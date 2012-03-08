@@ -1,0 +1,6 @@
+# generic types
+*.o
+.*.swp
+
+# files in this directory
+/libthreads

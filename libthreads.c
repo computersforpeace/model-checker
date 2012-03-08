@@ -1,27 +1,12 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ucontext.h>
-#include <stdio.h>
 
 //#define CONFIG_DEBUG
 
-#ifdef CONFIG_DEBUG
-#define DBG() do { printf("Here: %s, L%d\n", __func__, __LINE__); } while (0)
-#define DEBUG(fmt, ...) printf(fmt, ##__VA_ARGS__)
-#else
-#define DBG()
-#define DEBUG(fmt, ...)
-#endif
+#include "libthreads.h"
 
 #define STACK_SIZE (1024 * 1024)
-
-struct thread {
-	void (*start_routine);
-	void *arg;
-	ucontext_t context;
-	void *stack;
-	int index;
-};
 
 static struct thread *current;
 static ucontext_t *cleanup;

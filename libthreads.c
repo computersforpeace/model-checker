@@ -20,7 +20,6 @@ struct thread {
 	void *arg;
 	ucontext_t context;
 	void *stack;
-	int started;
 	int index;
 };
 
@@ -44,7 +43,6 @@ int thread_create(struct thread *t, void (*start_routine), void *arg)
 
 	t->start_routine = start_routine;
 	t->arg = arg;
-	t->started = 0;
 
 	/* Initialize state */
 	getcontext(&t->context);
@@ -65,8 +63,6 @@ void thread_start(struct thread *t)
 {
 	DBG();
 
-	t->started = 1;
-	
 	if (current) {
 		struct thread *old = current;
 		current = t;
@@ -104,18 +100,15 @@ int main()
 {
 	struct thread t;
 	ucontext_t main_context;
-	int pass = 0;
 
 	cleanup = &main_context;
 
 	thread_create(&t, &user_main, NULL);
 
-	getcontext(&main_context);
-	if (!pass++)
-		thread_start(&t);
+	thread_start(&t);
 
 	DBG();
 
-	DEBUG("Exiting?\n");
+	DEBUG("Exiting\n");
 	return 0;
 }

@@ -1,6 +1,5 @@
 #include <string.h>
 #include <stdlib.h>
-#include <ucontext.h>
 
 //#define CONFIG_DEBUG
 
@@ -48,10 +47,10 @@ static int create_initial_thread(struct thread *t)
 int thread_create(struct thread *t, void (*start_routine), void *arg)
 {
 	static int created = 1;
-	ucontext_t local;
 
 	DBG();
 
+	memset(t, 0, sizeof(*t));
 	t->index = created++;
 	DEBUG("create thread %d\n", t->index);
 
@@ -84,15 +83,15 @@ void a(int *idx)
 void user_main()
 {
 	struct thread t1, t2;
-	int i = 1, j = 2;
+	int i = 2, j = 3;
 
 	thread_create(&t1, &a, &i);
 	thread_create(&t2, &a, &j);
 
-	printf("user_main() is going to start 2 threads\n");
+	printf("%s() is going to start 1 thread\n", __func__);
 	thread_start(&t1);
 	thread_start(&t2);
-	printf("user_main() is finished\n");
+	printf("%s() is finished\n", __func__);
 }
 
 int main()
@@ -103,7 +102,6 @@ int main()
 	current = &main_thread;
 
 	thread_create(&user_thread, &user_main, NULL);
-
 	thread_start(&user_thread);
 
 	DBG();

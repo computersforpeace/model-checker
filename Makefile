@@ -10,3 +10,6 @@ ${BIN}: ${SOURCE} ${HEADERS}
 
 clean:
 	rm -f ${BIN} *.o
+
+tags::
+	ctags -R

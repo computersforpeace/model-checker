@@ -18,6 +18,7 @@ struct thread {
 	ucontext_t context;
 	void *stack;
 	int index;
+	int completed;
 };
 
 int thread_create(struct thread *t, void (*start_routine), void *arg);

@@ -7,7 +7,7 @@
 
 #define STACK_SIZE (1024 * 1024)
 
-static struct thread *current;
+static struct thread *current, *main_thread;
 
 static void *stack_allocate(size_t size)
 {
@@ -32,7 +32,7 @@ static int create_context(struct thread *t)
 	t->context.uc_stack.ss_sp = t->stack;
 	t->context.uc_stack.ss_size = STACK_SIZE;
 	t->context.uc_stack.ss_flags = 0;
-	t->context.uc_link = &current->context;
+	t->context.uc_link = &main_thread->context;
 	makecontext(&t->context, t->start_routine, 1, t->arg);
 
 	return 0;
@@ -42,6 +42,45 @@ static int create_initial_thread(struct thread *t)
 {
 	memset(t, 0, sizeof(*t));
 	return create_context(t);
+}
+
+static int thread_swap(struct thread *old, struct thread *new)
+{
+	return swapcontext(&old->context, &new->context);
+}
+
+static int thread_yield()
+{
+	struct thread *old, *next;
+
+	DBG();
+	if (current) {
+		old = current;
+		schedule_add_thread(old);
+	} else {
+		old = main_thread;
+	}
+	schedule_choose_next(&next);
+	current = next;
+	return thread_swap(old, next);
+}
+
+static int master_thread_yield()
+{
+	struct thread *next;
+
+	DBG();
+
+	if (current) {
+		DEBUG("completed thread %d\n", current->index);
+		current->completed = 1;
+	}
+	schedule_choose_next(&next);
+	if (next && !next->completed) {
+		current = next;
+		return thread_swap(main_thread, next);
+	}
+	return 1;
 }
 
 int thread_create(struct thread *t, void (*start_routine), void *arg)
@@ -63,21 +102,26 @@ int thread_create(struct thread *t, void (*start_routine), void *arg)
 
 void thread_start(struct thread *t)
 {
-	struct thread *old = current;
 	DBG();
 
-	current = t;
-	swapcontext(&old->context, &current->context);
+	schedule_add_thread(t);
+}
 
-	DBG();
+void thread_join(struct thread *t)
+{
+	while (!t->completed)
+		thread_yield();
 }
 
 void a(int *idx)
 {
 	int i;
 
-	for (i = 0; i < 10; i++)
+	for (i = 0; i < 10; i++) {
 		printf("Thread %d, loop %d\n", *idx, i);
+		if (i % 2)
+			thread_yield();
+	}
 }
 
 void user_main()
@@ -91,20 +135,24 @@ void user_main()
 	printf("%s() is going to start 1 thread\n", __func__);
 	thread_start(&t1);
 	thread_start(&t2);
+
+	thread_join(&t1);
+	thread_join(&t2);
 	printf("%s() is finished\n", __func__);
 }
 
 int main()
 {
-	struct thread main_thread, user_thread;
+	struct thread user_thread;
 
-	create_initial_thread(&main_thread);
-	current = &main_thread;
+	main_thread = malloc(sizeof(struct thread));
+	create_initial_thread(main_thread);
 
 	thread_create(&user_thread, &user_main, NULL);
 	thread_start(&user_thread);
 
-	DBG();
+	/* Wait for all threads to complete */
+	while (master_thread_yield() == 0);
 
 	DEBUG("Exiting\n");
 	return 0;

@@ -9,16 +9,45 @@
 #define STACK_SIZE (1024 * 1024)
 
 static struct thread *current;
-static ucontext_t *cleanup;
 
 static void *stack_allocate(size_t size)
 {
 	return malloc(size);
 }
 
+static int create_context(struct thread *t)
+{
+	int ret;
+
+	memset(&t->context, 0, sizeof(t->context));
+	ret = getcontext(&t->context);
+	if (ret)
+		return ret;
+
+	/* t->start_routine == NULL means this is our initial context */
+	if (!t->start_routine)
+		return 0;
+
+	/* Initialize new managed context */
+	t->stack = stack_allocate(STACK_SIZE);
+	t->context.uc_stack.ss_sp = t->stack;
+	t->context.uc_stack.ss_size = STACK_SIZE;
+	t->context.uc_stack.ss_flags = 0;
+	t->context.uc_link = &current->context;
+	makecontext(&t->context, t->start_routine, 1, t->arg);
+
+	return 0;
+}
+
+static int create_initial_thread(struct thread *t)
+{
+	memset(t, 0, sizeof(*t));
+	return create_context(t);
+}
+
 int thread_create(struct thread *t, void (*start_routine), void *arg)
 {
-	static int created;
+	static int created = 1;
 	ucontext_t local;
 
 	DBG();
@@ -30,32 +59,17 @@ int thread_create(struct thread *t, void (*start_routine), void *arg)
 	t->arg = arg;
 
 	/* Initialize state */
-	getcontext(&t->context);
-	t->stack = stack_allocate(STACK_SIZE);
-	t->context.uc_stack.ss_sp = t->stack;
-	t->context.uc_stack.ss_size = STACK_SIZE;
-	t->context.uc_stack.ss_flags = 0;
-	if (current)
-		t->context.uc_link = &current->context;
-	else
-		t->context.uc_link = cleanup;
-	makecontext(&t->context, t->start_routine, 1, t->arg);
-
-	return 0;
+	return create_context(t);
 }
 
 void thread_start(struct thread *t)
 {
+	struct thread *old = current;
 	DBG();
 
-	if (current) {
-		struct thread *old = current;
-		current = t;
-		swapcontext(&old->context, &current->context);
-	} else {
-		current = t;
-		swapcontext(cleanup, &current->context);
-	}
+	current = t;
+	swapcontext(&old->context, &current->context);
+
 	DBG();
 }
 
@@ -83,14 +97,14 @@ void user_main()
 
 int main()
 {
-	struct thread t;
-	ucontext_t main_context;
+	struct thread main_thread, user_thread;
 
-	cleanup = &main_context;
+	create_initial_thread(&main_thread);
+	current = &main_thread;
 
-	thread_create(&t, &user_main, NULL);
+	thread_create(&user_thread, &user_main, NULL);
 
-	thread_start(&t);
+	thread_start(&user_thread);
 
 	DBG();
 

@@ -1,5 +1,3 @@
-//#define CONFIG_DEBUG
-
 #include "schedule.h"
 
 struct thread_list_node {
@@ -46,7 +44,7 @@ static int dequeue_thread(struct thread **t)
 
 void schedule_add_thread(struct thread *t)
 {
-	DEBUG("%s: thread %d\n", __func__, t->index);
+	DEBUG("thread %d\n", t->index);
 	enqueue_thread(t);
 }
 

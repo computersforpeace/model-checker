@@ -4,12 +4,14 @@
 #include <stdio.h>
 #include <ucontext.h>
 
+//#define CONFIG_DEBUG
+
 #ifdef CONFIG_DEBUG
-#define DBG() do { printf("Here: %s, L%d\n", __func__, __LINE__); } while (0)
-#define DEBUG(fmt, ...) printf(fmt, ##__VA_ARGS__)
+#define DEBUG(fmt, ...) do { printf("*** %25s(): line %-4d *** " fmt, __func__, __LINE__, ##__VA_ARGS__); } while (0)
+#define DBG() DEBUG("\n");
 #else
-#define DBG()
 #define DEBUG(fmt, ...)
+#define DBG()
 #endif
 
 struct thread {

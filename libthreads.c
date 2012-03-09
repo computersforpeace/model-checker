@@ -1,8 +1,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-//#define CONFIG_DEBUG
-
 #include "libthreads.h"
 
 #define STACK_SIZE (1024 * 1024)

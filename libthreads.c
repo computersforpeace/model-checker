@@ -86,6 +86,7 @@ static int master_thread_yield()
 int thread_create(struct thread *t, void (*start_routine), void *arg)
 {
 	static int created = 1;
+	int ret = 0;
 
 	DBG();
 
@@ -97,14 +98,12 @@ int thread_create(struct thread *t, void (*start_routine), void *arg)
 	t->arg = arg;
 
 	/* Initialize state */
-	return create_context(t);
-}
-
-void thread_start(struct thread *t)
-{
-	DBG();
+	ret = create_context(t);
+	if (ret)
+		return ret;
 
 	schedule_add_thread(t);
+	return 0;
 }
 
 void thread_join(struct thread *t)
@@ -129,12 +128,9 @@ void user_main()
 	struct thread t1, t2;
 	int i = 2, j = 3;
 
+	printf("%s() creating 2 threads\n", __func__);
 	thread_create(&t1, &a, &i);
 	thread_create(&t2, &a, &j);
-
-	printf("%s() is going to start 1 thread\n", __func__);
-	thread_start(&t1);
-	thread_start(&t2);
 
 	thread_join(&t1);
 	thread_join(&t2);
@@ -149,7 +145,6 @@ int main()
 	create_initial_thread(main_thread);
 
 	thread_create(&user_thread, &user_main, NULL);
-	thread_start(&user_thread);
 
 	/* Wait for all threads to complete */
 	while (master_thread_yield() == 0);

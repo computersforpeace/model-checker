@@ -2,7 +2,7 @@ CC=gcc
 BIN=libthreads
 SOURCE=libthreads.c schedule.c
 HEADERS=libthreads.h schedule.h common.h
-FLAGS=
+FLAGS=-Wall
 
 all: ${BIN}
 

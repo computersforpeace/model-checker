@@ -54,7 +54,7 @@ static int thread_swap(struct thread *old, struct thread *new)
 	return swapcontext(&old->context, &new->context);
 }
 
-static int thread_yield()
+int thread_yield(void)
 {
 	struct thread *old, *next;
 

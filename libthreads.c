@@ -57,14 +57,11 @@ static int thread_yield()
 	struct thread *old, *next;
 
 	DBG();
-	if (current) {
-		old = current;
-		schedule_add_thread(old);
-	} else {
-		old = main_thread;
-	}
+	old = current;
+	schedule_add_thread(old);
 	schedule_choose_next(&next);
 	current = next;
+	DEBUG("(%d, %d)\n", old->index, next->index);
 	return thread_swap(old, next);
 }
 

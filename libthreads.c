@@ -110,12 +110,12 @@ void thread_join(struct thread *t)
 		thread_yield();
 }
 
-void a(int *idx)
+void a(int *parm)
 {
 	int i;
 
 	for (i = 0; i < 10; i++) {
-		printf("Thread %d, loop %d\n", *idx, i);
+		printf("Thread %d, magic number %d, loop %d\n", current->index, *parm, i);
 		if (i % 2)
 			thread_yield();
 	}
@@ -124,7 +124,7 @@ void a(int *idx)
 void user_main()
 {
 	struct thread t1, t2;
-	int i = 2, j = 3;
+	int i = 17, j = 13;
 
 	printf("%s() creating 2 threads\n", __func__);
 	thread_create(&t1, &a, &i);

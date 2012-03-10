@@ -25,5 +25,6 @@ struct thread {
 
 int thread_create(struct thread *t, void (*start_routine), void *arg);
 void thread_join(struct thread *t);
+struct thread *thread_current(void);
 
 #endif /* __LIBTHREADS_H__ */

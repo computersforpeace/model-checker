@@ -67,7 +67,7 @@ static int thread_yield()
 
 static void thread_dispose(struct thread *t)
 {
-	DEBUG("completed thread %d\n", current->index);
+	DEBUG("completed thread %d\n", thread_current()->index);
 	t->completed = 1;
 	stack_free(t->stack);
 }
@@ -115,12 +115,17 @@ void thread_join(struct thread *t)
 		thread_yield();
 }
 
+struct thread *thread_current(void)
+{
+	return current;
+}
+
 void a(int *parm)
 {
 	int i;
 
 	for (i = 0; i < 10; i++) {
-		printf("Thread %d, magic number %d, loop %d\n", current->index, *parm, i);
+		printf("Thread %d, magic number %d, loop %d\n", thread_current()->index, *parm, i);
 		if (i % 2)
 			thread_yield();
 	}

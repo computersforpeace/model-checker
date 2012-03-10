@@ -74,7 +74,7 @@ static void thread_dispose(struct thread *t)
 	stack_free(t->stack);
 }
 
-static void thread_wait_finish()
+static void thread_wait_finish(void)
 {
 	struct thread *next;
 

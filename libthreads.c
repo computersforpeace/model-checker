@@ -61,7 +61,7 @@ static int thread_yield()
 	DBG();
 	old = current;
 	schedule_add_thread(old);
-	schedule_choose_next(&next);
+	next = schedule_choose_next();
 	current = next;
 	DEBUG("(%d, %d)\n", old->index, next->index);
 	return thread_swap(old, next);
@@ -83,7 +83,7 @@ static void thread_wait_finish()
 	do {
 		if (current)
 			thread_dispose(current);
-		schedule_choose_next(&next);
+		next = schedule_choose_next();
 		current = next;
 	} while (next && !thread_swap(main_thread, next));
 }

@@ -32,18 +32,20 @@ static void enqueue_thread(struct thread *t)
 	tail = node;
 }
 
-static int dequeue_thread(struct thread **t)
+struct thread *dequeue_thread(void)
 {
-	if (!head) {
-		*t = NULL;
-		return -1;
-	}
-	*t = head->this;
+	struct thread *pop;
+
+	if (!head)
+		return NULL;
+
+	pop = head->this;
 	head->live = 0;
 	if (head == tail)
 		tail = NULL;
 	head = head->next;
-	return 0;
+
+	return pop;
 }
 
 void schedule_add_thread(struct thread *t)
@@ -52,7 +54,7 @@ void schedule_add_thread(struct thread *t)
 	enqueue_thread(t);
 }
 
-int schedule_choose_next(struct thread **t)
+struct thread *schedule_choose_next(void)
 {
-	return dequeue_thread(t);
+	return dequeue_thread();
 }

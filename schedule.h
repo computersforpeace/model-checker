@@ -4,6 +4,6 @@
 #include "libthreads.h"
 
 void schedule_add_thread(struct thread *t);
-int schedule_choose_next(struct thread **t);
+struct thread *schedule_choose_next(void);
 
 #endif /* __SCHEDULE_H__ */

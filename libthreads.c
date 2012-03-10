@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "libthreads.h"
+#include "schedule.h"
 #include "common.h"
 
 #define STACK_SIZE (1024 * 1024)

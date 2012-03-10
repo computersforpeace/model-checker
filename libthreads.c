@@ -122,31 +122,6 @@ struct thread *thread_current(void)
 	return current;
 }
 
-void a(int *parm)
-{
-	int i;
-
-	for (i = 0; i < 10; i++) {
-		printf("Thread %d, magic number %d, loop %d\n", thread_current()->index, *parm, i);
-		if (i % 2)
-			thread_yield();
-	}
-}
-
-void user_main()
-{
-	struct thread t1, t2;
-	int i = 17, j = 13;
-
-	printf("%s() creating 2 threads\n", __func__);
-	thread_create(&t1, &a, &i);
-	thread_create(&t2, &a, &j);
-
-	thread_join(&t1);
-	thread_join(&t2);
-	printf("%s() is finished\n", __func__);
-}
-
 int main()
 {
 	struct thread user_thread;

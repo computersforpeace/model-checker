@@ -17,4 +17,6 @@ void thread_join(struct thread *t);
 int thread_yield(void);
 struct thread *thread_current(void);
 
+extern void user_main(void);
+
 #endif /* __LIBTHREADS_H__ */

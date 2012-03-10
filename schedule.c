@@ -32,8 +32,10 @@ static void enqueue_thread(struct thread *t)
 
 static int dequeue_thread(struct thread **t)
 {
-	if (!head)
+	if (!head) {
+		*t = NULL;
 		return -1;
+	}
 	*t = head->this;
 	head->live = 0;
 	if (head == tail)

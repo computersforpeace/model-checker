@@ -12,6 +12,11 @@ static void *stack_allocate(size_t size)
 	return malloc(size);
 }
 
+static void stack_free(void *stack)
+{
+	free(stack);
+}
+
 static int create_context(struct thread *t)
 {
 	int ret;
@@ -63,22 +68,25 @@ static int thread_yield()
 	return thread_swap(old, next);
 }
 
-static int master_thread_yield()
+static void thread_dispose(struct thread *t)
+{
+	DEBUG("completed thread %d\n", current->index);
+	t->completed = 1;
+	stack_free(t->stack);
+}
+
+static void thread_wait_finish()
 {
 	struct thread *next;
 
 	DBG();
 
-	if (current) {
-		DEBUG("completed thread %d\n", current->index);
-		current->completed = 1;
-	}
-	schedule_choose_next(&next);
-	if (next && !next->completed) {
+	do {
+		if (current)
+			thread_dispose(current);
+		schedule_choose_next(&next);
 		current = next;
-		return thread_swap(main_thread, next);
-	}
-	return 1;
+	} while (next && !thread_swap(main_thread, next));
 }
 
 int thread_create(struct thread *t, void (*start_routine), void *arg)
@@ -142,10 +150,11 @@ int main()
 	main_thread = malloc(sizeof(struct thread));
 	create_initial_thread(main_thread);
 
+	/* Start user program */
 	thread_create(&user_thread, &user_main, NULL);
 
 	/* Wait for all threads to complete */
-	while (master_thread_yield() == 0);
+	thread_wait_finish();
 
 	DEBUG("Exiting\n");
 	return 0;

@@ -1,6 +1,6 @@
 BIN=libthreads
 SOURCE=libthreads.c schedule.c
-HEADERS=libthreads.h schedule.h
+HEADERS=libthreads.h schedule.h common.h
 FLAGS=
 
 all: ${BIN}

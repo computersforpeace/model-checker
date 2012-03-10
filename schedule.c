@@ -1,4 +1,5 @@
 #include "schedule.h"
+#include "common.h"
 
 struct thread_list_node {
 	struct thread *this;

@@ -1,6 +1,9 @@
+#include <stdlib.h>
+
 #include "libthreads.h"
 #include "schedule.h"
 #include "common.h"
+#include "model.h"
 
 struct thread_list_node {
 	struct thread *this;
@@ -57,4 +60,18 @@ void schedule_add_thread(struct thread *t)
 struct thread *schedule_choose_next(void)
 {
 	return dequeue_thread();
+}
+
+void scheduler_init(struct model_checker *mod)
+{
+	struct scheduler *sched;
+
+	/* Initialize FCFS scheduler */
+	sched = malloc(sizeof(*sched));
+	sched->init = NULL;
+	sched->exit = NULL;
+	sched->add_thread = schedule_add_thread;
+	sched->next_thread = schedule_choose_next;
+	sched->get_current_thread = thread_current;
+	mod->scheduler = sched;
 }

@@ -5,6 +5,9 @@
 #include "schedule.h"
 #include "common.h"
 
+/* global "model" struct */
+#include "model.h"
+
 #define STACK_SIZE (1024 * 1024)
 
 static struct thread *current, *main_thread;
@@ -60,8 +63,8 @@ int thread_yield(void)
 
 	DBG();
 	old = current;
-	schedule_add_thread(old);
-	next = schedule_choose_next();
+	model->scheduler->add_thread(old);
+	next = model->scheduler->next_thread();
 	current = next;
 	DEBUG("(%d, %d)\n", old->index, next->index);
 	return thread_swap(old, next);
@@ -83,7 +86,7 @@ static void thread_wait_finish(void)
 	do {
 		if (current)
 			thread_dispose(current);
-		next = schedule_choose_next();
+		next = model->scheduler->next_thread();
 		current = next;
 	} while (next && !thread_swap(main_thread, next));
 }
@@ -107,7 +110,7 @@ int thread_create(struct thread *t, void (*start_routine), void *arg)
 	if (ret)
 		return ret;
 
-	schedule_add_thread(t);
+	model->scheduler->add_thread(t);
 	return 0;
 }
 
@@ -125,6 +128,8 @@ struct thread *thread_current(void)
 int main()
 {
 	struct thread user_thread;
+
+	model_checker_init();
 
 	main_thread = malloc(sizeof(struct thread));
 	create_initial_thread(main_thread);

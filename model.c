@@ -5,6 +5,11 @@
 
 struct model_checker *model;
 
+void model_checker_add_system_thread(struct thread *t)
+{
+	model->system_thread = t;
+}
+
 void model_checker_init(void)
 {
 	model = malloc(sizeof(*model));

@@ -10,8 +10,6 @@
 
 #define STACK_SIZE (1024 * 1024)
 
-static struct thread *main_thread;
-
 static void *stack_allocate(size_t size)
 {
 	return malloc(size);
@@ -40,7 +38,7 @@ static int create_context(struct thread *t)
 	t->context.uc_stack.ss_sp = t->stack;
 	t->context.uc_stack.ss_size = STACK_SIZE;
 	t->context.uc_stack.ss_flags = 0;
-	t->context.uc_link = &main_thread->context;
+	t->context.uc_link = &model->system_thread->context;
 	makecontext(&t->context, t->start_routine, 1, t->arg);
 
 	return 0;
@@ -86,7 +84,7 @@ static void thread_wait_finish(void)
 		if ((curr = thread_current()))
 			thread_dispose(curr);
 		next = model->scheduler->next_thread();
-	} while (next && !thread_swap(main_thread, next));
+	} while (next && !thread_swap(model->system_thread, next));
 }
 
 int thread_create(struct thread *t, void (*start_routine), void *arg)
@@ -126,11 +124,13 @@ struct thread *thread_current(void)
 int main()
 {
 	struct thread user_thread;
+	struct thread *main_thread;
 
 	model_checker_init();
 
 	main_thread = malloc(sizeof(struct thread));
 	create_initial_thread(main_thread);
+	model_checker_add_system_thread(main_thread);
 
 	/* Start user program */
 	thread_create(&user_thread, &user_main, NULL);

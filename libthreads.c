@@ -10,7 +10,7 @@
 
 #define STACK_SIZE (1024 * 1024)
 
-static struct thread *current, *main_thread;
+static struct thread *main_thread;
 
 static void *stack_allocate(size_t size)
 {
@@ -62,10 +62,9 @@ int thread_yield(void)
 	struct thread *old, *next;
 
 	DBG();
-	old = current;
+	old = thread_current();
 	model->scheduler->add_thread(old);
 	next = model->scheduler->next_thread();
-	current = next;
 	DEBUG("(%d, %d)\n", old->index, next->index);
 	return thread_swap(old, next);
 }
@@ -79,15 +78,14 @@ static void thread_dispose(struct thread *t)
 
 static void thread_wait_finish(void)
 {
-	struct thread *next;
+	struct thread *curr, *next;
 
 	DBG();
 
 	do {
-		if (current)
-			thread_dispose(current);
+		if ((curr = thread_current()))
+			thread_dispose(curr);
 		next = model->scheduler->next_thread();
-		current = next;
 	} while (next && !thread_swap(main_thread, next));
 }
 
@@ -122,7 +120,7 @@ void thread_join(struct thread *t)
 
 struct thread *thread_current(void)
 {
-	return current;
+	return model->scheduler->get_current_thread();
 }
 
 int main()

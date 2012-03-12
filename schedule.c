@@ -23,8 +23,10 @@ static void enqueue_thread(struct thread *t)
 	struct thread_list_node *node;
 
 	for (node = nodes, i = 0; node->live && i < NUM_LIST_NODES; i++, node++);
-	if (i >= NUM_LIST_NODES)
+	if (i >= NUM_LIST_NODES) {
 		printf("ran out of nodes\n");
+		exit(1);
+	}
 	node->this = t;
 	node->next = NULL;
 	node->live = 1;

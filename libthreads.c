@@ -100,7 +100,7 @@ static void thread_wait_finish(void)
 /*
  * User program API functions
  */
-int thread_create(struct thread *t, void (*start_routine), void *arg)
+int thread_create(struct thread *t, void (*start_routine)(), void *arg)
 {
 	int ret = 0;
 

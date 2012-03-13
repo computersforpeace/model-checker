@@ -20,8 +20,8 @@ void user_main()
 	atomic_int obj;
 
 	printf("%s() creating 2 threads\n", __func__);
-	thread_create(&t1, &a, &obj);
-	thread_create(&t2, &a, &obj);
+	thread_create(&t1, (void (*)())&a, &obj);
+	thread_create(&t2, (void (*)())&a, &obj);
 
 	thread_join(&t1);
 	thread_join(&t2);

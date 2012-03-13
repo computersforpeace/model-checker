@@ -11,7 +11,7 @@ typedef enum thread_state {
 } thread_state;
 
 struct thread {
-	void (*start_routine);
+	void (*start_routine)();
 	void *arg;
 	ucontext_t context;
 	void *stack;
@@ -19,7 +19,7 @@ struct thread {
 	thread_state state;
 };
 
-int thread_create(struct thread *t, void (*start_routine), void *arg);
+int thread_create(struct thread *t, void (*start_routine)(), void *arg);
 void thread_join(struct thread *t);
 int thread_yield(void);
 struct thread *thread_current(void);

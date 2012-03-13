@@ -47,6 +47,7 @@ static int create_context(struct thread *t)
 static int create_initial_thread(struct thread *t)
 {
 	memset(t, 0, sizeof(*t));
+	model_checker_assign_id(t);
 	return create_context(t);
 }
 
@@ -101,13 +102,12 @@ static void thread_wait_finish(void)
  */
 int thread_create(struct thread *t, void (*start_routine), void *arg)
 {
-	static int created = 1;
 	int ret = 0;
 
 	DBG();
 
 	memset(t, 0, sizeof(*t));
-	t->index = created++;
+	model_checker_assign_id(t);
 	DEBUG("create thread %d\n", t->index);
 
 	t->start_routine = start_routine;

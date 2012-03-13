@@ -14,6 +14,10 @@ void model_checker_init(void)
 {
 	model = malloc(sizeof(*model));
 	memset(model, 0, sizeof(*model));
+
+	/* First thread created (system_thread) will have index 1 */
+	model->used_thread_id = 0;
+
 	scheduler_init(model);
 }
 
@@ -25,4 +29,9 @@ void model_checker_exit(void)
 		sched->exit();
 	free(sched);
 	free(model);
+}
+
+void model_checker_assign_id(struct thread *t)
+{
+	t->index = ++model->used_thread_id;
 }

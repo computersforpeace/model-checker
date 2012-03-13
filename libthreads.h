@@ -15,7 +15,7 @@ struct thread {
 	void *arg;
 	ucontext_t context;
 	void *stack;
-	int index;
+	int id;
 	thread_state state;
 };
 

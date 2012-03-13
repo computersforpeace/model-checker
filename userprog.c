@@ -8,7 +8,7 @@ static void a(atomic_int *obj)
 	int i;
 
 	for (i = 0; i < 10; i++) {
-		printf("Thread %d, loop %d\n", thread_current()->index, i);
+		printf("Thread %d, loop %d\n", thread_current()->id, i);
 		if (i % 2)
 			atomic_load(obj);
 	}

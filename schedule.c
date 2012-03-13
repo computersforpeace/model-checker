@@ -59,7 +59,7 @@ static struct thread *dequeue_thread(void)
 
 static void default_add_thread(struct thread *t)
 {
-	DEBUG("thread %d\n", t->index);
+	DEBUG("thread %d\n", t->id);
 	enqueue_thread(t);
 }
 

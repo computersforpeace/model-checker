@@ -58,7 +58,7 @@ static int thread_swap(struct thread *old, struct thread *new)
 
 static void thread_dispose(struct thread *t)
 {
-	DEBUG("completed thread %d\n", thread_current()->index);
+	DEBUG("completed thread %d\n", thread_current()->id);
 	t->state = THREAD_COMPLETED;
 	stack_free(t->stack);
 }
@@ -83,7 +83,7 @@ static int thread_system_next(void)
 	next = model->scheduler->next_thread();
 	if (next)
 		next->state = THREAD_RUNNING;
-	DEBUG("(%d, %d)\n", curr ? curr->index : -1, next ? next->index : -1);
+	DEBUG("(%d, %d)\n", curr ? curr->id : -1, next ? next->id : -1);
 	if (!next)
 		return 1;
 	return thread_swap(model->system_thread, next);
@@ -108,7 +108,7 @@ int thread_create(struct thread *t, void (*start_routine), void *arg)
 
 	memset(t, 0, sizeof(*t));
 	model_checker_assign_id(t);
-	DEBUG("create thread %d\n", t->index);
+	DEBUG("create thread %d\n", t->id);
 
 	t->start_routine = start_routine;
 	t->arg = arg;

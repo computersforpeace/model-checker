@@ -61,9 +61,8 @@ int thread_yield(void)
 
 	DBG();
 	old = thread_current();
-	model->scheduler->add_thread(old);
-	next = model->scheduler->next_thread();
-	DEBUG("(%d, %d)\n", old->index, next->index);
+	old->state = THREAD_READY;
+	next = model->system_thread;
 	return thread_swap(old, next);
 }
 
@@ -74,17 +73,38 @@ static void thread_dispose(struct thread *t)
 	stack_free(t->stack);
 }
 
-static void thread_wait_finish(void)
+/*
+ * Return 1 if found next thread, 0 otherwise
+ */
+static int thread_system_next(void)
 {
 	struct thread *curr, *next;
 
+	curr = thread_current();
+	if (curr) {
+		if (curr->state == THREAD_READY)
+			model->scheduler->add_thread(curr);
+		else if (curr->state == THREAD_RUNNING)
+			/* Stopped while running; i.e., completed */
+			thread_dispose(curr);
+		else
+			DEBUG("ERROR: current thread in unexpected state??\n");
+	}
+	next = model->scheduler->next_thread();
+	if (next)
+		next->state = THREAD_RUNNING;
+	DEBUG("(%d, %d)\n", curr ? curr->index : -1, next ? next->index : -1);
+	if (!next)
+		return 1;
+	return thread_swap(model->system_thread, next);
+}
+
+static void thread_wait_finish(void)
+{
+
 	DBG();
 
-	do {
-		if ((curr = thread_current()))
-			thread_dispose(curr);
-		next = model->scheduler->next_thread();
-	} while (next && !thread_swap(model->system_thread, next));
+	while (!thread_system_next());
 }
 
 int thread_create(struct thread *t, void (*start_routine), void *arg)

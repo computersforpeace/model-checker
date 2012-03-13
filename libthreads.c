@@ -70,7 +70,7 @@ int thread_yield(void)
 static void thread_dispose(struct thread *t)
 {
 	DEBUG("completed thread %d\n", thread_current()->index);
-	t->completed = 1;
+	t->state = THREAD_COMPLETED;
 	stack_free(t->stack);
 }
 
@@ -106,13 +106,15 @@ int thread_create(struct thread *t, void (*start_routine), void *arg)
 	if (ret)
 		return ret;
 
+	t->state = THREAD_CREATED;
+
 	model->scheduler->add_thread(t);
 	return 0;
 }
 
 void thread_join(struct thread *t)
 {
-	while (!t->completed)
+	while (t->state != THREAD_COMPLETED)
 		thread_yield();
 }
 

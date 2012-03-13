@@ -3,13 +3,20 @@
 
 #include <ucontext.h>
 
+typedef enum thread_state {
+	THREAD_CREATED,
+	THREAD_RUNNING,
+	THREAD_READY,
+	THREAD_COMPLETED
+} thread_state;
+
 struct thread {
 	void (*start_routine);
 	void *arg;
 	ucontext_t context;
 	void *stack;
 	int index;
-	int completed;
+	thread_state state;
 };
 
 int thread_create(struct thread *t, void (*start_routine), void *arg);

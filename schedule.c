@@ -78,7 +78,7 @@ void scheduler_init(struct model_checker *mod)
 	struct scheduler *sched;
 
 	/* Initialize default scheduler */
-	sched = malloc(sizeof(*sched));
+	sched = (struct scheduler *)malloc(sizeof(*sched));
 	sched->init = NULL;
 	sched->exit = NULL;
 	sched->add_thread = default_add_thread;

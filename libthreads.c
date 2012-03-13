@@ -156,7 +156,7 @@ int main()
 
 	model_checker_init();
 
-	main_thread = malloc(sizeof(struct thread));
+	main_thread = (struct thread *)malloc(sizeof(*main_thread));
 	create_initial_thread(main_thread);
 	model_checker_add_system_thread(main_thread);
 

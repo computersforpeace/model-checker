@@ -12,7 +12,7 @@ void model_checker_add_system_thread(struct thread *t)
 
 void model_checker_init(void)
 {
-	model = malloc(sizeof(*model));
+	model = (struct model_checker *)malloc(sizeof(*model));
 	memset(model, 0, sizeof(*model));
 
 	/* First thread created (system_thread) will have id 1 */

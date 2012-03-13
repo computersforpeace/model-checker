@@ -55,17 +55,6 @@ static int thread_swap(struct thread *old, struct thread *new)
 	return swapcontext(&old->context, &new->context);
 }
 
-int thread_yield(void)
-{
-	struct thread *old, *next;
-
-	DBG();
-	old = thread_current();
-	old->state = THREAD_READY;
-	next = model->system_thread;
-	return thread_swap(old, next);
-}
-
 static void thread_dispose(struct thread *t)
 {
 	DEBUG("completed thread %d\n", thread_current()->index);
@@ -107,6 +96,9 @@ static void thread_wait_finish(void)
 	while (!thread_system_next());
 }
 
+/*
+ * User program API functions
+ */
 int thread_create(struct thread *t, void (*start_routine), void *arg)
 {
 	static int created = 1;
@@ -138,11 +130,25 @@ void thread_join(struct thread *t)
 		thread_yield();
 }
 
+int thread_yield(void)
+{
+	struct thread *old, *next;
+
+	DBG();
+	old = thread_current();
+	old->state = THREAD_READY;
+	next = model->system_thread;
+	return thread_swap(old, next);
+}
+
 struct thread *thread_current(void)
 {
 	return model->scheduler->get_current_thread();
 }
 
+/*
+ * Main system function
+ */
 int main()
 {
 	struct thread user_thread;

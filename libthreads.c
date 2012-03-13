@@ -51,9 +51,9 @@ static int create_initial_thread(struct thread *t)
 	return create_context(t);
 }
 
-static int thread_swap(struct thread *old, struct thread *new)
+static int thread_swap(struct thread *t1, struct thread *t2)
 {
-	return swapcontext(&old->context, &new->context);
+	return swapcontext(&t1->context, &t2->context);
 }
 
 static void thread_dispose(struct thread *t)

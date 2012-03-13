@@ -6,7 +6,7 @@
 #include "model.h"
 
 struct thread_list_node {
-	struct thread *this;
+	struct thread *t;
 	struct thread_list_node *next;
 	int live;
 };
@@ -27,7 +27,7 @@ static void enqueue_thread(struct thread *t)
 		printf("ran out of nodes\n");
 		exit(1);
 	}
-	node->this = t;
+	node->t = t;
 	node->next = NULL;
 	node->live = 1;
 
@@ -45,7 +45,7 @@ static struct thread *dequeue_thread(void)
 	if (!head)
 		return NULL;
 
-	pop = head->this;
+	pop = head->t;
 	head->live = 0;
 	if (head == tail)
 		tail = NULL;

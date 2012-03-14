@@ -1,6 +1,6 @@
 CC=g++
 BIN=libthreads
-SOURCE=libthreads.c schedule.c libatomic.c userprog.c model.cc
+SOURCE=libthreads.c schedule.cc libatomic.c userprog.c model.cc
 HEADERS=libthreads.h schedule.h common.h libatomic.h model.h
 FLAGS=-Wall
 

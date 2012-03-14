@@ -166,6 +166,8 @@ int main()
 	/* Wait for all threads to complete */
 	thread_wait_finish();
 
+	delete model;
+
 	DEBUG("Exiting\n");
 	return 0;
 }

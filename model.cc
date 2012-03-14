@@ -15,7 +15,7 @@ ModelChecker::ModelChecker()
 
 ModelChecker::~ModelChecker()
 {
-	struct scheduler *sched = model->scheduler;
+	struct scheduler *sched = this->scheduler;
 
 	if (sched->exit)
 		sched->exit();
@@ -29,5 +29,5 @@ void ModelChecker::assign_id(struct thread *t)
 
 void ModelChecker::add_system_thread(struct thread *t)
 {
-	model->system_thread = t;
+	this->system_thread = t;
 }

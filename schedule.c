@@ -73,7 +73,7 @@ static struct thread *default_thread_current(void)
 	return current;
 }
 
-void scheduler_init(struct model_checker *mod)
+void scheduler_init(ModelChecker *mod)
 {
 	struct scheduler *sched;
 

@@ -14,6 +14,6 @@ struct scheduler {
 	void *priv;
 };
 
-void scheduler_init(struct model_checker *mod);
+void scheduler_init(ModelChecker *mod);
 
 #endif /* __SCHEDULE_H__ */

@@ -5,7 +5,7 @@
 #include "schedule.h"
 #include "common.h"
 
-/* global "model" struct */
+/* global "model" object */
 #include "model.h"
 
 #define STACK_SIZE (1024 * 1024)
@@ -47,7 +47,7 @@ static int create_context(struct thread *t)
 static int create_initial_thread(struct thread *t)
 {
 	memset(t, 0, sizeof(*t));
-	model_checker_assign_id(t);
+	model->assign_id(t);
 	return create_context(t);
 }
 
@@ -107,7 +107,7 @@ int thread_create(struct thread *t, void (*start_routine)(), void *arg)
 	DBG();
 
 	memset(t, 0, sizeof(*t));
-	model_checker_assign_id(t);
+	model->assign_id(t);
 	DEBUG("create thread %d\n", t->id);
 
 	t->start_routine = start_routine;
@@ -154,11 +154,11 @@ int main()
 	struct thread user_thread;
 	struct thread *main_thread;
 
-	model_checker_init();
+	model = new ModelChecker();
 
 	main_thread = (struct thread *)malloc(sizeof(*main_thread));
 	create_initial_thread(main_thread);
-	model_checker_add_system_thread(main_thread);
+	model->add_system_thread(main_thread);
 
 	/* Start user program */
 	thread_create(&user_thread, &user_main, NULL);

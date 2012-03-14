@@ -4,16 +4,18 @@
 #include "libthreads.h"
 #include "model.h"
 
-struct scheduler {
-	void (*init)(void);
-	void (*exit)(void);
-	void (*add_thread)(struct thread *t);
-	struct thread * (*next_thread)(void);
-	struct thread * (*get_current_thread)(void);
-
-	void *priv;
+class Scheduler {
+public:
+	virtual void add_thread(struct thread *t) = 0;
+	virtual struct thread * next_thread(void) = 0;
+	virtual struct thread * get_current_thread(void) = 0;
 };
 
-void scheduler_init(ModelChecker *mod);
+class DefaultScheduler: public Scheduler {
+public:
+	void add_thread(struct thread *t);
+	struct thread * next_thread(void);
+	struct thread * get_current_thread(void);
+};
 
 #endif /* __SCHEDULE_H__ */

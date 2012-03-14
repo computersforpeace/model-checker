@@ -9,17 +9,13 @@ ModelChecker::ModelChecker()
 {
 	/* First thread created (system_thread) will have id 1 */
 	this->used_thread_id = 0;
-
-	scheduler_init(this);
+	/* Initialize default scheduler */
+	this->scheduler = new DefaultScheduler();
 }
 
 ModelChecker::~ModelChecker()
 {
-	struct scheduler *sched = this->scheduler;
-
-	if (sched->exit)
-		sched->exit();
-	free(sched);
+	delete this->scheduler;
 }
 
 void ModelChecker::assign_id(struct thread *t)

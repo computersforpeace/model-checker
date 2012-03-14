@@ -57,32 +57,18 @@ static struct thread *dequeue_thread(void)
 	return pop;
 }
 
-static void default_add_thread(struct thread *t)
+void DefaultScheduler::add_thread(struct thread *t)
 {
 	DEBUG("thread %d\n", t->id);
 	enqueue_thread(t);
 }
 
-static struct thread *default_choose_next(void)
+struct thread *DefaultScheduler::next_thread(void)
 {
 	return dequeue_thread();
 }
 
-static struct thread *default_thread_current(void)
+struct thread *DefaultScheduler::get_current_thread(void)
 {
 	return current;
-}
-
-void scheduler_init(ModelChecker *mod)
-{
-	struct scheduler *sched;
-
-	/* Initialize default scheduler */
-	sched = (struct scheduler *)malloc(sizeof(*sched));
-	sched->init = NULL;
-	sched->exit = NULL;
-	sched->add_thread = default_add_thread;
-	sched->next_thread = default_choose_next;
-	sched->get_current_thread = default_thread_current;
-	mod->scheduler = sched;
 }

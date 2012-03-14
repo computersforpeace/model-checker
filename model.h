@@ -1,11 +1,13 @@
 #ifndef __MODEL_H__
 #define __MODEL_H__
 
+#include "schedule.h"
+
 class ModelChecker {
 public:
 	ModelChecker();
 	~ModelChecker();
-	struct scheduler *scheduler;
+	class Scheduler *scheduler;
 	struct thread *system_thread;
 
 	void add_system_thread(struct thread *t);

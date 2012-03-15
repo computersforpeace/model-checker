@@ -6,7 +6,7 @@
 void DefaultScheduler::add_thread(struct thread *t)
 {
 	DEBUG("thread %d\n", t->id);
-	queue.push_back(t);
+	queue.push(t);
 }
 
 struct thread *DefaultScheduler::next_thread(void)
@@ -15,7 +15,7 @@ struct thread *DefaultScheduler::next_thread(void)
 		return NULL;
 
 	current = queue.front();
-	queue.pop_front();
+	queue.pop();
 
 	return current;
 }

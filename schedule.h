@@ -1,7 +1,7 @@
 #ifndef __SCHEDULE_H__
 #define __SCHEDULE_H__
 
-#include <list>
+#include <queue>
 
 #include "libthreads.h"
 #include "model.h"
@@ -19,7 +19,7 @@ public:
 	struct thread * next_thread(void);
 	struct thread * get_current_thread(void);
 private:
-	std::list<struct thread *> queue;
+	std::queue<struct thread *> queue;
 	struct thread *current;
 };
 

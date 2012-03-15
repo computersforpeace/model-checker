@@ -5,8 +5,6 @@
 #include "common.h"
 #include "model.h"
 
-struct thread *current;
-
 void DefaultScheduler::add_thread(struct thread *t)
 {
 	DEBUG("thread %d\n", t->id);
@@ -15,17 +13,13 @@ void DefaultScheduler::add_thread(struct thread *t)
 
 struct thread *DefaultScheduler::next_thread(void)
 {
-	struct thread *t;
-
 	if (queue.empty())
 		return NULL;
 
-	t = queue.front();
+	current = queue.front();
 	queue.pop_front();
 
-	current = t;
-
-	return t;
+	return current;
 }
 
 struct thread *DefaultScheduler::get_current_thread(void)

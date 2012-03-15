@@ -20,6 +20,7 @@ public:
 	struct thread * get_current_thread(void);
 private:
 	std::list<struct thread *> queue;
+	struct thread *current;
 };
 
 #endif /* __SCHEDULE_H__ */

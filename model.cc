@@ -1,7 +1,5 @@
 #include "model.h"
 #include "schedule.h"
-#include <stdlib.h>
-#include <string.h>
 
 ModelChecker *model;
 

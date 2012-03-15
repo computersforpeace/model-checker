@@ -1,6 +1,8 @@
 #ifndef __SCHEDULE_H__
 #define __SCHEDULE_H__
 
+#include <list>
+
 #include "libthreads.h"
 #include "model.h"
 
@@ -16,6 +18,8 @@ public:
 	void add_thread(struct thread *t);
 	struct thread * next_thread(void);
 	struct thread * get_current_thread(void);
+private:
+	std::list<struct thread *> queue;
 };
 
 #endif /* __SCHEDULE_H__ */

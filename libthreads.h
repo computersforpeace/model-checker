@@ -10,12 +10,14 @@ typedef enum thread_state {
 	THREAD_COMPLETED
 } thread_state;
 
+typedef int thread_id_t;
+
 struct thread {
 	void (*start_routine)();
 	void *arg;
 	ucontext_t context;
 	void *stack;
-	int id;
+	thread_id_t id;
 	thread_state state;
 };
 

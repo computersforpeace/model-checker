@@ -1,8 +1,8 @@
 CC=g++
 BIN=libthreads
-SOURCE=libthreads.cc schedule.cc libatomic.cc userprog.c model.cc
+SOURCE=libthreads.cc schedule.cc libatomic.cc userprog.c model.cc malloc.c
 HEADERS=libthreads.h schedule.h common.h libatomic.h model.h
-FLAGS=-Wall
+FLAGS=-Wall -ldl
 
 all: ${BIN}
 

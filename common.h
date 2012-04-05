@@ -13,4 +13,7 @@
 #define DBG()
 #endif
 
+void *myMalloc(size_t size);
+void myFree(void *ptr);
+
 #endif /* __COMMON_H__ */

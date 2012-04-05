@@ -1,5 +1,5 @@
-#ifndef __CONFIG_H__
-#define __CONFIG_H__
+#ifndef __COMMON_H__
+#define __COMMON_H__
 
 #include <stdio.h>
 
@@ -13,4 +13,4 @@
 #define DBG()
 #endif
 
-#endif /* __CONFIG_H__ */
+#endif /* __COMMON_H__ */

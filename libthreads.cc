@@ -156,7 +156,7 @@ int main()
 
 	model = new ModelChecker();
 
-	main_thread = (struct thread *)malloc(sizeof(*main_thread));
+	main_thread = (struct thread *)myMalloc(sizeof(*main_thread));
 	create_initial_thread(main_thread);
 	model->add_system_thread(main_thread);
 
@@ -167,6 +167,7 @@ int main()
 	thread_wait_finish();
 
 	delete model;
+	myFree(main_thread);
 
 	DEBUG("Exiting\n");
 	return 0;

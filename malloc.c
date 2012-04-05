@@ -6,6 +6,7 @@
 #endif
 
 #include <dlfcn.h>
+#include <new>
 
 static void * (*real_malloc)(size_t) = NULL;
 static void (*real_free)(void *ptr) = NULL;
@@ -35,4 +36,14 @@ void myFree(void *ptr)
 		__my_alloc_init();
 
 	real_free(ptr);
+}
+
+void * operator new(size_t size)
+{
+	return myMalloc(size);
+}
+
+void operator delete(void *p)
+{
+	myFree(p);
 }

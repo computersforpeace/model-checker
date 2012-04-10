@@ -1,6 +1,8 @@
 #ifndef __MODEL_H__
 #define __MODEL_H__
 
+#include <list>
+
 #include "schedule.h"
 #include "libthreads.h"
 #include "libatomic.h"
@@ -38,10 +40,12 @@ public:
 	void assign_id(struct thread *t);
 
 	void set_current_action(ModelAction *act) { current_action = act; }
+	void check_current_action(void);
 
 private:
 	int used_thread_id;
 	class ModelAction *current_action;
+	std::list<class ModelAction *> action_trace;
 };
 
 extern ModelChecker *model;

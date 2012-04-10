@@ -2,6 +2,7 @@
 
 #include "model.h"
 #include "schedule.h"
+#include "common.h"
 
 ModelChecker *model;
 
@@ -28,6 +29,14 @@ void ModelChecker::assign_id(struct thread *t)
 void ModelChecker::add_system_thread(struct thread *t)
 {
 	this->system_thread = t;
+}
+
+void ModelChecker::check_current_action(void)
+{
+	if (this->current_action)
+		this->action_trace.push_back(this->current_action);
+	else
+		DEBUG("trying to push NULL action...\n");
 }
 
 ModelAction::ModelAction(action_type_t type, memory_order order, void *loc, int value)

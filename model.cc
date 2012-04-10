@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #include "model.h"
 #include "schedule.h"
 
@@ -24,4 +26,42 @@ void ModelChecker::assign_id(struct thread *t)
 void ModelChecker::add_system_thread(struct thread *t)
 {
 	this->system_thread = t;
+}
+
+ModelAction::ModelAction(action_type_t type, memory_order order, void *loc, int value)
+{
+	struct thread *t = thread_current();
+	ModelAction *act = this;
+
+	act->type = type;
+	act->order = order;
+	act->location = loc;
+	act->tid = t->id;
+	act->value = value;
+}
+
+void ModelAction::print(void)
+{
+	const char *type_str;
+	switch (this->type) {
+	case THREAD_CREATE:
+		type_str = "thread create";
+		break;
+	case THREAD_YIELD:
+		type_str = "thread yield";
+		break;
+	case THREAD_JOIN:
+		type_str = "thread join";
+		break;
+	case ATOMIC_READ:
+		type_str = "atomic read";
+		break;
+	case ATOMIC_WRITE:
+		type_str = "atomic write";
+		break;
+	default:
+		type_str = "unknown type";
+	}
+
+	printf("Thread: %d\tAction: %s\tMO: %d\tLoc: %#014zx\tValue: %d\n", tid, type_str, order, (size_t)location, value);
 }

@@ -11,7 +11,7 @@ ModelChecker::ModelChecker()
 	/* First thread created (system_thread) will have id 1 */
 	this->used_thread_id = 0;
 	/* Initialize default scheduler */
-	this->scheduler = new DefaultScheduler();
+	this->scheduler = new Scheduler();
 
 	this->current_action = NULL;
 }

@@ -137,12 +137,13 @@ int thread_create(struct thread *t, void (*start_routine)(), void *arg)
 	return 0;
 }
 
-void thread_join(struct thread *t)
+int thread_join(struct thread *t)
 {
 	int ret = 0;
 	while (t->state != THREAD_COMPLETED && !ret)
 		/* seq_cst is just a 'don't care' parameter */
 		ret = thread_switch_to_master(new ModelAction(THREAD_JOIN, memory_order_seq_cst, NULL, VALUE_NONE));
+	return ret;
 }
 
 int thread_yield(void)

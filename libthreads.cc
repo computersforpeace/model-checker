@@ -98,11 +98,12 @@ static void thread_wait_finish(void)
 	while (!thread_system_next());
 }
 
-int thread_switch_to_master()
+int thread_switch_to_master(ModelAction *act)
 {
 	struct thread *old, *next;
 
 	DBG();
+	model->set_current_action(act);
 	old = thread_current();
 	old->state = THREAD_READY;
 	next = model->system_thread;
@@ -140,12 +141,14 @@ void thread_join(struct thread *t)
 {
 	int ret = 0;
 	while (t->state != THREAD_COMPLETED && !ret)
-		ret = thread_switch_to_master();
+		/* seq_cst is just a 'don't care' parameter */
+		ret = thread_switch_to_master(new ModelAction(THREAD_JOIN, memory_order_seq_cst, NULL, VALUE_NONE));
 }
 
 int thread_yield(void)
 {
-	return thread_switch_to_master();
+	/* seq_cst is just a 'don't care' parameter */
+	return thread_switch_to_master(new ModelAction(THREAD_YIELD, memory_order_seq_cst, NULL, VALUE_NONE));
 }
 
 struct thread *thread_current(void)

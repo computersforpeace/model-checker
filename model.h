@@ -37,8 +37,11 @@ public:
 	void add_system_thread(struct thread *t);
 	void assign_id(struct thread *t);
 
+	void set_current_action(ModelAction *act) { current_action = act; }
+
 private:
 	int used_thread_id;
+	class ModelAction *current_action;
 };
 
 extern ModelChecker *model;

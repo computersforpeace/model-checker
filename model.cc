@@ -11,6 +11,8 @@ ModelChecker::ModelChecker()
 	this->used_thread_id = 0;
 	/* Initialize default scheduler */
 	this->scheduler = new DefaultScheduler();
+
+	this->current_action = NULL;
 }
 
 ModelChecker::~ModelChecker()

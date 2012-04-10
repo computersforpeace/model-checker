@@ -4,6 +4,7 @@
 #include "libthreads.h"
 #include "schedule.h"
 #include "common.h"
+#include "threads_internal.h"
 
 /* global "model" object */
 #include "model.h"
@@ -97,6 +98,17 @@ static void thread_wait_finish(void)
 	while (!thread_system_next());
 }
 
+int thread_switch_to_master()
+{
+	struct thread *old, *next;
+
+	DBG();
+	old = thread_current();
+	old->state = THREAD_READY;
+	next = model->system_thread;
+	return thread_swap(old, next);
+}
+
 /*
  * User program API functions
  */
@@ -126,19 +138,14 @@ int thread_create(struct thread *t, void (*start_routine)(), void *arg)
 
 void thread_join(struct thread *t)
 {
-	while (t->state != THREAD_COMPLETED)
-		thread_yield();
+	int ret = 0;
+	while (t->state != THREAD_COMPLETED && !ret)
+		ret = thread_switch_to_master();
 }
 
 int thread_yield(void)
 {
-	struct thread *old, *next;
-
-	DBG();
-	old = thread_current();
-	old->state = THREAD_READY;
-	next = model->system_thread;
-	return thread_swap(old, next);
+	return thread_switch_to_master();
 }
 
 struct thread *thread_current(void)

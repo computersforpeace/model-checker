@@ -72,6 +72,7 @@ static int thread_system_next(void)
 	struct thread *curr, *next;
 
 	curr = thread_current();
+	model->check_current_action();
 	if (curr) {
 		if (curr->state == THREAD_READY)
 			model->scheduler->add_thread(curr);

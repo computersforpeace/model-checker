@@ -39,6 +39,16 @@ void ModelChecker::check_current_action(void)
 		DEBUG("trying to push NULL action...\n");
 }
 
+void ModelChecker::print_trace(void)
+{
+	std::list<class ModelAction *>::iterator it;
+
+	for (it = action_trace.begin(); it != action_trace.end(); it++) {
+		DBG();
+		(*it)->print();
+	}
+}
+
 ModelAction::ModelAction(action_type_t type, memory_order order, void *loc, int value)
 {
 	struct thread *t = thread_current();

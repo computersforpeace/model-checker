@@ -41,6 +41,7 @@ public:
 
 	void set_current_action(ModelAction *act) { current_action = act; }
 	void check_current_action(void);
+	void print_trace(void);
 
 private:
 	int used_thread_id;

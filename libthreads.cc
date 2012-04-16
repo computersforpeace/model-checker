@@ -21,47 +21,44 @@ static void stack_free(void *stack)
 	free(stack);
 }
 
-static int create_context(struct thread *t)
+Thread *thread_current(void)
+{
+	return model->scheduler->get_current_thread();
+}
+
+int Thread::create_context()
 {
 	int ret;
 
-	memset(&t->context, 0, sizeof(t->context));
-	ret = getcontext(&t->context);
+	ret = getcontext(&context);
 	if (ret)
 		return ret;
 
-	/* t->start_routine == NULL means this is our initial context */
-	if (!t->start_routine)
+	/* start_routine == NULL means this is our initial context */
+	if (!start_routine)
 		return 0;
 
 	/* Initialize new managed context */
-	t->stack = stack_allocate(STACK_SIZE);
-	t->context.uc_stack.ss_sp = t->stack;
-	t->context.uc_stack.ss_size = STACK_SIZE;
-	t->context.uc_stack.ss_flags = 0;
-	t->context.uc_link = &model->system_thread->context;
-	makecontext(&t->context, t->start_routine, 1, t->arg);
+	stack = stack_allocate(STACK_SIZE);
+	context.uc_stack.ss_sp = stack;
+	context.uc_stack.ss_size = STACK_SIZE;
+	context.uc_stack.ss_flags = 0;
+	context.uc_link = &model->system_thread->context;
+	makecontext(&context, start_routine, 1, arg);
 
 	return 0;
 }
 
-static int create_initial_thread(struct thread *t)
+int Thread::swap(Thread *t)
 {
-	memset(t, 0, sizeof(*t));
-	model->assign_id(t);
-	return create_context(t);
+	return swapcontext(&this->context, &t->context);
 }
 
-static int thread_swap(struct thread *t1, struct thread *t2)
+void Thread::dispose()
 {
-	return swapcontext(&t1->context, &t2->context);
-}
-
-static void thread_dispose(struct thread *t)
-{
-	DEBUG("completed thread %d\n", thread_current()->id);
-	t->state = THREAD_COMPLETED;
-	stack_free(t->stack);
+	DEBUG("completed thread %d\n", thread_current()->get_id());
+	state = THREAD_COMPLETED;
+	stack_free(stack);
 }
 
 /*
@@ -69,26 +66,26 @@ static void thread_dispose(struct thread *t)
  */
 static int thread_system_next(void)
 {
-	struct thread *curr, *next;
+	Thread *curr, *next;
 
 	curr = thread_current();
 	model->check_current_action();
 	if (curr) {
-		if (curr->state == THREAD_READY)
+		if (curr->get_state() == THREAD_READY)
 			model->scheduler->add_thread(curr);
-		else if (curr->state == THREAD_RUNNING)
+		else if (curr->get_state() == THREAD_RUNNING)
 			/* Stopped while running; i.e., completed */
-			thread_dispose(curr);
+			curr->dispose();
 		else
 			DEBUG("ERROR: current thread in unexpected state??\n");
 	}
 	next = model->scheduler->next_thread();
 	if (next)
-		next->state = THREAD_RUNNING;
-	DEBUG("(%d, %d)\n", curr ? curr->id : -1, next ? next->id : -1);
+		next->set_state(THREAD_RUNNING);
+	DEBUG("(%d, %d)\n", curr ? curr->get_id() : -1, next ? next->get_id() : -1);
 	if (!next)
 		return 1;
-	return thread_swap(model->system_thread, next);
+	return model->system_thread->swap(next);
 }
 
 static void thread_wait_finish(void)
@@ -99,63 +96,84 @@ static void thread_wait_finish(void)
 	while (!thread_system_next());
 }
 
-int thread_switch_to_master(ModelAction *act)
+int Thread::switch_to_master(ModelAction *act)
 {
-	struct thread *old, *next;
+	Thread *next;
 
 	DBG();
 	model->set_current_action(act);
-	old = thread_current();
-	old->state = THREAD_READY;
+	state = THREAD_READY;
 	next = model->system_thread;
-	return thread_swap(old, next);
+	return swap(next);
+}
+
+Thread::Thread(thrd_t *t, void (*func)(), void *a) {
+	int ret;
+
+	user_thread = t;
+	start_routine = func;
+	arg = a;
+
+	/* Initialize state */
+	ret = create_context();
+	if (ret)
+		printf("Error in create_context\n");
+
+	state = THREAD_CREATED;
+	model->assign_id(this);
+	model->scheduler->add_thread(this);
+}
+
+Thread::Thread(thrd_t *t) {
+	/* system thread */
+	user_thread = t;
+	state = THREAD_CREATED;
+	model->assign_id(this);
+	create_context();
+	model->add_system_thread(this);
+}
+
+static thread_id_t thrd_to_id(thrd_t t)
+{
+	return t;
+}
+
+thread_id_t Thread::get_id()
+{
+	return thrd_to_id(*user_thread);
 }
 
 /*
  * User program API functions
  */
-int thread_create(struct thread *t, void (*start_routine)(), void *arg)
+int thrd_create(thrd_t *t, void (*start_routine)(), void *arg)
 {
-	int ret = 0;
-
+	int ret;
 	DBG();
-
-	memset(t, 0, sizeof(*t));
-	model->assign_id(t);
-	DEBUG("create thread %d\n", t->id);
-
-	t->start_routine = start_routine;
-	t->arg = arg;
-
-	/* Initialize state */
-	ret = create_context(t);
-	if (ret)
-		return ret;
-
-	t->state = THREAD_CREATED;
-
-	model->scheduler->add_thread(t);
-	return 0;
-}
-
-int thread_join(struct thread *t)
-{
-	int ret = 0;
-	while (t->state != THREAD_COMPLETED && !ret)
-		/* seq_cst is just a 'don't care' parameter */
-		ret = thread_switch_to_master(new ModelAction(THREAD_JOIN, memory_order_seq_cst, NULL, VALUE_NONE));
+	ret = model->add_thread(new Thread(t, start_routine, arg));
+	DEBUG("create thread %d\n", thrd_to_id(*t));
 	return ret;
 }
 
-int thread_yield(void)
+int thrd_join(thrd_t t)
 {
-	/* seq_cst is just a 'don't care' parameter */
-	return thread_switch_to_master(new ModelAction(THREAD_YIELD, memory_order_seq_cst, NULL, VALUE_NONE));
+	int ret = 0;
+	Thread *th = model->get_thread(thrd_to_id(t));
+	while (th->get_state() != THREAD_COMPLETED && !ret)
+		/* seq_cst is just a 'don't care' parameter */
+		ret = thread_current()->switch_to_master(new ModelAction(THREAD_JOIN, memory_order_seq_cst, NULL, VALUE_NONE));
+	return ret;
 }
 
-struct thread *thread_current(void)
+int thrd_yield(void)
 {
-	return model->scheduler->get_current_thread();
+	/* seq_cst is just a 'don't care' parameter */
+	return thread_current()->switch_to_master(new ModelAction(THREAD_YIELD, memory_order_seq_cst, NULL, VALUE_NONE));
+}
+
+thrd_t thrd_current(void)
+{
+	return thread_current()->get_thrd_t();
 }
 
 /*
@@ -163,24 +181,22 @@ struct thread *thread_current(void)
  */
 int main()
 {
-	struct thread user_thread;
-	struct thread *main_thread;
+	thrd_t user_thread, main_thread;
+	Thread *th;
 
 	model = new ModelChecker();
 
-	main_thread = (struct thread *)myMalloc(sizeof(*main_thread));
-	create_initial_thread(main_thread);
-	model->add_system_thread(main_thread);
+	th = new Thread(&main_thread);
 
 	/* Start user program */
-	thread_create(&user_thread, &user_main, NULL);
+	thrd_create(&user_thread, &user_main, NULL);
 
 	/* Wait for all threads to complete */
 	thread_wait_finish();
 
 	model->print_trace();
+	delete th;
 	delete model;
-	myFree(main_thread);
 
 	DEBUG("Exiting\n");
 	return 0;

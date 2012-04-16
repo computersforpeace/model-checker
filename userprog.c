@@ -8,7 +8,7 @@ static void a(atomic_int *obj)
 	int i;
 
 	for (i = 0; i < 10; i++) {
-		printf("Thread %d, loop %d\n", thread_current()->id, i);
+		printf("Thread %d, loop %d\n", thrd_current(), i);
 		switch (i % 4) {
 		case 1:
 			atomic_load(obj);
@@ -22,14 +22,14 @@ static void a(atomic_int *obj)
 
 void user_main()
 {
-	struct thread t1, t2;
+	thrd_t t1, t2;
 	atomic_int obj;
 
-	printf("Thread %d creating 2 threads\n", thread_current()->id);
-	thread_create(&t1, (void (*)())&a, &obj);
-	thread_create(&t2, (void (*)())&a, &obj);
+	printf("Creating 2 threads\n");
+	thrd_create(&t1, (void (*)())&a, &obj);
+	thrd_create(&t2, (void (*)())&a, &obj);
 
-	thread_join(&t1);
-	thread_join(&t2);
-	printf("Thread %d is finished\n", thread_current()->id);
+	thrd_join(t1);
+	thrd_join(t2);
+	printf("Thread is finished\n");
 }

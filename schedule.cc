@@ -1,15 +1,15 @@
-#include "libthreads.h"
+#include "threads_internal.h"
 #include "schedule.h"
 #include "common.h"
 #include "model.h"
 
-void Scheduler::add_thread(struct thread *t)
+void Scheduler::add_thread(Thread *t)
 {
-	DEBUG("thread %d\n", t->id);
+	DEBUG("thread %d\n", t->get_id());
 	queue.push(t);
 }
 
-struct thread *Scheduler::next_thread(void)
+Thread *Scheduler::next_thread(void)
 {
 	if (queue.empty())
 		return NULL;
@@ -20,7 +20,7 @@ struct thread *Scheduler::next_thread(void)
 	return current;
 }
 
-struct thread *Scheduler::get_current_thread(void)
+Thread *Scheduler::get_current_thread(void)
 {
 	return current;
 }

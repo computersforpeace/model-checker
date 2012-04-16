@@ -2,10 +2,12 @@
 #define __MODEL_H__
 
 #include <list>
+#include <map>
 
 #include "schedule.h"
 #include "libthreads.h"
 #include "libatomic.h"
+#include "threads_internal.h"
 
 #define VALUE_NONE -1
 
@@ -34,21 +36,27 @@ public:
 	ModelChecker();
 	~ModelChecker();
 	class Scheduler *scheduler;
-	struct thread *system_thread;
+	Thread *system_thread;
 
-	void add_system_thread(struct thread *t);
-	void assign_id(struct thread *t);
+	void add_system_thread(Thread *t);
 
 	void set_current_action(ModelAction *act) { current_action = act; }
 	void check_current_action(void);
 	void print_trace(void);
 
+	int add_thread(Thread *t);
+	Thread *get_thread(thread_id_t tid) { return thread_map[tid]; }
+
+	void assign_id(Thread *t);
 private:
 	int used_thread_id;
 	class ModelAction *current_action;
 	std::list<class ModelAction *> action_trace;
+	std::map<thread_id_t, class Thread *> thread_map;
 };
 
 extern ModelChecker *model;
+
+int thread_switch_to_master(ModelAction *act);
 
 #endif /* __MODEL_H__ */

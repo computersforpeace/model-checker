@@ -21,12 +21,12 @@ ModelChecker::~ModelChecker()
 	delete this->scheduler;
 }
 
-void ModelChecker::assign_id(struct thread *t)
+void ModelChecker::assign_id(Thread *t)
 {
-	t->id = ++this->used_thread_id;
+	t->set_id(++used_thread_id);
 }
 
-void ModelChecker::add_system_thread(struct thread *t)
+void ModelChecker::add_system_thread(Thread *t)
 {
 	this->system_thread = t;
 }
@@ -49,15 +49,21 @@ void ModelChecker::print_trace(void)
 	}
 }
 
+int ModelChecker::add_thread(Thread *t)
+{
+	thread_map[t->get_id()] = t;
+	return 0;
+}
+
 ModelAction::ModelAction(action_type_t type, memory_order order, void *loc, int value)
 {
-	struct thread *t = thread_current();
+	Thread *t = thread_current();
 	ModelAction *act = this;
 
 	act->type = type;
 	act->order = order;
 	act->location = loc;
-	act->tid = t->id;
+	act->tid = t->get_id();
 	act->value = value;
 }
 

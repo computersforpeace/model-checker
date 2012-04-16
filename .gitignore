@@ -3,5 +3,5 @@
 .*.swp
 
 # files in this directory
-/libthreads
+/model
 /tags

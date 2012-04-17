@@ -3,7 +3,7 @@
 
 #include <queue>
 
-#include "threads_internal.h"
+#include "threads.h"
 #include "model.h"
 
 class Scheduler {

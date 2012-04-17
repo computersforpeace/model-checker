@@ -1,5 +1,5 @@
-#ifndef __THREADS_INTERNAL_H__
-#define __THREADS_INTERNAL_H__
+#ifndef __THREADS_H__
+#define __THREADS_H__
 
 #include <ucontext.h>
 
@@ -44,4 +44,4 @@ static inline thread_id_t thrd_to_id(thrd_t t)
 	return t;
 }
 
-#endif /* __THREADS_INTERNAL_H__ */
+#endif /* __THREADS_H__ */

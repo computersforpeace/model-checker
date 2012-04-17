@@ -1,4 +1,4 @@
-#include "threads_internal.h"
+#include "threads.h"
 #include "schedule.h"
 #include "common.h"
 #include "model.h"

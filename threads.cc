@@ -3,7 +3,7 @@
 #include "libthreads.h"
 #include "schedule.h"
 #include "common.h"
-#include "threads_internal.h"
+#include "threads.h"
 
 /* global "model" object */
 #include "model.h"

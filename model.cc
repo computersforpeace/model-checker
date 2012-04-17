@@ -55,6 +55,18 @@ int ModelChecker::add_thread(Thread *t)
 	return 0;
 }
 
+int ModelChecker::switch_to_master(ModelAction *act)
+{
+	Thread *old, *next;
+
+	DBG();
+	old = thread_current();
+	set_current_action(act);
+	old->set_state(THREAD_READY);
+	next = system_thread;
+	return old->swap(next);
+}
+
 ModelAction::ModelAction(action_type_t type, memory_order order, void *loc, int value)
 {
 	Thread *t = thread_current();

@@ -23,14 +23,14 @@ int thrd_join(thrd_t t)
 	Thread *th = model->get_thread(thrd_to_id(t));
 	while (th->get_state() != THREAD_COMPLETED && !ret)
 		/* seq_cst is just a 'don't care' parameter */
-		ret = thread_current()->switch_to_master(new ModelAction(THREAD_JOIN, memory_order_seq_cst, NULL, VALUE_NONE));
+		ret = model->switch_to_master(new ModelAction(THREAD_JOIN, memory_order_seq_cst, NULL, VALUE_NONE));
 	return ret;
 }
 
 int thrd_yield(void)
 {
 	/* seq_cst is just a 'don't care' parameter */
-	return thread_current()->switch_to_master(new ModelAction(THREAD_YIELD, memory_order_seq_cst, NULL, VALUE_NONE));
+	return model->switch_to_master(new ModelAction(THREAD_YIELD, memory_order_seq_cst, NULL, VALUE_NONE));
 }
 
 thrd_t thrd_current(void)

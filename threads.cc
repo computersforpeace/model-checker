@@ -60,17 +60,6 @@ void Thread::dispose()
 	stack_free(stack);
 }
 
-int Thread::switch_to_master(ModelAction *act)
-{
-	Thread *next;
-
-	DBG();
-	model->set_current_action(act);
-	state = THREAD_READY;
-	next = model->system_thread;
-	return swap(next);
-}
-
 Thread::Thread(thrd_t *t, void (*func)(), void *a) {
 	int ret;
 

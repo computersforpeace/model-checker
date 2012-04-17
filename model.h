@@ -48,6 +48,8 @@ public:
 	Thread *get_thread(thread_id_t tid) { return thread_map[tid]; }
 
 	void assign_id(Thread *t);
+
+	int switch_to_master(ModelAction *act);
 private:
 	int used_thread_id;
 	class ModelAction *current_action;

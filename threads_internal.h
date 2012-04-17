@@ -20,7 +20,6 @@ public:
 	Thread(thrd_t *t);
 	int swap(Thread *t);
 	void dispose();
-	int switch_to_master(ModelAction *act);
 
 	thread_state get_state() { return state; }
 	void set_state(thread_state s) { state = s; }

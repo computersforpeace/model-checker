@@ -22,8 +22,9 @@ int thrd_join(thrd_t t)
 	int ret = 0;
 	Thread *th = model->get_thread(thrd_to_id(t));
 	while (th->get_state() != THREAD_COMPLETED && !ret)
-		/* seq_cst is just a 'don't care' parameter */
-		ret = model->switch_to_master(new ModelAction(THREAD_JOIN, memory_order_seq_cst, NULL, VALUE_NONE));
+		ret = model->switch_to_master(NULL);
+	/* seq_cst is just a 'don't care' parameter */
+	ret = model->switch_to_master(new ModelAction(THREAD_JOIN, memory_order_seq_cst, NULL, VALUE_NONE));
 	return ret;
 }
 

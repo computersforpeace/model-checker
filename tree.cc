@@ -13,7 +13,6 @@ TreeNode::~TreeNode() {
 
 	for (it = children.begin(); it != children.end(); it++)
 		delete it->second;
-	delete &children;
 }
 
 TreeNode *TreeNode::exploreChild(tree_t id)

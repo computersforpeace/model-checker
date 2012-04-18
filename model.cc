@@ -14,11 +14,15 @@ ModelChecker::ModelChecker()
 	this->scheduler = new Scheduler();
 
 	this->current_action = NULL;
+
+	rootNode = new TreeNode(NULL);
+	currentNode = rootNode;
 }
 
 ModelChecker::~ModelChecker()
 {
 	delete this->scheduler;
+	delete rootNode;
 }
 
 void ModelChecker::assign_id(Thread *t)

@@ -8,6 +8,7 @@
 #include "libthreads.h"
 #include "libatomic.h"
 #include "threads.h"
+#include "tree.h"
 
 #define VALUE_NONE -1
 
@@ -55,6 +56,7 @@ private:
 	class ModelAction *current_action;
 	std::list<class ModelAction *> action_trace;
 	std::map<thread_id_t, class Thread *> thread_map;
+	class TreeNode *rootNode, *currentNode;
 };
 
 extern ModelChecker *model;

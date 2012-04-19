@@ -17,7 +17,7 @@ ModelChecker::ModelChecker()
 
 	rootNode = new TreeNode(NULL);
 	currentNode = rootNode;
-	action_trace = new std::list<class ModelAction *>();
+	action_trace = new action_list_t();
 }
 
 ModelChecker::~ModelChecker()
@@ -53,7 +53,7 @@ ModelAction *ModelChecker::get_last_conflict(ModelAction *act)
 		default:
 			break;
 	}
-	std::list<class ModelAction *>::reverse_iterator rit;
+	action_list_t::reverse_iterator rit;
 	for (rit = action_trace->rbegin(); rit != action_trace->rend(); rit++) {
 		ModelAction *prev = *rit;
 		if (prev->get_location() != loc)
@@ -112,7 +112,7 @@ void ModelChecker::check_current_action(void)
 
 void ModelChecker::print_trace(void)
 {
-	std::list<class ModelAction *>::iterator it;
+	action_list_t::iterator it;
 
 	printf("\n");
 	printf("---------------------------------------------------------------------\n");

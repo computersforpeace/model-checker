@@ -20,6 +20,8 @@ typedef enum action_type {
 	ATOMIC_WRITE
 } action_type_t;
 
+typedef std::list<class ModelAction *> action_list_t;
+
 class ModelAction {
 public:
 	ModelAction(action_type_t type, memory_order order, void *loc, int value);
@@ -65,7 +67,7 @@ public:
 private:
 	int used_thread_id;
 	class ModelAction *current_action;
-	std::list<class ModelAction *> *action_trace;
+	action_list_t *action_trace;
 	std::map<thread_id_t, class Thread *> thread_map;
 	class TreeNode *rootNode, *currentNode;
 };

@@ -51,6 +51,7 @@ public:
 	void add_system_thread(Thread *t);
 
 	void set_current_action(ModelAction *act) { current_action = act; }
+	ModelAction *get_last_conflict(ModelAction *act);
 	void check_current_action(void);
 	void set_backtracking(ModelAction *act);
 	void print_trace(void);

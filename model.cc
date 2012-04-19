@@ -35,6 +35,34 @@ void ModelChecker::add_system_thread(Thread *t)
 	this->system_thread = t;
 }
 
+void ModelChecker::set_backtracking(ModelAction *act)
+{
+	ModelAction *prev;
+	TreeNode *node;
+
+	prev = get_last_conflict(act);
+	if (prev == NULL)
+		return;
+
+	node = prev->get_node();
+
+	/* Check if this has been explored already */
+	if (node->hasBeenExplored(act->get_tid()))
+		return;
+	/* If this is a new backtracking point, mark the tree */
+	if (node->setBacktrack(act->get_tid()) != 0)
+		return;
+
+	printf("Setting backtrack: conflict = %d, instead tid = %d\n",
+			prev->get_tid(), act->get_tid());
+	prev->print();
+	act->print();
+
+	/* FIXME */
+	//Backtrack *back = new Backtrack(prev, actionList);
+	//backtrackList->Append(back);
+}
+
 void ModelChecker::check_current_action(void)
 {
 	ModelAction *next = this->current_action;

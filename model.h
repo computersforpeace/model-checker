@@ -86,6 +86,7 @@ private:
 	action_list_t *action_trace;
 	std::map<thread_id_t, class Thread *> thread_map;
 	class TreeNode *rootNode, *currentNode;
+	std::list<class Backtrack *> backtrack_list;
 };
 
 extern ModelChecker *model;

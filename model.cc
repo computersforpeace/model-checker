@@ -91,9 +91,8 @@ void ModelChecker::set_backtracking(ModelAction *act)
 	prev->print();
 	act->print();
 
-	/* FIXME */
-	//Backtrack *back = new Backtrack(prev, actionList);
-	//backtrackList->Append(back);
+	Backtrack *back = new Backtrack(prev, action_trace);
+	backtrack_list.push_back(back);
 }
 
 void ModelChecker::check_current_action(void)

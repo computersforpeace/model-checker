@@ -43,6 +43,22 @@ private:
 	TreeNode *node;
 };
 
+class Backtrack {
+public:
+	Backtrack(ModelAction *d, action_list_t *t) {
+		diverge = d;
+		actionTrace = t;
+		//currentIterator = actionTrace->getFirst();
+	}
+	ModelAction *get_diverge() { return diverge; }
+	action_list_t *get_trace() { return actionTrace; }
+private:
+	ModelAction *diverge;
+	/* unused for now; will be used when re-exploring this path? */
+	//MyListElement *currentIterator;
+	action_list_t *actionTrace;
+};
+
 class ModelChecker {
 public:
 	ModelChecker();

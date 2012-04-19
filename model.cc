@@ -112,10 +112,15 @@ void ModelChecker::print_trace(void)
 {
 	std::list<class ModelAction *>::iterator it;
 
+	printf("\n");
+	printf("---------------------------------------------------------------------\n");
+	printf("Total nodes created: %d\n\n", TreeNode::getTotalNodes());
+
 	for (it = action_trace.begin(); it != action_trace.end(); it++) {
 		DBG();
 		(*it)->print();
 	}
+	printf("---------------------------------------------------------------------\n");
 }
 
 int ModelChecker::add_thread(Thread *t)

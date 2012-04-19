@@ -34,7 +34,7 @@ TreeNode *TreeNode::exploreChild(tree_t id)
 
 int TreeNode::setBacktrack(tree_t id)
 {
-	if (backtrack.find(id) == backtrack.end())
+	if (backtrack.find(id) != backtrack.end())
 		return 1;
 	backtrack.insert(id);
 	return 0;

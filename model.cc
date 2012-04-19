@@ -37,10 +37,16 @@ void ModelChecker::add_system_thread(Thread *t)
 
 void ModelChecker::check_current_action(void)
 {
-	if (this->current_action)
-		this->action_trace.push_back(this->current_action);
-	else
+	ModelAction *next = this->current_action;
+
+	if (!next) {
 		DEBUG("trying to push NULL action...\n");
+		return;
+	}
+	next->set_node(currentNode);
+	set_backtracking(next);
+	currentNode = currentNode->exploreChild(next->get_tid());
+	this->action_trace.push_back(next);
 }
 
 void ModelChecker::print_trace(void)

@@ -52,6 +52,7 @@ public:
 
 	void set_current_action(ModelAction *act) { current_action = act; }
 	void check_current_action(void);
+	void set_backtracking(ModelAction *act);
 	void print_trace(void);
 
 	int add_thread(Thread *t);

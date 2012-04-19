@@ -43,7 +43,7 @@ int TreeNode::setBacktrack(tree_t id)
 tree_t TreeNode::getNextBacktrack()
 {
 	if (backtrack.empty())
-		return NULL;
+		return TREE_T_NONE;
 	return *backtrack.begin();
 }
 

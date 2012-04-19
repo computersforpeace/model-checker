@@ -35,6 +35,37 @@ void ModelChecker::add_system_thread(Thread *t)
 	this->system_thread = t;
 }
 
+ModelAction *ModelChecker::get_last_conflict(ModelAction *act)
+{
+	void *loc = act->get_location();
+	action_type type = act->get_type();
+	thread_id_t id = act->get_tid();
+
+	switch (type) {
+		case THREAD_CREATE:
+		case THREAD_YIELD:
+		case THREAD_JOIN:
+			return NULL;
+		case ATOMIC_READ:
+		case ATOMIC_WRITE:
+		default:
+			break;
+	}
+	std::list<class ModelAction *>::reverse_iterator rit;
+	for (rit = action_trace.rbegin(); rit != action_trace.rend(); rit++) {
+		ModelAction *prev = *rit;
+		if (prev->get_location() != loc)
+			continue;
+		if (type == ATOMIC_READ && prev->get_type() != ATOMIC_WRITE)
+			continue;
+		/* Conflict from the same thread is not really a conflict */
+		if (id == prev->get_tid())
+			return NULL;
+		return prev;
+	}
+	return NULL;
+}
+
 void ModelChecker::set_backtracking(ModelAction *act)
 {
 	ModelAction *prev;

@@ -17,10 +17,12 @@ ModelChecker::ModelChecker()
 
 	rootNode = new TreeNode(NULL);
 	currentNode = rootNode;
+	action_trace = new std::list<class ModelAction *>();
 }
 
 ModelChecker::~ModelChecker()
 {
+	delete action_trace;
 	delete this->scheduler;
 	delete rootNode;
 }
@@ -52,7 +54,7 @@ ModelAction *ModelChecker::get_last_conflict(ModelAction *act)
 			break;
 	}
 	std::list<class ModelAction *>::reverse_iterator rit;
-	for (rit = action_trace.rbegin(); rit != action_trace.rend(); rit++) {
+	for (rit = action_trace->rbegin(); rit != action_trace->rend(); rit++) {
 		ModelAction *prev = *rit;
 		if (prev->get_location() != loc)
 			continue;
@@ -105,7 +107,7 @@ void ModelChecker::check_current_action(void)
 	next->set_node(currentNode);
 	set_backtracking(next);
 	currentNode = currentNode->exploreChild(next->get_tid());
-	this->action_trace.push_back(next);
+	this->action_trace->push_back(next);
 }
 
 void ModelChecker::print_trace(void)
@@ -116,7 +118,7 @@ void ModelChecker::print_trace(void)
 	printf("---------------------------------------------------------------------\n");
 	printf("Total nodes created: %d\n\n", TreeNode::getTotalNodes());
 
-	for (it = action_trace.begin(); it != action_trace.end(); it++) {
+	for (it = action_trace->begin(); it != action_trace->end(); it++) {
 		DBG();
 		(*it)->print();
 	}

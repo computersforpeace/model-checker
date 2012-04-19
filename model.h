@@ -65,7 +65,7 @@ public:
 private:
 	int used_thread_id;
 	class ModelAction *current_action;
-	std::list<class ModelAction *> action_trace;
+	std::list<class ModelAction *> *action_trace;
 	std::map<thread_id_t, class Thread *> thread_map;
 	class TreeNode *rootNode, *currentNode;
 };

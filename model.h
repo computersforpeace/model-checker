@@ -24,12 +24,21 @@ class ModelAction {
 public:
 	ModelAction(action_type_t type, memory_order order, void *loc, int value);
 	void print(void);
+
+	thread_id_t get_tid() { return tid; }
+	action_type get_type() { return type; }
+	memory_order get_mo() { return order; }
+	void *get_location() { return location; }
+
+	TreeNode *get_node() { return node; }
+	void set_node(TreeNode *n) { node = n; }
 private:
 	action_type type;
 	memory_order order;
 	void *location;
 	thread_id_t tid;
 	int value;
+	TreeNode *node;
 };
 
 class ModelChecker {

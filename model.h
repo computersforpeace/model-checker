@@ -3,6 +3,7 @@
 
 #include <list>
 #include <map>
+#include <cstddef>
 
 #include "schedule.h"
 #include "libthreads.h"

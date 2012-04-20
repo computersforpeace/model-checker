@@ -74,9 +74,7 @@ public:
 	void add_system_thread(Thread *t);
 
 	void set_current_action(ModelAction *act) { current_action = act; }
-	ModelAction *get_last_conflict(ModelAction *act);
 	void check_current_action(void);
-	void set_backtracking(ModelAction *act);
 	void print_trace(void);
 	Thread *schedule_next_thread();
 
@@ -89,6 +87,8 @@ public:
 private:
 	int used_thread_id;
 
+	ModelAction *get_last_conflict(ModelAction *act);
+	void set_backtracking(ModelAction *act);
 	thread_id_t advance_backtracking_state();
 	thread_id_t get_next_replay_thread();
 

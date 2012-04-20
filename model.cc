@@ -50,6 +50,49 @@ Thread *ModelChecker::schedule_next_thread()
 	return t;
 }
 
+/*
+ * get_next_replay_thread() - Choose the next thread in the replay sequence
+ *
+ * If we've reached the 'diverge' point, then we pick a thread from the
+ *   backtracking set.
+ * Otherwise, we simply return the next thread in the sequence.
+ */
+thread_id_t ModelChecker::get_next_replay_thread()
+{
+	ModelAction *next;
+	thread_id_t tid;
+
+	next = exploring->get_state();
+
+	if (next == exploring->get_diverge()) {
+		TreeNode *node = next->get_node();
+
+		/* Reached divergence point; discard our current 'exploring' */
+		DEBUG("*** Discard 'Backtrack' object ***\n");
+		tid = node->getNextBacktrack();
+		delete exploring;
+		exploring = NULL;
+	} else {
+		tid = next->get_tid();
+	}
+	DEBUG("*** ModelChecker chose next thread = %d ***\n", tid);
+	return tid;
+}
+
+thread_id_t ModelChecker::advance_backtracking_state()
+{
+	/* Have we completed exploring the preselected path? */
+	if (exploring == NULL)
+		return THREAD_ID_T_NONE;
+
+	/* Else, we are trying to replay an execution */
+	exploring->advance_state();
+	if (exploring->get_state() == NULL)
+		DEBUG("*** error: reached end of backtrack trace\n");
+
+	return get_next_replay_thread();
+}
+
 ModelAction *ModelChecker::get_last_conflict(ModelAction *act)
 {
 	void *loc = act->get_location();
@@ -116,6 +159,7 @@ void ModelChecker::check_current_action(void)
 		DEBUG("trying to push NULL action...\n");
 		return;
 	}
+	nextThread = advance_backtracking_state();
 	next->set_node(currentNode);
 	set_backtracking(next);
 	currentNode = currentNode->exploreChild(next->get_tid());

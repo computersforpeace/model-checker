@@ -49,15 +49,19 @@ public:
 	Backtrack(ModelAction *d, action_list_t *t) {
 		diverge = d;
 		actionTrace = t;
-		//currentIterator = actionTrace->getFirst();
+		iter = actionTrace->begin();
 	}
 	ModelAction *get_diverge() { return diverge; }
 	action_list_t *get_trace() { return actionTrace; }
+	void advance_state() { iter++; }
+	ModelAction *get_state() {
+		return iter == actionTrace->end() ? NULL : *iter;
+	}
 private:
 	ModelAction *diverge;
-	/* unused for now; will be used when re-exploring this path? */
-	//MyListElement *currentIterator;
 	action_list_t *actionTrace;
+	/* points to position in actionTrace as we replay */
+	action_list_t::iterator iter;
 };
 
 class ModelChecker {

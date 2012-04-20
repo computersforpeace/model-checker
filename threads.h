@@ -12,8 +12,6 @@ typedef enum thread_state {
 	THREAD_COMPLETED
 } thread_state;
 
-class ModelAction;
-
 class Thread {
 public:
 	Thread(thrd_t *t, void (*func)(), void *a);

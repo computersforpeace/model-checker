@@ -14,6 +14,8 @@ ModelChecker::ModelChecker()
 	this->scheduler = new Scheduler();
 
 	this->current_action = NULL;
+	this->exploring = NULL;
+	this->nextThread = THREAD_ID_T_NONE;
 
 	rootNode = new TreeNode(NULL);
 	currentNode = rootNode;

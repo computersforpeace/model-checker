@@ -78,6 +78,7 @@ public:
 	void check_current_action(void);
 	void set_backtracking(ModelAction *act);
 	void print_trace(void);
+	Thread *schedule_next_thread();
 
 	int add_thread(Thread *t);
 	Thread *get_thread(thread_id_t tid) { return thread_map[tid]; }
@@ -87,7 +88,14 @@ public:
 	int switch_to_master(ModelAction *act);
 private:
 	int used_thread_id;
+
+	thread_id_t advance_backtracking_state();
+	thread_id_t get_next_replay_thread();
+
 	class ModelAction *current_action;
+	Backtrack *exploring;
+	thread_id_t nextThread;
+
 	action_list_t *action_trace;
 	std::map<thread_id_t, class Thread *> thread_map;
 	class TreeNode *rootNode, *currentNode;

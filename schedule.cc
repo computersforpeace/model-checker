@@ -11,6 +11,12 @@ void Scheduler::add_thread(Thread *t)
 
 Thread *Scheduler::next_thread(void)
 {
+	Thread *t = model->schedule_next_thread();
+
+	if (t != NULL) {
+		readyList.remove(t);
+		return t;
+	}
 	if (readyList.empty())
 		return NULL;
 

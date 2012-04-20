@@ -39,6 +39,17 @@ void ModelChecker::add_system_thread(Thread *t)
 	this->system_thread = t;
 }
 
+Thread *ModelChecker::schedule_next_thread()
+{
+	Thread *t;
+	if (nextThread == THREAD_ID_T_NONE)
+		return NULL;
+	t = thread_map[nextThread];
+	if (t == NULL)
+		DEBUG("*** error: thread not in thread_map: id = %d\n", nextThread);
+	return t;
+}
+
 ModelAction *ModelChecker::get_last_conflict(ModelAction *act)
 {
 	void *loc = act->get_location();

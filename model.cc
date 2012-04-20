@@ -109,6 +109,7 @@ ModelAction *ModelChecker::get_last_conflict(ModelAction *act)
 		default:
 			break;
 	}
+	/* linear search: from most recent to oldest */
 	action_list_t::reverse_iterator rit;
 	for (rit = action_trace->rbegin(); rit != action_trace->rend(); rit++) {
 		ModelAction *prev = *rit;

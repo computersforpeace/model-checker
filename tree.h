@@ -3,7 +3,7 @@
 #include "threads.h"
 
 typedef thread_id_t tree_t;
-#define TREE_T_NONE	-1
+#define TREE_T_NONE	THREAD_ID_T_NONE
 
 /*
  * An n-ary tree

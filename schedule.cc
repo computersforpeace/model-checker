@@ -6,16 +6,16 @@
 void Scheduler::add_thread(Thread *t)
 {
 	DEBUG("thread %d\n", t->get_id());
-	queue.push(t);
+	readyList.push_back(t);
 }
 
 Thread *Scheduler::next_thread(void)
 {
-	if (queue.empty())
+	if (readyList.empty())
 		return NULL;
 
-	current = queue.front();
-	queue.pop();
+	current = readyList.front();
+	readyList.pop_front();
 
 	return current;
 }

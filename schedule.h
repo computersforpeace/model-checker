@@ -11,6 +11,7 @@ public:
 	void add_thread(Thread *t);
 	Thread * next_thread(void);
 	Thread * get_current_thread(void);
+	void print();
 private:
 	std::list<Thread *> readyList;
 	Thread *current;

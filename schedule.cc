@@ -13,19 +13,19 @@ Thread *Scheduler::next_thread(void)
 {
 	Thread *t = model->schedule_next_thread();
 
-	print();
-
 	if (t != NULL) {
 		readyList.remove(t);
-		return t;
+	} else if (readyList.empty()) {
+		t = NULL;
+	} else {
+		t = readyList.front();
+		current = t;
+		readyList.pop_front();
 	}
-	if (readyList.empty())
-		return NULL;
 
-	current = readyList.front();
-	readyList.pop_front();
+	print();
 
-	return current;
+	return t;
 }
 
 Thread *Scheduler::get_current_thread(void)

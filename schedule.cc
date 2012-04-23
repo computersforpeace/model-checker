@@ -40,7 +40,7 @@ void Scheduler::print()
 		printf("Current thread: %d\n", current->get_id());
 	else
 		printf("No current thread\n");
-	printf("# Threads in ready list: %ld\n", readyList.size());
+	printf("Num. threads in ready list: %ld\n", readyList.size());
 
 	std::list<Thread *>::iterator it;
 	for (it = readyList.begin(); it != readyList.end(); it++)

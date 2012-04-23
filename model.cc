@@ -175,6 +175,10 @@ void ModelChecker::print_trace(void)
 	printf("---------------------------------------------------------------------\n");
 	printf("Total nodes created: %d\n\n", TreeNode::getTotalNodes());
 
+	scheduler->print();
+
+	printf("\nTrace:\n\n");
+
 	for (it = action_trace->begin(); it != action_trace->end(); it++) {
 		DBG();
 		(*it)->print();

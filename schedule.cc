@@ -14,6 +14,7 @@ Thread *Scheduler::next_thread(void)
 	Thread *t = model->schedule_next_thread();
 
 	if (t != NULL) {
+		current = t;
 		readyList.remove(t);
 	} else if (readyList.empty()) {
 		t = NULL;

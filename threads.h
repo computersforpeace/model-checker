@@ -16,6 +16,8 @@ typedef enum thread_state {
 
 class Thread {
 public:
+	void * operator new(size_t size);
+	void operator delete(void *ptr);
 	Thread(thrd_t *t, void (*func)(), void *a);
 	Thread(thrd_t *t);
 	~Thread();

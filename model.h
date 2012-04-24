@@ -81,7 +81,7 @@ public:
 	int add_thread(Thread *t);
 	Thread * get_thread(thread_id_t tid) { return thread_map[tid]; }
 
-	void assign_id(Thread *t);
+	int get_next_id();
 
 	int switch_to_master(ModelAction *act);
 

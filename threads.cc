@@ -73,7 +73,8 @@ Thread::Thread(thrd_t *t, void (*func)(), void *a) {
 		printf("Error in create_context\n");
 
 	state = THREAD_CREATED;
-	model->assign_id(this);
+	id = model->get_next_id();
+	*user_thread = id;
 	model->scheduler->add_thread(this);
 }
 
@@ -84,14 +85,15 @@ Thread::Thread(thrd_t *t) {
 	arg = NULL;
 
 	state = THREAD_CREATED;
-	model->assign_id(this);
+	id = model->get_next_id();
+	*user_thread = id;
 	create_context();
 	model->add_system_thread(this);
 }
 
 thread_id_t Thread::get_id()
 {
-	return thrd_to_id(*user_thread);
+	return id;
 }
 
 /*

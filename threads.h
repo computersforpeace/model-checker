@@ -24,7 +24,6 @@ public:
 	thread_state get_state() { return state; }
 	void set_state(thread_state s) { state = s; }
 	thread_id_t get_id();
-	void set_id(thread_id_t i) { *user_thread = i; }
 	thrd_t get_thrd_t() { return *user_thread; }
 private:
 	int create_context();
@@ -34,6 +33,7 @@ private:
 	ucontext_t context;
 	void *stack;
 	thrd_t *user_thread;
+	thread_id_t id;
 	thread_state state;
 };
 

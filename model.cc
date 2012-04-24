@@ -30,9 +30,9 @@ ModelChecker::~ModelChecker()
 	delete rootNode;
 }
 
-void ModelChecker::assign_id(Thread *t)
+int ModelChecker::get_next_id()
 {
-	t->set_id(++used_thread_id);
+	return ++used_thread_id;
 }
 
 void ModelChecker::add_system_thread(Thread *t)

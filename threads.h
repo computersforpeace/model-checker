@@ -18,8 +18,9 @@ class Thread {
 public:
 	Thread(thrd_t *t, void (*func)(), void *a);
 	Thread(thrd_t *t);
+	~Thread();
+	void complete();
 	int swap(Thread *t);
-	void dispose();
 
 	thread_state get_state() { return state; }
 	void set_state(thread_state s) { state = s; }

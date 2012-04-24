@@ -53,11 +53,13 @@ int Thread::swap(Thread *t)
 	return swapcontext(&this->context, &t->context);
 }
 
-void Thread::dispose()
+void Thread::complete()
 {
-	DEBUG("completed thread %d\n", thread_current()->get_id());
-	state = THREAD_COMPLETED;
-	stack_free(stack);
+	if (state != THREAD_COMPLETED) {
+		DEBUG("completed thread %d\n", get_id());
+		state = THREAD_COMPLETED;
+		stack_free(stack);
+	}
 }
 
 Thread::Thread(thrd_t *t, void (*func)(), void *a) {
@@ -90,6 +92,12 @@ Thread::Thread(thrd_t *t) {
 	model->add_system_thread(this);
 }
 
+Thread::~Thread()
+{
+	complete();
+	model->remove_thread(this);
+}
+
 thread_id_t Thread::get_id()
 {
 	return id;
@@ -109,7 +117,7 @@ static int thread_system_next(void)
 			model->scheduler->add_thread(curr);
 		else if (curr->get_state() == THREAD_RUNNING)
 			/* Stopped while running; i.e., completed */
-			curr->dispose();
+			curr->complete();
 		else
 			DEBUG("ERROR: current thread in unexpected state??\n");
 	}

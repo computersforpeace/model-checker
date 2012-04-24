@@ -30,6 +30,21 @@ ModelChecker::~ModelChecker()
 	delete rootNode;
 }
 
+void ModelChecker::reset_to_initial_state()
+{
+	DEBUG("+++ Resetting to initial state +++\n");
+	std::map<thread_id_t, class Thread *>::iterator it;
+	for (it = thread_map.begin(); it != thread_map.end(); it++) {
+		delete (*it).second;
+	}
+	thread_map.clear();
+	action_trace = new action_list_t();
+	currentNode = rootNode;
+	current_action = NULL;
+	used_thread_id = 1; // ?
+	/* scheduler reset ? */
+}
+
 int ModelChecker::get_next_id()
 {
 	return ++used_thread_id;
@@ -161,6 +176,16 @@ void ModelChecker::set_backtracking(ModelAction *act)
 
 	Backtrack *back = new Backtrack(prev, action_trace);
 	backtrack_list.push_back(back);
+}
+
+Backtrack * ModelChecker::get_next_backtrack()
+{
+	Backtrack *next;
+	if (backtrack_list.empty())
+		return NULL;
+	next = backtrack_list.back();
+	backtrack_list.pop_back();
+	return next;
 }
 
 void ModelChecker::check_current_action(void)

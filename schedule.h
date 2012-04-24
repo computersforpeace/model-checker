@@ -9,6 +9,7 @@
 class Scheduler {
 public:
 	void add_thread(Thread *t);
+	void remove_thread(Thread *t);
 	Thread * next_thread(void);
 	Thread * get_current_thread(void);
 	void print();

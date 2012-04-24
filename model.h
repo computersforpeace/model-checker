@@ -79,6 +79,7 @@ public:
 	Thread * schedule_next_thread();
 
 	int add_thread(Thread *t);
+	void remove_thread(Thread *t);
 	Thread * get_thread(thread_id_t tid) { return thread_map[tid]; }
 
 	int get_next_id();

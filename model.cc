@@ -205,6 +205,11 @@ int ModelChecker::add_thread(Thread *t)
 	return 0;
 }
 
+void ModelChecker::remove_thread(Thread *t)
+{
+	scheduler->remove_thread(t);
+}
+
 int ModelChecker::switch_to_master(ModelAction *act)
 {
 	Thread *old, *next;

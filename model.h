@@ -88,6 +88,7 @@ public:
 	bool next_execution();
 private:
 	int used_thread_id;
+	int num_executions;
 
 	ModelAction *get_last_conflict(ModelAction *act);
 	void set_backtracking(ModelAction *act);

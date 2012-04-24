@@ -13,6 +13,7 @@ ModelChecker::ModelChecker()
 	/* Initialize default scheduler */
 	this->scheduler = new Scheduler();
 
+	num_executions = 0;
 	this->current_action = NULL;
 	this->exploring = NULL;
 	this->nextThread = THREAD_ID_T_NONE;
@@ -178,6 +179,7 @@ void ModelChecker::print_trace(void)
 
 	printf("\n");
 	printf("---------------------------------------------------------------------\n");
+	printf("Number of executions: %d\n", num_executions);
 	printf("Total nodes created: %d\n\n", TreeNode::getTotalNodes());
 
 	scheduler->print();

@@ -93,6 +93,11 @@ thread_id_t ModelChecker::advance_backtracking_state()
 	return get_next_replay_thread();
 }
 
+bool ModelChecker::next_execution()
+{
+	return false;
+}
+
 ModelAction *ModelChecker::get_last_conflict(ModelAction *act)
 {
 	void *loc = act->get_location();

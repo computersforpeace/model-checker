@@ -138,13 +138,16 @@ int main()
 
 	th = new Thread(&main_thread);
 
-	/* Start user program */
-	thrd_create(&user_thread, &user_main, NULL);
+	do {
+		/* Start user program */
+		thrd_create(&user_thread, &user_main, NULL);
 
-	/* Wait for all threads to complete */
-	thread_wait_finish();
+		/* Wait for all threads to complete */
+		thread_wait_finish();
 
-	model->print_trace();
+		model->print_trace();
+	} while (model->next_execution());
+
 	delete th;
 	delete model;
 

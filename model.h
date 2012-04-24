@@ -84,6 +84,8 @@ public:
 	void assign_id(Thread *t);
 
 	int switch_to_master(ModelAction *act);
+
+	bool next_execution();
 private:
 	int used_thread_id;
 

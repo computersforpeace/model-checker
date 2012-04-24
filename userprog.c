@@ -26,8 +26,8 @@ void user_main()
 	atomic_int obj;
 
 	printf("Creating 2 threads\n");
-	thrd_create(&t1, (void (*)())&a, &obj);
-	thrd_create(&t2, (void (*)())&a, &obj);
+	thrd_create(&t1, (thrd_start_t)&a, &obj);
+	thrd_create(&t2, (thrd_start_t)&a, &obj);
 
 	thrd_join(t1);
 	thrd_join(t2);

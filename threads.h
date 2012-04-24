@@ -37,7 +37,7 @@ private:
 	thread_state state;
 };
 
-Thread *thread_current();
+Thread * thread_current();
 
 static inline thread_id_t thrd_to_id(thrd_t t)
 {

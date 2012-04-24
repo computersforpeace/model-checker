@@ -9,7 +9,7 @@ void Scheduler::add_thread(Thread *t)
 	readyList.push_back(t);
 }
 
-Thread *Scheduler::next_thread(void)
+Thread * Scheduler::next_thread(void)
 {
 	Thread *t = model->schedule_next_thread();
 
@@ -29,7 +29,7 @@ Thread *Scheduler::next_thread(void)
 	return t;
 }
 
-Thread *Scheduler::get_current_thread(void)
+Thread * Scheduler::get_current_thread(void)
 {
 	return current;
 }

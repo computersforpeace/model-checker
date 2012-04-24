@@ -16,12 +16,12 @@ public:
 	TreeNode(TreeNode *par);
 	~TreeNode();
 	bool hasBeenExplored(tree_t id) { return children.find(id) != children.end(); }
-	TreeNode *exploreChild(tree_t id);
+	TreeNode * exploreChild(tree_t id);
 	tree_t getNextBacktrack();
 
 	/* Return 1 if already in backtrack, 0 otherwise */
 	int setBacktrack(tree_t id);
-	TreeNode *getRoot();
+	TreeNode * getRoot();
 	static int getTotalNodes() { return TreeNode::totalNodes; }
 private:
 	TreeNode *parent;

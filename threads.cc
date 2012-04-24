@@ -10,7 +10,7 @@
 
 #define STACK_SIZE (1024 * 1024)
 
-static void *stack_allocate(size_t size)
+static void * stack_allocate(size_t size)
 {
 	return malloc(size);
 }
@@ -20,7 +20,7 @@ static void stack_free(void *stack)
 	free(stack);
 }
 
-Thread *thread_current(void)
+Thread * thread_current(void)
 {
 	return model->scheduler->get_current_thread();
 }

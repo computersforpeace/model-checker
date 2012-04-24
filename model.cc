@@ -40,7 +40,7 @@ void ModelChecker::add_system_thread(Thread *t)
 	this->system_thread = t;
 }
 
-Thread *ModelChecker::schedule_next_thread()
+Thread * ModelChecker::schedule_next_thread()
 {
 	Thread *t;
 	if (nextThread == THREAD_ID_T_NONE)
@@ -96,10 +96,15 @@ thread_id_t ModelChecker::advance_backtracking_state()
 
 bool ModelChecker::next_execution()
 {
-	return false;
+	num_executions++;
+	if ((exploring = model->get_next_backtrack()) == NULL)
+		return false;
+	model->reset_to_initial_state();
+	nextThread = get_next_replay_thread();
+	return true;
 }
 
-ModelAction *ModelChecker::get_last_conflict(ModelAction *act)
+ModelAction * ModelChecker::get_last_conflict(ModelAction *act)
 {
 	void *loc = act->get_location();
 	action_type type = act->get_type();

@@ -31,9 +31,9 @@ public:
 	thread_id_t get_tid() { return tid; }
 	action_type get_type() { return type; }
 	memory_order get_mo() { return order; }
-	void *get_location() { return location; }
+	void * get_location() { return location; }
 
-	TreeNode *get_node() { return node; }
+	TreeNode * get_node() { return node; }
 	void set_node(TreeNode *n) { node = n; }
 private:
 	action_type type;
@@ -51,10 +51,10 @@ public:
 		actionTrace = t;
 		iter = actionTrace->begin();
 	}
-	ModelAction *get_diverge() { return diverge; }
-	action_list_t *get_trace() { return actionTrace; }
+	ModelAction * get_diverge() { return diverge; }
+	action_list_t * get_trace() { return actionTrace; }
 	void advance_state() { iter++; }
-	ModelAction *get_state() {
+	ModelAction * get_state() {
 		return iter == actionTrace->end() ? NULL : *iter;
 	}
 private:
@@ -76,10 +76,10 @@ public:
 	void set_current_action(ModelAction *act) { current_action = act; }
 	void check_current_action(void);
 	void print_trace(void);
-	Thread *schedule_next_thread();
+	Thread * schedule_next_thread();
 
 	int add_thread(Thread *t);
-	Thread *get_thread(thread_id_t tid) { return thread_map[tid]; }
+	Thread * get_thread(thread_id_t tid) { return thread_map[tid]; }
 
 	void assign_id(Thread *t);
 
@@ -90,7 +90,7 @@ private:
 	int used_thread_id;
 	int num_executions;
 
-	ModelAction *get_last_conflict(ModelAction *act);
+	ModelAction * get_last_conflict(ModelAction *act);
 	void set_backtracking(ModelAction *act);
 	thread_id_t advance_backtracking_state();
 	thread_id_t get_next_replay_thread();

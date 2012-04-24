@@ -22,7 +22,7 @@ static void __my_alloc_init(void)
 	}
 }
 
-void *myMalloc(size_t size)
+void * myMalloc(size_t size)
 {
 	if (real_malloc == NULL)
 		__my_alloc_init();

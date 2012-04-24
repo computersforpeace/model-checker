@@ -15,7 +15,7 @@ TreeNode::~TreeNode() {
 		delete it->second;
 }
 
-TreeNode *TreeNode::exploreChild(tree_t id)
+TreeNode * TreeNode::exploreChild(tree_t id)
 {
 	TreeNode *n;
 	std::set<tree_t >::iterator it;
@@ -47,7 +47,7 @@ tree_t TreeNode::getNextBacktrack()
 	return *backtrack.begin();
 }
 
-TreeNode *TreeNode::getRoot()
+TreeNode * TreeNode::getRoot()
 {
 	if (parent)
 		return parent->getRoot();

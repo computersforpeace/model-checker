@@ -75,7 +75,7 @@ public:
 
 	void set_current_action(ModelAction *act) { current_action = act; }
 	void check_current_action(void);
-	void print_trace(void);
+	void print_summary(void);
 	Thread * schedule_next_thread();
 
 	int add_thread(Thread *t);

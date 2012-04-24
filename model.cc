@@ -112,6 +112,7 @@ thread_id_t ModelChecker::advance_backtracking_state()
 bool ModelChecker::next_execution()
 {
 	num_executions++;
+	print_summary();
 	if ((exploring = model->get_next_backtrack()) == NULL)
 		return false;
 	model->reset_to_initial_state();
@@ -203,7 +204,7 @@ void ModelChecker::check_current_action(void)
 	this->action_trace->push_back(next);
 }
 
-void ModelChecker::print_trace(void)
+void ModelChecker::print_summary(void)
 {
 	action_list_t::iterator it;
 

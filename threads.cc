@@ -158,8 +158,6 @@ int main()
 
 		/* Wait for all threads to complete */
 		thread_wait_finish();
-
-		model->print_trace();
 	} while (model->next_execution());
 
 	delete th;

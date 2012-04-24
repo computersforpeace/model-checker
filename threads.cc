@@ -58,7 +58,8 @@ void Thread::complete()
 	if (state != THREAD_COMPLETED) {
 		DEBUG("completed thread %d\n", get_id());
 		state = THREAD_COMPLETED;
-		stack_free(stack);
+		if (stack)
+			stack_free(stack);
 	}
 }
 
@@ -85,10 +86,11 @@ Thread::Thread(thrd_t *t) {
 	start_routine = NULL;
 	arg = NULL;
 
+	create_context();
+	stack = NULL;
 	state = THREAD_CREATED;
 	id = model->get_next_id();
 	*user_thread = id;
-	create_context();
 	model->add_system_thread(this);
 }
 

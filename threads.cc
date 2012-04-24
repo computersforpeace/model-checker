@@ -80,6 +80,9 @@ Thread::Thread(thrd_t *t, void (*func)(), void *a) {
 Thread::Thread(thrd_t *t) {
 	/* system thread */
 	user_thread = t;
+	start_routine = NULL;
+	arg = NULL;
+
 	state = THREAD_CREATED;
 	model->assign_id(this);
 	create_context();

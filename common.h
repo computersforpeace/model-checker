@@ -16,4 +16,7 @@
 void * myMalloc(size_t size);
 void myFree(void *ptr);
 
+#define userMalloc(size)	malloc(size)
+#define userFree(ptr)		free(ptr)
+
 #endif /* __COMMON_H__ */

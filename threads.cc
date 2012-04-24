@@ -12,12 +12,12 @@
 
 static void * stack_allocate(size_t size)
 {
-	return malloc(size);
+	return userMalloc(size);
 }
 
 static void stack_free(void *stack)
 {
-	free(stack);
+	userFree(stack);
 }
 
 Thread * thread_current(void)

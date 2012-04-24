@@ -75,7 +75,6 @@ Thread::Thread(thrd_t *t, void (*func)(), void *a) {
 	state = THREAD_CREATED;
 	id = model->get_next_id();
 	*user_thread = id;
-	model->scheduler->add_thread(this);
 }
 
 Thread::Thread(thrd_t *t) {

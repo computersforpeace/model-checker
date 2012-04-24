@@ -201,6 +201,7 @@ void ModelChecker::print_trace(void)
 int ModelChecker::add_thread(Thread *t)
 {
 	thread_map[t->get_id()] = t;
+	scheduler->add_thread(t);
 	return 0;
 }
 

@@ -110,6 +110,4 @@ private:
 
 extern ModelChecker *model;
 
-int thread_switch_to_master(ModelAction *act);
-
 #endif /* __MODEL_H__ */

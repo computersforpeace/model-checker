@@ -1,16 +1,35 @@
-CC=g++
+CC=gcc
+CXX=g++
+
 BIN=model
-SOURCE=libthreads.cc schedule.cc libatomic.cc userprog.c model.cc malloc.c threads.cc tree.cc
-HEADERS=libthreads.h schedule.h common.h libatomic.h model.h threads.h tree.h
-FLAGS=-Wall -ldl -g
+LIB_NAME=model
+LIB_SO=lib$(LIB_NAME).so
 
-all: ${BIN}
+USER_O=userprog.o
+USER_H=libthreads.h libatomic.h
 
-${BIN}: ${SOURCE} ${HEADERS}
-	${CC} -o ${BIN} ${SOURCE} ${FLAGS}
+MODEL_CC=libthreads.cc schedule.cc libatomic.cc model.cc malloc.c threads.cc tree.cc
+MODEL_O=libthreads.o schedule.o libatomic.o model.o malloc.o threads.o tree.o
+MODEL_H=libthreads.h schedule.h common.h libatomic.h model.h threads.h tree.h
+
+CPPFLAGS=-Wall -g
+LDFLAGS=-ldl
+
+all: $(BIN)
+
+$(BIN): $(USER_O) $(LIB_SO)
+	$(CXX) -o $(BIN) $(USER_O) -L. -l$(LIB_NAME) $(CPPFLAGS)
+
+# note: implicit rule for generating $(USER_O) (i.e., userprog.c -> userprog.o)
+
+$(LIB_SO): $(MODEL_O) $(MODEL_H)
+	$(CXX) -shared -Wl,-soname,$(LIB_SO) -o $(LIB_SO) $(MODEL_O) $(LDFLAGS) $(CPPFLAGS)
+
+$(MODEL_O): $(MODEL_CC) $(MODEL_H)
+	$(CXX) -fPIC -c $(MODEL_CC) $(CPPFLAGS)
 
 clean:
-	rm -f ${BIN} *.o
+	rm -f $(BIN) *.o *.so
 
 tags::
 	ctags -R

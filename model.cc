@@ -214,7 +214,7 @@ void ModelChecker::print_trace(void)
 
 	scheduler->print();
 
-	printf("\nTrace:\n\n");
+	printf("Trace:\n\n");
 
 	for (it = action_trace->begin(); it != action_trace->end(); it++) {
 		DBG();

@@ -45,12 +45,12 @@ Thread * Scheduler::get_current_thread(void)
 void Scheduler::print()
 {
 	if (current)
-		printf("Current thread: %d\n", current->get_id());
+		DEBUG("Current thread: %d\n", current->get_id());
 	else
-		printf("No current thread\n");
-	printf("Num. threads in ready list: %ld\n", readyList.size());
+		DEBUG("No current thread\n");
+	DEBUG("Num. threads in ready list: %ld\n", readyList.size());
 
 	std::list<Thread *>::iterator it;
 	for (it = readyList.begin(); it != readyList.end(); it++)
-		printf("In ready list: thread %d\n", (*it)->get_id());
+		DEBUG("In ready list: thread %d\n", (*it)->get_id());
 }

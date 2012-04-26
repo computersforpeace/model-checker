@@ -146,7 +146,7 @@ ModelAction * ModelChecker::get_last_conflict(ModelAction *act)
 			continue;
 		/* Conflict from the same thread is not really a conflict */
 		if (id == prev->get_tid())
-			return NULL;
+			continue;
 		return prev;
 	}
 	return NULL;

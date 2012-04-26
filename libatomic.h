@@ -15,6 +15,7 @@ extern "C" {
 	} memory_order;
 
 	typedef struct atomic_object {
+		int value;
 	} atomic_int;
 
 	void atomic_store_explicit(struct atomic_object *obj, int value, memory_order order);

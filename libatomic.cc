@@ -6,11 +6,12 @@ void atomic_store_explicit(struct atomic_object *obj, int value, memory_order or
 {
 	DBG();
 	model->switch_to_master(new ModelAction(ATOMIC_WRITE, order, obj, value));
+	obj->value = value;
 }
 
 int atomic_load_explicit(struct atomic_object *obj, memory_order order)
 {
 	DBG();
 	model->switch_to_master(new ModelAction(ATOMIC_READ, order, obj, VALUE_NONE));
-	return 0;
+	return obj->value;
 }

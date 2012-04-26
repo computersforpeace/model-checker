@@ -197,6 +197,7 @@ void ModelChecker::check_current_action(void)
 		DEBUG("trying to push NULL action...\n");
 		return;
 	}
+	current_action = NULL;
 	nextThread = advance_backtracking_state();
 	next->set_node(currentNode);
 	set_backtracking(next);

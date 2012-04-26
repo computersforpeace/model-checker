@@ -121,11 +121,11 @@ static int thread_system_next(void)
 	Thread *curr, *next;
 
 	curr = thread_current();
-	model->check_current_action();
 	if (curr) {
-		if (curr->get_state() == THREAD_READY)
+		if (curr->get_state() == THREAD_READY) {
+			model->check_current_action();
 			model->scheduler->add_thread(curr);
-		else if (curr->get_state() == THREAD_RUNNING)
+		} else if (curr->get_state() == THREAD_RUNNING)
 			/* Stopped while running; i.e., completed */
 			curr->complete();
 		else

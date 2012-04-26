@@ -6,15 +6,18 @@
 static void a(atomic_int *obj)
 {
 	int i;
+	int ret;
 
 	for (i = 0; i < 10; i++) {
 		printf("Thread %d, loop %d\n", thrd_current(), i);
 		switch (i % 4) {
 		case 1:
-			atomic_load(obj);
+			ret = atomic_load(obj);
+			printf("Read value: %d\n", ret);
 			break;
 		case 3:
 			atomic_store(obj, i);
+			printf("Write value: %d\n", i);
 			break;
 		}
 	}

@@ -24,6 +24,8 @@ extern "C" {
 	int atomic_load_explicit(struct atomic_object *obj, memory_order order);
 #define atomic_load(A) atomic_load_explicit((A), memory_order_seq_cst)
 
+	void atomic_init(struct atomic_object *obj, int value);
+
 #ifdef __cplusplus
 }
 #endif

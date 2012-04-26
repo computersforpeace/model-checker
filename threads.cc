@@ -42,15 +42,20 @@ int Thread::create_context()
 	context.uc_stack.ss_sp = stack;
 	context.uc_stack.ss_size = STACK_SIZE;
 	context.uc_stack.ss_flags = 0;
-	context.uc_link = &model->system_thread->context;
+	context.uc_link = model->get_system_context();
 	makecontext(&context, start_routine, 1, arg);
 
 	return 0;
 }
 
-int Thread::swap(Thread *t)
+int Thread::swap(Thread *t, ucontext_t *ctxt)
 {
-	return swapcontext(&this->context, &t->context);
+	return swapcontext(&t->context, ctxt);
+}
+
+int Thread::swap(ucontext_t *ctxt, Thread *t)
+{
+	return swapcontext(ctxt, &t->context);
 }
 
 void Thread::complete()
@@ -99,7 +104,7 @@ Thread::Thread(thrd_t *t) {
 	state = THREAD_CREATED;
 	id = model->get_next_id();
 	*user_thread = id;
-	model->add_system_thread(this);
+	model->set_system_context(&context);
 }
 
 Thread::~Thread()
@@ -137,7 +142,7 @@ static int thread_system_next(void)
 	DEBUG("(%d, %d)\n", curr ? curr->get_id() : -1, next ? next->get_id() : -1);
 	if (!next)
 		return 1;
-	return model->system_thread->swap(next);
+	return Thread::swap(model->get_system_context(), next);
 }
 
 static void thread_wait_finish(void)
@@ -153,12 +158,15 @@ static void thread_wait_finish(void)
  */
 int main()
 {
-	thrd_t user_thread, main_thread;
-	Thread *th;
+	thrd_t user_thread;
+	ucontext_t main_context;
 
 	model = new ModelChecker();
 
-	th = new Thread(&main_thread);
+	if (getcontext(&main_context))
+		return 1;
+
+	model->set_system_context(&main_context);
 
 	do {
 		/* Start user program */
@@ -168,7 +176,6 @@ int main()
 		thread_wait_finish();
 	} while (model->next_execution());
 
-	delete th;
 	delete model;
 
 	DEBUG("Exiting\n");

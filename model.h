@@ -4,6 +4,7 @@
 #include <list>
 #include <map>
 #include <cstddef>
+#include <ucontext.h>
 
 #include "schedule.h"
 #include "libthreads.h"
@@ -69,9 +70,9 @@ public:
 	ModelChecker();
 	~ModelChecker();
 	class Scheduler *scheduler;
-	Thread *system_thread;
 
-	void add_system_thread(Thread *t);
+	void set_system_context(ucontext_t *ctxt) { system_context = ctxt; }
+	ucontext_t * get_system_context(void) { return system_context; }
 
 	void set_current_action(ModelAction *act) { current_action = act; }
 	void check_current_action(void);
@@ -102,6 +103,7 @@ private:
 	Backtrack *exploring;
 	thread_id_t nextThread;
 
+	ucontext_t *system_context;
 	action_list_t *action_trace;
 	std::map<thread_id_t, class Thread *> thread_map;
 	class TreeNode *rootNode, *currentNode;

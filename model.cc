@@ -50,11 +50,6 @@ int ModelChecker::get_next_id()
 	return ++used_thread_id;
 }
 
-void ModelChecker::add_system_thread(Thread *t)
-{
-	this->system_thread = t;
-}
-
 Thread * ModelChecker::schedule_next_thread()
 {
 	Thread *t;
@@ -239,14 +234,13 @@ void ModelChecker::remove_thread(Thread *t)
 
 int ModelChecker::switch_to_master(ModelAction *act)
 {
-	Thread *old, *next;
+	Thread *old;
 
 	DBG();
 	old = thread_current();
 	set_current_action(act);
 	old->set_state(THREAD_READY);
-	next = system_thread;
-	return old->swap(next);
+	return Thread::swap(old, get_system_context());
 }
 
 ModelAction::ModelAction(action_type_t type, memory_order order, void *loc, int value)

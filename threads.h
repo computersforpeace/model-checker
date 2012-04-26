@@ -22,7 +22,9 @@ public:
 	Thread(thrd_t *t);
 	~Thread();
 	void complete();
-	int swap(Thread *t);
+
+	static int swap(ucontext_t *ctxt, Thread *t);
+	static int swap(Thread *t, ucontext_t *ctxt);
 
 	thread_state get_state() { return state; }
 	void set_state(thread_state s) { state = s; }

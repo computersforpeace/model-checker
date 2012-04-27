@@ -167,10 +167,12 @@ void ModelChecker::set_backtracking(ModelAction *act)
 	if (node->setBacktrack(act->get_tid()) != 0)
 		return;
 
-	printf("Setting backtrack: conflict = %d, instead tid = %d\n",
+	DEBUG("Setting backtrack: conflict = %d, instead tid = %d\n",
 			prev->get_tid(), act->get_tid());
-	prev->print();
-	act->print();
+	if (DBG_ENABLED()) {
+		prev->print();
+		act->print();
+	}
 
 	Backtrack *back = new Backtrack(prev, action_trace);
 	backtrack_list.push_back(back);

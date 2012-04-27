@@ -38,12 +38,12 @@ void myFree(void *ptr)
 	real_free(ptr);
 }
 
-void * operator new(size_t size)
+void * operator new(size_t size) throw(std::bad_alloc)
 {
 	return myMalloc(size);
 }
 
-void operator delete(void *p)
+void operator delete(void *p) throw()
 {
 	myFree(p);
 }

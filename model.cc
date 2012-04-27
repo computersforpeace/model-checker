@@ -4,12 +4,14 @@
 #include "schedule.h"
 #include "common.h"
 
+#define INITIAL_THREAD_ID	0
+
 ModelChecker *model;
 
 ModelChecker::ModelChecker()
 {
-	/* First thread created (system_thread) will have id 1 */
-	this->used_thread_id = 0;
+	/* First thread created will have id (INITIAL_THREAD_ID + 1) */
+	this->used_thread_id = INITIAL_THREAD_ID;
 	/* Initialize default scheduler */
 	this->scheduler = new Scheduler();
 
@@ -41,7 +43,7 @@ void ModelChecker::reset_to_initial_state()
 	action_trace = new action_list_t();
 	currentNode = rootNode;
 	current_action = NULL;
-	used_thread_id = 1; // ?
+	used_thread_id = INITIAL_THREAD_ID;
 	/* scheduler reset ? */
 }
 

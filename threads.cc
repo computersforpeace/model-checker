@@ -33,10 +33,6 @@ int Thread::create_context()
 	if (ret)
 		return ret;
 
-	/* start_routine == NULL means this is our initial context */
-	if (!start_routine)
-		return 0;
-
 	/* Initialize new managed context */
 	stack = stack_allocate(STACK_SIZE);
 	context.uc_stack.ss_sp = stack;
@@ -91,20 +87,6 @@ Thread::Thread(thrd_t *t, void (*func)(), void *a) {
 	state = THREAD_CREATED;
 	id = model->get_next_id();
 	*user_thread = id;
-}
-
-Thread::Thread(thrd_t *t) {
-	/* system thread */
-	user_thread = t;
-	start_routine = NULL;
-	arg = NULL;
-
-	create_context();
-	stack = NULL;
-	state = THREAD_CREATED;
-	id = model->get_next_id();
-	*user_thread = id;
-	model->set_system_context(&context);
 }
 
 Thread::~Thread()

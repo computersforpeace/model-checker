@@ -119,9 +119,7 @@ bool ModelChecker::next_execution()
 
 ModelAction * ModelChecker::get_last_conflict(ModelAction *act)
 {
-	void *loc = act->get_location();
 	action_type type = act->get_type();
-	thread_id_t id = act->get_tid();
 
 	switch (type) {
 		case THREAD_CREATE:
@@ -137,14 +135,8 @@ ModelAction * ModelChecker::get_last_conflict(ModelAction *act)
 	action_list_t::reverse_iterator rit;
 	for (rit = action_trace->rbegin(); rit != action_trace->rend(); rit++) {
 		ModelAction *prev = *rit;
-		if (prev->get_location() != loc)
-			continue;
-		if (type == ATOMIC_READ && prev->get_type() != ATOMIC_WRITE)
-			continue;
-		/* Conflict from the same thread is not really a conflict */
-		if (id == prev->get_tid())
-			continue;
-		return prev;
+		if (act->is_dependent(prev))
+			return prev;
 	}
 	return NULL;
 }
@@ -257,6 +249,38 @@ ModelAction::ModelAction(action_type_t type, memory_order order, void *loc, int 
 	act->location = loc;
 	act->tid = t->get_id();
 	act->value = value;
+}
+
+bool ModelAction::is_read()
+{
+	return type == ATOMIC_READ;
+}
+
+bool ModelAction::is_write()
+{
+	return type == ATOMIC_WRITE;
+}
+
+bool ModelAction::same_var(ModelAction *act)
+{
+	return location == act->location;
+}
+
+bool ModelAction::same_thread(ModelAction *act)
+{
+	return tid == act->tid;
+}
+
+bool ModelAction::is_dependent(ModelAction *act)
+{
+	if (!is_read() && !is_write())
+		return false;
+	if (!act->is_read() && !act->is_write())
+		return false;
+	if (same_var(act) && !same_thread(act) &&
+			(is_write() || act->is_write()))
+		return true;
+	return false;
 }
 
 void ModelAction::print(void)

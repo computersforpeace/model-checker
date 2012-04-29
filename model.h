@@ -36,6 +36,12 @@ public:
 
 	TreeNode * get_node() { return node; }
 	void set_node(TreeNode *n) { node = n; }
+
+	bool is_read();
+	bool is_write();
+	bool same_var(ModelAction *act);
+	bool same_thread(ModelAction *act);
+	bool is_dependent(ModelAction *act);
 private:
 	action_type type;
 	memory_order order;

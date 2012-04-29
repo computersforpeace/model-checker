@@ -39,6 +39,8 @@ public:
 
 	bool is_read();
 	bool is_write();
+	bool is_acquire();
+	bool is_release();
 	bool same_var(ModelAction *act);
 	bool same_thread(ModelAction *act);
 	bool is_dependent(ModelAction *act);

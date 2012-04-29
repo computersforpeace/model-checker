@@ -261,6 +261,30 @@ bool ModelAction::is_write()
 	return type == ATOMIC_WRITE;
 }
 
+bool ModelAction::is_acquire()
+{
+	switch (order) {
+	case memory_order_acquire:
+	case memory_order_acq_rel:
+	case memory_order_seq_cst:
+		return true;
+	default:
+		return false;
+	}
+}
+
+bool ModelAction::is_release()
+{
+	switch (order) {
+	case memory_order_release:
+	case memory_order_acq_rel:
+	case memory_order_seq_cst:
+		return true;
+	default:
+		return false;
+	}
+}
+
 bool ModelAction::same_var(ModelAction *act)
 {
 	return location == act->location;

@@ -5,7 +5,6 @@
 
 #include "libthreads.h"
 #include "libatomic.h"
-#include "threads.h"
 
 #define VALUE_NONE -1
 

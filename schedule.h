@@ -3,8 +3,9 @@
 
 #include <list>
 
-#include "threads.h"
 #include "model.h"
+
+class Thread;
 
 class Scheduler {
 public:

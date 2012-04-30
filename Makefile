@@ -10,7 +10,7 @@ USER_H=libthreads.h libatomic.h
 
 MODEL_CC=libthreads.cc schedule.cc libatomic.cc model.cc malloc.c threads.cc tree.cc librace.cc
 MODEL_O=libthreads.o schedule.o libatomic.o model.o malloc.o threads.o tree.o librace.o
-MODEL_H=libthreads.h schedule.h common.h libatomic.h model.h threads.h tree.h librace.h
+MODEL_H=libthreads.h schedule.h common.h libatomic.h model.h threads.h tree.h librace.h action.h
 
 CPPFLAGS=-Wall -g
 LDFLAGS=-ldl

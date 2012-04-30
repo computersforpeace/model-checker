@@ -1,6 +1,8 @@
 #include <stdio.h>
 
 #include "model.h"
+#include "action.h"
+#include "tree.h"
 #include "schedule.h"
 #include "common.h"
 

@@ -38,9 +38,8 @@ void ModelChecker::reset_to_initial_state()
 {
 	DEBUG("+++ Resetting to initial state +++\n");
 	std::map<thread_id_t, class Thread *>::iterator it;
-	for (it = thread_map.begin(); it != thread_map.end(); it++) {
+	for (it = thread_map.begin(); it != thread_map.end(); it++)
 		delete (*it).second;
-	}
 	thread_map.clear();
 	action_trace = new action_list_t();
 	currentNode = rootNode;

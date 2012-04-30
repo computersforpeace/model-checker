@@ -1,3 +1,6 @@
+#ifndef __TREE_H__
+#define __TREE_H__
+
 #include <set>
 #include <map>
 #include "threads.h"
@@ -29,3 +32,5 @@ private:
 	std::set<tree_t> backtrack;
 	static int totalNodes;
 };
+
+#endif /* __TREE_H__ */

@@ -9,42 +9,44 @@ TreeNode::TreeNode(TreeNode *par)
 }
 
 TreeNode::~TreeNode() {
-	std::map<tree_t, class TreeNode *>::iterator it;
+	std::map<int, class TreeNode *>::iterator it;
 
 	for (it = children.begin(); it != children.end(); it++)
 		delete it->second;
 }
 
-TreeNode * TreeNode::exploreChild(tree_t id)
+TreeNode * TreeNode::exploreChild(thread_id_t id)
 {
 	TreeNode *n;
-	std::set<tree_t >::iterator it;
+	std::set<int>::iterator it;
+	int i = id_to_int(id);
 
 	if (!hasBeenExplored(id)) {
 		n = new TreeNode(this);
-		children[id] = n;
+		children[i] = n;
 	} else {
-		n = children[id];
+		n = children[i];
 	}
-	if ((it = backtrack.find(id)) != backtrack.end())
+	if ((it = backtrack.find(i)) != backtrack.end())
 		backtrack.erase(it);
 
 	return n;
 }
 
-int TreeNode::setBacktrack(tree_t id)
+int TreeNode::setBacktrack(thread_id_t id)
 {
-	if (backtrack.find(id) != backtrack.end())
+	int i = id_to_int(id);
+	if (backtrack.find(i) != backtrack.end())
 		return 1;
-	backtrack.insert(id);
+	backtrack.insert(i);
 	return 0;
 }
 
-tree_t TreeNode::getNextBacktrack()
+thread_id_t TreeNode::getNextBacktrack()
 {
 	if (backtrack.empty())
-		return TREE_T_NONE;
-	return *backtrack.begin();
+		return THREAD_ID_T_NONE;
+	return int_to_id(*backtrack.begin());
 }
 
 TreeNode * TreeNode::getRoot()

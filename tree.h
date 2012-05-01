@@ -5,9 +5,6 @@
 #include <map>
 #include "threads.h"
 
-typedef thread_id_t tree_t;
-#define TREE_T_NONE	THREAD_ID_T_NONE
-
 /*
  * An n-ary tree
  *
@@ -18,18 +15,18 @@ class TreeNode {
 public:
 	TreeNode(TreeNode *par);
 	~TreeNode();
-	bool hasBeenExplored(tree_t id) { return children.find(id) != children.end(); }
-	TreeNode * exploreChild(tree_t id);
-	tree_t getNextBacktrack();
+	bool hasBeenExplored(thread_id_t id) { return children.find(id_to_int(id)) != children.end(); }
+	TreeNode * exploreChild(thread_id_t id);
+	thread_id_t getNextBacktrack();
 
 	/* Return 1 if already in backtrack, 0 otherwise */
-	int setBacktrack(tree_t id);
+	int setBacktrack(thread_id_t id);
 	TreeNode * getRoot();
 	static int getTotalNodes() { return TreeNode::totalNodes; }
 private:
 	TreeNode *parent;
-	std::map<tree_t, class TreeNode *> children;
-	std::set<tree_t> backtrack;
+	std::map<int, class TreeNode *> children;
+	std::set<int> backtrack;
 	static int totalNodes;
 };
 

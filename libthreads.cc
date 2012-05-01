@@ -13,7 +13,7 @@ int thrd_create(thrd_t *t, void (*start_routine)(), void *arg)
 	int ret;
 	DBG();
 	ret = model->add_thread(new Thread(t, start_routine, arg));
-	DEBUG("create thread %d\n", thrd_to_id(*t));
+	DEBUG("create thread %d\n", id_to_int(thrd_to_id(*t)));
 	return ret;
 }
 

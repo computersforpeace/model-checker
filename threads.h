@@ -48,4 +48,14 @@ static inline thread_id_t thrd_to_id(thrd_t t)
 	return t;
 }
 
+static inline thread_id_t int_to_id(int i)
+{
+	return i;
+}
+
+static inline int id_to_int(thread_id_t id)
+{
+	return id;
+}
+
 #endif /* __THREADS_H__ */

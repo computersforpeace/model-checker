@@ -5,6 +5,8 @@
 
 #include "libthreads.h"
 
+typedef int thread_id_t;
+
 #define THREAD_ID_T_NONE	-1
 
 typedef enum thread_state {

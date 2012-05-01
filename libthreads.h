@@ -5,10 +5,9 @@
 extern "C" {
 #endif
 
-	typedef int thread_id_t;
 	typedef void (*thrd_start_t)();
 
-	typedef thread_id_t thrd_t;
+	typedef int thrd_t;
 
 	int thrd_create(thrd_t *t, thrd_start_t start_routine, void *arg);
 	int thrd_join(thrd_t);

@@ -3,7 +3,7 @@
 
 #include <list>
 
-#include "libthreads.h"
+#include "threads.h"
 #include "libatomic.h"
 
 #define VALUE_NONE -1

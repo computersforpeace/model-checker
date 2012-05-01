@@ -53,7 +53,7 @@ public:
 	void remove_thread(Thread *t);
 	Thread * get_thread(thread_id_t tid) { return thread_map[tid]; }
 
-	int get_next_id();
+	thread_id_t get_next_id();
 
 	int switch_to_master(ModelAction *act);
 

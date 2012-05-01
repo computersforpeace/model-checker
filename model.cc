@@ -48,7 +48,7 @@ void ModelChecker::reset_to_initial_state()
 	/* scheduler reset ? */
 }
 
-int ModelChecker::get_next_id()
+thread_id_t ModelChecker::get_next_id()
 {
 	return ++used_thread_id;
 }

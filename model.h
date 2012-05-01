@@ -51,7 +51,7 @@ public:
 
 	int add_thread(Thread *t);
 	void remove_thread(Thread *t);
-	Thread * get_thread(thread_id_t tid) { return thread_map[tid]; }
+	Thread * get_thread(thread_id_t tid) { return thread_map[id_to_int(tid)]; }
 
 	thread_id_t get_next_id();
 
@@ -75,7 +75,7 @@ private:
 
 	ucontext_t *system_context;
 	action_list_t *action_trace;
-	std::map<thread_id_t, class Thread *> thread_map;
+	std::map<int, class Thread *> thread_map;
 	class TreeNode *rootNode, *currentNode;
 	std::list<class Backtrack *> backtrack_list;
 };

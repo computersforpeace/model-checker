@@ -37,7 +37,7 @@ ModelChecker::~ModelChecker()
 void ModelChecker::reset_to_initial_state()
 {
 	DEBUG("+++ Resetting to initial state +++\n");
-	std::map<thread_id_t, class Thread *>::iterator it;
+	std::map<int, class Thread *>::iterator it;
 	for (it = thread_map.begin(); it != thread_map.end(); it++)
 		delete (*it).second;
 	thread_map.clear();
@@ -58,7 +58,7 @@ Thread * ModelChecker::schedule_next_thread()
 	Thread *t;
 	if (nextThread == THREAD_ID_T_NONE)
 		return NULL;
-	t = thread_map[nextThread];
+	t = thread_map[id_to_int(nextThread)];
 	if (t == NULL)
 		DEBUG("*** error: thread not in thread_map: id = %d\n", nextThread);
 	return t;
@@ -219,7 +219,7 @@ void ModelChecker::print_summary(void)
 
 int ModelChecker::add_thread(Thread *t)
 {
-	thread_map[t->get_id()] = t;
+	thread_map[id_to_int(t->get_id())] = t;
 	scheduler->add_thread(t);
 	return 0;
 }

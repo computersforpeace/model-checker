@@ -331,5 +331,6 @@ void ModelAction::print(void)
 		type_str = "unknown type";
 	}
 
-	printf("Thread: %d\tAction: %s\tMO: %d\tLoc: %#014zx\tValue: %d\n", id_to_int(tid), type_str, order, (size_t)location, value);
+	printf("Thread: %d\tAction: %s\tMO: %d\tLoc: %14p\tValue: %d\n",
+			id_to_int(tid), type_str, order, location, value);
 }

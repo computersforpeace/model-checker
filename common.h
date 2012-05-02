@@ -15,6 +15,15 @@
 #define DBG_ENABLED() (0)
 #endif
 
+#define ASSERT(expr) \
+do { \
+	if (!(expr)) { \
+		fprintf(stderr, "Error: assertion failed in %s at line %d\n", __FILE__, __LINE__); \
+		exit(1); \
+	} \
+} while (0);
+
+
 void * myMalloc(size_t size);
 void myFree(void *ptr);
 

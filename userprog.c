@@ -30,11 +30,11 @@ void user_main()
 
 	atomic_init(&obj, 0);
 
-	printf("Creating 2 threads\n");
+	printf("Thread %d: creating 2 threads\n", thrd_current());
 	thrd_create(&t1, (thrd_start_t)&a, &obj);
 	thrd_create(&t2, (thrd_start_t)&a, &obj);
 
 	thrd_join(t1);
 	thrd_join(t2);
-	printf("Thread is finished\n");
+	printf("Thread %d is finished\n", thrd_current());
 }

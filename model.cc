@@ -14,6 +14,7 @@ ModelChecker::ModelChecker()
 {
 	/* First thread created will have id (INITIAL_THREAD_ID + 1) */
 	this->used_thread_id = INITIAL_THREAD_ID;
+	used_sequence_numbers = 0;
 	/* Initialize default scheduler */
 	this->scheduler = new Scheduler();
 
@@ -45,12 +46,18 @@ void ModelChecker::reset_to_initial_state()
 	currentNode = rootNode;
 	current_action = NULL;
 	used_thread_id = INITIAL_THREAD_ID;
+	used_sequence_numbers = 0;
 	/* scheduler reset ? */
 }
 
 thread_id_t ModelChecker::get_next_id()
 {
 	return ++used_thread_id;
+}
+
+int ModelChecker::get_next_seq_num()
+{
+	return ++used_sequence_numbers;
 }
 
 Thread * ModelChecker::schedule_next_thread()
@@ -250,6 +257,7 @@ ModelAction::ModelAction(action_type_t type, memory_order order, void *loc, int 
 	act->location = loc;
 	act->tid = t->get_id();
 	act->value = value;
+	act->seq_number = model->get_next_seq_num();
 }
 
 bool ModelAction::is_read()
@@ -331,6 +339,6 @@ void ModelAction::print(void)
 		type_str = "unknown type";
 	}
 
-	printf("Thread: %d\tAction: %s\tMO: %d\tLoc: %14p\tValue: %d\n",
-			id_to_int(tid), type_str, order, location, value);
+	printf("(%4d) Thread: %d\tAction: %s\tMO: %d\tLoc: %14p\tValue: %d\n",
+			seq_number, id_to_int(tid), type_str, order, location, value);
 }

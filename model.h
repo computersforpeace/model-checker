@@ -54,12 +54,14 @@ public:
 	Thread * get_thread(thread_id_t tid) { return thread_map[id_to_int(tid)]; }
 
 	thread_id_t get_next_id();
+	int get_next_seq_num();
 
 	int switch_to_master(ModelAction *act);
 
 	bool next_execution();
 private:
 	int used_thread_id;
+	int used_sequence_numbers;
 	int num_executions;
 
 	ModelAction * get_last_conflict(ModelAction *act);

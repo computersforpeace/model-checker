@@ -28,6 +28,7 @@ public:
 	action_type get_type() { return type; }
 	memory_order get_mo() { return order; }
 	void * get_location() { return location; }
+	int get_seq_number() { return seq_number; }
 
 	TreeNode * get_node() { return node; }
 	void set_node(TreeNode *n) { node = n; }
@@ -46,6 +47,7 @@ private:
 	thread_id_t tid;
 	int value;
 	TreeNode *node;
+	int seq_number;
 };
 
 typedef std::list<class ModelAction *> action_list_t;

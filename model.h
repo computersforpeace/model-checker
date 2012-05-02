@@ -60,7 +60,7 @@ public:
 
 	bool next_execution();
 private:
-	int used_thread_id;
+	int next_thread_id;
 	int used_sequence_numbers;
 	int num_executions;
 

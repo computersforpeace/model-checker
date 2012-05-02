@@ -12,8 +12,8 @@ ModelChecker *model;
 
 ModelChecker::ModelChecker()
 {
-	/* First thread created will have id (INITIAL_THREAD_ID + 1) */
-	this->used_thread_id = INITIAL_THREAD_ID;
+	/* First thread created will have id INITIAL_THREAD_ID */
+	this->next_thread_id = INITIAL_THREAD_ID;
 	used_sequence_numbers = 0;
 	/* Initialize default scheduler */
 	this->scheduler = new Scheduler();
@@ -45,14 +45,14 @@ void ModelChecker::reset_to_initial_state()
 	action_trace = new action_list_t();
 	currentNode = rootNode;
 	current_action = NULL;
-	used_thread_id = INITIAL_THREAD_ID;
+	next_thread_id = INITIAL_THREAD_ID;
 	used_sequence_numbers = 0;
 	/* scheduler reset ? */
 }
 
 thread_id_t ModelChecker::get_next_id()
 {
-	return ++used_thread_id;
+	return next_thread_id++;
 }
 
 int ModelChecker::get_next_seq_num()

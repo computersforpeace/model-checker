@@ -152,7 +152,7 @@ int main()
 
 	do {
 		/* Start user program */
-		thrd_create(&user_thread, &user_main, NULL);
+		model->add_thread(new Thread(&user_thread, &user_main, NULL));
 
 		/* Wait for all threads to complete */
 		thread_wait_finish();

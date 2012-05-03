@@ -108,8 +108,8 @@ thread_id_t ModelChecker::advance_backtracking_state()
 
 	/* Else, we are trying to replay an execution */
 	exploring->advance_state();
-	if (exploring->get_state() == NULL)
-		DEBUG("*** error: reached end of backtrack trace\n");
+
+	ASSERT(exploring->get_state() != NULL);
 
 	return get_next_replay_thread();
 }

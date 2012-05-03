@@ -116,7 +116,7 @@ static int thread_system_next(void)
 			/* Stopped while running; i.e., completed */
 			curr->complete();
 		else
-			DEBUG("ERROR: current thread in unexpected state??\n");
+			ASSERT(false);
 	}
 	next = model->scheduler->next_thread();
 	if (next)

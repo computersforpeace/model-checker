@@ -2,6 +2,7 @@
 #define __COMMON_H__
 
 #include <stdio.h>
+#include <stdlib.h>
 
 //#define CONFIG_DEBUG
 

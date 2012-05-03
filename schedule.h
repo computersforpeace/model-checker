@@ -3,8 +3,7 @@
 
 #include <list>
 
-#include "model.h"
-
+/* Forward declaration */
 class Thread;
 
 class Scheduler {

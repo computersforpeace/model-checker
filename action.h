@@ -16,7 +16,7 @@ typedef enum action_type {
 	ATOMIC_WRITE
 } action_type_t;
 
-/* Forward declaration (tree.h) */
+/* Forward declaration */
 class TreeNode;
 
 class ModelAction {

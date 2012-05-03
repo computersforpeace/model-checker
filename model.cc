@@ -142,14 +142,15 @@ bool ModelChecker::next_execution()
 	print_summary();
 	if ((exploring = model->get_next_backtrack()) == NULL)
 		return false;
-	model->reset_to_initial_state();
-	nextThread = get_next_replay_thread();
 
 	if (DBG_ENABLED()) {
 		printf("Next execution will diverge at:\n");
 		exploring->get_diverge()->print();
 		print_list(exploring->get_trace());
 	}
+
+	model->reset_to_initial_state();
+	nextThread = get_next_replay_thread();
 	return true;
 }
 

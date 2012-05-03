@@ -31,8 +31,10 @@ public:
 	void set_state(thread_state s) { state = s; }
 	thread_id_t get_id();
 	thrd_t get_thrd_t() { return *user_thread; }
+	Thread * get_parent() { return parent; }
 private:
 	int create_context();
+	Thread *parent;
 
 	void (*start_routine)();
 	void *arg;

@@ -206,19 +206,25 @@ void ModelChecker::check_current_action(void)
 
 void ModelChecker::print_summary(void)
 {
-	action_list_t::iterator it;
-
 	printf("\n");
-	printf("---------------------------------------------------------------------\n");
 	printf("Number of executions: %d\n", num_executions);
-	printf("Total nodes created: %d\n\n", TreeNode::getTotalNodes());
+	printf("Total nodes created: %d\n", TreeNode::getTotalNodes());
 
 	scheduler->print();
 
-	printf("Trace:\n\n");
+	print_list(action_trace);
+	printf("\n");
 
-	for (it = action_trace->begin(); it != action_trace->end(); it++) {
-		DBG();
+}
+
+void ModelChecker::print_list(action_list_t *list)
+{
+	action_list_t::iterator it;
+
+	printf("---------------------------------------------------------------------\n");
+	printf("Trace:\n");
+
+	for (it = list->begin(); it != list->end(); it++) {
 		(*it)->print();
 	}
 	printf("---------------------------------------------------------------------\n");

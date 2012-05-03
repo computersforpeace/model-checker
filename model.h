@@ -71,6 +71,8 @@ private:
 	Backtrack * get_next_backtrack();
 	void reset_to_initial_state();
 
+	void print_list(action_list_t *list);
+
 	class ModelAction *current_action;
 	Backtrack *exploring;
 	thread_id_t nextThread;

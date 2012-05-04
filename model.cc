@@ -190,6 +190,9 @@ void ModelChecker::set_backtracking(ModelAction *act)
 
 	node = prev->get_node();
 
+	while (t && !node->is_enabled(t))
+		t = t->get_parent();
+
 	/* Check if this has been explored already */
 	if (node->hasBeenExplored(t->get_id()))
 		return;

@@ -14,6 +14,8 @@ int thrd_create(thrd_t *t, void (*start_routine)(), void *arg)
 	DBG();
 	ret = model->add_thread(new Thread(t, start_routine, arg));
 	DEBUG("create thread %d\n", id_to_int(thrd_to_id(*t)));
+	/* seq_cst is just a 'don't care' parameter */
+	model->switch_to_master(new ModelAction(THREAD_CREATE, memory_order_seq_cst, NULL, VALUE_NONE));
 	return ret;
 }
 

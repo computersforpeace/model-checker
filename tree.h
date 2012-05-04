@@ -3,6 +3,7 @@
 
 #include <set>
 #include <map>
+#include <cstddef>
 #include "threads.h"
 
 class ModelAction;

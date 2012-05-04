@@ -86,8 +86,9 @@ Thread * ModelChecker::schedule_next_thread()
 	if (nextThread == THREAD_ID_T_NONE)
 		return NULL;
 	t = thread_map[id_to_int(nextThread)];
-	if (t == NULL)
-		DEBUG("*** error: thread not in thread_map: id = %d\n", nextThread);
+
+	ASSERT(t != NULL);
+
 	return t;
 }
 

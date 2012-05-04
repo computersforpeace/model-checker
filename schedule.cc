@@ -48,7 +48,7 @@ void Scheduler::print()
 		DEBUG("Current thread: %d\n", current->get_id());
 	else
 		DEBUG("No current thread\n");
-	DEBUG("Num. threads in ready list: %ld\n", readyList.size());
+	DEBUG("Num. threads in ready list: %zu\n", readyList.size());
 
 	std::list<Thread *>::iterator it;
 	for (it = readyList.begin(); it != readyList.end(); it++)

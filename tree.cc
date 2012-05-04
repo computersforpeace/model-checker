@@ -7,6 +7,13 @@ TreeNode::TreeNode(TreeNode *par, ModelAction *act)
 {
 	TreeNode::totalNodes++;
 	this->parent = par;
+	if (!parent) {
+		num_threads = 1;
+	} else {
+		num_threads = parent->num_threads;
+		if (act && act->get_type() == THREAD_CREATE)
+			num_threads++;
+	}
 }
 
 TreeNode::~TreeNode() {
@@ -56,4 +63,9 @@ TreeNode * TreeNode::getRoot()
 	if (parent)
 		return parent->getRoot();
 	return this;
+}
+
+bool TreeNode::is_enabled(Thread *t)
+{
+	return id_to_int(t->get_id()) < num_threads;
 }

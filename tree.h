@@ -25,11 +25,14 @@ public:
 	int setBacktrack(thread_id_t id);
 	TreeNode * getRoot();
 	static int getTotalNodes() { return TreeNode::totalNodes; }
+
+	bool is_enabled(Thread *t);
 private:
 	TreeNode *parent;
 	std::map<int, class TreeNode *> children;
 	std::set<int> backtrack;
 	static int totalNodes;
+	int num_threads;
 };
 
 #endif /* __TREE_H__ */

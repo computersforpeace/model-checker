@@ -5,6 +5,8 @@
 #include <map>
 #include "threads.h"
 
+class ModelAction;
+
 /*
  * An n-ary tree
  *
@@ -13,10 +15,10 @@
  */
 class TreeNode {
 public:
-	TreeNode(TreeNode *par);
+	TreeNode(TreeNode *par = NULL, ModelAction *act = NULL);
 	~TreeNode();
 	bool hasBeenExplored(thread_id_t id) { return children.find(id_to_int(id)) != children.end(); }
-	TreeNode * exploreChild(thread_id_t id);
+	TreeNode * explore_child(ModelAction *act);
 	thread_id_t getNextBacktrack();
 
 	/* Return 1 if already in backtrack, 0 otherwise */

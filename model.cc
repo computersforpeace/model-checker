@@ -43,7 +43,7 @@ ModelChecker::ModelChecker()
 	this->exploring = NULL;
 	this->nextThread = THREAD_ID_T_NONE;
 
-	rootNode = new TreeNode(NULL);
+	rootNode = new TreeNode();
 	currentNode = rootNode;
 	action_trace = new action_list_t();
 }
@@ -182,6 +182,7 @@ void ModelChecker::set_backtracking(ModelAction *act)
 {
 	ModelAction *prev;
 	TreeNode *node;
+	Thread *t = get_thread(act->get_tid());
 
 	prev = get_last_conflict(act);
 	if (prev == NULL)
@@ -190,14 +191,14 @@ void ModelChecker::set_backtracking(ModelAction *act)
 	node = prev->get_node();
 
 	/* Check if this has been explored already */
-	if (node->hasBeenExplored(act->get_tid()))
+	if (node->hasBeenExplored(t->get_id()))
 		return;
 	/* If this is a new backtracking point, mark the tree */
-	if (node->setBacktrack(act->get_tid()) != 0)
+	if (node->setBacktrack(t->get_id()) != 0)
 		return;
 
 	DEBUG("Setting backtrack: conflict = %d, instead tid = %d\n",
-			prev->get_tid(), act->get_tid());
+			prev->get_tid(), t->get_id());
 	if (DBG_ENABLED()) {
 		prev->print();
 		act->print();
@@ -229,7 +230,7 @@ void ModelChecker::check_current_action(void)
 	nextThread = advance_backtracking_state();
 	next->set_node(currentNode);
 	set_backtracking(next);
-	currentNode = currentNode->exploreChild(next->get_tid());
+	currentNode = currentNode->explore_child(next);
 	this->action_trace->push_back(next);
 }
 

@@ -1,8 +1,9 @@
 #include "tree.h"
+#include "action.h"
 
 int TreeNode::totalNodes = 0;
 
-TreeNode::TreeNode(TreeNode *par)
+TreeNode::TreeNode(TreeNode *par, ModelAction *act)
 {
 	TreeNode::totalNodes++;
 	this->parent = par;
@@ -15,14 +16,15 @@ TreeNode::~TreeNode() {
 		delete it->second;
 }
 
-TreeNode * TreeNode::exploreChild(thread_id_t id)
+TreeNode * TreeNode::explore_child(ModelAction *act)
 {
 	TreeNode *n;
 	std::set<int>::iterator it;
+	thread_id_t id = act->get_tid();
 	int i = id_to_int(id);
 
 	if (!hasBeenExplored(id)) {
-		n = new TreeNode(this);
+		n = new TreeNode(this, act);
 		children[i] = n;
 	} else {
 		n = children[i];

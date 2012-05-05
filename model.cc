@@ -30,6 +30,14 @@ private:
 
 ModelChecker *model;
 
+void free_action_list(action_list_t *list)
+{
+	action_list_t::iterator it;
+	for (it = list->begin(); it != list->end(); it++)
+		delete (*it);
+	delete list;
+}
+
 ModelChecker::ModelChecker()
 {
 	/* First thread created will have id INITIAL_THREAD_ID */
@@ -55,7 +63,8 @@ ModelChecker::~ModelChecker()
 		delete (*it).second;
 	thread_map.clear();
 
-	delete action_trace;
+	free_action_list(action_trace);
+
 	delete this->scheduler;
 	delete rootNode;
 }

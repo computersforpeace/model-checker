@@ -50,6 +50,11 @@ ModelChecker::ModelChecker()
 
 ModelChecker::~ModelChecker()
 {
+	std::map<int, class Thread *>::iterator it;
+	for (it = thread_map.begin(); it != thread_map.end(); it++)
+		delete (*it).second;
+	thread_map.clear();
+
 	delete action_trace;
 	delete this->scheduler;
 	delete rootNode;

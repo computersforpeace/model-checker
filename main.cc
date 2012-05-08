@@ -1,7 +1,4 @@
-#include <stdlib.h>
-
 #include "libthreads.h"
-#include "schedule.h"
 #include "common.h"
 #include "threads.h"
 

@@ -39,21 +39,21 @@ void free_action_list(action_list_t *list)
 }
 
 ModelChecker::ModelChecker()
-{
-	/* First thread created will have id INITIAL_THREAD_ID */
-	next_thread_id = INITIAL_THREAD_ID;
-	used_sequence_numbers = 0;
+	:
 	/* Initialize default scheduler */
-	scheduler = new Scheduler();
+	scheduler(new Scheduler()),
+	/* First thread created will have id INITIAL_THREAD_ID */
+	next_thread_id(INITIAL_THREAD_ID),
+	used_sequence_numbers(0),
 
-	num_executions = 0;
-	current_action = NULL;
-	exploring = NULL;
-	nextThread = THREAD_ID_T_NONE;
-
-	rootNode = new TreeNode();
-	currentNode = rootNode;
-	action_trace = new action_list_t();
+	num_executions(0),
+	current_action(NULL),
+	exploring(NULL),
+	nextThread(THREAD_ID_T_NONE),
+	action_trace(new action_list_t()),
+	rootNode(new TreeNode()),
+	currentNode(rootNode)
+{
 }
 
 ModelChecker::~ModelChecker()

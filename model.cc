@@ -121,7 +121,7 @@ thread_id_t ModelChecker::get_next_replay_thread()
 	next = exploring->get_state();
 
 	if (next == exploring->get_diverge()) {
-		TreeNode *node = next->get_node();
+		TreeNode *node = next->get_treenode();
 
 		/* Reached divergence point; discard our current 'exploring' */
 		DEBUG("*** Discard 'Backtrack' object ***\n");
@@ -203,7 +203,7 @@ void ModelChecker::set_backtracking(ModelAction *act)
 	if (prev == NULL)
 		return;
 
-	node = prev->get_node();
+	node = prev->get_treenode();
 
 	while (t && !node->is_enabled(t))
 		t = t->get_parent();

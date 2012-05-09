@@ -30,8 +30,8 @@ public:
 	void * get_location() { return location; }
 	int get_seq_number() { return seq_number; }
 
-	TreeNode * get_node() { return node; }
-	void set_node(TreeNode *n) { node = n; }
+	TreeNode * get_treenode() { return treenode; }
+	void set_node(TreeNode *n) { treenode = n; }
 
 	bool is_read();
 	bool is_write();
@@ -46,7 +46,7 @@ private:
 	void *location;
 	thread_id_t tid;
 	int value;
-	TreeNode *node;
+	TreeNode *treenode;
 	int seq_number;
 };
 

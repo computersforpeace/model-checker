@@ -50,6 +50,6 @@ private:
 	int seq_number;
 };
 
-typedef std::list<class ModelAction *, MyAlloc< class ModelAction * > > action_list_t;
+typedef std::list<class ModelAction *> action_list_t;
 
 #endif /* __ACTION_H__ */

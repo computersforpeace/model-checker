@@ -26,7 +26,7 @@ TreeNode::~TreeNode() {
 TreeNode * TreeNode::explore_child(ModelAction *act)
 {
 	TreeNode *n;
-	std::set<int, std::less< int >, MyAlloc< int > >::iterator it;
+	std::set<int>::iterator it;
 	thread_id_t id = act->get_tid();
 	int i = id_to_int(id);
 

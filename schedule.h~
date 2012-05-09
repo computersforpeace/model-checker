@@ -16,7 +16,7 @@ public:
 	void print();
   MEMALLOC
 private:
-	std::list<Thread *, MyAlloc< Thread * > > readyList;
+	std::list<Thread *> readyList;
 	Thread *current;
 };
 

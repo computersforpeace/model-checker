@@ -19,7 +19,7 @@ SHMEM_O=snapshot.o malloc.o mymemory.o
 SHMEM_H=snapshot.h snapshotimp.h mymemory.h
 
 CPPFLAGS=-Wall -g
-LDFLAGS=-ldl -lrt
+LDFLAGS=-ldl
 
 MEMCPPFLAGS=-fPIC -g -c -Wall
 all: $(BIN)

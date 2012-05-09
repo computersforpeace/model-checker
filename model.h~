@@ -63,7 +63,7 @@ private:
 
 	ucontext_t *system_context;
 	action_list_t *action_trace;
-	std::map<int, class Thread *, std::less< int >, MyAlloc< std::pair< const int, class Thread * > > > thread_map;
+	std::map<int, class Thread *, MyAlloc< std::pair< const int, class Thread * > > > thread_map;
 	class TreeNode *rootNode, *currentNode;
 	std::list<class Backtrack *, MyAlloc< class Backtrack * > > backtrack_list;
 };

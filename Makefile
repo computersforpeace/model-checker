@@ -10,9 +10,9 @@ LIB_MEM_SO=lib$(LIB_MEM).so
 USER_O=userprog.o
 USER_H=libthreads.h libatomic.h
 
-MODEL_CC=libthreads.cc schedule.cc libatomic.cc model.cc threads.cc tree.cc librace.cc action.cc main.cc
-MODEL_O=libthreads.o schedule.o libatomic.o model.o threads.o tree.o librace.o action.o main.o
-MODEL_H=libthreads.h schedule.h common.h libatomic.h model.h threads.h tree.h librace.h action.h
+MODEL_CC=libthreads.cc schedule.cc libatomic.cc model.cc threads.cc tree.cc librace.cc action.cc main.cc snapshot-interface.cc
+MODEL_O=libthreads.o schedule.o libatomic.o model.o threads.o tree.o librace.o action.o main.o snapshot-interface.o
+MODEL_H=libthreads.h schedule.h common.h libatomic.h model.h threads.h tree.h librace.h action.h snapshot-interface.h
 
 SHMEM_CC=snapshot.cc malloc.c mymemory.cc
 SHMEM_O=snapshot.o malloc.o mymemory.o

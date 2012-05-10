@@ -4,6 +4,8 @@
 #include "action.h"
 #include "tree.h"
 #include "schedule.h"
+#include "snapshot-interface.h"
+#undef DEBUG
 #include "common.h"
 
 #define INITIAL_THREAD_ID	0
@@ -54,6 +56,7 @@ ModelChecker::ModelChecker()
 	rootNode = new TreeNode();
 	currentNode = rootNode;
 	action_trace = new action_list_t();
+	global_vec = snapshot_utils::ReturnGlobalSegmentsToSnapshot();
 }
 
 ModelChecker::~ModelChecker()

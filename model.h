@@ -13,8 +13,7 @@
 #include "action.h"
 
 /* Forward declaration */
-class TreeNode;
-class Backtrack;
+class NodeStack;
 
 class ModelChecker {
 public:
@@ -48,20 +47,20 @@ private:
 	ModelAction * get_last_conflict(ModelAction *act);
 	void set_backtracking(ModelAction *act);
 	thread_id_t get_next_replay_thread();
-	Backtrack * get_next_backtrack();
+	ModelAction * get_next_backtrack();
 	void reset_to_initial_state();
 
 	void print_list(action_list_t *list);
 
-	class ModelAction *current_action;
-	Backtrack *exploring;
+	ModelAction *current_action;
+	ModelAction *diverge;
 	thread_id_t nextThread;
 
 	ucontext_t *system_context;
 	action_list_t *action_trace;
 	std::map<int, class Thread *> thread_map;
-	class TreeNode *rootNode, *currentNode;
-	std::list<class Backtrack *> backtrack_list;
+	class NodeStack *node_stack;
+	ModelAction *next_backtrack;
 };
 
 extern ModelChecker *model;

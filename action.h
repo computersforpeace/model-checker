@@ -17,7 +17,6 @@ typedef enum action_type {
 } action_type_t;
 
 /* Forward declaration */
-class TreeNode;
 class Node;
 
 class ModelAction {
@@ -31,8 +30,6 @@ public:
 	void * get_location() { return location; }
 	int get_seq_number() const { return seq_number; }
 
-	TreeNode * get_treenode() { return treenode; }
-	void set_node(TreeNode *n) { treenode = n; }
 	Node * get_node() { return node; }
 	void set_node(Node *n) { node = n; }
 
@@ -56,7 +53,6 @@ private:
 	void *location;
 	thread_id_t tid;
 	int value;
-	TreeNode *treenode;
 	Node *node;
 	int seq_number;
 };

@@ -238,18 +238,18 @@ Backtrack * ModelChecker::get_next_backtrack()
 
 void ModelChecker::check_current_action(void)
 {
-	ModelAction *next = this->current_action;
-
-	if (!next) {
+	ModelAction *curr = this->current_action;
+	current_action = NULL;
+	if (!curr) {
 		DEBUG("trying to push NULL action...\n");
 		return;
 	}
-	current_action = NULL;
+
 	nextThread = advance_backtracking_state();
-	next->set_node(currentNode);
-	set_backtracking(next);
-	currentNode = currentNode->explore_child(next);
-	this->action_trace->push_back(next);
+	curr->set_node(currentNode);
+	set_backtracking(curr);
+	currentNode = currentNode->explore_child(curr);
+	this->action_trace->push_back(curr);
 }
 
 void ModelChecker::print_summary(void)

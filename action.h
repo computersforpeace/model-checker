@@ -29,7 +29,7 @@ public:
 	action_type get_type() { return type; }
 	memory_order get_mo() { return order; }
 	void * get_location() { return location; }
-	int get_seq_number() { return seq_number; }
+	int get_seq_number() const { return seq_number; }
 
 	TreeNode * get_treenode() { return treenode; }
 	void set_node(TreeNode *n) { treenode = n; }
@@ -42,6 +42,13 @@ public:
 	bool same_var(ModelAction *act);
 	bool same_thread(ModelAction *act);
 	bool is_dependent(ModelAction *act);
+
+	inline bool operator <(const ModelAction& act) const {
+		return get_seq_number() < act.get_seq_number();
+	}
+	inline bool operator >(const ModelAction& act) const {
+		return get_seq_number() > act.get_seq_number();
+	}
 private:
 	action_type type;
 	memory_order order;

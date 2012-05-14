@@ -33,6 +33,7 @@ public:
 
 	TreeNode * get_treenode() { return treenode; }
 	void set_node(TreeNode *n) { treenode = n; }
+	Node * get_node() { return node; }
 	void set_node(Node *n) { node = n; }
 
 	bool is_read();

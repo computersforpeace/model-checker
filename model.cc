@@ -10,14 +10,6 @@
 
 ModelChecker *model;
 
-void free_action_list(action_list_t *list)
-{
-	action_list_t::iterator it;
-	for (it = list->begin(); it != list->end(); it++)
-		delete (*it);
-	delete list;
-}
-
 ModelChecker::ModelChecker()
 	:
 	/* Initialize default scheduler */

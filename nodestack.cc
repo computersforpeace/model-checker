@@ -124,10 +124,10 @@ void NodeStack::print()
 ModelAction * NodeStack::explore_action(ModelAction *act)
 {
 	DBG();
-	if (node_list.empty()) {
-		node_list.push_back(new Node(act));
-		iter = node_list.begin();
-	} else if (get_head()->has_been_explored(act->get_tid())) {
+
+	ASSERT(!node_list.empty());
+
+	if (get_head()->has_been_explored(act->get_tid())) {
 		/* Discard duplicate ModelAction */
 		delete act;
 		iter++;

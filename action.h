@@ -18,6 +18,7 @@ typedef enum action_type {
 
 /* Forward declaration */
 class TreeNode;
+class Node;
 
 class ModelAction {
 public:
@@ -32,6 +33,7 @@ public:
 
 	TreeNode * get_treenode() { return treenode; }
 	void set_node(TreeNode *n) { treenode = n; }
+	void set_node(Node *n) { node = n; }
 
 	bool is_read();
 	bool is_write();
@@ -47,6 +49,7 @@ private:
 	thread_id_t tid;
 	int value;
 	TreeNode *treenode;
+	Node *node;
 	int seq_number;
 };
 

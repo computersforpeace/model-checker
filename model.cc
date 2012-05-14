@@ -81,6 +81,7 @@ void ModelChecker::reset_to_initial_state()
 	current_action = NULL;
 	next_thread_id = INITIAL_THREAD_ID;
 	used_sequence_numbers = 0;
+	nextThread = 0;
 	/* scheduler reset ? */
 }
 
@@ -118,6 +119,15 @@ thread_id_t ModelChecker::get_next_replay_thread()
 	ModelAction *next;
 	thread_id_t tid;
 
+	/* Have we completed exploring the preselected path? */
+	if (exploring == NULL)
+		return THREAD_ID_T_NONE;
+
+	/* Else, we are trying to replay an execution */
+	exploring->advance_state();
+
+	ASSERT(exploring->get_state() != NULL);
+
 	next = exploring->get_state();
 
 	if (next == exploring->get_diverge()) {
@@ -133,20 +143,6 @@ thread_id_t ModelChecker::get_next_replay_thread()
 	}
 	DEBUG("*** ModelChecker chose next thread = %d ***\n", tid);
 	return tid;
-}
-
-thread_id_t ModelChecker::advance_backtracking_state()
-{
-	/* Have we completed exploring the preselected path? */
-	if (exploring == NULL)
-		return THREAD_ID_T_NONE;
-
-	/* Else, we are trying to replay an execution */
-	exploring->advance_state();
-
-	ASSERT(exploring->get_state() != NULL);
-
-	return get_next_replay_thread();
 }
 
 bool ModelChecker::next_execution()
@@ -165,7 +161,6 @@ bool ModelChecker::next_execution()
 	}
 
 	model->reset_to_initial_state();
-	nextThread = get_next_replay_thread();
 	return true;
 }
 
@@ -245,7 +240,7 @@ void ModelChecker::check_current_action(void)
 		return;
 	}
 
-	nextThread = advance_backtracking_state();
+	nextThread = get_next_replay_thread();
 	curr->set_node(currentNode);
 	set_backtracking(curr);
 	currentNode = currentNode->explore_child(curr);

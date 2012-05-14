@@ -47,7 +47,6 @@ private:
 
 	ModelAction * get_last_conflict(ModelAction *act);
 	void set_backtracking(ModelAction *act);
-	thread_id_t advance_backtracking_state();
 	thread_id_t get_next_replay_thread();
 	Backtrack * get_next_backtrack();
 	void reset_to_initial_state();

@@ -2,6 +2,8 @@
 *.o
 .*.swp
 *.so
+*~
+*.*~
 
 # files in this directory
 /model

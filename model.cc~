@@ -4,6 +4,8 @@
 #include "action.h"
 #include "tree.h"
 #include "schedule.h"
+#include "snapshot-interface.h"
+#undef DEBUG
 #include "common.h"
 
 #define INITIAL_THREAD_ID	0
@@ -54,11 +56,12 @@ ModelChecker::ModelChecker()
 	rootNode = new TreeNode();
 	currentNode = rootNode;
 	action_trace = new action_list_t();
+	global_vec = snapshot_utils::ReturnGlobalSegmentsToSnapshot();
 }
 
 ModelChecker::~ModelChecker()
 {
-	std::map<int, class Thread *, MyAlloc< std::pair< int, class Thread * > > >::iterator it;
+	std::map<int, class Thread *, std::less< int >, MyAlloc< std::pair< int, class Thread * > > >::iterator it;
 	for (it = thread_map.begin(); it != thread_map.end(); it++)
 		delete (*it).second;
 	thread_map.clear();
@@ -72,7 +75,7 @@ ModelChecker::~ModelChecker()
 void ModelChecker::reset_to_initial_state()
 {
 	DEBUG("+++ Resetting to initial state +++\n");
-	std::map<int, class Thread *, MyAlloc< std::pair< int, class Thread * > > >::iterator it;
+	std::map<int, class Thread *, std::less< int >, MyAlloc< std::pair< int, class Thread * > > >::iterator it;
 	for (it = thread_map.begin(); it != thread_map.end(); it++)
 		delete (*it).second;
 	thread_map.clear();

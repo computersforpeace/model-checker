@@ -67,7 +67,6 @@ private:
 	std::map<int, class Thread *, std::less< int >, MyAlloc< std::pair< const int, class Thread * > > > thread_map;
 	class TreeNode *rootNode, *currentNode;
 	std::list<class Backtrack *, MyAlloc< class Backtrack * > > backtrack_list;
-	std::vector< std::pair< void *, size_t >, MyAlloc< std::pair< void *, size_t > > > global_vec;
 };
 
 extern ModelChecker *model;

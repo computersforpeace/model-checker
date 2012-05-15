@@ -56,7 +56,6 @@ ModelChecker::ModelChecker()
 	rootNode = new TreeNode();
 	currentNode = rootNode;
 	action_trace = new action_list_t();
-	global_vec = snapshot_utils::ReturnGlobalSegmentsToSnapshot();
 }
 
 ModelChecker::~ModelChecker()

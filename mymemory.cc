@@ -59,6 +59,7 @@ void *malloc( size_t size ){
 	if( NULL == mySpace ){
 		//void * mem = MYMALLOC( MSPACE_SIZE );
 		mySpace = create_mspace( MSPACE_SIZE, 1 );
+        AddUserHeapToSnapshot();
 	}
 	return mspace_malloc( mySpace, size );
 }
@@ -67,3 +68,8 @@ void free( void * ptr ){
 	mspace_free( mySpace, ptr );
 }
 
+void AddUserHeapToSnapshot(){
+    static bool alreadySnapshotted = false;
+    if( alreadySnapshotted ) return;
+    addMemoryRegionToSnapShot( mySpace, MSPACE_SIZE / PAGESIZE );
+}

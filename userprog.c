@@ -2,22 +2,26 @@
 
 #include "libthreads.h"
 #include "libatomic.h"
+#include "librace.h"
 
 static void a(atomic_int *obj)
 {
 	int i;
 	int ret;
 
-	for (i = 0; i < 10; i++) {
+	store_32(&i, 10);
+	printf("load 32 yields: %d\n", load_32(&i));
+
+	for (i = 0; i < 2; i++) {
 		printf("Thread %d, loop %d\n", thrd_current(), i);
 		switch (i % 4) {
 		case 1:
 			ret = atomic_load(obj);
 			printf("Read value: %d\n", ret);
 			break;
-		case 3:
-			atomic_store(obj, i);
-			printf("Write value: %d\n", i);
+		case 0:
+			atomic_store(obj, i + 1);
+			printf("Write value: %d\n", i + 1);
 			break;
 		}
 	}

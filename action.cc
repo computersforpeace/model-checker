@@ -2,6 +2,7 @@
 
 #include "model.h"
 #include "action.h"
+#include "clockvector.h"
 
 ModelAction::ModelAction(action_type_t type, memory_order order, void *loc, int value)
 {
@@ -14,6 +15,14 @@ ModelAction::ModelAction(action_type_t type, memory_order order, void *loc, int 
 	act->tid = t->get_id();
 	act->value = value;
 	act->seq_number = model->get_next_seq_num();
+
+	cv = NULL;
+}
+
+ModelAction::~ModelAction()
+{
+	if (cv)
+		delete cv;
 }
 
 bool ModelAction::is_read()

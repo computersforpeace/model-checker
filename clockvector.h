@@ -14,6 +14,8 @@ public:
 	void merge(ClockVector *cv);
 	bool happens_before(ModelAction *act, thread_id_t id);
 
+	void print();
+
 	MEMALLOC
 private:
 	int *clock;

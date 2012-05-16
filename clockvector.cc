@@ -59,3 +59,10 @@ bool ClockVector::happens_before(ModelAction *act, thread_id_t id)
 		return act->get_seq_number() < clock[i];
 	return false;
 }
+
+void ClockVector::print()
+{
+	int i;
+	for (i = 0; i < num_threads; i++)
+		printf("%d%c", clock[i], (i == num_threads - 1) ? '\n' : ' ');
+}

@@ -2,6 +2,7 @@
 #define __SCHEDULE_H__
 
 #include <list>
+#include "mymemory.h"
 
 /* Forward declaration */
 class Thread;
@@ -13,8 +14,9 @@ public:
 	Thread * next_thread(void);
 	Thread * get_current_thread(void);
 	void print();
+  MEMALLOC
 private:
-	std::list<Thread *> readyList;
+	std::list<Thread *, MyAlloc< Thread * > > readyList;
 	Thread *current;
 };
 

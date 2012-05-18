@@ -17,7 +17,7 @@ TreeNode::TreeNode(TreeNode *par, ModelAction *act)
 }
 
 TreeNode::~TreeNode() {
-	std::map<int, class TreeNode *>::iterator it;
+	std::map<int, class TreeNode *, std::less< int >, MyAlloc< std::pair< const int, class TreeNode * > > >::iterator it;
 
 	for (it = children.begin(); it != children.end(); it++)
 		delete it->second;
@@ -26,7 +26,7 @@ TreeNode::~TreeNode() {
 TreeNode * TreeNode::explore_child(ModelAction *act)
 {
 	TreeNode *n;
-	std::set<int>::iterator it;
+	std::set<int, std::less< int >, MyAlloc< int > >::iterator it;
 	thread_id_t id = act->get_tid();
 	int i = id_to_int(id);
 

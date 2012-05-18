@@ -61,13 +61,6 @@ void Thread::complete()
 	}
 }
 
-void * Thread::operator new(size_t size) {
-	return userMalloc(size);
-}
-
-void Thread::operator delete(void *ptr) {
-	userFree(ptr);
-}
 
 Thread::Thread(thrd_t *t, void (*func)(), void *a) {
 	int ret;

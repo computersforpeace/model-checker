@@ -1,4 +1,4 @@
 #!/bin/sh
 
 export LD_LIBRARY_PATH=.
-./model
+gdb ./model

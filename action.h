@@ -2,10 +2,9 @@
 #define __ACTION_H__
 
 #include <list>
-
 #include "threads.h"
 #include "libatomic.h"
-
+#include "mymemory.h"
 #define VALUE_NONE -1
 
 typedef enum action_type {
@@ -50,6 +49,7 @@ public:
 	inline bool operator >(const ModelAction& act) const {
 		return get_seq_number() > act.get_seq_number();
 	}
+  MEMALLOC
 private:
 	action_type type;
 	memory_order order;
@@ -61,6 +61,6 @@ private:
 	int seq_number;
 };
 
-typedef std::list<class ModelAction *> action_list_t;
+typedef std::list<class ModelAction *, MyAlloc< class ModelAction * > > action_list_t;
 
 #endif /* __ACTION_H__ */

@@ -14,7 +14,7 @@ static void a(atomic_int *obj)
 
 	for (i = 0; i < 2; i++) {
 		printf("Thread %d, loop %d\n", thrd_current(), i);
-		switch (i % 4) {
+		switch (i  ) {
 		case 1:
 			ret = atomic_load(obj);
 			printf("Read value: %d\n", ret);

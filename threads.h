@@ -2,7 +2,7 @@
 #define __THREADS_H__
 
 #include <ucontext.h>
-
+#include "mymemory.h"
 #include "libthreads.h"
 
 typedef int thread_id_t;
@@ -18,8 +18,6 @@ typedef enum thread_state {
 
 class Thread {
 public:
-	void * operator new(size_t size);
-	void operator delete(void *ptr);
 	Thread(thrd_t *t, void (*func)(), void *a);
 	~Thread();
 	void complete();
@@ -32,6 +30,7 @@ public:
 	thread_id_t get_id();
 	thrd_t get_thrd_t() { return *user_thread; }
 	Thread * get_parent() { return parent; }
+  MEMALLOC
 private:
 	int create_context();
 	Thread *parent;

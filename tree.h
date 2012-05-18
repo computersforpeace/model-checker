@@ -1,6 +1,6 @@
 #ifndef __TREE_H__
 #define __TREE_H__
-
+#include "mymemory.h"
 #include <set>
 #include <map>
 #include <cstddef>
@@ -28,10 +28,11 @@ public:
 	static int getTotalNodes() { return TreeNode::totalNodes; }
 
 	bool is_enabled(Thread *t);
+  MEMALLOC
 private:
 	TreeNode *parent;
-	std::map<int, class TreeNode *> children;
-	std::set<int> backtrack;
+	std::map<int, class TreeNode *, std::less< int >, MyAlloc< std::pair< const int, class TreeNode * > > > children;
+	std::set<int, std::less< int >, MyAlloc< int > > backtrack;
 	static int totalNodes;
 	int num_threads;
 };

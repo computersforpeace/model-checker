@@ -3,10 +3,13 @@
 
 #include <list>
 #include <map>
+#include <vector>
 #include <cstddef>
 #include <ucontext.h>
 
 #include "schedule.h"
+#include "mymemory.h"
+#include <utility>
 #include "libthreads.h"
 #include "libatomic.h"
 #include "threads.h"
@@ -40,6 +43,7 @@ public:
 	int switch_to_master(ModelAction *act);
 
 	bool next_execution();
+  MEMALLOC
 private:
 	int next_thread_id;
 	int used_sequence_numbers;
@@ -59,9 +63,9 @@ private:
 
 	ucontext_t *system_context;
 	action_list_t *action_trace;
-	std::map<int, class Thread *> thread_map;
+	std::map<int, class Thread *, std::less< int >, MyAlloc< std::pair< const int, class Thread * > > > thread_map;
 	class TreeNode *rootNode, *currentNode;
-	std::list<class Backtrack *> backtrack_list;
+	std::list<class Backtrack *, MyAlloc< class Backtrack * > > backtrack_list;
 };
 
 extern ModelChecker *model;

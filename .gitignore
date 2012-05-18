@@ -3,6 +3,10 @@
 .*.swp
 *.so
 *~
+<<<<<<< HEAD
+=======
+*.*~
+>>>>>>> subramanian
 
 # files in this directory
 /model

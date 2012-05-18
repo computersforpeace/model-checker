@@ -1,4 +1,3 @@
-
 #include "mymemory.h"
 #include "snapshot.h"
 #include "snapshotimp.h"
@@ -8,8 +7,8 @@
 #if !USE_CHECKPOINTING
 static mspace sStaticSpace = NULL;
 #endif
-void *MYMALLOC(size_t size)
-{
+
+void *MYMALLOC(size_t size) {
 #if USE_CHECKPOINTING
   static void *(*mallocp)(size_t size);
   char *error;
@@ -17,11 +16,11 @@ void *MYMALLOC(size_t size)
 
   /* get address of libc malloc */
   if (!mallocp) {
-  mallocp = ( void * ( * )( size_t ) )dlsym(RTLD_NEXT, "malloc");
-  if ((error = dlerror()) != NULL) {
+    mallocp = ( void * ( * )( size_t ) )dlsym(RTLD_NEXT, "malloc");
+    if ((error = dlerror()) != NULL) {
       fputs(error, stderr);
       exit(1);
-  }
+    }
   }
   ptr = mallocp(size);     
   return ptr;
@@ -30,13 +29,12 @@ void *MYMALLOC(size_t size)
     createSharedLibrary();
   }
   if( NULL == sStaticSpace )
-  sStaticSpace = create_mspace_with_base( ( void * )( sTheRecord->mSharedMemoryBase ), SHARED_MEMORY_DEFAULT -sizeof( struct Snapshot_t ), 1 );
+    sStaticSpace = create_mspace_with_base( ( void * )( sTheRecord->mSharedMemoryBase ), SHARED_MEMORY_DEFAULT -sizeof( struct Snapshot_t ), 1 );
   return mspace_malloc( sStaticSpace, size );
 #endif
 }
 
-void MYFREE(void *ptr)
-{
+void MYFREE(void *ptr) {
 #if USE_CHECKPOINTING
   static void (*freep)(void *);
   char *error;
@@ -55,21 +53,30 @@ void MYFREE(void *ptr)
 #endif
 }
 static mspace mySpace = NULL;
-void *malloc( size_t size ){
-	if( NULL == mySpace ){
-		//void * mem = MYMALLOC( MSPACE_SIZE );
-		mySpace = create_mspace( MSPACE_SIZE, 1 );
-        AddUserHeapToSnapshot();
-	}
-	return mspace_malloc( mySpace, size );
+void *malloc( size_t size ) {
+  if( NULL == mySpace ){
+    //void * mem = MYMALLOC( MSPACE_SIZE );
+    mySpace = create_mspace( MSPACE_SIZE, 1 );
+    AddUserHeapToSnapshot();
+  }
+  return mspace_malloc( mySpace, size );
 }
 
 void free( void * ptr ){
-	mspace_free( mySpace, ptr );
+  mspace_free( mySpace, ptr );
 }
 
 void AddUserHeapToSnapshot(){
-    static bool alreadySnapshotted = false;
-    if( alreadySnapshotted ) return;
-    addMemoryRegionToSnapShot( mySpace, MSPACE_SIZE / PAGESIZE );
+  static bool alreadySnapshotted = false;
+  if( alreadySnapshotted ) return;
+  addMemoryRegionToSnapShot( mySpace, MSPACE_SIZE / PAGESIZE );
+}
+
+
+void * operator new(size_t size) throw(std::bad_alloc) {
+  return MYMALLOC(size);
+}
+
+void operator delete(void *p) throw() {
+  MYFREE(p);
 }

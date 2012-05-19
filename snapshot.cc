@@ -31,11 +31,11 @@ void BeginOperation( struct timeval * theStartTime ){
 	gettimeofday( theStartTime, NULL );
 #endif
 }
-#if DEBUG
+#if SSDEBUG
 struct timeval *starttime = NULL;
 #endif
 void DumpIntoLog( const char * filename, const char * message ){
-#if DEBUG
+#if SSDEBUG
    static pid_t thePID = getpid();
    char newFn[ 1024 ] ={ 0 };
    sprintf( newFn,"%s-%d.txt", filename, thePID );
@@ -146,7 +146,7 @@ void initSnapShotLibrary(unsigned int numbackingpages, unsigned int numsnapshots
     exit(-1);
   }
   createSharedLibrary();
- #if DEBUG
+ #if SSDEBUG
   starttime = &(sTheRecord->startTimeGlobal);
   gettimeofday( starttime, NULL );
 #endif
@@ -187,7 +187,7 @@ void initSnapShotLibrary(unsigned int numbackingpages, unsigned int numsnapshots
     } else {
       int status;
       int retVal;
-#if DEBUG
+#if SSDEBUG
       char mesg[ 1024 ] = { 0 };
       sprintf( mesg, "The process id of child is %d and the process id of this process is %d and snapshot id is %d", forkedID, getpid(), snapshotid );
       DumpIntoLog( "ModelSnapshot", mesg );
@@ -271,7 +271,7 @@ void rollBack( snapshot_id theID ){
   getcontext( &sTheRecord->mContextToRollback );
   if( !sTemp ){
     sTemp = 1;
-#if DEBUG
+#if SSDEBUG
   	DumpIntoLog( "ModelSnapshot", "Invoked rollback" ); 
 #endif
   	exit( 0 );

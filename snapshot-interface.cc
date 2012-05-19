@@ -77,7 +77,6 @@ void SnapshotGlobalSegments(){
 //declaration of constructor....
 snapshotStack::snapshotStack(){
   SnapshotGlobalSegments();
-  AddUserHeapToSnapshot();
   stack=NULL;
 }
 	

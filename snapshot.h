@@ -5,7 +5,7 @@
 
 typedef unsigned int snapshot_id;
 typedef void (*MyFuncPtr)();
-void initSnapShotLibrary(unsigned int numbackingpages, unsigned int numsnapshots, unsigned int nummemoryregions, MyFuncPtr entryPoint);
+void initSnapShotLibrary(unsigned int numbackingpages, unsigned int numsnapshots, unsigned int nummemoryregions, unsigned int numheappages, MyFuncPtr entryPoint);
 
 void addMemoryRegionToSnapShot( void * ptr, unsigned int numPages );
 

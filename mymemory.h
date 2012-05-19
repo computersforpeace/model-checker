@@ -18,7 +18,6 @@
 
 void *MYMALLOC(size_t size);
 void MYFREE(void *ptr);
-void AddUserHeapToSnapshot();												
 /*
 The following code example is taken from the book
 The C++ Standard Library - A Tutorial and Reference
@@ -109,7 +108,6 @@ template <class T>
      return false;
  }
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -118,6 +116,7 @@ extern void* mspace_malloc(mspace msp, size_t bytes);
 extern void mspace_free(mspace msp, void* mem);
 extern mspace create_mspace_with_base(void* base, size_t capacity, int locked);
 extern mspace create_mspace(size_t capacity, int locked);
+extern mspace mySpace;
 #ifdef __cplusplus
 };  /* end of extern "C" */
 #endif

@@ -123,7 +123,7 @@ void createSharedLibrary(){
 #ifdef __cplusplus
 }
 #endif
-void initSnapShotLibrary(unsigned int numbackingpages, unsigned int numsnapshots, unsigned int nummemoryregions , MyFuncPtr entryPoint){
+void initSnapShotLibrary(unsigned int numbackingpages, unsigned int numsnapshots, unsigned int nummemoryregions, unsigned int numheappages, MyFuncPtr entryPoint){
 #if USE_CHECKPOINTING
   struct sigaction sa;
   sa.sa_flags = SA_SIGINFO | SA_NODEFER | SA_RESTART;
@@ -134,6 +134,8 @@ void initSnapShotLibrary(unsigned int numbackingpages, unsigned int numsnapshots
     exit(-1);
   }
   initSnapShotRecord(numbackingpages, numsnapshots, nummemoryregions);
+  mySpace = create_mspace( numheappages*PAGESIZE, 1 );
+  addMemoryRegionToSnapShot(mySpace, numheappages);
   entryPoint();
 #else
   //add a signal to indicate that the process is going to terminate.

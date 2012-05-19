@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "mymemory.h"
 
 #define CONFIG_DEBUG
 
@@ -24,9 +25,6 @@ do { \
 	} \
 } while (0);
 
-
-void * myMalloc(size_t size);
-void myFree(void *ptr);
 
 #define userMalloc(size)	malloc(size)
 #define userFree(ptr)		free(ptr)

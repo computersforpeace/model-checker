@@ -13,6 +13,8 @@
 #include <cstring>
 #include <cassert>
 
+snapshotStack * snapshotObject;
+
 /*This looks like it might leak memory...  Subramanian should fix this. */
 
 typedef std::basic_stringstream< char, std::char_traits< char >, MyAlloc< char > > MyStringStream;

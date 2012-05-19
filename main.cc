@@ -5,6 +5,7 @@
 /* global "model" object */
 #include "model.h"
 #include "snapshot.h"
+#include "snapshot-interface.h"
 
 /*
  * Return 1 if found next thread, 0 otherwise
@@ -45,6 +46,9 @@ static void thread_wait_finish(void) {
 void real_main() {
   thrd_t user_thread;
   ucontext_t main_context;
+
+  //Create the singleton snapshotStack object
+  snapshotObject = new snapshotStack();
   
   model = new ModelChecker();
   

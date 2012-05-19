@@ -3,7 +3,6 @@
 #include "snapshotimp.h"
 #include <stdio.h>
 #include <dlfcn.h>
-#define MSPACE_SIZE ( 1 << 20 )
 #if !USE_CHECKPOINTING
 static mspace sStaticSpace = NULL;
 #endif

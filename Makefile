@@ -25,7 +25,7 @@ MEMCPPFLAGS=-fPIC -g -c -Wall
 all: $(BIN)
 
 $(BIN): $(USER_O) $(LIB_SO) $(LIB_MEM_SO)
-	$(CXX) -o $(BIN) $(USER_O) -L. -l$(LIB_NAME) -l$(LIB_MEM) $(CPPFLAGS)
+	$(CXX) -o $(BIN) $(USER_O) -L. -l$(LIB_NAME) -l$(LIB_MEM) $(CPPFLAGS) $(LDFLAGS)
 
 # note: implicit rule for generating $(USER_O) (i.e., userprog.c -> userprog.o)
 
@@ -39,7 +39,7 @@ malloc.o: malloc.c
 	$(CC) $(MEMCPPFLAGS) -DMSPACES -DONLY_MSPACES malloc.c
 
 mymemory.o: mymemory.h snapshotimp.h mymemory.cc
-	$(CXX) $(MEMCPPFLAGS) mymemory.cc 
+	$(CXX) $(MEMCPPFLAGS) mymemory.cc
 
 snapshot.o: mymemory.h snapshot.h snapshotimp.h snapshot.cc
 	$(CXX) $(MEMCPPFLAGS) snapshot.cc

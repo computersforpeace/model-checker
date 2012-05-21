@@ -5,6 +5,7 @@
 #include <vector>
 #include <cstddef>
 #include "threads.h"
+#include "mymemory.h"
 
 class ModelAction;
 
@@ -26,6 +27,8 @@ public:
 	void print();
 
 	static int get_total_nodes() { return total_nodes; }
+
+	MEMALLOC
 private:
 	void explore(thread_id_t tid);
 
@@ -48,6 +51,8 @@ public:
 	void reset_execution();
 
 	void print();
+
+	MEMALLOC
 private:
 	node_list_t node_list;
 	node_list_t::iterator iter;

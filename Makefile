@@ -21,7 +21,6 @@ SHMEM_H=snapshot.h snapshotimp.h mymemory.h
 CPPFLAGS=-Wall -g
 LDFLAGS=-ldl -lrt
 
-MEMCPPFLAGS=-fPIC -g -c -Wall
 all: $(BIN)
 
 $(BIN): $(USER_O) $(LIB_SO) $(LIB_MEM_SO)
@@ -36,13 +35,13 @@ $(LIB_MEM_SO): $(SHMEM_O) $(SHMEM_H)
 	$(CC) -shared -W1,rpath,"." -o $(LIB_MEM_SO) $(SHMEM_O)
 
 malloc.o: malloc.c
-	$(CC) $(MEMCPPFLAGS) -DMSPACES -DONLY_MSPACES malloc.c
+	$(CC) -fPIC -c malloc.c -DMSPACES -DONLY_MSPACES $(CPPFLAGS)
 
 mymemory.o: mymemory.h snapshotimp.h mymemory.cc
-	$(CXX) $(MEMCPPFLAGS) mymemory.cc
+	$(CXX) -fPIC -c mymemory.cc $(CPPFLAGS)
 
 snapshot.o: mymemory.h snapshot.h snapshotimp.h snapshot.cc
-	$(CXX) $(MEMCPPFLAGS) snapshot.cc
+	$(CXX) -fPIC -c snapshot.cc $(CPPFLAGS)
 
 $(MODEL_O): $(MODEL_CC) $(MODEL_H)
 	$(CXX) -fPIC -c $(MODEL_CC) $(CPPFLAGS)

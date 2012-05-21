@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include "mymemory.h"
 
-#define CONFIG_DEBUG
+//#define CONFIG_DEBUG
 
 #ifdef CONFIG_DEBUG
 #define DEBUG(fmt, ...) do { printf("*** %25s(): line %-4d *** " fmt, __func__, __LINE__, ##__VA_ARGS__); } while (0)

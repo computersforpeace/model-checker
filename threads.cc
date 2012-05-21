@@ -25,7 +25,7 @@ Thread * thread_current(void)
 /* This method just gets around makecontext not being 64-bit clean */
 
 void thread_startup() {
-	Thread * curr_thread=thread_current();
+	Thread * curr_thread = thread_current();
 	curr_thread->start_routine(curr_thread->arg);
 }
 

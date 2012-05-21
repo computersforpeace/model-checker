@@ -30,8 +30,10 @@ public:
 	thread_id_t get_id();
 	thrd_t get_thrd_t() { return *user_thread; }
 	Thread * get_parent() { return parent; }
-  friend void thread_startup();
-  MEMALLOC
+
+	friend void thread_startup();
+
+	MEMALLOC
 private:
 	int create_context();
 	Thread *parent;

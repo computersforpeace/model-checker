@@ -15,7 +15,8 @@ public:
 	Thread * next_thread(void);
 	Thread * get_current_thread(void);
 	void print();
-  MEMALLOC
+
+	MEMALLOC
 private:
 	std::list<Thread *, MyAlloc< Thread * > > readyList;
 	Thread *current;

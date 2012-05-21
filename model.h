@@ -42,7 +42,8 @@ public:
 	int switch_to_master(ModelAction *act);
 
 	bool next_execution();
-  MEMALLOC
+
+	MEMALLOC
 private:
 	int next_thread_id;
 	int used_sequence_numbers;

@@ -46,7 +46,8 @@ public:
 	inline bool operator >(const ModelAction& act) const {
 		return get_seq_number() > act.get_seq_number();
 	}
-  MEMALLOC
+
+	MEMALLOC
 private:
 	action_type type;
 	memory_order order;

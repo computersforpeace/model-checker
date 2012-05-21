@@ -1,5 +1,3 @@
-/* -*- Mode: C; indent-tabs-mode: t -*- */
-
 #ifndef __SCHEDULE_H__
 #define __SCHEDULE_H__
 

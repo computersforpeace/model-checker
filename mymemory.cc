@@ -1,4 +1,3 @@
-/* -*- Mode: C; indent-tabs-mode: t -*- */
 #include "mymemory.h"
 #include "snapshot.h"
 #include "snapshotimp.h"

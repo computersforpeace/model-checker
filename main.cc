@@ -1,5 +1,3 @@
-/* -*- Mode: C; indent-tabs-mode: t -*- */
-
 #include "libthreads.h"
 #include "common.h"
 #include "threads.h"

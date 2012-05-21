@@ -1,4 +1,3 @@
-/* -*- Mode: C; indent-tabs-mode: t -*- */
 #include <inttypes.h>
 #include <sys/mman.h>
 #include <unistd.h>

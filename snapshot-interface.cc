@@ -1,5 +1,3 @@
-/* -*- Mode: C; indent-tabs-mode: t -*- */
-
 #define MYBINARYNAME "model"
 #define MYLIBRARYNAME "libmodel.so"
 #define MYALLOCNAME  "libmymemory.so"

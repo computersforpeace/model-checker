@@ -2,22 +2,23 @@
 #define _MY_MEMORY_H
 #include <stdlib.h>
 #include <limits>
-#define MEMALLOC void *operator new( size_t size ){ \
-																	return MYMALLOC( size );\
-																	}\
-							   void operator delete( void *p, size_t size ){ \
-																	MYFREE( p ); \
-																	}\
-                 void *operator new[]( size_t size ){ \
-                                  return MYMALLOC( size );\
-                                  }\
-                 void operator delete[]( void *p, size_t size ){\
-                                  MYFREE( p );\
-                                  }
-
+#define MEMALLOC \
+	void * operator new(size_t size) { \
+		return MYMALLOC(size);\
+	}\
+	void operator delete(void *p, size_t size) { \
+		MYFREE( p ); \
+	}\
+	void * operator new[](size_t size) { \
+		return MYMALLOC(size);\
+	}\
+	void operator delete[](void *p, size_t size) {\
+		MYFREE(p);\
+	}
 
 void *MYMALLOC(size_t size);
 void MYFREE(void *ptr);
+
 /*
 The following code example is taken from the book
 The C++ Standard Library - A Tutorial and Reference

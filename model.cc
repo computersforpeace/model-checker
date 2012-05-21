@@ -5,7 +5,6 @@
 #include "nodestack.h"
 #include "schedule.h"
 #include "snapshot-interface.h"
-#undef DEBUG
 #include "common.h"
 
 #define INITIAL_THREAD_ID	0

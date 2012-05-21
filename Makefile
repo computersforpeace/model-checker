@@ -24,15 +24,15 @@ LDFLAGS=-ldl -lrt
 all: $(BIN)
 
 $(BIN): $(USER_O) $(LIB_SO) $(LIB_MEM_SO)
-	$(CXX) -o $(BIN) $(USER_O) -L. -l$(LIB_NAME) -l$(LIB_MEM) $(CPPFLAGS) $(LDFLAGS)
+	$(CXX) -o $(BIN) $(USER_O) -L. -l$(LIB_NAME) -l$(LIB_MEM)
 
 # note: implicit rule for generating $(USER_O) (i.e., userprog.c -> userprog.o)
 
 $(LIB_SO): $(MODEL_O) $(MODEL_H)
-	$(CXX) -shared -Wl,-soname,$(LIB_SO) -o $(LIB_SO) $(MODEL_O) $(LDFLAGS) $(CPPFLAGS)
+	$(CXX) -shared -o $(LIB_SO) $(MODEL_O) $(LDFLAGS)
 
 $(LIB_MEM_SO): $(SHMEM_O) $(SHMEM_H)
-	$(CC) -shared -W1,rpath,"." -o $(LIB_MEM_SO) $(SHMEM_O)
+	$(CXX) -shared -o $(LIB_MEM_SO) $(SHMEM_O) $(LDFLAGS)
 
 malloc.o: malloc.c
 	$(CC) -fPIC -c malloc.c -DMSPACES -DONLY_MSPACES $(CPPFLAGS)

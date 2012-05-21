@@ -1,3 +1,5 @@
+/* -*- Mode: C; indent-tabs-mode: t -*- */
+
 #include "libthreads.h"
 #include "common.h"
 #include "threads.h"
@@ -22,6 +24,13 @@ Thread * thread_current(void)
 	return model->scheduler->get_current_thread();
 }
 
+/* This method just gets around makecontext not being 64-bit clean */
+
+void thread_startup() {
+	Thread * curr_thread=thread_current();
+	curr_thread->start_routine(curr_thread->arg);
+}
+
 int Thread::create_context()
 {
 	int ret;
@@ -36,7 +45,7 @@ int Thread::create_context()
 	context.uc_stack.ss_size = STACK_SIZE;
 	context.uc_stack.ss_flags = 0;
 	context.uc_link = model->get_system_context();
-	makecontext(&context, start_routine, 1, arg);
+	makecontext(&context, start_routine, 1);
 
 	return 0;
 }
@@ -60,7 +69,6 @@ void Thread::complete()
 			stack_free(stack);
 	}
 }
-
 
 Thread::Thread(thrd_t *t, void (*func)(), void *a) {
 	int ret;

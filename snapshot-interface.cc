@@ -9,7 +9,6 @@
 
 #define MYBINARYNAME "model"
 #define MYLIBRARYNAME "libmodel.so"
-#define MYALLOCNAME  "libmymemory.so"
 #define PROCNAME      "/proc/*/maps"
 #define REPLACEPOS		6
 #define PAGESIZE 4096
@@ -48,10 +47,9 @@ static void takeSegmentSnapshot( const MyString & lineText ){
 void SnapshotGlobalSegments(){
 	MyString fn = PROCNAME;
 	static char sProcessSize[ 12 ] = { 0 };
-	std::pair< const char *, bool > dataSect[ 3 ];
+	std::pair< const char *, bool > dataSect[ 2 ];
 	dataSect[ 0 ] = std::make_pair( MYBINARYNAME, false );
 	dataSect[ 1 ] = std::make_pair( MYLIBRARYNAME, false );
-	dataSect[ 2 ] = std::make_pair( MYALLOCNAME, false );
 	static pid_t sProcID = 0;
 	if( 0 == sProcID ) {
 		sProcID = getpid();	

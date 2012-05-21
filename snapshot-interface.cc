@@ -1,9 +1,3 @@
-#define MYBINARYNAME "model"
-#define MYLIBRARYNAME "libmodel.so"
-#define MYALLOCNAME  "libmymemory.so"
-#define PROCNAME      "/proc/*/maps"
-#define REPLACEPOS		6
-#define PAGESIZE 4096
 #include "snapshot-interface.h"
 #include <iostream>
 #include <fstream>
@@ -12,6 +6,13 @@
 #include <sstream>
 #include <cstring>
 #include <cassert>
+
+#define MYBINARYNAME "model"
+#define MYLIBRARYNAME "libmodel.so"
+#define MYALLOCNAME  "libmymemory.so"
+#define PROCNAME      "/proc/*/maps"
+#define REPLACEPOS		6
+#define PAGESIZE 4096
 
 snapshotStack * snapshotObject;
 

@@ -1,3 +1,4 @@
+/* -*- Mode: C; indent-tabs-mode: t -*- */
 #include "mymemory.h"
 #include "snapshot.h"
 #include "snapshotimp.h"
@@ -9,61 +10,61 @@ static mspace sStaticSpace = NULL;
 
 void *MYMALLOC(size_t size) {
 #if USE_CHECKPOINTING
-  static void *(*mallocp)(size_t size);
-  char *error;
-  void *ptr;
-
-  /* get address of libc malloc */
-  if (!mallocp) {
-    mallocp = ( void * ( * )( size_t ) )dlsym(RTLD_NEXT, "malloc");
-    if ((error = dlerror()) != NULL) {
-      fputs(error, stderr);
-      exit(1);
-    }
-  }
-  ptr = mallocp(size);     
-  return ptr;
+	static void *(*mallocp)(size_t size);
+	char *error;
+	void *ptr;
+  
+	/* get address of libc malloc */
+	if (!mallocp) {
+		mallocp = ( void * ( * )( size_t ) )dlsym(RTLD_NEXT, "malloc");
+		if ((error = dlerror()) != NULL) {
+			fputs(error, stderr);
+			exit(1);
+		}
+	}
+	ptr = mallocp(size);     
+	return ptr;
 #else
-  if( !sTheRecord ){
-    createSharedLibrary();
-  }
-  if( NULL == sStaticSpace )
-    sStaticSpace = create_mspace_with_base( ( void * )( sTheRecord->mSharedMemoryBase ), SHARED_MEMORY_DEFAULT -sizeof( struct Snapshot_t ), 1 );
-  return mspace_malloc( sStaticSpace, size );
+	if( !sTheRecord ){
+		createSharedLibrary();
+	}
+	if( NULL == sStaticSpace )
+		sStaticSpace = create_mspace_with_base( ( void * )( sTheRecord->mSharedMemoryBase ), SHARED_MEMORY_DEFAULT -sizeof( struct Snapshot_t ), 1 );
+	return mspace_malloc( sStaticSpace, size );
 #endif
 }
 
 void MYFREE(void *ptr) {
 #if USE_CHECKPOINTING
-  static void (*freep)(void *);
-  char *error;
+	static void (*freep)(void *);
+	char *error;
 
-  /* get address of libc free */
-  if (!freep) {
-    freep = ( void  ( * )( void * ) )dlsym(RTLD_NEXT, "free");
-    if ((error = dlerror()) != NULL) {
-      fputs(error, stderr);
-      exit(1);
-    }
-  }
-  freep(ptr);
+	/* get address of libc free */
+	if (!freep) {
+		freep = ( void  ( * )( void * ) )dlsym(RTLD_NEXT, "free");
+		if ((error = dlerror()) != NULL) {
+			fputs(error, stderr);
+			exit(1);
+		}
+	}
+	freep(ptr);
 #else
-  mspace_free( sStaticSpace, ptr );
+	mspace_free( sStaticSpace, ptr );
 #endif
 }
 mspace mySpace = NULL;
 void *malloc( size_t size ) {
-  return mspace_malloc( mySpace, size );
+	return mspace_malloc( mySpace, size );
 }
 
 void free( void * ptr ){
-  mspace_free( mySpace, ptr );
+	mspace_free( mySpace, ptr );
 }
 
 void * operator new(size_t size) throw(std::bad_alloc) {
-  return MYMALLOC(size);
+	return MYMALLOC(size);
 }
 
 void operator delete(void *p) throw() {
-  MYFREE(p);
+	MYFREE(p);
 }

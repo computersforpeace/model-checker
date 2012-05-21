@@ -3,8 +3,8 @@
 #include "common.h"
 #include "model.h"
 
-Scheduler::Scheduler(): 
-current(NULL) 
+Scheduler::Scheduler() :
+	current(NULL)
 {
 }
 

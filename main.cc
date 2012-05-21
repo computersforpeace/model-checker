@@ -12,7 +12,7 @@
  */
 static int thread_system_next(void) {
 	Thread *curr, *next;
-  
+
 	curr = thread_current();
 	if (curr) {
 		if (curr->get_state() == THREAD_READY) {
@@ -45,24 +45,24 @@ void real_main() {
 
 	//Create the singleton snapshotStack object
 	snapshotObject = new snapshotStack();
-  
+
 	model = new ModelChecker();
-  
+
 	if (getcontext(&main_context))
 		return;
-  
+
 	model->set_system_context(&main_context);
 
 	do {
 		/* Start user program */
 		model->add_thread(new Thread(&user_thread, (void (*)(void *)) &user_main, NULL));
-    
+
 		/* Wait for all threads to complete */
 		thread_wait_finish();
 	} while (model->next_execution());
-  
+
 	delete model;
-  
+
 	DEBUG("Exiting\n");
 }
 

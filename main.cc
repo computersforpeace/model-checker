@@ -10,10 +10,6 @@
 /*
  * Return 1 if found next thread, 0 otherwise
  */
-int num;
-int num1;
-int num2;
-
 static int thread_system_next(void) {
   Thread *curr, *next;
   

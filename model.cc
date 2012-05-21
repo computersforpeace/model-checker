@@ -2,7 +2,7 @@
 
 #include "model.h"
 #include "action.h"
-#include "tree.h"
+#include "nodestack.h"
 #include "schedule.h"
 #include "snapshot-interface.h"
 #undef DEBUG
@@ -10,35 +10,7 @@
 
 #define INITIAL_THREAD_ID	0
 
-class Backtrack {
-public:
-	Backtrack(ModelAction *d, action_list_t *t) {
-		diverge = d;
-		actionTrace = t;
-		iter = actionTrace->begin();
-	}
-	ModelAction * get_diverge() { return diverge; }
-	action_list_t * get_trace() { return actionTrace; }
-	void advance_state() { iter++; }
-	ModelAction * get_state() {
-		return iter == actionTrace->end() ? NULL : *iter;
-	}
-private:
-	ModelAction *diverge;
-	action_list_t *actionTrace;
-	/* points to position in actionTrace as we replay */
-	action_list_t::iterator iter;
-};
-
 ModelChecker *model;
-
-void free_action_list(action_list_t *list)
-{
-	action_list_t::iterator it;
-	for (it = list->begin(); it != list->end(); it++)
-		delete (*it);
-	delete list;
-}
 
 ModelChecker::ModelChecker()
 	:
@@ -50,11 +22,11 @@ ModelChecker::ModelChecker()
 
 	num_executions(0),
 	current_action(NULL),
-	exploring(NULL),
+	diverge(NULL),
 	nextThread(THREAD_ID_T_NONE),
 	action_trace(new action_list_t()),
-	rootNode(new TreeNode()),
-	currentNode(rootNode)
+	node_stack(new NodeStack()),
+	next_backtrack(NULL)
 {
 }
 
@@ -65,10 +37,10 @@ ModelChecker::~ModelChecker()
 		delete (*it).second;
 	thread_map.clear();
 
-	free_action_list(action_trace);
+	delete action_trace;
 
+	delete node_stack;
 	delete scheduler;
-	delete rootNode;
 }
 
 void ModelChecker::reset_to_initial_state()
@@ -78,12 +50,14 @@ void ModelChecker::reset_to_initial_state()
 	for (it = thread_map.begin(); it != thread_map.end(); it++)
 		delete (*it).second;
 	thread_map.clear();
+	delete action_trace;
 	action_trace = new action_list_t();
-	currentNode = rootNode;
+	node_stack->reset_execution();
 	current_action = NULL;
 	next_thread_id = INITIAL_THREAD_ID;
 	used_sequence_numbers = 0;
 	nextThread = 0;
+	next_backtrack = NULL;
 	/* scheduler reset ? */
 }
 
@@ -122,24 +96,19 @@ thread_id_t ModelChecker::get_next_replay_thread()
 	thread_id_t tid;
 
 	/* Have we completed exploring the preselected path? */
-	if (exploring == NULL)
+	if (diverge == NULL)
 		return THREAD_ID_T_NONE;
 
 	/* Else, we are trying to replay an execution */
-	exploring->advance_state();
+	next = node_stack->get_next()->get_action();
 
-	ASSERT(exploring->get_state() != NULL);
+	if (next == diverge) {
+		Node *node = next->get_node();
 
-	next = exploring->get_state();
-
-	if (next == exploring->get_diverge()) {
-		TreeNode *node = next->get_treenode();
-
-		/* Reached divergence point; discard our current 'exploring' */
-		DEBUG("*** Discard 'Backtrack' object ***\n");
-		tid = node->getNextBacktrack();
-		delete exploring;
-		exploring = NULL;
+		/* Reached divergence point */
+		DEBUG("*** Divergence point ***\n");
+		tid = node->get_next_backtrack();
+		diverge = NULL;
 	} else {
 		tid = next->get_tid();
 	}
@@ -153,13 +122,12 @@ bool ModelChecker::next_execution()
 
 	num_executions++;
 	print_summary();
-	if ((exploring = model->get_next_backtrack()) == NULL)
+	if ((diverge = model->get_next_backtrack()) == NULL)
 		return false;
 
 	if (DBG_ENABLED()) {
 		printf("Next execution will diverge at:\n");
-		exploring->get_diverge()->print();
-		print_list(exploring->get_trace());
+		diverge->print();
 	}
 
 	model->reset_to_initial_state();
@@ -193,48 +161,47 @@ ModelAction * ModelChecker::get_last_conflict(ModelAction *act)
 void ModelChecker::set_backtracking(ModelAction *act)
 {
 	ModelAction *prev;
-	TreeNode *node;
+	Node *node;
 	Thread *t = get_thread(act->get_tid());
 
 	prev = get_last_conflict(act);
 	if (prev == NULL)
 		return;
 
-	node = prev->get_treenode();
+	node = prev->get_node();
 
-	while (t && !node->is_enabled(t))
+	while (!node->is_enabled(t))
 		t = t->get_parent();
 
 	/* Check if this has been explored already */
-	if (node->hasBeenExplored(t->get_id()))
-		return;
-	/* If this is a new backtracking point, mark the tree */
-	if (node->setBacktrack(t->get_id()) != 0)
+	if (node->has_been_explored(t->get_id()))
 		return;
 
+	if (!next_backtrack || *prev > *next_backtrack)
+		next_backtrack = prev;
+
+	/* If this is a new backtracking point, mark the tree */
+	if (!node->set_backtrack(t->get_id()))
+		return;
 	DEBUG("Setting backtrack: conflict = %d, instead tid = %d\n",
 			prev->get_tid(), t->get_id());
 	if (DBG_ENABLED()) {
 		prev->print();
 		act->print();
 	}
-
-	Backtrack *back = new Backtrack(prev, action_trace);
-	backtrack_list.push_back(back);
 }
 
-Backtrack * ModelChecker::get_next_backtrack()
+ModelAction * ModelChecker::get_next_backtrack()
 {
-	Backtrack *next;
-	if (backtrack_list.empty())
-		return NULL;
-	next = backtrack_list.back();
-	backtrack_list.pop_back();
+	ModelAction *next = next_backtrack;
+	next_backtrack = NULL;
 	return next;
 }
 
 void ModelChecker::check_current_action(void)
 {
+	Node *currnode;
+
 	ModelAction *curr = this->current_action;
 	current_action = NULL;
 	if (!curr) {
@@ -242,10 +209,16 @@ void ModelChecker::check_current_action(void)
 		return;
 	}
 
+	curr = node_stack->explore_action(curr);
 	nextThread = get_next_replay_thread();
-	curr->set_node(currentNode);
+
+	currnode = curr->get_node();
+
+	if (!currnode->backtrack_empty())
+		if (!next_backtrack || *curr > *next_backtrack)
+			next_backtrack = curr;
+
 	set_backtracking(curr);
-	currentNode = currentNode->explore_child(curr);
 	this->action_trace->push_back(curr);
 }
 
@@ -253,13 +226,12 @@ void ModelChecker::print_summary(void)
 {
 	printf("\n");
 	printf("Number of executions: %d\n", num_executions);
-	printf("Total nodes created: %d\n", TreeNode::getTotalNodes());
+	printf("Total nodes created: %d\n", Node::get_total_nodes());
 
 	scheduler->print();
 
 	print_list(action_trace);
 	printf("\n");
-
 }
 
 void ModelChecker::print_list(action_list_t *list)

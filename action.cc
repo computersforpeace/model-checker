@@ -52,7 +52,8 @@ bool ModelAction::is_release()
 
 bool ModelAction::same_var(ModelAction *act)
 {
-	return location == act->location;
+	return true;
+	// TODO: fix stack allocation... return location == act->location;
 }
 
 bool ModelAction::same_thread(ModelAction *act)

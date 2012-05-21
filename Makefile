@@ -8,9 +8,9 @@ LIB_SO=lib$(LIB_NAME).so
 USER_O=userprog.o
 USER_H=libthreads.h libatomic.h
 
-MODEL_CC=libthreads.cc schedule.cc libatomic.cc model.cc threads.cc tree.cc librace.cc action.cc nodestack.cc clockvector.cc main.cc snapshot-interface.cc
-MODEL_O=libthreads.o schedule.o libatomic.o model.o threads.o tree.o librace.o action.o nodestack.o clockvector.o main.o snapshot-interface.o
-MODEL_H=libthreads.h schedule.h common.h libatomic.h model.h threads.h tree.h librace.h action.h nodestack.h clockvector.h snapshot-interface.h
+MODEL_CC=libthreads.cc schedule.cc libatomic.cc model.cc threads.cc librace.cc action.cc nodestack.cc clockvector.cc main.cc snapshot-interface.cc
+MODEL_O=libthreads.o schedule.o libatomic.o model.o threads.o librace.o action.o nodestack.o clockvector.o main.o snapshot-interface.o
+MODEL_H=libthreads.h schedule.h common.h libatomic.h model.h threads.h librace.h action.h nodestack.h clockvector.h snapshot-interface.h
 
 SHMEM_CC=snapshot.cc malloc.c mymemory.cc
 SHMEM_O=snapshot.o malloc.o mymemory.o

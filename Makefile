@@ -3,9 +3,7 @@ CXX=g++
 
 BIN=model
 LIB_NAME=model
-LIB_MEM=mymemory
 LIB_SO=lib$(LIB_NAME).so
-LIB_MEM_SO=lib$(LIB_MEM).so
 
 USER_O=userprog.o
 USER_H=libthreads.h libatomic.h
@@ -23,16 +21,13 @@ LDFLAGS=-ldl -lrt
 
 all: $(BIN)
 
-$(BIN): $(USER_O) $(LIB_SO) $(LIB_MEM_SO)
-	$(CXX) -o $(BIN) $(USER_O) -L. -l$(LIB_NAME) -l$(LIB_MEM)
+$(BIN): $(USER_O) $(LIB_SO)
+	$(CXX) -o $(BIN) $(USER_O) -L. -l$(LIB_NAME)
 
 # note: implicit rule for generating $(USER_O) (i.e., userprog.c -> userprog.o)
 
-$(LIB_SO): $(MODEL_O) $(MODEL_H)
-	$(CXX) -shared -o $(LIB_SO) $(MODEL_O) $(LDFLAGS)
-
-$(LIB_MEM_SO): $(SHMEM_O) $(SHMEM_H)
-	$(CXX) -shared -o $(LIB_MEM_SO) $(SHMEM_O) $(LDFLAGS)
+$(LIB_SO): $(MODEL_O) $(MODEL_H) $(SHMEM_O) $(SHMEM_H)
+	$(CXX) -shared -o $(LIB_SO) $(MODEL_O) $(SHMEM_O) $(LDFLAGS)
 
 malloc.o: malloc.c
 	$(CC) -fPIC -c malloc.c -DMSPACES -DONLY_MSPACES $(CPPFLAGS)

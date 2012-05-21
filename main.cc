@@ -78,5 +78,5 @@ int main(int numargs, char ** args) {
 	main_args=args;
 
 	/* Let's jump in quickly and start running stuff */
-	initSnapShotLibrary(10000 /*int numbackingpages*/, 1024 /*unsigned int numsnapshots*/, 1024 /*unsigned int nummemoryregions*/ , 1000 /*int numheappages*/, &real_main /*MyFuncPtr entryPoint*/);
+	initSnapShotLibrary(10000, 1024, 1024, 1000, &real_main);
 }

@@ -8,7 +8,7 @@
 /*
  * User program API functions
  */
-int thrd_create(thrd_t *t, void (*start_routine)(), void *arg)
+int thrd_create(thrd_t *t, void (*start_routine)(void *), void *arg)
 {
 	int ret;
 	DBG();

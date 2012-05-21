@@ -1,3 +1,5 @@
+/* -*- Mode: C; indent-tabs-mode: t -*- */
+
 #ifndef __SCHEDULE_H__
 #define __SCHEDULE_H__
 
@@ -9,6 +11,7 @@ class Thread;
 
 class Scheduler {
 public:
+	Scheduler();
 	void add_thread(Thread *t);
 	void remove_thread(Thread *t);
 	Thread * next_thread(void);

@@ -18,7 +18,7 @@ typedef enum thread_state {
 
 class Thread {
 public:
-	Thread(thrd_t *t, void (*func)(), void *a);
+	Thread(thrd_t *t, void (*func)(void *), void *a);
 	~Thread();
 	void complete();
 
@@ -30,12 +30,13 @@ public:
 	thread_id_t get_id();
 	thrd_t get_thrd_t() { return *user_thread; }
 	Thread * get_parent() { return parent; }
+  friend void thread_startup();
   MEMALLOC
 private:
 	int create_context();
 	Thread *parent;
 
-	void (*start_routine)();
+	void (*start_routine)(void *);
 	void *arg;
 	ucontext_t context;
 	void *stack;

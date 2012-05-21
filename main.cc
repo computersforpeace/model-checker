@@ -57,7 +57,7 @@ void real_main() {
 
 	do {
 		/* Start user program */
-		model->add_thread(new Thread(&user_thread, &user_main, NULL));
+		model->add_thread(new Thread(&user_thread, (void (*)(void *)) &user_main, NULL));
     
 		/* Wait for all threads to complete */
 		thread_wait_finish();

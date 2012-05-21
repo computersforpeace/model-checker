@@ -1,7 +1,14 @@
+/* -*- Mode: C; indent-tabs-mode: t -*- */
+
 #include "threads.h"
 #include "schedule.h"
 #include "common.h"
 #include "model.h"
+
+Scheduler::Scheduler(): 
+current(NULL) 
+{
+}
 
 void Scheduler::add_thread(Thread *t)
 {

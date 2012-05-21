@@ -45,7 +45,7 @@ int Thread::create_context()
 	context.uc_stack.ss_size = STACK_SIZE;
 	context.uc_stack.ss_flags = 0;
 	context.uc_link = model->get_system_context();
-	makecontext(&context, start_routine, 1);
+	makecontext(&context, thread_startup, 0);
 
 	return 0;
 }
@@ -70,7 +70,7 @@ void Thread::complete()
 	}
 }
 
-Thread::Thread(thrd_t *t, void (*func)(), void *a) {
+Thread::Thread(thrd_t *t, void (*func)(void *), void *a) {
 	int ret;
 
 	user_thread = t;

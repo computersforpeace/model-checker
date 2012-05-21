@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-	typedef void (*thrd_start_t)();
+	typedef void (*thrd_start_t)(void *);
 
 	typedef int thrd_t;
 

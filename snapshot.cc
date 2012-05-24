@@ -77,13 +77,13 @@ void HandlePF( int sig, siginfo_t *si, void * unused){
 #if USE_CHECKPOINTING
 	if( si->si_code == SEGV_MAPERR ){
 		printf("Real Fault at %llx\n", ( long long )si->si_addr);
-		exit( EXIT_FAILURE );	
+		exit( EXIT_FAILURE );
 	}
 	void* addr = ReturnPageAlignedAddress(si->si_addr);
 	unsigned int backingpage=snapshotrecord->lastBackingPage++; //Could run out of pages...
 	if (backingpage==snapshotrecord->maxBackingPages) {
 		printf("Out of backing pages at %llx\n", ( long long )si->si_addr);
-		exit( EXIT_FAILURE );	
+		exit( EXIT_FAILURE );
 	}
 
 	//copy page
@@ -150,7 +150,7 @@ void initSnapShotLibrary(unsigned int numbackingpages, unsigned int numsnapshots
 		exit(-1);
 	}
 	initSnapShotRecord(numbackingpages, numsnapshots, nummemoryregions);
-	
+
 	basemySpace=MYMALLOC((numheappages+1)*PAGESIZE);
 	void * pagealignedbase=PageAlignAddressUpward(basemySpace);
 	mySpace = create_mspace_with_base(pagealignedbase,  numheappages*PAGESIZE, 1 );
@@ -172,7 +172,7 @@ void initSnapShotLibrary(unsigned int numbackingpages, unsigned int numsnapshots
 	gettimeofday( starttime, NULL );
 #endif
 	//step 2 setup the stack context.
- 
+
 	int alreadySwapped = 0;
 	getcontext( &savedSnapshotContext );
 	if( !alreadySwapped ){
@@ -185,7 +185,7 @@ void initSnapShotLibrary(unsigned int numbackingpages, unsigned int numsnapshots
 		makecontext( &newContext, entryPoint, 0 );
 		swapcontext( &swappedContext, &newContext );
 	}
-  
+
 	//add the code to take a snapshot here...
 	//to return to user process, do a second swapcontext...
 	pid_t forkedID = 0;
@@ -194,7 +194,7 @@ void initSnapShotLibrary(unsigned int numbackingpages, unsigned int numsnapshots
 	while( !sTheRecord->mbFinalize ){
 		sTheRecord->currSnapShotID=snapshotid+1;
 		forkedID = fork();
-		if( 0 == forkedID ){ 
+		if( 0 == forkedID ){
 			ucontext_t currentContext;
 #if 0
 			int dbg = 0;
@@ -203,7 +203,7 @@ void initSnapShotLibrary(unsigned int numbackingpages, unsigned int numsnapshots
 			if( swapContext )
 				swapcontext( &currentContext, &( sTheRecord->mContextToRollback ) );
 			else{
-				swapcontext( &currentContext, &savedUserSnapshotContext );      
+				swapcontext( &currentContext, &savedUserSnapshotContext );
 			}
 		} else {
 			int status;
@@ -213,7 +213,7 @@ void initSnapShotLibrary(unsigned int numbackingpages, unsigned int numsnapshots
 			sprintf( mesg, "The process id of child is %d and the process id of this process is %d and snapshot id is %d", forkedID, getpid(), snapshotid );
 			DumpIntoLog( "ModelSnapshot", mesg );
 #endif
-			do { 
+			do {
 				retVal=waitpid( forkedID, &status, 0 );
 			} while( -1 == retVal && errno == EINTR );
 
@@ -224,7 +224,7 @@ void initSnapShotLibrary(unsigned int numbackingpages, unsigned int numsnapshots
 			}
 		}
 	}
-  
+
 #endif
 }
 /* This function assumes that addr is page aligned */
@@ -235,7 +235,7 @@ void addMemoryRegionToSnapShot( void * addr, unsigned int numPages) {
 		printf("Exceeded supported number of memory regions!\n");
 		exit(-1);
 	}
-  
+
 	snapshotrecord->regionsToSnapShot[ memoryregion ].basePtr=addr;
 	snapshotrecord->regionsToSnapShot[ memoryregion ].sizeInPages=numPages;
 #endif //NOT REQUIRED IN THE CASE OF FORK BASED SNAPSHOTS.
@@ -248,7 +248,7 @@ snapshot_id takeSnapshot( ){
 			perror("mprotect");
 			printf("Failed to mprotect inside of takeSnapShot\n");
 			exit(-1);
-		}		
+		}
 	}
 	unsigned int snapshot=snapshotrecord->lastSnapShot++;
 	if (snapshot==snapshotrecord->maxSnapShots) {
@@ -256,7 +256,7 @@ snapshot_id takeSnapshot( ){
 		exit(-1);
 	}
 	snapshotrecord->snapShots[snapshot].firstBackingPage=snapshotrecord->lastBackingPage;
-  
+
 	return snapshot;
 #else
 	swapcontext( &savedUserSnapshotContext, &savedSnapshotContext );
@@ -271,15 +271,15 @@ void rollBack( snapshot_id theID ){
 			perror("mprotect");
 			printf("Failed to mprotect inside of takeSnapShot\n");
 			exit(-1);
-		}		
+		}
 	}
 	for(unsigned int page=snapshotrecord->snapShots[theID].firstBackingPage; page<snapshotrecord->lastBackingPage; page++) {
 		bool oldVal = false;
 		if( duplicateMap.find( snapshotrecord->backingRecords[page].basePtrOfPage ) != duplicateMap.end() ){
-			oldVal = true;          
+			oldVal = true;
 		}
 		else{
-			duplicateMap[ snapshotrecord->backingRecords[page].basePtrOfPage ] = true;    
+			duplicateMap[ snapshotrecord->backingRecords[page].basePtrOfPage ] = true;
 		}
 		if(  !oldVal ){
 			memcpy(snapshotrecord->backingRecords[page].basePtrOfPage, &snapshotrecord->backingStore[page], sizeof(struct SnapShotPage));
@@ -295,7 +295,7 @@ void rollBack( snapshot_id theID ){
 	if( !sTemp ){
 		sTemp = 1;
 #if SSDEBUG
-		DumpIntoLog( "ModelSnapshot", "Invoked rollback" ); 
+		DumpIntoLog( "ModelSnapshot", "Invoked rollback" );
 #endif
 		exit( 0 );
 	}

@@ -2,6 +2,8 @@
 #define _SNAPSHOT_H
 #define PAGESIZE 4096
 #define USE_CHECKPOINTING 1
+/* Size of signal stack */
+#define SIGSTACKSIZE 16384
 
 
 typedef unsigned int snapshot_id;

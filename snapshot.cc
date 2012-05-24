@@ -137,8 +137,11 @@ void initSnapShotLibrary(unsigned int numbackingpages, unsigned int numsnapshots
 		exit(-1);
 	}
 	initSnapShotRecord(numbackingpages, numsnapshots, nummemoryregions);
-	mySpace = create_mspace( numheappages*PAGESIZE, 1 );
-	addMemoryRegionToSnapShot(mySpace, numheappages);
+	
+	basemySpace=MYMALLOC((numheappages+1)*PAGESIZE);
+	void * pagealignedbase=(void *)((((uintptr_t)basemySpace)+PAGESIZE-1)&~(PAGESIZE-1));
+	mySpace = create_mspace_with_base(pagealignedbase,  numheappages*PAGESIZE, 1 );
+	addMemoryRegionToSnapShot(pagealignedbase, numheappages);
 	entryPoint();
 #else
 	//add a signal to indicate that the process is going to terminate.

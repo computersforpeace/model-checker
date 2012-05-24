@@ -122,6 +122,7 @@ extern void mspace_free(mspace msp, void* mem);
 extern mspace create_mspace_with_base(void* base, size_t capacity, int locked);
 extern mspace create_mspace(size_t capacity, int locked);
 extern mspace mySpace;
+extern void * basemySpace;
 #ifdef __cplusplus
 };  /* end of extern "C" */
 #endif

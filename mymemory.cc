@@ -52,6 +52,8 @@ void MYFREE(void *ptr) {
 #endif
 }
 mspace mySpace = NULL;
+void * basemySpace = NULL;
+
 void *malloc( size_t size ) {
 	return mspace_malloc( mySpace, size );
 }

@@ -91,7 +91,10 @@ void HandlePF( int sig, siginfo_t *si, void * unused){
 	//remember where to copy page back to
 	snapshotrecord->backingRecords[backingpage].basePtrOfPage=addr;
 	//set protection to read/write
-	mprotect( addr, sizeof(struct SnapShotPage), PROT_READ | PROT_WRITE );  
+	if (mprotect( addr, sizeof(struct SnapShotPage), PROT_READ | PROT_WRITE )) {
+		perror("mprotect");
+		// Handle error by quitting?
+	}
 #endif //nothing to handle for non snapshotting case.
 }
 
@@ -226,6 +229,7 @@ snapshot_id takeSnapshot( ){
 #if USE_CHECKPOINTING
 	for(unsigned int region=0; region<snapshotrecord->lastRegion;region++) {
 		if( mprotect(snapshotrecord->regionsToSnapShot[region].basePtr, snapshotrecord->regionsToSnapShot[region].sizeInPages*sizeof(struct SnapShotPage), PROT_READ ) == -1 ){
+			perror("mprotect");
 			printf("Failed to mprotect inside of takeSnapShot\n");
 			exit(-1);
 		}		
@@ -248,6 +252,7 @@ void rollBack( snapshot_id theID ){
 	std::map< void *, bool, std::less< void * >, MyAlloc< std::pair< const void *, bool > > > duplicateMap;
 	for(unsigned int region=0; region<snapshotrecord->lastRegion;region++) {
 		if( mprotect(snapshotrecord->regionsToSnapShot[region].basePtr, snapshotrecord->regionsToSnapShot[region].sizeInPages*sizeof(struct SnapShotPage), PROT_READ | PROT_WRITE ) == -1 ){
+			perror("mprotect");
 			printf("Failed to mprotect inside of takeSnapShot\n");
 			exit(-1);
 		}		

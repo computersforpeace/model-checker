@@ -33,7 +33,7 @@ public:
 
 	friend void thread_startup();
 
-	MEMALLOC
+	SNAPSHOTALLOC
 private:
 	int create_context();
 	Thread *parent;

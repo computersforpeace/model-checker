@@ -39,7 +39,7 @@ private:
 	std::vector<bool> backtrack;
 };
 
-typedef std::list<class Node *> node_list_t;
+typedef std::list<class Node *, MyAlloc< class Node * > > node_list_t;
 
 class NodeStack {
 public:

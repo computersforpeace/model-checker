@@ -45,7 +45,7 @@ ModelChecker::~ModelChecker()
 void ModelChecker::reset_to_initial_state()
 {
 	DEBUG("+++ Resetting to initial state +++\n");
-	std::map<int, class Thread *, std::less< int >, MyAlloc< std::pair< int, class Thread * > > >::iterator it;
+	std::map<int, class Thread *>::iterator it;
 	for (it = thread_map.begin(); it != thread_map.end(); it++)
 		delete (*it).second;
 	thread_map.clear();

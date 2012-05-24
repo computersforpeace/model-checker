@@ -92,13 +92,13 @@ int snapshotStack::backTrackBeforeStep(int seqindex) {
 			return stack->index;
 		}
 		struct stackEntry *tmp=stack;
-		free(tmp);
+		MYFREE(tmp);
 		stack=stack->next;
 	}
 }
 
 void snapshotStack::snapshotStep(int seqindex) {
-	struct stackEntry *tmp=(struct stackEntry *)malloc(sizeof(struct stackEntry));
+	struct stackEntry *tmp=(struct stackEntry *)MYMALLOC(sizeof(struct stackEntry));
 	tmp->next=stack;
 	tmp->index=seqindex;
 	tmp->snapshotid=takeSnapshot();

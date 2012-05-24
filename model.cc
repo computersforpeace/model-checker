@@ -59,6 +59,7 @@ void ModelChecker::reset_to_initial_state()
 	nextThread = 0;
 	next_backtrack = NULL;
 	/* scheduler reset ? */
+	snapshotObject->backTrackBeforeStep(0);
 }
 
 thread_id_t ModelChecker::get_next_id()

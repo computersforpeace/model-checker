@@ -53,6 +53,8 @@ void real_main() {
 
 	model->set_system_context(&main_context);
 
+	snapshotObject->snapshotStep(0);
+
 	do {
 		/* Start user program */
 		model->add_thread(new Thread(&user_thread, (void (*)(void *)) &user_main, NULL));

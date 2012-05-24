@@ -17,7 +17,7 @@
 #include <errno.h>
 #include <sys/wait.h>
 #include <ucontext.h>
-#include <sys/time.h>
+
 //extern declaration definition
 #define FAILURE(mesg) { printf("failed in the API: %s with errno relative message: %s\n", mesg, strerror( errno ) ); exit( -1 ); }
 #if USE_CHECKPOINTING
@@ -26,24 +26,13 @@ struct Snapshot_t * sTheRecord = NULL;
 #else
 struct Snapshot_t * sTheRecord = NULL;
 #endif
-void BeginOperation( struct timeval * theStartTime ){
-#if 1
-	gettimeofday( theStartTime, NULL );
-#endif
-}
-#if SSDEBUG
-struct timeval *starttime = NULL;
-#endif
 void DumpIntoLog( const char * filename, const char * message ){
 #if SSDEBUG
 	static pid_t thePID = getpid();
 	char newFn[ 1024 ] ={ 0 };
 	sprintf( newFn,"%s-%d.txt", filename, thePID );
 	FILE * myFile = fopen( newFn, "w+" );
-	struct timeval theEndTime;
-	BeginOperation( &theEndTime );
-	double elapsed = ( theEndTime.tv_sec - starttime->tv_sec ) + ( theEndTime.tv_usec - starttime->tv_usec ) / 1000000.0;
-	fprintf( myFile, "The timestamp %f:--> the message %s: the process id %d\n", elapsed, message, thePID );
+	fprintf( myFile, "the message %s: the process id %d\n", message, thePID );
 	fflush( myFile );
 	fclose( myFile );
 	myFile = NULL;
@@ -167,10 +156,7 @@ void initSnapShotLibrary(unsigned int numbackingpages, unsigned int numsnapshots
 		exit(-1);
 	}
 	createSharedLibrary();
-#if SSDEBUG
-	starttime = &(sTheRecord->startTimeGlobal);
-	gettimeofday( starttime, NULL );
-#endif
+
 	//step 2 setup the stack context.
 
 	int alreadySwapped = 0;

@@ -61,9 +61,6 @@ size_t mStackSize;
 snapshot_id mIDToRollback;
 ucontext_t mContextToRollback;
 snapshot_id currSnapShotID;
-#if SSDEBUG
-struct timeval startTimeGlobal;
-#endif
 volatile bool mbFinalize;
 };
 extern struct Snapshot_t * sTheRecord;

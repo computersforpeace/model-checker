@@ -2,6 +2,7 @@
 #define _MY_MEMORY_H
 #include <stdlib.h>
 #include <limits>
+
 #define MEMALLOC \
 	void * operator new(size_t size) { \
 		return MYMALLOC(size);\
@@ -121,4 +122,5 @@ extern mspace mySpace;
 #ifdef __cplusplus
 };  /* end of extern "C" */
 #endif
-#endif
+
+#endif /* _MY_MEMORY_H */

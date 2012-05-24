@@ -52,6 +52,7 @@ struct SnapShot {
 //Global reference to snapshot data structure
 extern struct SnapShot * snapshotrecord;
 void * ReturnPageAlignedAddress( void *);
+void * PageAlignAddressUpward( void *);
 #else
 struct Snapshot_t{
 char *mSharedMemoryBase;

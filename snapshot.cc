@@ -61,7 +61,7 @@ void initSnapShotRecord(unsigned int numbackingpages, unsigned int numsnapshots,
 	snapshotrecord->regionsToSnapShot=( struct MemoryRegion * )MYMALLOC(sizeof(struct MemoryRegion)*nummemoryregions);
 	snapshotrecord->backingStoreBasePtr= ( struct SnapShotPage * )MYMALLOC( sizeof( struct SnapShotPage ) * (numbackingpages + 1) );
 	//Page align the backingstorepages
-	snapshotrecord->backingStore=( struct SnapShotPage * )ReturnPageAlignedAddress((void*) ((uintptr_t)(snapshotrecord->backingStoreBasePtr)+sizeof(struct SnapShotPage)-1));
+	snapshotrecord->backingStore=( struct SnapShotPage * )PageAlignAddressUpward(snapshotrecord->backingStoreBasePtr);
 	snapshotrecord->backingRecords=( struct BackingPageRecord * )MYMALLOC(sizeof(struct BackingPageRecord)*numbackingpages);
 	snapshotrecord->snapShots= ( struct SnapShotRecord * )MYMALLOC(sizeof(struct SnapShotRecord)*numsnapshots);
 	snapshotrecord->lastSnapShot=0;
@@ -103,6 +103,12 @@ void HandlePF( int sig, siginfo_t *si, void * unused){
 void * ReturnPageAlignedAddress(void * addr) {
 	return (void *)(((uintptr_t)addr)&~(PAGESIZE-1));
 }
+
+//Return a page aligned address for the address being added
+//as a side effect the numBytes are also changed.
+void * PageAlignAddressUpward(void * addr) {
+	return (void *)((((uintptr_t)addr)+PAGESIZE-1)&~(PAGESIZE-1));
+}
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -139,7 +145,7 @@ void initSnapShotLibrary(unsigned int numbackingpages, unsigned int numsnapshots
 	initSnapShotRecord(numbackingpages, numsnapshots, nummemoryregions);
 	
 	basemySpace=MYMALLOC((numheappages+1)*PAGESIZE);
-	void * pagealignedbase=(void *)((((uintptr_t)basemySpace)+PAGESIZE-1)&~(PAGESIZE-1));
+	void * pagealignedbase=PageAlignAddressUpward(basemySpace);
 	mySpace = create_mspace_with_base(pagealignedbase,  numheappages*PAGESIZE, 1 );
 	addMemoryRegionToSnapShot(pagealignedbase, numheappages);
 	entryPoint();

@@ -3,6 +3,7 @@
 #define PAGESIZE 4096
 #define USE_CHECKPOINTING 1
 
+
 typedef unsigned int snapshot_id;
 typedef void (*MyFuncPtr)();
 void initSnapShotLibrary(unsigned int numbackingpages, unsigned int numsnapshots, unsigned int nummemoryregions, unsigned int numheappages, MyFuncPtr entryPoint);

@@ -17,6 +17,9 @@
 		MYFREE(p);\
 	}
 
+/* Empty define; represents opposite of MEMALLOC */
+#define SNAPSHOTALLOC
+
 void *MYMALLOC(size_t size);
 void MYFREE(void *ptr);
 

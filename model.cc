@@ -31,7 +31,7 @@ ModelChecker::ModelChecker()
 
 ModelChecker::~ModelChecker()
 {
-	std::map<int, class Thread *, std::less< int >, MyAlloc< std::pair< int, class Thread * > > >::iterator it;
+	std::map<int, class Thread *>::iterator it;
 	for (it = thread_map.begin(); it != thread_map.end(); it++)
 		delete (*it).second;
 	thread_map.clear();

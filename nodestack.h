@@ -35,8 +35,8 @@ private:
 	static int total_nodes;
 	ModelAction *action;
 	int num_threads;
-	std::vector<bool> explored_children;
-	std::vector<bool> backtrack;
+	std::vector< bool, MyAlloc<bool> > explored_children;
+	std::vector< bool, MyAlloc<bool> > backtrack;
 };
 
 typedef std::list<class Node *, MyAlloc< class Node * > > node_list_t;

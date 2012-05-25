@@ -76,13 +76,13 @@ void initSnapShotRecord(unsigned int numbackingpages, unsigned int numsnapshots,
 void HandlePF( int sig, siginfo_t *si, void * unused){
 #if USE_CHECKPOINTING
 	if( si->si_code == SEGV_MAPERR ){
-		printf("Real Fault at %llx\n", ( long long )si->si_addr);
+		printf("Real Fault at %p\n", si->si_addr);
 		exit( EXIT_FAILURE );
 	}
 	void* addr = ReturnPageAlignedAddress(si->si_addr);
 	unsigned int backingpage=snapshotrecord->lastBackingPage++; //Could run out of pages...
 	if (backingpage==snapshotrecord->maxBackingPages) {
-		printf("Out of backing pages at %llx\n", ( long long )si->si_addr);
+		printf("Out of backing pages at %p\n", si->si_addr);
 		exit( EXIT_FAILURE );
 	}
 

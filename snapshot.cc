@@ -134,12 +134,12 @@ extern "C" {
 #endif
 void initSnapShotLibrary(unsigned int numbackingpages, unsigned int numsnapshots, unsigned int nummemoryregions, unsigned int numheappages, MyFuncPtr entryPoint){
 #if USE_CHECKPOINTING
-  /* Setup a stack for our signal handler....  */
-  stack_t ss;
-  ss.ss_sp = MYMALLOC(SIGSTACKSIZE);
-  ss.ss_size = SIGSTACKSIZE;
-  ss.ss_flags = 0;
-  sigaltstack(&ss, NULL);
+	/* Setup a stack for our signal handler....  */
+	stack_t ss;
+	ss.ss_sp = MYMALLOC(SIGSTACKSIZE);
+	ss.ss_size = SIGSTACKSIZE;
+	ss.ss_flags = 0;
+	sigaltstack(&ss, NULL);
 
 	struct sigaction sa;
 	sa.sa_flags = SA_SIGINFO | SA_NODEFER | SA_RESTART | SA_ONSTACK;

@@ -63,9 +63,17 @@ void free( void * ptr ){
 }
 
 void * operator new(size_t size) throw(std::bad_alloc) {
-	return MYMALLOC(size);
+	return malloc(size);
 }
 
 void operator delete(void *p) throw() {
-	MYFREE(p);
+	free(p);
+}
+
+void * operator new[](size_t size) throw(std::bad_alloc) {
+	return malloc(size);
+}
+
+void operator delete[](void *p, size_t size) {
+	free(p);
 }

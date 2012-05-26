@@ -50,8 +50,6 @@ void ModelChecker::reset_to_initial_state()
 	for (it = thread_map->begin(); it != thread_map->end(); it++)
 		delete (*it).second;
 	thread_map->clear();
-	delete action_trace;
-	action_trace = new action_list_t();
 	node_stack->reset_execution();
 	current_action = NULL;
 	next_thread_id = INITIAL_THREAD_ID;

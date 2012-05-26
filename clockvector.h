@@ -2,6 +2,7 @@
 #define __CLOCKVECTOR_H__
 
 #include "threads.h"
+#include "mymemory.h"
 
 /* Forward declaration */
 class ModelAction;
@@ -12,6 +13,8 @@ public:
 	~ClockVector();
 	void merge(ClockVector *cv);
 	bool happens_before(ModelAction *act, thread_id_t id);
+
+	MEMALLOC
 private:
 	int *clock;
 	int num_threads;

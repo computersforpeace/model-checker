@@ -139,6 +139,7 @@ ModelAction * NodeStack::explore_action(ModelAction *act)
 
 		/* Record action */
 		get_head()->explore_child(act);
+		act->create_cv(get_head()->get_action());
 		node_list.push_back(new Node(act, get_head()));
 		iter++;
 	}

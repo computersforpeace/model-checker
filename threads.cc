@@ -9,12 +9,12 @@
 
 static void * stack_allocate(size_t size)
 {
-	return MYMALLOC(size);
+	return malloc(size);
 }
 
 static void stack_free(void *stack)
 {
-	MYFREE(stack);
+	free(stack);
 }
 
 Thread * thread_current(void)

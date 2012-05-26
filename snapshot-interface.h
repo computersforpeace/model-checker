@@ -2,16 +2,7 @@
 #define __SNAPINTERFACE_H
 #include "snapshot.h"
 #include "mymemory.h"
-#include <vector>
-#include <utility>
-#include <string>
-#include <map>
-#include <set>
 #include "snapshot.h"
-#include "libthreads.h"
-
-class snapshotStack;
-typedef std::basic_string<char, std::char_traits<char>, MyAlloc<char> > MyString;
 
 void SnapshotGlobalSegments();
 

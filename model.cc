@@ -46,10 +46,6 @@ ModelChecker::~ModelChecker()
 void ModelChecker::reset_to_initial_state()
 {
 	DEBUG("+++ Resetting to initial state +++\n");
-	std::map<int, class Thread *>::iterator it;
-	for (it = thread_map->begin(); it != thread_map->end(); it++)
-		delete (*it).second;
-	thread_map->clear();
 	node_stack->reset_execution();
 	current_action = NULL;
 	next_thread_id = INITIAL_THREAD_ID;

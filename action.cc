@@ -122,6 +122,11 @@ void ModelAction::print(void)
 		type_str = "unknown type";
 	}
 
-	printf("(%4d) Thread: %d\tAction: %s\tMO: %d\tLoc: %14p\tValue: %d\n",
+	printf("(%3d) Thread: %-2d    Action: %-13s    MO: %d    Loc: %14p    Value: %d",
 			seq_number, id_to_int(tid), type_str, order, location, value);
+	if (cv) {
+		printf("\t");
+		cv->print();
+	} else
+		printf("\n");
 }

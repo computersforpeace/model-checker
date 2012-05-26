@@ -65,6 +65,7 @@ private:
 	ucontext_t *system_context;
 	action_list_t *action_trace;
 	std::map<int, class Thread *> *thread_map;
+	std::map<void *, std::vector<action_list_t> > *obj_thrd_map;
 	class NodeStack *node_stack;
 	ModelAction *next_backtrack;
 };

@@ -25,6 +25,7 @@ ModelChecker::ModelChecker()
 	nextThread(THREAD_ID_T_NONE),
 	action_trace(new action_list_t()),
 	thread_map(new std::map<int, class Thread *>),
+	obj_thrd_map(new std::map<void *, std::vector<action_list_t> >()),
 	node_stack(new NodeStack()),
 	next_backtrack(NULL)
 {
@@ -37,8 +38,8 @@ ModelChecker::~ModelChecker()
 		delete (*it).second;
 	delete thread_map;
 
+	delete obj_thrd_map;
 	delete action_trace;
-
 	delete node_stack;
 	delete scheduler;
 }
@@ -219,6 +220,11 @@ void ModelChecker::check_current_action(void)
 
 	set_backtracking(curr);
 	this->action_trace->push_back(curr);
+
+	std::vector<action_list_t> *vec = &(*obj_thrd_map)[curr->get_location()];
+	if (id_to_int(curr->get_tid()) >= (int)vec->size())
+		vec->resize(next_thread_id);
+	(*vec)[id_to_int(curr->get_tid())].push_back(curr);
 }
 
 void ModelChecker::print_summary(void)

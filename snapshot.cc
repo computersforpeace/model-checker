@@ -4,7 +4,6 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <map>
-#include <set>
 #include <cstring>
 #include <cstdio>
 #include "snapshot.h"
@@ -41,7 +40,7 @@ void DumpIntoLog( const char * filename, const char * message ){
 #if !USE_CHECKPOINTING
 static ucontext_t savedSnapshotContext;
 static ucontext_t savedUserSnapshotContext;
-static int snapshotid = 0;
+static snapshot_id snapshotid = 0;
 #endif
 /* Initialize snapshot data structure */
 #if USE_CHECKPOINTING

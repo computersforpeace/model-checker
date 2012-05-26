@@ -37,6 +37,7 @@ public:
 	Thread * get_thread(thread_id_t tid) { return (*thread_map)[id_to_int(tid)]; }
 
 	thread_id_t get_next_id();
+	int get_num_threads();
 	int get_next_seq_num();
 
 	int switch_to_master(ModelAction *act);

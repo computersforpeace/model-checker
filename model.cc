@@ -60,6 +60,11 @@ thread_id_t ModelChecker::get_next_id()
 	return next_thread_id++;
 }
 
+int ModelChecker::get_num_threads()
+{
+	return next_thread_id;
+}
+
 int ModelChecker::get_next_seq_num()
 {
 	return ++used_sequence_numbers;

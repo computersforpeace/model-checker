@@ -21,6 +21,9 @@ LDFLAGS=-ldl -lrt
 
 all: $(BIN)
 
+debug: CPPFLAGS += -DCONFIG_DEBUG
+debug: all
+
 $(BIN): $(USER_O) $(LIB_SO)
 	$(CXX) -o $(BIN) $(USER_O) -L. -l$(LIB_NAME)
 

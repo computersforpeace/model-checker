@@ -2,6 +2,8 @@
 #define __ACTION_H__
 
 #include <list>
+#include <cstddef>
+
 #include "threads.h"
 #include "libatomic.h"
 #include "mymemory.h"
@@ -41,6 +43,9 @@ public:
 	bool same_var(ModelAction *act);
 	bool same_thread(ModelAction *act);
 	bool is_dependent(ModelAction *act);
+
+	void create_cv(ModelAction *parent = NULL);
+	void read_from(ModelAction *act);
 
 	inline bool operator <(const ModelAction& act) const {
 		return get_seq_number() < act.get_seq_number();

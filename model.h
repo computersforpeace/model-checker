@@ -34,7 +34,7 @@ public:
 
 	int add_thread(Thread *t);
 	void remove_thread(Thread *t);
-	Thread * get_thread(thread_id_t tid) { return thread_map[id_to_int(tid)]; }
+	Thread * get_thread(thread_id_t tid) { return (*thread_map)[id_to_int(tid)]; }
 
 	thread_id_t get_next_id();
 	int get_next_seq_num();
@@ -63,7 +63,7 @@ private:
 
 	ucontext_t *system_context;
 	action_list_t *action_trace;
-	std::map<int, class Thread *> thread_map;
+	std::map<int, class Thread *> *thread_map;
 	class NodeStack *node_stack;
 	ModelAction *next_backtrack;
 };

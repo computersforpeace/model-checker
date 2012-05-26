@@ -24,6 +24,7 @@ ModelChecker::ModelChecker()
 	diverge(NULL),
 	nextThread(THREAD_ID_T_NONE),
 	action_trace(new action_list_t()),
+	thread_map(new std::map<int, class Thread *>),
 	node_stack(new NodeStack()),
 	next_backtrack(NULL)
 {
@@ -32,9 +33,9 @@ ModelChecker::ModelChecker()
 ModelChecker::~ModelChecker()
 {
 	std::map<int, class Thread *>::iterator it;
-	for (it = thread_map.begin(); it != thread_map.end(); it++)
+	for (it = thread_map->begin(); it != thread_map->end(); it++)
 		delete (*it).second;
-	thread_map.clear();
+	delete thread_map;
 
 	delete action_trace;
 
@@ -46,9 +47,9 @@ void ModelChecker::reset_to_initial_state()
 {
 	DEBUG("+++ Resetting to initial state +++\n");
 	std::map<int, class Thread *>::iterator it;
-	for (it = thread_map.begin(); it != thread_map.end(); it++)
+	for (it = thread_map->begin(); it != thread_map->end(); it++)
 		delete (*it).second;
-	thread_map.clear();
+	thread_map->clear();
 	delete action_trace;
 	action_trace = new action_list_t();
 	node_stack->reset_execution();
@@ -75,7 +76,7 @@ Thread * ModelChecker::schedule_next_thread()
 	Thread *t;
 	if (nextThread == THREAD_ID_T_NONE)
 		return NULL;
-	t = thread_map[id_to_int(nextThread)];
+	t = (*thread_map)[id_to_int(nextThread)];
 
 	ASSERT(t != NULL);
 
@@ -248,7 +249,7 @@ void ModelChecker::print_list(action_list_t *list)
 
 int ModelChecker::add_thread(Thread *t)
 {
-	thread_map[id_to_int(t->get_id())] = t;
+	(*thread_map)[id_to_int(t->get_id())] = t;
 	scheduler->add_thread(t);
 	return 0;
 }

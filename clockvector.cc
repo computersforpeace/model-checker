@@ -63,6 +63,7 @@ bool ClockVector::happens_before(ModelAction *act, thread_id_t id)
 void ClockVector::print()
 {
 	int i;
+	printf("CV: (");
 	for (i = 0; i < num_threads; i++)
-		printf("%d%c", clock[i], (i == num_threads - 1) ? '\n' : ' ');
+		printf("%2d%s", clock[i], (i == num_threads - 1) ? ")\n" : ", ");
 }

@@ -43,8 +43,8 @@ void real_main() {
 	thrd_t user_thread;
 	ucontext_t main_context;
 
-	//Create the singleton snapshotStack object
-	snapshotObject = new snapshotStack();
+	//Create the singleton SnapshotStack object
+	snapshotObject = new SnapshotStack();
 
 	model = new ModelChecker();
 

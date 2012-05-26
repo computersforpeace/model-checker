@@ -18,7 +18,7 @@
 
 typedef std::basic_string<char, std::char_traits<char>, MyAlloc<char> > MyString;
 
-snapshotStack * snapshotObject;
+SnapshotStack * snapshotObject;
 
 /*This looks like it might leak memory...  Subramanian should fix this. */
 
@@ -79,17 +79,17 @@ void SnapshotGlobalSegments(){
 	}
 }
 
-//class definition of snapshotStack.....
+//class definition of SnapshotStack.....
 //declaration of constructor....
-snapshotStack::snapshotStack(){
+SnapshotStack::SnapshotStack(){
 	SnapshotGlobalSegments();
 	stack=NULL;
 }
 	
-snapshotStack::~snapshotStack(){
+SnapshotStack::~SnapshotStack(){
 }
 	
-int snapshotStack::backTrackBeforeStep(int seqindex) {
+int SnapshotStack::backTrackBeforeStep(int seqindex) {
 	while(true) {
 		if (stack->index<=seqindex) {
 			//have right entry
@@ -102,7 +102,7 @@ int snapshotStack::backTrackBeforeStep(int seqindex) {
 	}
 }
 
-void snapshotStack::snapshotStep(int seqindex) {
+void SnapshotStack::snapshotStep(int seqindex) {
 	struct stackEntry *tmp=(struct stackEntry *)MYMALLOC(sizeof(struct stackEntry));
 	tmp->next=stack;
 	tmp->index=seqindex;

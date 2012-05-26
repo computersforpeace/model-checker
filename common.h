@@ -2,8 +2,6 @@
 #define __COMMON_H__
 
 #include <stdio.h>
-#include <stdlib.h>
-#include "mymemory.h"
 
 //#define CONFIG_DEBUG
 
@@ -24,9 +22,5 @@ do { \
 		exit(1); \
 	} \
 } while (0);
-
-
-#define userMalloc(size)	malloc(size)
-#define userFree(ptr)		free(ptr)
 
 #endif /* __COMMON_H__ */

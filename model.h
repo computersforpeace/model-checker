@@ -56,6 +56,8 @@ private:
 	ModelAction * get_next_backtrack();
 	void reset_to_initial_state();
 
+	ModelAction * get_last_action(thread_id_t tid);
+
 	void print_list(action_list_t *list);
 
 	ModelAction *current_action;
@@ -66,6 +68,7 @@ private:
 	action_list_t *action_trace;
 	std::map<int, class Thread *> *thread_map;
 	std::map<void *, std::vector<action_list_t> > *obj_thrd_map;
+	std::vector<ModelAction *> *thrd_last_action;
 	class NodeStack *node_stack;
 	ModelAction *next_backtrack;
 };

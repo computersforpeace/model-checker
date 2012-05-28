@@ -88,7 +88,7 @@ void ModelAction::create_cv(ModelAction *parent)
 	if (parent)
 		cv = new ClockVector(parent->cv, this);
 	else
-		cv = new ClockVector();
+		cv = new ClockVector(NULL, this);
 }
 
 void ModelAction::read_from(ModelAction *act)

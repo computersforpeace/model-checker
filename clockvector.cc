@@ -14,8 +14,6 @@ ClockVector::ClockVector(ClockVector *parent, ModelAction *act)
 	memset(clock, 0, num_threads * sizeof(int));
 	if (parent)
 		std::memcpy(clock, parent->clock, parent->num_threads * sizeof(int));
-	else
-		clock[0] = 1;
 
 	if (act)
 		clock[id_to_int(act->get_tid())] = act->get_seq_number();

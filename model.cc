@@ -211,7 +211,8 @@ void ModelChecker::check_current_action(void)
 		return;
 	}
 
-	curr = node_stack->explore_action(curr, NULL);
+	/* TODO: if get_last_action() is NULL, sync with parent thread */
+	curr = node_stack->explore_action(curr, get_last_action(curr->get_tid()));
 	nextThread = get_next_replay_thread();
 
 	currnode = curr->get_node();

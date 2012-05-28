@@ -222,14 +222,20 @@ void ModelChecker::check_current_action(void)
 			next_backtrack = curr;
 
 	set_backtracking(curr);
-	this->action_trace->push_back(curr);
 
-	std::vector<action_list_t> *vec = &(*obj_thrd_map)[curr->get_location()];
-	if (id_to_int(curr->get_tid()) >= (int)vec->size())
+	add_action_to_lists(curr);
+}
+
+void ModelChecker::add_action_to_lists(ModelAction *act)
+{
+	action_trace->push_back(act);
+
+	std::vector<action_list_t> *vec = &(*obj_thrd_map)[act->get_location()];
+	if (id_to_int(act->get_tid()) >= (int)vec->size())
 		vec->resize(next_thread_id);
-	(*vec)[id_to_int(curr->get_tid())].push_back(curr);
+	(*vec)[id_to_int(act->get_tid())].push_back(act);
 
-	(*thrd_last_action)[id_to_int(curr->get_tid())] = curr;
+	(*thrd_last_action)[id_to_int(act->get_tid())] = act;
 }
 
 ModelAction * ModelChecker::get_last_action(thread_id_t tid)

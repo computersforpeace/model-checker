@@ -56,6 +56,7 @@ private:
 	ModelAction * get_next_backtrack();
 	void reset_to_initial_state();
 
+	void add_action_to_lists(ModelAction *act);
 	ModelAction * get_last_action(thread_id_t tid);
 
 	void print_list(action_list_t *list);

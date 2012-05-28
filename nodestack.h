@@ -11,7 +11,7 @@ class ModelAction;
 
 class Node {
 public:
-	Node(ModelAction *act = NULL, Node *parent = NULL);
+	Node(ModelAction *act = NULL, int nthreads = 1);
 	~Node();
 	/* return true = thread choice has already been explored */
 	bool has_been_explored(thread_id_t tid);

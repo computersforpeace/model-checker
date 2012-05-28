@@ -209,7 +209,7 @@ void ModelChecker::check_current_action(void)
 		return;
 	}
 
-	curr = node_stack->explore_action(curr);
+	curr = node_stack->explore_action(curr, NULL);
 	nextThread = get_next_replay_thread();
 
 	currnode = curr->get_node();

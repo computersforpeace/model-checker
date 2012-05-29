@@ -66,11 +66,11 @@ void SnapshotGlobalSegments(){
 		MyString line;
 		while( procName.good() ){
 			getline( procName, line );
-			int i  = 0;
-			for( i = 0; i < 3; ++i ){
+			int i;
+			for( i = 0; i < 2; ++i ){
 				if( MyString::npos != line.find( dataSect[ i ].first ) ) break;			
 			}
-			if( i >= 3 || dataSect[ i ].second == true ) continue;
+			if( i >= 2 || dataSect[ i ].second == true ) continue;
 			dataSect[ i ].second = true;
 			if( !procName.good() )return;
 			getline( procName, line );

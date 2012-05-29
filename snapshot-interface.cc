@@ -1,4 +1,5 @@
 #include "snapshot-interface.h"
+#include "snapshot.h"
 #include <iostream>
 #include <fstream>
 #include <unistd.h>
@@ -14,7 +15,6 @@
 #define MYLIBRARYNAME "libmodel.so"
 #define PROCNAME      "/proc/*/maps"
 #define REPLACEPOS		6
-#define PAGESIZE 4096
 
 typedef std::basic_string<char, std::char_traits<char>, MyAlloc<char> > MyString;
 

@@ -45,7 +45,7 @@ class NodeStack {
 public:
 	NodeStack();
 	~NodeStack();
-	ModelAction * explore_action(ModelAction *act, ModelAction *parent);
+	ModelAction * explore_action(ModelAction *act);
 	Node * get_head();
 	Node * get_next();
 	void reset_execution();

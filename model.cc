@@ -211,7 +211,8 @@ void ModelChecker::check_current_action(void)
 		return;
 	}
 
-	curr = node_stack->explore_action(curr, get_parent_action(curr->get_tid()));
+	curr = node_stack->explore_action(curr);
+	curr->create_cv(get_parent_action(curr->get_tid()));
 
 	/* Assign 'creation' parent */
 	if (curr->get_type() == THREAD_CREATE) {

@@ -84,7 +84,9 @@ bool ModelAction::is_dependent(ModelAction *act)
 
 void ModelAction::create_cv(ModelAction *parent)
 {
-	ASSERT(cv == NULL);
+	if (cv)
+		return;
+
 	if (parent)
 		cv = new ClockVector(parent->cv, this);
 	else

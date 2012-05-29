@@ -117,7 +117,7 @@ void NodeStack::print()
 	printf("............................................\n");
 }
 
-ModelAction * NodeStack::explore_action(ModelAction *act, ModelAction *parent)
+ModelAction * NodeStack::explore_action(ModelAction *act)
 {
 	DBG();
 
@@ -135,7 +135,6 @@ ModelAction * NodeStack::explore_action(ModelAction *act, ModelAction *parent)
 
 		/* Record action */
 		get_head()->explore_child(act);
-		act->create_cv(parent);
 		node_list.push_back(new Node(act, model->get_num_threads()));
 		iter++;
 	}

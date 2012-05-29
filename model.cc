@@ -211,8 +211,14 @@ void ModelChecker::check_current_action(void)
 		return;
 	}
 
-	/* TODO: if get_last_action() is NULL, sync with parent thread */
-	curr = node_stack->explore_action(curr, get_last_action(curr->get_tid()));
+	curr = node_stack->explore_action(curr, get_parent_action(curr->get_tid()));
+
+	/* Assign 'creation' parent */
+	if (curr->get_type() == THREAD_CREATE) {
+		Thread *th = (Thread *)curr->get_location();
+		th->set_creation(curr);
+	}
+
 	nextThread = get_next_replay_thread();
 
 	currnode = curr->get_node();
@@ -244,6 +250,14 @@ ModelAction * ModelChecker::get_last_action(thread_id_t tid)
 	if ((int)thrd_last_action->size() < nthreads)
 		thrd_last_action->resize(nthreads);
 	return (*thrd_last_action)[id_to_int(tid)];
+}
+
+ModelAction * ModelChecker::get_parent_action(thread_id_t tid)
+{
+	ModelAction *parent = get_last_action(tid);
+	if (!parent)
+		parent = get_thread(tid)->get_creation();
+	return parent;
 }
 
 void ModelChecker::print_summary(void)

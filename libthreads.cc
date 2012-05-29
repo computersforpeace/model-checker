@@ -10,12 +10,14 @@
  */
 int thrd_create(thrd_t *t, thrd_start_t start_routine, void *arg)
 {
+	Thread *thread;
 	int ret;
 	DBG();
-	ret = model->add_thread(new Thread(t, start_routine, arg));
+	thread = new Thread(t, start_routine, arg);
+	ret = model->add_thread(thread);
 	DEBUG("create thread %d\n", id_to_int(thrd_to_id(*t)));
 	/* seq_cst is just a 'don't care' parameter */
-	model->switch_to_master(new ModelAction(THREAD_CREATE, memory_order_seq_cst, NULL, VALUE_NONE));
+	model->switch_to_master(new ModelAction(THREAD_CREATE, memory_order_seq_cst, thread, VALUE_NONE));
 	return ret;
 }
 

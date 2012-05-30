@@ -1,7 +1,11 @@
 #ifndef _SNAPSHOT_H
 #define _SNAPSHOT_H
 #define PAGESIZE 4096
-#define USE_CHECKPOINTING 1
+
+/* If USE_MPROTECT_SNAPSHOT=1, then snapshot by using mmap() and mprotect()
+   If USE_MPROTECT_SNAPSHOT=0, then snapshot by using fork() */
+#define USE_MPROTECT_SNAPSHOT 1
+
 /* Size of signal stack */
 #define SIGSTACKSIZE 16384
 

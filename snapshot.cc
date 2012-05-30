@@ -19,7 +19,7 @@
 
 //extern declaration definition
 #define FAILURE(mesg) { printf("failed in the API: %s with errno relative message: %s\n", mesg, strerror( errno ) ); exit( -1 ); }
-#if USE_CHECKPOINTING
+#if USE_MPROTECT_SNAPSHOT
 struct SnapShot * snapshotrecord = NULL;
 struct Snapshot_t * sTheRecord = NULL;
 #else
@@ -37,13 +37,13 @@ void DumpIntoLog( const char * filename, const char * message ){
 	myFile = NULL;
 #endif
 }
-#if !USE_CHECKPOINTING
+#if !USE_MPROTECT_SNAPSHOT
 static ucontext_t savedSnapshotContext;
 static ucontext_t savedUserSnapshotContext;
 static snapshot_id snapshotid = 0;
 #endif
 /* Initialize snapshot data structure */
-#if USE_CHECKPOINTING
+#if USE_MPROTECT_SNAPSHOT
 void initSnapShotRecord(unsigned int numbackingpages, unsigned int numsnapshots, unsigned int nummemoryregions) {
 	snapshotrecord=( struct SnapShot * )MYMALLOC(sizeof(struct SnapShot));
 	snapshotrecord->regionsToSnapShot=( struct MemoryRegion * )MYMALLOC(sizeof(struct MemoryRegion)*nummemoryregions);
@@ -62,7 +62,7 @@ void initSnapShotRecord(unsigned int numbackingpages, unsigned int numsnapshots,
 #endif //nothing to initialize for the fork based snapshotting.
 
 void HandlePF( int sig, siginfo_t *si, void * unused){
-#if USE_CHECKPOINTING
+#if USE_MPROTECT_SNAPSHOT
 	if( si->si_code == SEGV_MAPERR ){
 		printf("Real Fault at %p\n", si->si_addr);
 		exit( EXIT_FAILURE );
@@ -101,7 +101,7 @@ void * PageAlignAddressUpward(void * addr) {
 extern "C" {
 #endif
 	void createSharedLibrary(){
-#if !USE_CHECKPOINTING
+#if !USE_MPROTECT_SNAPSHOT
 		//step 1. create shared memory.
 		if( sTheRecord ) return;
 		int fd = shm_open( "/ModelChecker-Snapshotter", O_RDWR | O_CREAT, 0777 ); //universal permissions.
@@ -121,7 +121,7 @@ extern "C" {
 }
 #endif
 void initSnapShotLibrary(unsigned int numbackingpages, unsigned int numsnapshots, unsigned int nummemoryregions, unsigned int numheappages, MyFuncPtr entryPoint){
-#if USE_CHECKPOINTING
+#if USE_MPROTECT_SNAPSHOT
 	/* Setup a stack for our signal handler....  */
 	stack_t ss;
 	ss.ss_sp = MYMALLOC(SIGSTACKSIZE);
@@ -214,7 +214,7 @@ void initSnapShotLibrary(unsigned int numbackingpages, unsigned int numsnapshots
 }
 /* This function assumes that addr is page aligned */
 void addMemoryRegionToSnapShot( void * addr, unsigned int numPages) {
-#if USE_CHECKPOINTING
+#if USE_MPROTECT_SNAPSHOT
 	unsigned int memoryregion=snapshotrecord->lastRegion++;
 	if (memoryregion==snapshotrecord->maxRegions) {
 		printf("Exceeded supported number of memory regions!\n");
@@ -227,7 +227,7 @@ void addMemoryRegionToSnapShot( void * addr, unsigned int numPages) {
 }
 //take snapshot
 snapshot_id takeSnapshot( ){
-#if USE_CHECKPOINTING
+#if USE_MPROTECT_SNAPSHOT
 	for(unsigned int region=0; region<snapshotrecord->lastRegion;region++) {
 		if( mprotect(snapshotrecord->regionsToSnapShot[region].basePtr, snapshotrecord->regionsToSnapShot[region].sizeInPages*sizeof(struct SnapShotPage), PROT_READ ) == -1 ){
 			perror("mprotect");
@@ -249,7 +249,7 @@ snapshot_id takeSnapshot( ){
 #endif
 }
 void rollBack( snapshot_id theID ){
-#if USE_CHECKPOINTING
+#if USE_MPROTECT_SNAPSHOT
 	std::map< void *, bool, std::less< void * >, MyAlloc< std::pair< const void *, bool > > > duplicateMap;
 	for(unsigned int region=0; region<snapshotrecord->lastRegion;region++) {
 		if( mprotect(snapshotrecord->regionsToSnapShot[region].basePtr, snapshotrecord->regionsToSnapShot[region].sizeInPages*sizeof(struct SnapShotPage), PROT_READ | PROT_WRITE ) == -1 ){
@@ -288,7 +288,7 @@ void rollBack( snapshot_id theID ){
 }
 
 void finalize(){
-#if !USE_CHECKPOINTING
+#if !USE_MPROTECT_SNAPSHOT
 	sTheRecord->mbFinalize = true;
 #endif
 }

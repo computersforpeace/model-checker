@@ -3,12 +3,12 @@
 #include "snapshotimp.h"
 #include <stdio.h>
 #include <dlfcn.h>
-#if !USE_CHECKPOINTING
+#if !USE_MPROTECT_SNAPSHOT
 static mspace sStaticSpace = NULL;
 #endif
 
 void *MYMALLOC(size_t size) {
-#if USE_CHECKPOINTING
+#if USE_MPROTECT_SNAPSHOT
 	static void *(*mallocp)(size_t size);
 	char *error;
 	void *ptr;
@@ -34,7 +34,7 @@ void *MYMALLOC(size_t size) {
 }
 
 void MYFREE(void *ptr) {
-#if USE_CHECKPOINTING
+#if USE_MPROTECT_SNAPSHOT
 	static void (*freep)(void *);
 	char *error;
 

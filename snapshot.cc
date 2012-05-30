@@ -156,6 +156,10 @@ void initSnapShotLibrary(unsigned int numbackingpages,
 	addMemoryRegionToSnapShot(pagealignedbase, numheappages);
 	entryPoint();
 #else
+	//SUBRAMANIAN: WHY IS THIS SIGNAL HANDLER HERE FOR THE FORK BASED APPROACH????
+	//IT LOOKS LIKE SOME CODE WAS REMOVED FROM SIGNAL HANDLER...
+	//IN ANY CASE, DO NOT REUSE THE HANDLEPF CALL!!!!
+
 	//add a signal to indicate that the process is going to terminate.
 	struct sigaction sa;
 	sa.sa_flags = SA_SIGINFO | SA_NODEFER | SA_RESTART;

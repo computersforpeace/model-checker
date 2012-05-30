@@ -26,13 +26,10 @@ public:
 
 	void print();
 
-	static int get_total_nodes() { return total_nodes; }
-
 	MEMALLOC
 private:
 	void explore(thread_id_t tid);
 
-	static int total_nodes;
 	ModelAction *action;
 	int num_threads;
 	std::vector< bool, MyAlloc<bool> > explored_children;
@@ -50,12 +47,16 @@ public:
 	Node * get_next();
 	void reset_execution();
 
+	int get_total_nodes() { return total_nodes; }
+
 	void print();
 
 	MEMALLOC
 private:
 	node_list_t node_list;
 	node_list_t::iterator iter;
+
+	int total_nodes;
 };
 
 #endif /* __NODESTACK_H__ */

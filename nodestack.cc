@@ -3,15 +3,12 @@
 #include "common.h"
 #include "model.h"
 
-int Node::total_nodes = 0;
-
 Node::Node(ModelAction *act, int nthreads)
 	: action(act),
 	num_threads(nthreads),
 	explored_children(num_threads),
 	backtrack(num_threads)
 {
-	total_nodes++;
 }
 
 Node::~Node()
@@ -94,8 +91,10 @@ static void clear_node_list(node_list_t *list, node_list_t::iterator start,
 }
 
 NodeStack::NodeStack()
+	: total_nodes(0)
 {
 	node_list.push_back(new Node());
+	total_nodes++;
 	iter = node_list.begin();
 }
 
@@ -136,6 +135,7 @@ ModelAction * NodeStack::explore_action(ModelAction *act)
 		/* Record action */
 		get_head()->explore_child(act);
 		node_list.push_back(new Node(act, model->get_num_threads()));
+		total_nodes++;
 		iter++;
 	}
 	return (*iter)->get_action();

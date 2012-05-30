@@ -265,7 +265,7 @@ void ModelChecker::print_summary(void)
 {
 	printf("\n");
 	printf("Number of executions: %d\n", num_executions);
-	printf("Total nodes created: %d\n", Node::get_total_nodes());
+	printf("Total nodes created: %d\n", node_stack->get_total_nodes());
 
 	scheduler->print();
 

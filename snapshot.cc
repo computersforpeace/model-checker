@@ -120,7 +120,9 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-void initSnapShotLibrary(unsigned int numbackingpages, unsigned int numsnapshots, unsigned int nummemoryregions, unsigned int numheappages, MyFuncPtr entryPoint){
+void initSnapShotLibrary(unsigned int numbackingpages,
+		unsigned int numsnapshots, unsigned int nummemoryregions,
+		unsigned int numheappages, VoidFuncPtr entryPoint) {
 #if USE_MPROTECT_SNAPSHOT
 	/* Setup a stack for our signal handler....  */
 	stack_t ss;

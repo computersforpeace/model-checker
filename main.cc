@@ -4,7 +4,6 @@
 
 /* global "model" object */
 #include "model.h"
-#include "snapshot.h"
 #include "snapshot-interface.h"
 
 /*

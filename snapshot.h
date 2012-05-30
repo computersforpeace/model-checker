@@ -1,5 +1,8 @@
 #ifndef _SNAPSHOT_H
 #define _SNAPSHOT_H
+
+#include "snapshot-interface.h"
+
 #define PAGESIZE 4096
 
 /* If USE_MPROTECT_SNAPSHOT=1, then snapshot by using mmap() and mprotect()
@@ -8,13 +11,6 @@
 
 /* Size of signal stack */
 #define SIGSTACKSIZE 16384
-
-typedef unsigned int snapshot_id;
-
-typedef void (*VoidFuncPtr)();
-void initSnapShotLibrary(unsigned int numbackingpages,
-		unsigned int numsnapshots, unsigned int nummemoryregions,
-		unsigned int numheappages, VoidFuncPtr entryPoint);
 
 void addMemoryRegionToSnapShot( void * ptr, unsigned int numPages );
 

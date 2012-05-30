@@ -1,8 +1,13 @@
 #ifndef __SNAPINTERFACE_H
 #define __SNAPINTERFACE_H
-#include "snapshot.h"
 #include "mymemory.h"
-#include "snapshot.h"
+
+typedef unsigned int snapshot_id;
+
+typedef void (*VoidFuncPtr)();
+void initSnapShotLibrary(unsigned int numbackingpages,
+		unsigned int numsnapshots, unsigned int nummemoryregions,
+		unsigned int numheappages, VoidFuncPtr entryPoint);
 
 void SnapshotGlobalSegments();
 

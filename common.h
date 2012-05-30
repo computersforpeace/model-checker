@@ -2,10 +2,12 @@
 #define __COMMON_H__
 
 #include <stdio.h>
-#include <stdlib.h>
-#include "mymemory.h"
 
-//#define CONFIG_DEBUG
+/*
+#ifndef CONFIG_DEBUG
+#define CONFIG_DEBUG
+#endif
+*/
 
 #ifdef CONFIG_DEBUG
 #define DEBUG(fmt, ...) do { printf("*** %25s(): line %-4d *** " fmt, __func__, __LINE__, ##__VA_ARGS__); } while (0)
@@ -24,9 +26,5 @@ do { \
 		exit(1); \
 	} \
 } while (0);
-
-
-#define userMalloc(size)	malloc(size)
-#define userFree(ptr)		free(ptr)
 
 #endif /* __COMMON_H__ */

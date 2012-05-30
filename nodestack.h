@@ -11,7 +11,7 @@ class ModelAction;
 
 class Node {
 public:
-	Node(ModelAction *act = NULL, Node *parent = NULL);
+	Node(ModelAction *act = NULL, int nthreads = 1);
 	~Node();
 	/* return true = thread choice has already been explored */
 	bool has_been_explored(thread_id_t tid);
@@ -35,11 +35,11 @@ private:
 	static int total_nodes;
 	ModelAction *action;
 	int num_threads;
-	std::vector<bool> explored_children;
-	std::vector<bool> backtrack;
+	std::vector< bool, MyAlloc<bool> > explored_children;
+	std::vector< bool, MyAlloc<bool> > backtrack;
 };
 
-typedef std::list<class Node *> node_list_t;
+typedef std::list<class Node *, MyAlloc< class Node * > > node_list_t;
 
 class NodeStack {
 public:

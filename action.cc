@@ -2,6 +2,8 @@
 
 #include "model.h"
 #include "action.h"
+#include "clockvector.h"
+#include "common.h"
 
 ModelAction::ModelAction(action_type_t type, memory_order order, void *loc, int value)
 {
@@ -14,6 +16,14 @@ ModelAction::ModelAction(action_type_t type, memory_order order, void *loc, int 
 	act->tid = t->get_id();
 	act->value = value;
 	act->seq_number = model->get_next_seq_num();
+
+	cv = NULL;
+}
+
+ModelAction::~ModelAction()
+{
+	if (cv)
+		delete cv;
 }
 
 bool ModelAction::is_read()
@@ -52,8 +62,7 @@ bool ModelAction::is_release()
 
 bool ModelAction::same_var(ModelAction *act)
 {
-	return true;
-	// TODO: fix stack allocation... return location == act->location;
+	return location == act->location;
 }
 
 bool ModelAction::same_thread(ModelAction *act)
@@ -71,6 +80,25 @@ bool ModelAction::is_dependent(ModelAction *act)
 			(is_write() || act->is_write()))
 		return true;
 	return false;
+}
+
+void ModelAction::create_cv(ModelAction *parent)
+{
+	if (cv)
+		return;
+
+	if (parent)
+		cv = new ClockVector(parent->cv, this);
+	else
+		cv = new ClockVector(NULL, this);
+}
+
+void ModelAction::read_from(ModelAction *act)
+{
+	ASSERT(cv);
+	if (act->is_release() && this->is_acquire())
+		cv->merge(act->cv);
+	value = act->value;
 }
 
 void ModelAction::print(void)
@@ -96,6 +124,11 @@ void ModelAction::print(void)
 		type_str = "unknown type";
 	}
 
-	printf("(%4d) Thread: %d\tAction: %s\tMO: %d\tLoc: %14p\tValue: %d\n",
+	printf("(%3d) Thread: %-2d    Action: %-13s    MO: %d    Loc: %14p    Value: %d",
 			seq_number, id_to_int(tid), type_str, order, location, value);
+	if (cv) {
+		printf("\t");
+		cv->print();
+	} else
+		printf("\n");
 }

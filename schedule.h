@@ -16,9 +16,9 @@ public:
 	Thread * get_current_thread(void);
 	void print();
 
-	MEMALLOC
+	SNAPSHOTALLOC
 private:
-	std::list<Thread *, MyAlloc< Thread * > > readyList;
+	std::list<Thread *> readyList;
 	Thread *current;
 };
 

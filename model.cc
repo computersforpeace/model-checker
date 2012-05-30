@@ -24,6 +24,9 @@ ModelChecker::ModelChecker()
 	diverge(NULL),
 	nextThread(THREAD_ID_T_NONE),
 	action_trace(new action_list_t()),
+	thread_map(new std::map<int, class Thread *>),
+	obj_thrd_map(new std::map<void *, std::vector<action_list_t> >()),
+	thrd_last_action(new std::vector<ModelAction *>(1)),
 	node_stack(new NodeStack()),
 	next_backtrack(NULL)
 {
@@ -31,13 +34,14 @@ ModelChecker::ModelChecker()
 
 ModelChecker::~ModelChecker()
 {
-	std::map<int, class Thread *, std::less< int >, MyAlloc< std::pair< int, class Thread * > > >::iterator it;
-	for (it = thread_map.begin(); it != thread_map.end(); it++)
+	std::map<int, class Thread *>::iterator it;
+	for (it = thread_map->begin(); it != thread_map->end(); it++)
 		delete (*it).second;
-	thread_map.clear();
+	delete thread_map;
 
+	delete obj_thrd_map;
 	delete action_trace;
-
+	delete thrd_last_action;
 	delete node_stack;
 	delete scheduler;
 }
@@ -45,24 +49,23 @@ ModelChecker::~ModelChecker()
 void ModelChecker::reset_to_initial_state()
 {
 	DEBUG("+++ Resetting to initial state +++\n");
-	std::map<int, class Thread *, std::less< int >, MyAlloc< std::pair< int, class Thread * > > >::iterator it;
-	for (it = thread_map.begin(); it != thread_map.end(); it++)
-		delete (*it).second;
-	thread_map.clear();
-	delete action_trace;
-	action_trace = new action_list_t();
 	node_stack->reset_execution();
 	current_action = NULL;
 	next_thread_id = INITIAL_THREAD_ID;
 	used_sequence_numbers = 0;
 	nextThread = 0;
 	next_backtrack = NULL;
-	/* scheduler reset ? */
+	snapshotObject->backTrackBeforeStep(0);
 }
 
 thread_id_t ModelChecker::get_next_id()
 {
 	return next_thread_id++;
+}
+
+int ModelChecker::get_num_threads()
+{
+	return next_thread_id;
 }
 
 int ModelChecker::get_next_seq_num()
@@ -75,7 +78,7 @@ Thread * ModelChecker::schedule_next_thread()
 	Thread *t;
 	if (nextThread == THREAD_ID_T_NONE)
 		return NULL;
-	t = thread_map[id_to_int(nextThread)];
+	t = (*thread_map)[id_to_int(nextThread)];
 
 	ASSERT(t != NULL);
 
@@ -209,6 +212,14 @@ void ModelChecker::check_current_action(void)
 	}
 
 	curr = node_stack->explore_action(curr);
+	curr->create_cv(get_parent_action(curr->get_tid()));
+
+	/* Assign 'creation' parent */
+	if (curr->get_type() == THREAD_CREATE) {
+		Thread *th = (Thread *)curr->get_location();
+		th->set_creation(curr);
+	}
+
 	nextThread = get_next_replay_thread();
 
 	currnode = curr->get_node();
@@ -218,7 +229,36 @@ void ModelChecker::check_current_action(void)
 			next_backtrack = curr;
 
 	set_backtracking(curr);
-	this->action_trace->push_back(curr);
+
+	add_action_to_lists(curr);
+}
+
+void ModelChecker::add_action_to_lists(ModelAction *act)
+{
+	action_trace->push_back(act);
+
+	std::vector<action_list_t> *vec = &(*obj_thrd_map)[act->get_location()];
+	if (id_to_int(act->get_tid()) >= (int)vec->size())
+		vec->resize(next_thread_id);
+	(*vec)[id_to_int(act->get_tid())].push_back(act);
+
+	(*thrd_last_action)[id_to_int(act->get_tid())] = act;
+}
+
+ModelAction * ModelChecker::get_last_action(thread_id_t tid)
+{
+	int nthreads = get_num_threads();
+	if ((int)thrd_last_action->size() < nthreads)
+		thrd_last_action->resize(nthreads);
+	return (*thrd_last_action)[id_to_int(tid)];
+}
+
+ModelAction * ModelChecker::get_parent_action(thread_id_t tid)
+{
+	ModelAction *parent = get_last_action(tid);
+	if (!parent)
+		parent = get_thread(tid)->get_creation();
+	return parent;
 }
 
 void ModelChecker::print_summary(void)
@@ -248,7 +288,7 @@ void ModelChecker::print_list(action_list_t *list)
 
 int ModelChecker::add_thread(Thread *t)
 {
-	thread_map[id_to_int(t->get_id())] = t;
+	(*thread_map)[id_to_int(t->get_id())] = t;
 	scheduler->add_thread(t);
 	return 0;
 }

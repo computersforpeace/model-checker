@@ -1,19 +1,24 @@
 #include "snapshot-interface.h"
+#include "snapshot.h"
 #include <iostream>
 #include <fstream>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sstream>
 #include <cstring>
+#include <string>
 #include <cassert>
+#include <vector>
+#include <utility>
 
 #define MYBINARYNAME "model"
 #define MYLIBRARYNAME "libmodel.so"
 #define PROCNAME      "/proc/*/maps"
 #define REPLACEPOS		6
-#define PAGESIZE 4096
 
-snapshotStack * snapshotObject;
+typedef std::basic_string<char, std::char_traits<char>, MyAlloc<char> > MyString;
+
+SnapshotStack * snapshotObject;
 
 /*This looks like it might leak memory...  Subramanian should fix this. */
 
@@ -61,11 +66,11 @@ void SnapshotGlobalSegments(){
 		MyString line;
 		while( procName.good() ){
 			getline( procName, line );
-			int i  = 0;
-			for( i = 0; i < 3; ++i ){
+			int i;
+			for( i = 0; i < 2; ++i ){
 				if( MyString::npos != line.find( dataSect[ i ].first ) ) break;			
 			}
-			if( i >= 3 || dataSect[ i ].second == true ) continue;
+			if( i >= 2 || dataSect[ i ].second == true ) continue;
 			dataSect[ i ].second = true;
 			if( !procName.good() )return;
 			getline( procName, line );
@@ -74,17 +79,17 @@ void SnapshotGlobalSegments(){
 	}
 }
 
-//class definition of snapshotStack.....
+//class definition of SnapshotStack.....
 //declaration of constructor....
-snapshotStack::snapshotStack(){
+SnapshotStack::SnapshotStack(){
 	SnapshotGlobalSegments();
 	stack=NULL;
 }
 	
-snapshotStack::~snapshotStack(){
+SnapshotStack::~SnapshotStack(){
 }
 	
-int snapshotStack::backTrackBeforeStep(int seqindex) {
+int SnapshotStack::backTrackBeforeStep(int seqindex) {
 	while(true) {
 		if (stack->index<=seqindex) {
 			//have right entry
@@ -97,7 +102,7 @@ int snapshotStack::backTrackBeforeStep(int seqindex) {
 	}
 }
 
-void snapshotStack::snapshotStep(int seqindex) {
+void SnapshotStack::snapshotStep(int seqindex) {
 	struct stackEntry *tmp=(struct stackEntry *)MYMALLOC(sizeof(struct stackEntry));
 	tmp->next=stack;
 	tmp->index=seqindex;

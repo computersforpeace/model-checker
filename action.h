@@ -2,6 +2,8 @@
 #define __ACTION_H__
 
 #include <list>
+#include <cstddef>
+
 #include "threads.h"
 #include "libatomic.h"
 #include "mymemory.h"
@@ -17,10 +19,12 @@ typedef enum action_type {
 
 /* Forward declaration */
 class Node;
+class ClockVector;
 
 class ModelAction {
 public:
 	ModelAction(action_type_t type, memory_order order, void *loc, int value);
+	~ModelAction();
 	void print(void);
 
 	thread_id_t get_tid() { return tid; }
@@ -40,6 +44,9 @@ public:
 	bool same_thread(ModelAction *act);
 	bool is_dependent(ModelAction *act);
 
+	void create_cv(ModelAction *parent = NULL);
+	void read_from(ModelAction *act);
+
 	inline bool operator <(const ModelAction& act) const {
 		return get_seq_number() < act.get_seq_number();
 	}
@@ -56,8 +63,10 @@ private:
 	int value;
 	Node *node;
 	int seq_number;
+
+	ClockVector *cv;
 };
 
-typedef std::list<class ModelAction *, MyAlloc< class ModelAction * > > action_list_t;
+typedef std::list<class ModelAction *> action_list_t;
 
 #endif /* __ACTION_H__ */

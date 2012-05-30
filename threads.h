@@ -16,6 +16,8 @@ typedef enum thread_state {
 	THREAD_COMPLETED
 } thread_state;
 
+class ModelAction;
+
 class Thread {
 public:
 	Thread(thrd_t *t, void (*func)(void *), void *a);
@@ -31,12 +33,16 @@ public:
 	thrd_t get_thrd_t() { return *user_thread; }
 	Thread * get_parent() { return parent; }
 
+	void set_creation(ModelAction *act) { creation = act; }
+	ModelAction * get_creation() { return creation; }
+
 	friend void thread_startup();
 
-	MEMALLOC
+	SNAPSHOTALLOC
 private:
 	int create_context();
 	Thread *parent;
+	ModelAction *creation;
 
 	void (*start_routine)(void *);
 	void *arg;

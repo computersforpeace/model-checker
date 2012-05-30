@@ -1,17 +1,13 @@
 #ifndef __SNAPINTERFACE_H
 #define __SNAPINTERFACE_H
-#include "snapshot.h"
 #include "mymemory.h"
-#include <vector>
-#include <utility>
-#include <string>
-#include <map>
-#include <set>
-#include "snapshot.h"
-#include "libthreads.h"
 
-class snapshotStack;
-typedef std::basic_string<char, std::char_traits<char>, MyAlloc<char> > MyString;
+typedef unsigned int snapshot_id;
+
+typedef void (*VoidFuncPtr)();
+void initSnapShotLibrary(unsigned int numbackingpages,
+		unsigned int numsnapshots, unsigned int nummemoryregions,
+		unsigned int numheappages, VoidFuncPtr entryPoint);
 
 void SnapshotGlobalSegments();
 
@@ -21,11 +17,11 @@ struct stackEntry {
   int index;
 };
 
-class snapshotStack {
+class SnapshotStack {
  public:
   MEMALLOC
-  snapshotStack( );
-  ~snapshotStack();
+  SnapshotStack( );
+  ~SnapshotStack();
   int backTrackBeforeStep(int seq_index);
   void snapshotStep(int seq_index);
 
@@ -36,5 +32,5 @@ class snapshotStack {
 /* Not sure what it even means to have more than one snapshot object,
    so let's just make a global reference to it.*/
 
-extern snapshotStack * snapshotObject;
+extern SnapshotStack * snapshotObject;
 #endif

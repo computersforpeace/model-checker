@@ -4,7 +4,6 @@
 
 /* global "model" object */
 #include "model.h"
-#include "snapshot.h"
 #include "snapshot-interface.h"
 
 /*
@@ -43,8 +42,8 @@ void real_main() {
 	thrd_t user_thread;
 	ucontext_t main_context;
 
-	//Create the singleton snapshotStack object
-	snapshotObject = new snapshotStack();
+	//Create the singleton SnapshotStack object
+	snapshotObject = new SnapshotStack();
 
 	model = new ModelChecker();
 
@@ -52,6 +51,8 @@ void real_main() {
 		return;
 
 	model->set_system_context(&main_context);
+
+	snapshotObject->snapshotStep(0);
 
 	do {
 		/* Start user program */

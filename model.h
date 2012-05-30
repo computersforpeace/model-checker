@@ -34,9 +34,10 @@ public:
 
 	int add_thread(Thread *t);
 	void remove_thread(Thread *t);
-	Thread * get_thread(thread_id_t tid) { return thread_map[id_to_int(tid)]; }
+	Thread * get_thread(thread_id_t tid) { return (*thread_map)[id_to_int(tid)]; }
 
 	thread_id_t get_next_id();
+	int get_num_threads();
 	int get_next_seq_num();
 
 	int switch_to_master(ModelAction *act);
@@ -55,6 +56,10 @@ private:
 	ModelAction * get_next_backtrack();
 	void reset_to_initial_state();
 
+	void add_action_to_lists(ModelAction *act);
+	ModelAction * get_last_action(thread_id_t tid);
+	ModelAction * get_parent_action(thread_id_t tid);
+
 	void print_list(action_list_t *list);
 
 	ModelAction *current_action;
@@ -63,7 +68,9 @@ private:
 
 	ucontext_t *system_context;
 	action_list_t *action_trace;
-	std::map<int, class Thread *, std::less< int >, MyAlloc< std::pair< const int, class Thread * > > > thread_map;
+	std::map<int, class Thread *> *thread_map;
+	std::map<void *, std::vector<action_list_t> > *obj_thrd_map;
+	std::vector<ModelAction *> *thrd_last_action;
 	class NodeStack *node_stack;
 	ModelAction *next_backtrack;
 };

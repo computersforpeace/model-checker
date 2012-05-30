@@ -1,21 +1,17 @@
 #include "nodestack.h"
 #include "action.h"
 #include "common.h"
+#include "model.h"
 
 int Node::total_nodes = 0;
 
-Node::Node(ModelAction *act, Node *parent)
+Node::Node(ModelAction *act, int nthreads)
 	: action(act),
-	num_threads(parent ? parent->num_threads : 1),
+	num_threads(nthreads),
 	explored_children(num_threads),
 	backtrack(num_threads)
 {
 	total_nodes++;
-	if (act && act->get_type() == THREAD_CREATE) {
-		num_threads++;
-		explored_children.resize(num_threads);
-		backtrack.resize(num_threads);
-	}
 }
 
 Node::~Node()
@@ -139,7 +135,7 @@ ModelAction * NodeStack::explore_action(ModelAction *act)
 
 		/* Record action */
 		get_head()->explore_child(act);
-		node_list.push_back(new Node(act, get_head()));
+		node_list.push_back(new Node(act, model->get_num_threads()));
 		iter++;
 	}
 	return (*iter)->get_action();

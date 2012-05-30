@@ -141,6 +141,15 @@ void initSnapShotLibrary(unsigned int numbackingpages,
 	}
 	initSnapShotRecord(numbackingpages, numsnapshots, nummemoryregions);
 
+	// EVIL HACK: We need to make sure that calls into the HandlePF method don't cause dynamic links
+	// The problem is that we end up protecting state in the dynamic linker...
+	// Solution is to call our signal handler before we start protecting stuff...
+
+	siginfo_t si;
+	si.si_addr=ss.ss_sp;
+	HandlePF(SIGSEGV, &si, NULL);
+	snapshotrecord->lastBackingPage--; //remove the fake page we copied
+
 	basemySpace=MYMALLOC((numheappages+1)*PAGESIZE);
 	void * pagealignedbase=PageAlignAddressUpward(basemySpace);
 	mySpace = create_mspace_with_base(pagealignedbase,  numheappages*PAGESIZE, 1 );

@@ -115,6 +115,7 @@ extern "C" {
 		sTheRecord->mStackSize = STACK_SIZE_DEFAULT;
 		sTheRecord->mIDToRollback = -1;
 		sTheRecord->currSnapShotID = 0;
+		sTheRecord->mbFinalize = false;
 #endif
 	}
 #ifdef __cplusplus
@@ -156,19 +157,10 @@ void initSnapShotLibrary(unsigned int numbackingpages,
 	addMemoryRegionToSnapShot(pagealignedbase, numheappages);
 	entryPoint();
 #else
-	//SUBRAMANIAN: WHY IS THIS SIGNAL HANDLER HERE FOR THE FORK BASED APPROACH????
-	//IT LOOKS LIKE SOME CODE WAS REMOVED FROM SIGNAL HANDLER...
-	//IN ANY CASE, DO NOT REUSE THE HANDLEPF CALL!!!!
 
-	//add a signal to indicate that the process is going to terminate.
-	struct sigaction sa;
-	sa.sa_flags = SA_SIGINFO | SA_NODEFER | SA_RESTART;
-	sigemptyset( &sa.sa_mask );
-	sa.sa_sigaction = HandlePF;
-	if( sigaction( SIGUSR1, &sa, NULL ) == -1 ){
-		printf("SIGACTION CANNOT BE INSTALLED\n");
-		exit(-1);
-	}
+	basemySpace=system_malloc((numheappages+1)*PAGESIZE);
+	void * pagealignedbase=PageAlignAddressUpward(basemySpace);
+	mySpace = create_mspace_with_base(pagealignedbase,  numheappages*PAGESIZE, 1 );
 	createSharedLibrary();
 
 	//step 2 setup the stack context.

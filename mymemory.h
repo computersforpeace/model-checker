@@ -23,6 +23,8 @@
 void *MYMALLOC(size_t size);
 void MYFREE(void *ptr);
 
+void system_free( void * ptr );
+void *system_malloc( size_t size );
 /*
 The following code example is taken from the book
 The C++ Standard Library - A Tutorial and Reference
@@ -119,6 +121,8 @@ extern "C" {
 typedef void * mspace;
 extern void* mspace_malloc(mspace msp, size_t bytes);
 extern void mspace_free(mspace msp, void* mem);
+extern void* mspace_realloc(mspace msp, void* mem, size_t newsize);
+extern void* mspace_calloc(mspace msp, size_t n_elements, size_t elem_size);
 extern mspace create_mspace_with_base(void* base, size_t capacity, int locked);
 extern mspace create_mspace(size_t capacity, int locked);
 extern mspace mySpace;

@@ -8,6 +8,7 @@ typedef void (*VoidFuncPtr)();
 void initSnapShotLibrary(unsigned int numbackingpages,
 		unsigned int numsnapshots, unsigned int nummemoryregions,
 		unsigned int numheappages, VoidFuncPtr entryPoint);
+void finalize();
 
 void SnapshotGlobalSegments();
 

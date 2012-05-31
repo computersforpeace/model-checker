@@ -18,8 +18,6 @@ snapshot_id takeSnapshot( );
 
 void rollBack( snapshot_id theSnapShot );
 
-void finalize();
-
 #ifdef __cplusplus
 extern "C" {
 #endif

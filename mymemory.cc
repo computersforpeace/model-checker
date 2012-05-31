@@ -18,7 +18,7 @@ void *MYMALLOC(size_t size) {
 		mallocp = ( void * ( * )( size_t ) )dlsym(RTLD_NEXT, "malloc");
 		if ((error = dlerror()) != NULL) {
 			fputs(error, stderr);
-			exit(1);
+			exit(EXIT_FAILURE);
 		}
 	}
 	ptr = mallocp(size);     
@@ -43,7 +43,7 @@ void *system_malloc( size_t size ){
 		mallocp = ( void * ( * )( size_t ) )dlsym(RTLD_NEXT, "malloc");
 		if ((error = dlerror()) != NULL) {
 			fputs(error, stderr);
-			exit(1);
+			exit(EXIT_FAILURE);
 		}
 	}
 	ptr = mallocp(size);
@@ -59,7 +59,7 @@ void system_free( void * ptr ){
 		freep = ( void  ( * )( void * ) )dlsym(RTLD_NEXT, "free");
 		if ((error = dlerror()) != NULL) {
 			fputs(error, stderr);
-			exit(1);
+			exit(EXIT_FAILURE);
 		}
 	}
 	freep(ptr);
@@ -74,7 +74,7 @@ void MYFREE(void *ptr) {
 		freep = ( void  ( * )( void * ) )dlsym(RTLD_NEXT, "free");
 		if ((error = dlerror()) != NULL) {
 			fputs(error, stderr);
-			exit(1);
+			exit(EXIT_FAILURE);
 		}
 	}
 	freep(ptr);

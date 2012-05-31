@@ -23,7 +23,7 @@
 do { \
 	if (!(expr)) { \
 		fprintf(stderr, "Error: assertion failed in %s at line %d\n", __FILE__, __LINE__); \
-		exit(1); \
+		exit(EXIT_FAILURE); \
 	} \
 } while (0);
 

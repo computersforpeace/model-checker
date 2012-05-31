@@ -18,7 +18,7 @@
 #include <ucontext.h>
 
 //extern declaration definition
-#define FAILURE(mesg) { printf("failed in the API: %s with errno relative message: %s\n", mesg, strerror( errno ) ); exit( -1 ); }
+#define FAILURE(mesg) { printf("failed in the API: %s with errno relative message: %s\n", mesg, strerror( errno ) ); exit(EXIT_FAILURE); }
 #if USE_MPROTECT_SNAPSHOT
 struct SnapShot * snapshotrecord = NULL;
 struct Snapshot_t * sTheRecord = NULL;
@@ -138,7 +138,7 @@ void initSnapShotLibrary(unsigned int numbackingpages,
 	sa.sa_sigaction = HandlePF;
 	if( sigaction( SIGSEGV, &sa, NULL ) == -1 ){
 		printf("SIGACTION CANNOT BE INSTALLED\n");
-		exit(-1);
+		exit(EXIT_FAILURE);
 	}
 	initSnapShotRecord(numbackingpages, numsnapshots, nummemoryregions);
 
@@ -210,7 +210,7 @@ void initSnapShotLibrary(unsigned int numbackingpages,
 			} while( -1 == retVal && errno == EINTR );
 
 			if( sTheRecord->mIDToRollback != snapshotid )
-				exit(0);
+				exit(EXIT_SUCCESS);
 			else{
 				swapContext = true;
 			}
@@ -225,7 +225,7 @@ void addMemoryRegionToSnapShot( void * addr, unsigned int numPages) {
 	unsigned int memoryregion=snapshotrecord->lastRegion++;
 	if (memoryregion==snapshotrecord->maxRegions) {
 		printf("Exceeded supported number of memory regions!\n");
-		exit(-1);
+		exit(EXIT_FAILURE);
 	}
 
 	snapshotrecord->regionsToSnapShot[ memoryregion ].basePtr=addr;
@@ -239,13 +239,13 @@ snapshot_id takeSnapshot( ){
 		if( mprotect(snapshotrecord->regionsToSnapShot[region].basePtr, snapshotrecord->regionsToSnapShot[region].sizeInPages*sizeof(struct SnapShotPage), PROT_READ ) == -1 ){
 			perror("mprotect");
 			printf("Failed to mprotect inside of takeSnapShot\n");
-			exit(-1);
+			exit(EXIT_FAILURE);
 		}
 	}
 	unsigned int snapshot=snapshotrecord->lastSnapShot++;
 	if (snapshot==snapshotrecord->maxSnapShots) {
 		printf("Out of snapshots\n");
-		exit(-1);
+		exit(EXIT_FAILURE);
 	}
 	snapshotrecord->snapShots[snapshot].firstBackingPage=snapshotrecord->lastBackingPage;
 
@@ -262,7 +262,7 @@ void rollBack( snapshot_id theID ){
 		if( mprotect(snapshotrecord->regionsToSnapShot[region].basePtr, snapshotrecord->regionsToSnapShot[region].sizeInPages*sizeof(struct SnapShotPage), PROT_READ | PROT_WRITE ) == -1 ){
 			perror("mprotect");
 			printf("Failed to mprotect inside of takeSnapShot\n");
-			exit(-1);
+			exit(EXIT_FAILURE);
 		}
 	}
 	for(unsigned int page=snapshotrecord->snapShots[theID].firstBackingPage; page<snapshotrecord->lastBackingPage; page++) {
@@ -289,7 +289,7 @@ void rollBack( snapshot_id theID ){
 #if SSDEBUG
 		DumpIntoLog( "ModelSnapshot", "Invoked rollback" );
 #endif
-		exit( 0 );
+		exit(EXIT_SUCCESS);
 	}
 #endif
 }

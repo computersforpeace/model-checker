@@ -11,8 +11,8 @@
 #include <vector>
 #include <utility>
 #include <inttypes.h>
-
 #include "common.h"
+
 
 #define MYBINARYNAME "model"
 #define MYLIBRARYNAME "libmodel.so"
@@ -20,6 +20,53 @@
 
 SnapshotStack * snapshotObject;
 
+#ifdef MAC
+void SnapshotGlobalSegments(){
+	int pid = getpid();
+	char buf[9000], execname[100];
+	FILE *map;
+
+	sprintf(execname, "vmmap -interleaved %d", pid);
+	map=popen(execname, "r");
+
+	if (!map) {
+		perror("popen");
+		exit(EXIT_FAILURE);
+	}
+
+	/* Wait for correct part */
+	while (fgets(buf, sizeof(buf), map)) {
+		if (strstr(buf, "==== regions for process"))
+			break;
+	}
+
+	while (fgets(buf, sizeof(buf), map)) {
+		char regionname[200] = "";
+		char type[23];
+		char smstr[23];
+		char r, w, x;
+		char mr, mw, mx;
+		int size;
+		void *begin, *end;
+
+		//Skip out at the end of the section
+		if (buf[0]=='\n')
+			break;
+		
+		sscanf(buf, "%22s %p-%p [%5dK] %c%c%c/%c%c%c SM=%3s %200s\n", &type, &begin, &end, &size, &r, &w, &x, &mr, &mw, &mx, smstr, regionname);
+
+		if (w == 'w' && (strstr(regionname, MYBINARYNAME) || strstr(regionname, MYLIBRARYNAME))) {
+			printf("%s\n", buf);
+		
+			size_t len = ((uintptr_t)end - (uintptr_t)begin) / PAGESIZE;
+			if (len != 0)
+				addMemoryRegionToSnapShot(begin, len);
+			DEBUG("%45s: %18p - %18p\t%c%c%c%c\n", regionname, begin, end, r, w, x, p);
+		}
+	}
+	pclose(map);
+}
+#else
 void SnapshotGlobalSegments(){
 	int pid = getpid();
 	char buf[9000], filename[100];
@@ -46,6 +93,7 @@ void SnapshotGlobalSegments(){
 	}
 	fclose(map);
 }
+#endif
 
 //class definition of SnapshotStack.....
 //declaration of constructor....

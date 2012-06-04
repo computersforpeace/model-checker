@@ -16,13 +16,19 @@ SHMEM_CC=snapshot.cc malloc.c mymemory.cc
 SHMEM_O=snapshot.o malloc.o mymemory.o
 SHMEM_H=snapshot.h snapshotimp.h mymemory.h
 
-CPPFLAGS=-Wall -g
+CPPFLAGS=-Wall -g -O0
 LDFLAGS=-ldl -lrt
+SHARED=-shared
 
 all: $(BIN)
 
 debug: CPPFLAGS += -DCONFIG_DEBUG
 debug: all
+
+mac: CPPFLAGS += -D_XOPEN_SOURCE -DMAC
+mac: LDFLAGS=-ldl
+mac: SHARED=-Wl,-undefined,dynamic_lookup -dynamiclib
+mac: all
 
 $(BIN): $(USER_O) $(LIB_SO)
 	$(CXX) -o $(BIN) $(USER_O) -L. -l$(LIB_NAME)
@@ -30,7 +36,7 @@ $(BIN): $(USER_O) $(LIB_SO)
 # note: implicit rule for generating $(USER_O) (i.e., userprog.c -> userprog.o)
 
 $(LIB_SO): $(MODEL_O) $(MODEL_H) $(SHMEM_O) $(SHMEM_H)
-	$(CXX) -shared -o $(LIB_SO) $(MODEL_O) $(SHMEM_O) $(LDFLAGS)
+	$(CXX) $(SHARED) -o $(LIB_SO) $(MODEL_O) $(SHMEM_O) $(LDFLAGS)
 
 malloc.o: malloc.c
 	$(CC) -fPIC -c malloc.c -DMSPACES -DONLY_MSPACES $(CPPFLAGS)

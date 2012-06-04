@@ -136,10 +136,17 @@ void initSnapShotLibrary(unsigned int numbackingpages,
 	sa.sa_flags = SA_SIGINFO | SA_NODEFER | SA_RESTART | SA_ONSTACK;
 	sigemptyset( &sa.sa_mask );
 	sa.sa_sigaction = HandlePF;
+#ifdef MAC
+	if( sigaction( SIGBUS, &sa, NULL ) == -1 ){
+		printf("SIGACTION CANNOT BE INSTALLED\n");
+		exit(EXIT_FAILURE);
+	}
+#endif
 	if( sigaction( SIGSEGV, &sa, NULL ) == -1 ){
 		printf("SIGACTION CANNOT BE INSTALLED\n");
 		exit(EXIT_FAILURE);
 	}
+
 	initSnapShotRecord(numbackingpages, numsnapshots, nummemoryregions);
 
 	// EVIL HACK: We need to make sure that calls into the HandlePF method don't cause dynamic links

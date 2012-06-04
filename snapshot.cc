@@ -68,6 +68,7 @@ void HandlePF( int sig, siginfo_t *si, void * unused){
 		exit( EXIT_FAILURE );
 	}
 	void* addr = ReturnPageAlignedAddress(si->si_addr);
+
 	unsigned int backingpage=snapshotrecord->lastBackingPage++; //Could run out of pages...
 	if (backingpage==snapshotrecord->maxBackingPages) {
 		printf("Out of backing pages at %p\n", si->si_addr);
@@ -155,6 +156,7 @@ void initSnapShotLibrary(unsigned int numbackingpages,
 
 	siginfo_t si;
 	si.si_addr=ss.ss_sp;
+	si.si_code = 0;
 	HandlePF(SIGSEGV, &si, NULL);
 	snapshotrecord->lastBackingPage--; //remove the fake page we copied
 

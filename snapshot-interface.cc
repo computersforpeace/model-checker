@@ -56,11 +56,10 @@ void SnapshotGlobalSegments(){
 		sscanf(buf, "%22s %p-%p [%5dK] %c%c%c/%c%c%c SM=%3s %200s\n", &type, &begin, &end, &size, &r, &w, &x, &mr, &mw, &mx, smstr, regionname);
 
 		if (w == 'w' && (strstr(regionname, MYBINARYNAME) || strstr(regionname, MYLIBRARYNAME))) {
-			printf("%s\n", buf);
-		
 			size_t len = ((uintptr_t)end - (uintptr_t)begin) / PAGESIZE;
 			if (len != 0)
 				addMemoryRegionToSnapShot(begin, len);
+			DEBUG("%s\n", buf);
 			DEBUG("%45s: %18p - %18p\t%c%c%c%c\n", regionname, begin, end, r, w, x, p);
 		}
 	}

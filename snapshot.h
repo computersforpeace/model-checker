@@ -10,7 +10,7 @@
 #define USE_MPROTECT_SNAPSHOT 1
 
 /* Size of signal stack */
-#define SIGSTACKSIZE 16384
+#define SIGSTACKSIZE 32768
 
 void addMemoryRegionToSnapShot( void * ptr, unsigned int numPages );
 

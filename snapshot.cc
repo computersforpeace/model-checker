@@ -155,8 +155,8 @@ void initSnapShotLibrary(unsigned int numbackingpages,
 	// Solution is to call our signal handler before we start protecting stuff...
 
 	siginfo_t si;
+	memset(&si, 0, sizeof(si));
 	si.si_addr=ss.ss_sp;
-	si.si_code = 0;
 	HandlePF(SIGSEGV, &si, NULL);
 	snapshotrecord->lastBackingPage--; //remove the fake page we copied
 

@@ -1,3 +1,7 @@
+/** @file action.h
+ *  @brief Models actions taken by threads.
+ */
+
 #ifndef __ACTION_H__
 #define __ACTION_H__
 
@@ -42,11 +46,13 @@ public:
 
 	bool is_read();
 	bool is_write();
+	bool is_rmw();
 	bool is_acquire();
 	bool is_release();
+	bool is_seqcst();
 	bool same_var(ModelAction *act);
 	bool same_thread(ModelAction *act);
-	bool is_dependent(ModelAction *act);
+	bool is_synchronizing(ModelAction *act);
 
 	void create_cv(ModelAction *parent = NULL);
 	void read_from(ModelAction *act);

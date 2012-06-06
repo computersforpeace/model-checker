@@ -36,6 +36,11 @@ bool ModelAction::is_write()
 	return type == ATOMIC_WRITE;
 }
 
+bool ModelAction::is_rmw()
+{
+	return type == ATOMIC_RMW;
+}
+
 bool ModelAction::is_acquire()
 {
 	switch (order) {
@@ -60,6 +65,11 @@ bool ModelAction::is_release()
 	}
 }
 
+bool ModelAction::is_seqcst()
+{
+	return order==memory_order_seq_cst;
+}
+
 bool ModelAction::same_var(ModelAction *act)
 {
 	return location == act->location;
@@ -70,15 +80,38 @@ bool ModelAction::same_thread(ModelAction *act)
 	return tid == act->tid;
 }
 
-bool ModelAction::is_dependent(ModelAction *act)
+/** The is_synchronizing method should only explore interleavings if:
+ *  (1) the operations are seq_cst and don't commute or
+ *  (2) the reordering may establish or break a synchronization relation.
+ *  Other memory operations will be dealt with by using the reads_from
+ *  relation.
+ *
+ *  @param act is the action to consider exploring a reordering.
+ *  @return tells whether we have to explore a reordering.
+ */
+
+bool ModelAction::is_synchronizing(ModelAction *act)
 {
-	if (!is_read() && !is_write())
+	//Same thread can't be reordered
+	if (same_thread(act))
 		return false;
-	if (!act->is_read() && !act->is_write())
+
+	// Different locations commute
+	if (!same_var(act))
 		return false;
-	if (same_var(act) && !same_thread(act) &&
-			(is_write() || act->is_write()))
+	
+	// Explore interleavings of seqcst writes to guarantee total order
+	// of seq_cst operations that don't commute
+	if (is_write() && is_seqcst() && act->is_write() && act->is_seqcst())
 		return true;
+
+	// Explore synchronizing read/write pairs
+	if (is_read() && is_acquire() && act->is_write() && act->is_release())
+		return true;
+	if (is_write() && is_release() && act->is_read() && act->is_acquire())
+		return true;
+
+	// Otherwise handle by reads_from relation
 	return false;
 }
 

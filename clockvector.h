@@ -1,3 +1,7 @@
+/** @file clockvector.h
+ *  @brief Implements a clock vector.
+ */
+
 #ifndef __CLOCKVECTOR_H__
 #define __CLOCKVECTOR_H__
 

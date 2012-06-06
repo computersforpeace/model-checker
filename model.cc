@@ -154,7 +154,7 @@ ModelAction * ModelChecker::get_last_conflict(ModelAction *act)
 	action_list_t::reverse_iterator rit;
 	for (rit = action_trace->rbegin(); rit != action_trace->rend(); rit++) {
 		ModelAction *prev = *rit;
-		if (act->is_dependent(prev))
+		if (act->is_synchronizing(prev))
 			return prev;
 	}
 	return NULL;

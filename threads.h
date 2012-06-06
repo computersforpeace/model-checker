@@ -1,3 +1,7 @@
+/** @file threads.h
+ *  @brief Model Checker Thread class.
+ */
+
 #ifndef __THREADS_H__
 #define __THREADS_H__
 

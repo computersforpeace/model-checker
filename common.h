@@ -1,3 +1,7 @@
+/** @file common.h
+ *  @brief General purpose macros.
+ */
+
 #ifndef __COMMON_H__
 #define __COMMON_H__
 

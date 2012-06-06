@@ -25,10 +25,10 @@ typedef enum action_type {
 /* Forward declaration */
 class Node;
 class ClockVector;
+
 /**
  * The ModelAction class encapsulates an atomic action.
  */
-
 class ModelAction {
 public:
 	ModelAction(action_type_t type, memory_order order, void *loc, int value);
@@ -79,16 +79,18 @@ private:
 	/** The thread id that performed this action. */
 	thread_id_t tid;
 	
-	/** The value written.  This should probably be something longer. */
+	/** The value read or written (if RMW, then the value written). This
+	 * should probably be something longer. */
 	int value;
 
+	/** A back reference to a Node in NodeStack, if this ModelAction is
+	 * saved on the NodeStack. */
 	Node *node;
 	
 	int seq_number;
 
-	/** The clock vector stored with this action if this action is a
-	 *  store release */
-
+	/** The clock vector stored with this action; only needed if this
+	 * action is a store release? */
 	ClockVector *cv;
 };
 

@@ -7,6 +7,9 @@
 #include <stdlib.h>
 #include <limits>
 
+/** MEMALLOC declares the allocators for a class to allocate
+ *	memory in the non-snapshotting heap. */
+
 #define MEMALLOC \
 	void * operator new(size_t size) { \
 		return MYMALLOC(size);\
@@ -21,7 +24,9 @@
 		MYFREE(p);\
 	}
 
-/* Empty define; represents opposite of MEMALLOC */
+/** SNAPSHOTALLOC declares the allocators for a class to allocate
+ *	memory in the snapshotting heap. */
+
 #define SNAPSHOTALLOC
 
 void *MYMALLOC(size_t size);
@@ -29,16 +34,18 @@ void MYFREE(void *ptr);
 
 void system_free( void * ptr );
 void *system_malloc( size_t size );
-/*
-The following code example is taken from the book
-The C++ Standard Library - A Tutorial and Reference
-by Nicolai M. Josuttis, Addison-Wesley, 1999
-© Copyright Nicolai M. Josuttis 1999
-Permission to copy, use, modify, sell and distribute this software
-is granted provided this copyright notice appears in all copies.
-This software is provided "as is" without express or implied
-warranty, and with no claim as to its suitability for any purpose.
-*/
+
+/** @brief Provides a non-snapshotting allocators for a STL class.
+ *
+ * The code was adapted from a code example from the book The C++
+ * Standard Library - A Tutorial and Reference by Nicolai M. Josuttis,
+ * Addison-Wesley, 1999 © Copyright Nicolai M. Josuttis 1999
+ * Permission to copy, use, modify, sell and distribute this software
+ * is granted provided this copyright notice appears in all copies.
+ * This software is provided "as is" without express or implied
+ * warranty, and with no claim as to its suitability for any purpose.
+ */
+
 template <class T>
    class MyAlloc {
      public:
@@ -107,12 +114,14 @@ template <class T>
        }
    };
 
-// return that all specializations of this allocator are interchangeable
+/** Return that all specializations of this allocator are interchangeable. */
  template <class T1, class T2>
  bool operator== (const MyAlloc<T1>&,
                   const MyAlloc<T2>&) throw() {
      return true;
  }
+
+/** Return that all specializations of this allocator are interchangeable. */
  template <class T1, class T2>
  bool operator!= (const MyAlloc<T1>&,
                   const MyAlloc<T2>&) throw() {

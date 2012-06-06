@@ -56,8 +56,7 @@ $(MODEL_O): $(MODEL_CC) $(MODEL_H)
 clean:
 	rm -f $(BIN) *.o *.so
 
-mrclean:
-	rm -f $(BIN) *.o *.so
+mrclean: clean
 	rm -rf docs
 
 tags::

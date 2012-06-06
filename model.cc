@@ -85,7 +85,7 @@ Thread * ModelChecker::schedule_next_thread()
 	return t;
 }
 
-/*
+/**
  * get_next_replay_thread() - Choose the next thread in the replay sequence
  *
  * If we've reached the 'diverge' point, then we pick a thread from the

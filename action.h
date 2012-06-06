@@ -14,12 +14,16 @@ typedef enum action_type {
 	THREAD_YIELD,
 	THREAD_JOIN,
 	ATOMIC_READ,
-	ATOMIC_WRITE
+	ATOMIC_WRITE,
+	ATOMIC_RMW
 } action_type_t;
 
 /* Forward declaration */
 class Node;
 class ClockVector;
+/**
+ * The ModelAction class encapsulates an atomic action.
+ */
 
 class ModelAction {
 public:
@@ -56,13 +60,28 @@ public:
 
 	MEMALLOC
 private:
+
+	/** Type of action (read, write, thread create, thread yield, thread join) */
 	action_type type;
+
+	/** The memory order for this operation. */
 	memory_order order;
+
+	/** A pointer to the memory location for this action. */
 	void *location;
+
+	/** The thread id that performed this action. */
 	thread_id_t tid;
+	
+	/** The value written.  This should probably be something longer. */
 	int value;
+
 	Node *node;
+	
 	int seq_number;
+
+	/** The clock vector stored with this action if this action is a
+	 *  store release */
 
 	ClockVector *cv;
 };

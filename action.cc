@@ -120,6 +120,9 @@ void ModelAction::print(void)
 	case ATOMIC_WRITE:
 		type_str = "atomic write";
 		break;
+	case ATOMIC_RMW:
+		type_str = "atomic rmw";
+		break;
 	default:
 		type_str = "unknown type";
 	}

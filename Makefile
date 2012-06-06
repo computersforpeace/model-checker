@@ -30,6 +30,9 @@ mac: LDFLAGS=-ldl
 mac: SHARED=-Wl,-undefined,dynamic_lookup -dynamiclib
 mac: all
 
+docs:
+	doxygen
+
 $(BIN): $(USER_O) $(LIB_SO)
 	$(CXX) -o $(BIN) $(USER_O) -L. -l$(LIB_NAME)
 
@@ -52,6 +55,10 @@ $(MODEL_O): $(MODEL_CC) $(MODEL_H)
 
 clean:
 	rm -f $(BIN) *.o *.so
+
+mrclean:
+	rm -f $(BIN) *.o *.so
+	rm -rf docs
 
 tags::
 	ctags -R

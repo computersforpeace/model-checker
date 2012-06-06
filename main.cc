@@ -1,3 +1,7 @@
+/** @file main.cc
+ *  @brief Entry point for the model checker.
+ */
+
 #include "libthreads.h"
 #include "common.h"
 #include "threads.h"
@@ -6,9 +10,11 @@
 #include "model.h"
 #include "snapshot-interface.h"
 
-/*
- * Return 1 if found next thread, 0 otherwise
+/** The thread_system_next function takes the next step in the
+ *  execution.  @return Returns the 1 if there is another step and 0
+ *  otherwise.
  */
+
 static int thread_system_next(void) {
 	Thread *curr, *next;
 
@@ -32,11 +38,18 @@ static int thread_system_next(void) {
 	return Thread::swap(model->get_system_context(), next);
 }
 
+/** The thread_wait_finish method runs the current execution until we
+ *  have no more steps to take.
+ */
+
 static void thread_wait_finish(void) {
 	DBG();
 
 	while (!thread_system_next());
 }
+
+
+/** The real_main function contains the main model checking loop. */
 
 void real_main() {
 	thrd_t user_thread;
@@ -71,8 +84,9 @@ void real_main() {
 int main_numargs;
 char ** main_args;
 
-/*
- * Main system function
+/**
+ * Main function.  Just initializes snapshotting library and the
+ * snapshotting library calls the real_main function.
  */
 int main(int numargs, char ** args) {
 	/* Stash this stuff in case someone wants it eventually */

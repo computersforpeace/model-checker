@@ -44,6 +44,10 @@ static snapshot_id snapshotid = 0;
 #endif
 /* Initialize snapshot data structure */
 #if USE_MPROTECT_SNAPSHOT
+
+/** The initSnapShotRecord method initialized the snapshotting data
+ *  structures for the mprotect based snapshot. 
+ */
 void initSnapShotRecord(unsigned int numbackingpages, unsigned int numsnapshots, unsigned int nummemoryregions) {
 	snapshotrecord=( struct SnapShot * )MYMALLOC(sizeof(struct SnapShot));
 	snapshotrecord->regionsToSnapShot=( struct MemoryRegion * )MYMALLOC(sizeof(struct MemoryRegion)*nummemoryregions);
@@ -327,6 +331,8 @@ void rollBack( snapshot_id theID ){
 }
 
 /** The finalize method shuts down the snapshotting system.  */
+//Subramanian -- remove this function from the external interface and
+//have us call it internally
 
 void finalize(){
 #if !USE_MPROTECT_SNAPSHOT

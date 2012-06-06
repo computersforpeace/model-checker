@@ -1,3 +1,8 @@
+/** @file snapshot-interface.h
+ *  @brief C++ layer on top of snapshotting system.
+ */
+
+
 #ifndef __SNAPINTERFACE_H
 #define __SNAPINTERFACE_H
 #include "mymemory.h"

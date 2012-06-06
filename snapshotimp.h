@@ -1,3 +1,7 @@
+/** @file snapshotimp.h
+ *	@brief Snapshotting implementation header file..
+ */
+
 #ifndef _SNAPSHOTIMP_H
 #define _SNAPSHOTIMP_H
 #include "snapshot.h"

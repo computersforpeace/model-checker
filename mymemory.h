@@ -1,3 +1,7 @@
+/** @file mymemory.h
+ *  @brief Memory allocation functions.
+ */
+
 #ifndef _MY_MEMORY_H
 #define _MY_MEMORY_H
 #include <stdlib.h>

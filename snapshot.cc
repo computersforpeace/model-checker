@@ -61,6 +61,10 @@ void initSnapShotRecord(unsigned int numbackingpages, unsigned int numsnapshots,
 }
 #endif //nothing to initialize for the fork based snapshotting.
 
+/** HandlePF is the page fault handler for mprotect based snapshotting
+ * algorithm.
+ */
+
 void HandlePF( int sig, siginfo_t *si, void * unused){
 #if USE_MPROTECT_SNAPSHOT
 	if( si->si_code == SEGV_MAPERR ){
@@ -87,14 +91,18 @@ void HandlePF( int sig, siginfo_t *si, void * unused){
 #endif //nothing to handle for non snapshotting case.
 }
 
-//Return a page aligned address for the address being added
-//as a side effect the numBytes are also changed.
+/** ReturnPageAlignedAddress returns a page aligned address for the
+ * address being added as a side effect the numBytes are also changed.
+ */
+
 void * ReturnPageAlignedAddress(void * addr) {
 	return (void *)(((uintptr_t)addr)&~(PAGESIZE-1));
 }
 
-//Return a page aligned address for the address being added
-//as a side effect the numBytes are also changed.
+/** PageAlignedAdressUpdate return a page aligned address for the
+ * address being added as a side effect the numBytes are also changed.
+ */
+
 void * PageAlignAddressUpward(void * addr) {
 	return (void *)((((uintptr_t)addr)+PAGESIZE-1)&~(PAGESIZE-1));
 }
@@ -122,6 +130,10 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
+
+/** The initSnapShotLibrary function initializes the Snapshot library.
+ *  @param entryPoint the function that should run the program.
+ */
 void initSnapShotLibrary(unsigned int numbackingpages,
 		unsigned int numsnapshots, unsigned int nummemoryregions,
 		unsigned int numheappages, VoidFuncPtr entryPoint) {
@@ -228,7 +240,9 @@ void initSnapShotLibrary(unsigned int numbackingpages,
 
 #endif
 }
-/* This function assumes that addr is page aligned */
+
+/** The addMemoryRegionToSnapShot function assumes that addr is page aligned. 
+ */
 void addMemoryRegionToSnapShot( void * addr, unsigned int numPages) {
 #if USE_MPROTECT_SNAPSHOT
 	unsigned int memoryregion=snapshotrecord->lastRegion++;
@@ -241,7 +255,11 @@ void addMemoryRegionToSnapShot( void * addr, unsigned int numPages) {
 	snapshotrecord->regionsToSnapShot[ memoryregion ].sizeInPages=numPages;
 #endif //NOT REQUIRED IN THE CASE OF FORK BASED SNAPSHOTS.
 }
-//take snapshot
+
+/** The takeSnapshot function takes a snapshot.
+ * @return The snapshot identifier.
+ */
+
 snapshot_id takeSnapshot( ){
 #if USE_MPROTECT_SNAPSHOT
 	for(unsigned int region=0; region<snapshotrecord->lastRegion;region++) {
@@ -264,6 +282,11 @@ snapshot_id takeSnapshot( ){
 	return snapshotid;
 #endif
 }
+
+/** The rollBack function rollback to the given snapshot identifier.
+ *  @param theID is the snapshot identifier to rollback to.
+ */
+
 void rollBack( snapshot_id theID ){
 #if USE_MPROTECT_SNAPSHOT
 	std::map< void *, bool, std::less< void * >, MyAlloc< std::pair< const void *, bool > > > duplicateMap;
@@ -302,6 +325,8 @@ void rollBack( snapshot_id theID ){
 	}
 #endif
 }
+
+/** The finalize method shuts down the snapshotting system.  */
 
 void finalize(){
 #if !USE_MPROTECT_SNAPSHOT

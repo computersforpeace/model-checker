@@ -7,6 +7,8 @@
 static mspace sStaticSpace = NULL;
 #endif
 
+/** Non-snapshotting malloc for our use. */
+
 void *MYMALLOC(size_t size) {
 #if USE_MPROTECT_SNAPSHOT
 	static void *(*mallocp)(size_t size);
@@ -64,6 +66,8 @@ void system_free( void * ptr ){
 	}
 	freep(ptr);
 }
+
+/** Non-snapshotting free for our use. */
 void MYFREE(void *ptr) {
 #if USE_MPROTECT_SNAPSHOT
 	static void (*freep)(void *);
@@ -82,32 +86,53 @@ void MYFREE(void *ptr) {
 	mspace_free( sStaticSpace, ptr );
 #endif
 }
+
+
+/** This global references the mspace for the snapshotting heap */
 mspace mySpace = NULL;
+
+/** This global references the unaligned memory address that was malloced for the snapshotting heap */
 void * basemySpace = NULL;
+
+//Subramanian --- please make these work for the fork based approach
+
+/** Snapshotting malloc implementation for user programs. */
 
 void *malloc( size_t size ) {
 	return mspace_malloc( mySpace, size );
 }
 
+/** Snapshotting free implementation for user programs. */
+
 void free( void * ptr ){
 	mspace_free( mySpace, ptr );
 }
+
+/** Snapshotting realloc implementation for user programs. */
 
 void *realloc( void *ptr, size_t size ){
 	return mspace_realloc( mySpace, ptr, size );
 }
 
+/** Snapshotting new operator for user programs. */
+
 void * operator new(size_t size) throw(std::bad_alloc) {
 	return malloc(size);
 }
+
+/** Snapshotting delete operator for user programs. */
 
 void operator delete(void *p) throw() {
 	free(p);
 }
 
+/** Snapshotting new[] operator for user programs. */
+
 void * operator new[](size_t size) throw(std::bad_alloc) {
 	return malloc(size);
 }
+
+/** Snapshotting delete[] operator for user programs. */
 
 void operator delete[](void *p, size_t size) {
 	free(p);

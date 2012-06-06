@@ -21,6 +21,11 @@
 SnapshotStack * snapshotObject;
 
 #ifdef MAC
+/** The SnapshotGlobalSegments function computes the memory regions
+ *	that may contain globals and then configures the snapshotting
+ *	library to snapshot them.
+ */
+
 void SnapshotGlobalSegments(){
 	int pid = getpid();
 	char buf[9000], execname[100];
@@ -66,6 +71,10 @@ void SnapshotGlobalSegments(){
 	pclose(map);
 }
 #else
+/** The SnapshotGlobalSegments function computes the memory regions
+ *	that may contain globals and then configures the snapshotting
+ *	library to snapshot them.
+ */
 void SnapshotGlobalSegments(){
 	int pid = getpid();
 	char buf[9000], filename[100];
@@ -94,8 +103,6 @@ void SnapshotGlobalSegments(){
 }
 #endif
 
-//class definition of SnapshotStack.....
-//declaration of constructor....
 SnapshotStack::SnapshotStack(){
 	SnapshotGlobalSegments();
 	stack=NULL;
@@ -104,6 +111,14 @@ SnapshotStack::SnapshotStack(){
 SnapshotStack::~SnapshotStack(){
 }
 
+
+/** This method returns to the last snapshot before the inputted
+ * sequence number.  This function must be called from the model
+ * checking thread and not from a snapshotted stack.  
+ * @param seqindex is the sequence number to rollback before.  
+ * @return is the sequence number we actually rolled back to.
+ */
+		
 int SnapshotStack::backTrackBeforeStep(int seqindex) {
 	while(true) {
 		if (stack->index<=seqindex) {
@@ -116,6 +131,9 @@ int SnapshotStack::backTrackBeforeStep(int seqindex) {
 		stack=stack->next;
 	}
 }
+
+/** This method takes a snapshot at the given sequence number.
+ */
 
 void SnapshotStack::snapshotStep(int seqindex) {
 	struct stackEntry *tmp=(struct stackEntry *)MYMALLOC(sizeof(struct stackEntry));

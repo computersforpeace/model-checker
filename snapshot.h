@@ -1,3 +1,7 @@
+/** @file snapshot.h
+ *	@brief Snapshotting interface header file.
+ */
+
 #ifndef _SNAPSHOT_H
 #define _SNAPSHOT_H
 

@@ -100,8 +100,6 @@ mspace mySpace = NULL;
 /** This global references the unaligned memory address that was malloced for the snapshotting heap */
 void * basemySpace = NULL;
 
-//Subramanian --- please make these work for the fork based approach
-
 /** Adding the fix for not able to allocate through a reimplemented calloc at the beginning before instantiating our allocator
 A bit circumspect about adding an sbrk. linux docs say to avoid using it... */
 
@@ -163,9 +161,7 @@ void * calloc( size_t num, size_t size ){
 	return mspace_calloc( mySpace, num, size );
 }
 
-
 /** Snapshotting new operator for user programs. */
-
 
 void * operator new(size_t size) throw(std::bad_alloc) {
 	return malloc(size);

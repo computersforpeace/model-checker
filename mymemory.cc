@@ -3,6 +3,12 @@
 #include "snapshotimp.h"
 #include <stdio.h>
 #include <dlfcn.h>
+#include <unistd.h>
+#include <cstring>
+#define REQUESTS_BEFORE_ALLOC 1024
+size_t allocatedReqs[ REQUESTS_BEFORE_ALLOC ] = { 0 };
+int nextRequest = 0;
+int howManyFreed = 0;
 #if !USE_MPROTECT_SNAPSHOT
 static mspace sStaticSpace = NULL;
 #endif
@@ -96,15 +102,47 @@ void * basemySpace = NULL;
 
 //Subramanian --- please make these work for the fork based approach
 
+/** Adding the fix for not able to allocate through a reimplemented calloc at the beginning before instantiating our allocator
+A bit circumspect about adding an sbrk. linux docs say to avoid using it... */
+
+void * HandleEarlyAllocationRequest( size_t sz ){
+	if( 0 == mySpace ){
+		void * returnAddress = sbrk( sz );
+		if( nextRequest >= REQUESTS_BEFORE_ALLOC ){
+			exit( EXIT_FAILURE );
+		}
+		allocatedReqs[ nextRequest++ ] = ( size_t )returnAddress;
+		return returnAddress;
+	}
+	return NULL;
+}
+
+/** The fact that I am not expecting more than a handful requests is implicit in my not using a binary search here*/
+
+bool DontFree( void * ptr ){
+	if( howManyFreed == nextRequest ) return false; //a minor optimization to reduce the number of instructions executed on each free call....
+	if( NULL == ptr ) return true;
+	for( int i =  nextRequest - 1; i >= 0; --i ){
+		if( allocatedReqs[ i ] ==  ( size_t )ptr ) {
+			++howManyFreed;
+			return true;
+		}
+	}
+	return false;
+}
+
 /** Snapshotting malloc implementation for user programs. */
 
 void *malloc( size_t size ) {
+	void * earlyReq = HandleEarlyAllocationRequest( size );
+	if( earlyReq ) return earlyReq;
 	return mspace_malloc( mySpace, size );
 }
 
 /** Snapshotting free implementation for user programs. */
 
 void free( void * ptr ){
+	if( DontFree( ptr ) ) return;
 	mspace_free( mySpace, ptr );
 }
 
@@ -114,7 +152,20 @@ void *realloc( void *ptr, size_t size ){
 	return mspace_realloc( mySpace, ptr, size );
 }
 
+/** Snapshotting calloc implementation for user programs. */
+
+void * calloc( size_t num, size_t size ){
+	void * earlyReq = HandleEarlyAllocationRequest( size * num );
+	if( earlyReq ) {
+		std::memset( earlyReq, 0, size * num );
+		return earlyReq;
+	}
+	return mspace_calloc( mySpace, num, size );
+}
+
+
 /** Snapshotting new operator for user programs. */
+
 
 void * operator new(size_t size) throw(std::bad_alloc) {
 	return malloc(size);

@@ -44,7 +44,7 @@ $(LIB_SO): $(MODEL_O) $(MODEL_H) $(SHMEM_O) $(SHMEM_H)
 malloc.o: malloc.c
 	$(CC) -fPIC -c malloc.c -DMSPACES -DONLY_MSPACES $(CPPFLAGS)
 
-mymemory.o: mymemory.h snapshotimp.h mymemory.cc
+mymemory.o: mymemory.h snapshotimp.h snapshot.h mymemory.cc
 	$(CXX) -fPIC -c mymemory.cc $(CPPFLAGS)
 
 snapshot.o: mymemory.h snapshot.h snapshotimp.h snapshot.cc

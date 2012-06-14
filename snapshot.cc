@@ -120,7 +120,6 @@ void createSharedLibrary(){
 	sTheRecord->mStackSize = STACK_SIZE_DEFAULT;
 	sTheRecord->mIDToRollback = -1;
 	sTheRecord->currSnapShotID = 0;
-	sTheRecord->mbFinalize = false;
 #endif
 }
 
@@ -197,7 +196,7 @@ void initSnapShotLibrary(unsigned int numbackingpages,
 	pid_t forkedID = 0;
 	snapshotid = sTheRecord->currSnapShotID;
 	bool swapContext = false;
-	while( !sTheRecord->mbFinalize ){
+	while( true ){
 		sTheRecord->currSnapShotID=snapshotid+1;
 		forkedID = fork();
 		if( 0 == forkedID ){
@@ -311,14 +310,7 @@ void rollBack( snapshot_id theID ){
 		SSDEBUG("Invoked rollback");
 		exit(EXIT_SUCCESS);
 	}
+	sTheRecord->mIDToRollback = -1;
 #endif
 }
 
-/** The finalize method shuts down the snapshotting system.  */
-//Subramanian -- remove this function from the external interface and
-//have us call it internally
-void finalize(){
-#if !USE_MPROTECT_SNAPSHOT
-	sTheRecord->mbFinalize = true;
-#endif
-}

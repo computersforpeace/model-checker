@@ -63,7 +63,6 @@ struct Snapshot {
 	snapshot_id mIDToRollback;
 	ucontext_t mContextToRollback;
 	snapshot_id currSnapShotID;
-	volatile bool mbFinalize;
 };
 extern struct Snapshot * sTheRecord;
 #endif

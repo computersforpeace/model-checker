@@ -78,7 +78,6 @@ void real_main() {
 	delete model;
 
 	DEBUG("Exiting\n");
-	finalize();
 }
 
 int main_numargs;

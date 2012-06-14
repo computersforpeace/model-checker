@@ -28,7 +28,6 @@
 /* extern declaration definition */
 #if USE_MPROTECT_SNAPSHOT
 struct SnapShot * snapshotrecord = NULL;
-struct Snapshot_t * sTheRecord = NULL;
 #else
 struct Snapshot_t * sTheRecord = NULL;
 #endif

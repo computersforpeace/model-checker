@@ -72,13 +72,11 @@ static void initSnapShotRecord(unsigned int numbackingpages, unsigned int numsna
 	snapshotrecord->maxBackingPages=numbackingpages;
 	snapshotrecord->maxSnapShots=numsnapshots;
 }
-#endif //nothing to initialize for the fork based snapshotting.
 
 /** HandlePF is the page fault handler for mprotect based snapshotting
  * algorithm.
  */
 static void HandlePF( int sig, siginfo_t *si, void * unused){
-#if USE_MPROTECT_SNAPSHOT
 	if( si->si_code == SEGV_MAPERR ){
 		printf("Real Fault at %p\n", si->si_addr);
 		exit( EXIT_FAILURE );
@@ -100,8 +98,8 @@ static void HandlePF( int sig, siginfo_t *si, void * unused){
 		perror("mprotect");
 		// Handle error by quitting?
 	}
-#endif //nothing to handle for non snapshotting case.
 }
+#endif //nothing to handle for non snapshotting case.
 
 void createSharedLibrary(){
 #if !USE_MPROTECT_SNAPSHOT

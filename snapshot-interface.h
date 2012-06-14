@@ -15,8 +15,6 @@ void initSnapShotLibrary(unsigned int numbackingpages,
 		unsigned int numheappages, VoidFuncPtr entryPoint);
 void finalize();
 
-void SnapshotGlobalSegments();
-
 struct stackEntry {
   struct stackEntry *next;
   snapshot_id snapshotid;

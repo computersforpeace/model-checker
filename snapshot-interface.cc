@@ -25,8 +25,7 @@ SnapshotStack * snapshotObject;
  *	that may contain globals and then configures the snapshotting
  *	library to snapshot them.
  */
-
-void SnapshotGlobalSegments(){
+static void SnapshotGlobalSegments(){
 	int pid = getpid();
 	char buf[9000], execname[100];
 	FILE *map;
@@ -75,7 +74,7 @@ void SnapshotGlobalSegments(){
  *	that may contain globals and then configures the snapshotting
  *	library to snapshot them.
  */
-void SnapshotGlobalSegments(){
+static void SnapshotGlobalSegments(){
 	int pid = getpid();
 	char buf[9000], filename[100];
 	FILE *map;

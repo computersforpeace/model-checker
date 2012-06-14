@@ -57,7 +57,7 @@ static void * ReturnPageAlignedAddress(void * addr) {
 /** The initSnapShotRecord method initialized the snapshotting data
  *  structures for the mprotect based snapshot. 
  */
-void initSnapShotRecord(unsigned int numbackingpages, unsigned int numsnapshots, unsigned int nummemoryregions) {
+static void initSnapShotRecord(unsigned int numbackingpages, unsigned int numsnapshots, unsigned int nummemoryregions) {
 	snapshotrecord=( struct SnapShot * )MYMALLOC(sizeof(struct SnapShot));
 	snapshotrecord->regionsToSnapShot=( struct MemoryRegion * )MYMALLOC(sizeof(struct MemoryRegion)*nummemoryregions);
 	snapshotrecord->backingStoreBasePtr= ( struct SnapShotPage * )MYMALLOC( sizeof( struct SnapShotPage ) * (numbackingpages + 1) );
@@ -77,8 +77,7 @@ void initSnapShotRecord(unsigned int numbackingpages, unsigned int numsnapshots,
 /** HandlePF is the page fault handler for mprotect based snapshotting
  * algorithm.
  */
-
-void HandlePF( int sig, siginfo_t *si, void * unused){
+static void HandlePF( int sig, siginfo_t *si, void * unused){
 #if USE_MPROTECT_SNAPSHOT
 	if( si->si_code == SEGV_MAPERR ){
 		printf("Real Fault at %p\n", si->si_addr);

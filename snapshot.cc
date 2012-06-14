@@ -29,7 +29,7 @@
 #if USE_MPROTECT_SNAPSHOT
 struct SnapShot * snapshotrecord = NULL;
 #else
-struct Snapshot_t * sTheRecord = NULL;
+struct Snapshot * sTheRecord = NULL;
 #endif
 
 #if !USE_MPROTECT_SNAPSHOT
@@ -114,8 +114,8 @@ void createSharedLibrary(){
 	if( -1 == ftruncate( fd, ( size_t )SHARED_MEMORY_DEFAULT + ( size_t )STACK_SIZE_DEFAULT ) ) FAILURE( "ftruncate" );
 	char * memMapBase = ( char * ) mmap( 0, ( size_t )SHARED_MEMORY_DEFAULT + ( size_t )STACK_SIZE_DEFAULT, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0 );
 	if( MAP_FAILED == memMapBase ) FAILURE("mmap");
-	sTheRecord = ( struct Snapshot_t * )memMapBase;
-	sTheRecord->mSharedMemoryBase = memMapBase + sizeof( struct Snapshot_t );
+	sTheRecord = ( struct Snapshot * )memMapBase;
+	sTheRecord->mSharedMemoryBase = memMapBase + sizeof( struct Snapshot );
 	sTheRecord->mStackBase = ( char * )memMapBase + ( size_t )SHARED_MEMORY_DEFAULT;
 	sTheRecord->mStackSize = STACK_SIZE_DEFAULT;
 	sTheRecord->mIDToRollback = -1;

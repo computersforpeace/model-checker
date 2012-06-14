@@ -36,7 +36,7 @@ void *MYMALLOC(size_t size) {
 		createSharedLibrary();
 	}
 	if( NULL == sStaticSpace )
-		sStaticSpace = create_mspace_with_base( ( void * )( sTheRecord->mSharedMemoryBase ), SHARED_MEMORY_DEFAULT -sizeof( struct Snapshot_t ), 1 );
+		sStaticSpace = create_mspace_with_base( ( void * )( sTheRecord->mSharedMemoryBase ), SHARED_MEMORY_DEFAULT -sizeof( struct Snapshot ), 1 );
 	return mspace_malloc( sStaticSpace, size );
 #endif
 }

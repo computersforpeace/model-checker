@@ -58,7 +58,7 @@ extern struct SnapShot * snapshotrecord;
 void * ReturnPageAlignedAddress( void *);
 void * PageAlignAddressUpward( void *);
 #else
-struct Snapshot_t{
+struct Snapshot {
 char *mSharedMemoryBase;
 char *mStackBase;
 size_t mStackSize;
@@ -67,6 +67,6 @@ ucontext_t mContextToRollback;
 snapshot_id currSnapShotID;
 volatile bool mbFinalize;
 };
-extern struct Snapshot_t * sTheRecord;
+extern struct Snapshot * sTheRecord;
 #endif
 #endif

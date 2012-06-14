@@ -249,7 +249,6 @@ void addMemoryRegionToSnapShot( void * addr, unsigned int numPages) {
 /** The takeSnapshot function takes a snapshot.
  * @return The snapshot identifier.
  */
-
 snapshot_id takeSnapshot( ){
 #if USE_MPROTECT_SNAPSHOT
 	for(unsigned int region=0; region<snapshotrecord->lastRegion;region++) {
@@ -276,7 +275,6 @@ snapshot_id takeSnapshot( ){
 /** The rollBack function rollback to the given snapshot identifier.
  *  @param theID is the snapshot identifier to rollback to.
  */
-
 void rollBack( snapshot_id theID ){
 #if USE_MPROTECT_SNAPSHOT
 	std::map< void *, bool, std::less< void * >, MyAlloc< std::pair< const void *, bool > > > duplicateMap;
@@ -317,10 +315,8 @@ void rollBack( snapshot_id theID ){
 /** The finalize method shuts down the snapshotting system.  */
 //Subramanian -- remove this function from the external interface and
 //have us call it internally
-
 void finalize(){
 #if !USE_MPROTECT_SNAPSHOT
 	sTheRecord->mbFinalize = true;
 #endif
 }
-

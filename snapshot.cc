@@ -17,8 +17,9 @@
 #include <sys/wait.h>
 #include <ucontext.h>
 
-//extern declaration definition
 #define FAILURE(mesg) { printf("failed in the API: %s with errno relative message: %s\n", mesg, strerror( errno ) ); exit(EXIT_FAILURE); }
+
+/* extern declaration definition */
 #if USE_MPROTECT_SNAPSHOT
 struct SnapShot * snapshotrecord = NULL;
 struct Snapshot_t * sTheRecord = NULL;
@@ -42,7 +43,7 @@ static ucontext_t savedSnapshotContext;
 static ucontext_t savedUserSnapshotContext;
 static snapshot_id snapshotid = 0;
 #endif
-/* Initialize snapshot data structure */
+
 #if USE_MPROTECT_SNAPSHOT
 
 /** The initSnapShotRecord method initialized the snapshotting data

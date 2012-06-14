@@ -19,6 +19,12 @@
 
 #define FAILURE(mesg) { printf("failed in the API: %s with errno relative message: %s\n", mesg, strerror( errno ) ); exit(EXIT_FAILURE); }
 
+#ifdef CONFIG_SSDEBUG
+#define SSDEBUG		printf
+#else
+#define SSDEBUG(...)	do { } while (0)
+#endif
+
 /* extern declaration definition */
 #if USE_MPROTECT_SNAPSHOT
 struct SnapShot * snapshotrecord = NULL;
@@ -26,18 +32,7 @@ struct Snapshot_t * sTheRecord = NULL;
 #else
 struct Snapshot_t * sTheRecord = NULL;
 #endif
-void DumpIntoLog( const char * filename, const char * message ){
-#if SSDEBUG
-	static pid_t thePID = getpid();
-	char newFn[ 1024 ] ={ 0 };
-	sprintf( newFn,"%s-%d.txt", filename, thePID );
-	FILE * myFile = fopen( newFn, "w+" );
-	fprintf( myFile, "the message %s: the process id %d\n", message, thePID );
-	fflush( myFile );
-	fclose( myFile );
-	myFile = NULL;
-#endif
-}
+
 #if !USE_MPROTECT_SNAPSHOT
 static ucontext_t savedSnapshotContext;
 static ucontext_t savedUserSnapshotContext;
@@ -226,11 +221,10 @@ void initSnapShotLibrary(unsigned int numbackingpages,
 		} else {
 			int status;
 			int retVal;
-#if SSDEBUG
-			char mesg[ 1024 ] = { 0 };
-			sprintf( mesg, "The process id of child is %d and the process id of this process is %d and snapshot id is %d", forkedID, getpid(), snapshotid );
-			DumpIntoLog( "ModelSnapshot", mesg );
-#endif
+
+			SSDEBUG("The process id of child is %d and the process id of this process is %d and snapshot id is %d",
+			        forkedID, getpid(), snapshotid );
+
 			do {
 				retVal=waitpid( forkedID, &status, 0 );
 			} while( -1 == retVal && errno == EINTR );
@@ -323,9 +317,7 @@ void rollBack( snapshot_id theID ){
 	getcontext( &sTheRecord->mContextToRollback );
 	if( !sTemp ){
 		sTemp = 1;
-#if SSDEBUG
-		DumpIntoLog( "ModelSnapshot", "Invoked rollback" );
-#endif
+		SSDEBUG("Invoked rollback");
 		exit(EXIT_SUCCESS);
 	}
 #endif

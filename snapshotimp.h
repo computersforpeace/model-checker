@@ -17,53 +17,53 @@
 #if USE_MPROTECT_SNAPSHOT
 //Each snapshotrecord lists the firstbackingpage that must be written to revert to that snapshot
 struct SnapShotRecord {
-  unsigned int firstBackingPage;
+	unsigned int firstBackingPage;
 };
 
 //Backing store page struct
 struct SnapShotPage {
-  char data[PAGESIZE];
+	char data[PAGESIZE];
 };
 
 //List the base address of the corresponding page in the backing store so we know where to copy it to
 struct BackingPageRecord {
-  void * basePtrOfPage;
+	void * basePtrOfPage;
 };
 
 //Stuct for each memory region
 struct MemoryRegion {
-  void * basePtr; //base of memory region
-  int sizeInPages; //size of memory region in pages
+	void * basePtr; //base of memory region
+	int sizeInPages; //size of memory region in pages
 };
 
 //Primary struct for snapshotting system....
 struct SnapShot {
-  struct MemoryRegion * regionsToSnapShot; //This pointer references an array of memory regions to snapshot
-  struct SnapShotPage * backingStore; //This pointer references an array of snapshotpage's that form the backing store
-  void * backingStoreBasePtr; //This pointer references an array of snapshotpage's that form the backing store
-  struct BackingPageRecord * backingRecords; //This pointer references an array of backingpagerecord's (same number of elements as backingstore
-  struct SnapShotRecord * snapShots; //This pointer references the snapshot array
-  
-  unsigned int lastSnapShot; //Stores the next snapshot record we should use
-  unsigned int lastBackingPage; //Stores the next backingpage we should use
-  unsigned int lastRegion; //Stores the next memory region to be used
+	struct MemoryRegion * regionsToSnapShot; //This pointer references an array of memory regions to snapshot
+	struct SnapShotPage * backingStore; //This pointer references an array of snapshotpage's that form the backing store
+	void * backingStoreBasePtr; //This pointer references an array of snapshotpage's that form the backing store
+	struct BackingPageRecord * backingRecords; //This pointer references an array of backingpagerecord's (same number of elements as backingstore
+	struct SnapShotRecord * snapShots; //This pointer references the snapshot array
 
-  unsigned int maxRegions; //Stores the max number of memory regions we support
-  unsigned int maxBackingPages; //Stores the total number of backing pages
-  unsigned int maxSnapShots; //Stores the total number of snapshots we allow
+	unsigned int lastSnapShot; //Stores the next snapshot record we should use
+	unsigned int lastBackingPage; //Stores the next backingpage we should use
+	unsigned int lastRegion; //Stores the next memory region to be used
+
+	unsigned int maxRegions; //Stores the max number of memory regions we support
+	unsigned int maxBackingPages; //Stores the total number of backing pages
+	unsigned int maxSnapShots; //Stores the total number of snapshots we allow
 };
 
 //Global reference to snapshot data structure
 extern struct SnapShot * snapshotrecord;
 #else
 struct Snapshot {
-void *mSharedMemoryBase;
-void *mStackBase;
-size_t mStackSize;
-snapshot_id mIDToRollback;
-ucontext_t mContextToRollback;
-snapshot_id currSnapShotID;
-volatile bool mbFinalize;
+	void *mSharedMemoryBase;
+	void *mStackBase;
+	size_t mStackSize;
+	snapshot_id mIDToRollback;
+	ucontext_t mContextToRollback;
+	snapshot_id currSnapShotID;
+	volatile bool mbFinalize;
 };
 extern struct Snapshot * sTheRecord;
 #endif

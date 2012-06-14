@@ -38,7 +38,21 @@ static ucontext_t savedUserSnapshotContext;
 static snapshot_id snapshotid = 0;
 #endif
 
+/** PageAlignedAdressUpdate return a page aligned address for the
+ * address being added as a side effect the numBytes are also changed.
+ */
+static void * PageAlignAddressUpward(void * addr) {
+	return (void *)((((uintptr_t)addr)+PAGESIZE-1)&~(PAGESIZE-1));
+}
+
 #if USE_MPROTECT_SNAPSHOT
+
+/** ReturnPageAlignedAddress returns a page aligned address for the
+ * address being added as a side effect the numBytes are also changed.
+ */
+static void * ReturnPageAlignedAddress(void * addr) {
+	return (void *)(((uintptr_t)addr)&~(PAGESIZE-1));
+}
 
 /** The initSnapShotRecord method initialized the snapshotting data
  *  structures for the mprotect based snapshot. 
@@ -90,21 +104,6 @@ void HandlePF( int sig, siginfo_t *si, void * unused){
 #endif //nothing to handle for non snapshotting case.
 }
 
-/** ReturnPageAlignedAddress returns a page aligned address for the
- * address being added as a side effect the numBytes are also changed.
- */
-
-void * ReturnPageAlignedAddress(void * addr) {
-	return (void *)(((uintptr_t)addr)&~(PAGESIZE-1));
-}
-
-/** PageAlignedAdressUpdate return a page aligned address for the
- * address being added as a side effect the numBytes are also changed.
- */
-
-void * PageAlignAddressUpward(void * addr) {
-	return (void *)((((uintptr_t)addr)+PAGESIZE-1)&~(PAGESIZE-1));
-}
 void createSharedLibrary(){
 #if !USE_MPROTECT_SNAPSHOT
 	//step 1. create shared memory.

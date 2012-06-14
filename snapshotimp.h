@@ -57,8 +57,8 @@ struct SnapShot {
 extern struct SnapShot * snapshotrecord;
 #else
 struct Snapshot {
-char *mSharedMemoryBase;
-char *mStackBase;
+void *mSharedMemoryBase;
+void *mStackBase;
 size_t mStackSize;
 snapshot_id mIDToRollback;
 ucontext_t mContextToRollback;

@@ -11,8 +11,8 @@
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <csignal>
-#define SHARED_MEMORY_DEFAULT ( 100 * ( 1 << 20 ) ) // 100mb for the shared memory
-#define STACK_SIZE_DEFAULT  ( ( 1 << 20 ) * 20 ) //20 mb out of the above 100 mb for my stack.
+#define SHARED_MEMORY_DEFAULT	(100 * ((size_t)1 << 20)) // 100mb for the shared memory
+#define STACK_SIZE_DEFAULT      (((size_t)1 << 20) * 20)  // 20 mb out of the above 100 mb for my stack
 
 #if USE_MPROTECT_SNAPSHOT
 //Each snapshotrecord lists the firstbackingpage that must be written to revert to that snapshot

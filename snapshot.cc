@@ -107,12 +107,12 @@ void createSharedLibrary(){
 	if( sTheRecord ) return;
 	int fd = shm_open( "/ModelChecker-Snapshotter", O_RDWR | O_CREAT, 0777 ); //universal permissions.
 	if( -1 == fd ) FAILURE("shm_open");
-	if( -1 == ftruncate( fd, ( size_t )SHARED_MEMORY_DEFAULT + ( size_t )STACK_SIZE_DEFAULT ) ) FAILURE( "ftruncate" );
-	void * memMapBase = mmap( 0, ( size_t )SHARED_MEMORY_DEFAULT + ( size_t )STACK_SIZE_DEFAULT, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0 );
+	if( -1 == ftruncate( fd, SHARED_MEMORY_DEFAULT + STACK_SIZE_DEFAULT ) ) FAILURE( "ftruncate" );
+	void * memMapBase = mmap( 0, SHARED_MEMORY_DEFAULT + STACK_SIZE_DEFAULT, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0 );
 	if( MAP_FAILED == memMapBase ) FAILURE("mmap");
 	sTheRecord = ( struct Snapshot * )memMapBase;
 	sTheRecord->mSharedMemoryBase = (void *)((uintptr_t)memMapBase + sizeof(struct Snapshot));
-	sTheRecord->mStackBase = (void *)((uintptr_t)memMapBase + (size_t)SHARED_MEMORY_DEFAULT);
+	sTheRecord->mStackBase = (void *)((uintptr_t)memMapBase + SHARED_MEMORY_DEFAULT);
 	sTheRecord->mStackSize = STACK_SIZE_DEFAULT;
 	sTheRecord->mIDToRollback = -1;
 	sTheRecord->currSnapShotID = 0;

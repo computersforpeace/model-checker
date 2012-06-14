@@ -178,18 +178,13 @@ void initSnapShotLibrary(unsigned int numbackingpages,
 	createSharedLibrary();
 
 	//step 2 setup the stack context.
-
-	int alreadySwapped = 0;
-	getcontext( &savedSnapshotContext );
-	if( !alreadySwapped ){
-		alreadySwapped = 1;
-		ucontext_t swappedContext, newContext;
-		getcontext( &newContext );
-		newContext.uc_stack.ss_sp = sTheRecord->mStackBase;
-		newContext.uc_stack.ss_size = STACK_SIZE_DEFAULT;
-		makecontext( &newContext, entryPoint, 0 );
-		swapcontext( &swappedContext, &newContext );
-	}
+	ucontext_t newContext;
+	getcontext( &newContext );
+	newContext.uc_stack.ss_sp = sTheRecord->mStackBase;
+	newContext.uc_stack.ss_size = STACK_SIZE_DEFAULT;
+	makecontext( &newContext, entryPoint, 0 );
+	/* switch to a new entryPoint context, on a new stack */
+	swapcontext(&savedSnapshotContext, &newContext);
 
 	//add the code to take a snapshot here...
 	//to return to user process, do a second swapcontext...

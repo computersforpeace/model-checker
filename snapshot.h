@@ -22,11 +22,6 @@ snapshot_id takeSnapshot( );
 
 void rollBack( snapshot_id theSnapShot );
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 void createSharedLibrary();
-#ifdef __cplusplus
-};  /* end of extern "C" */
-#endif
+
 #endif

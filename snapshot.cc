@@ -106,30 +106,24 @@ void * ReturnPageAlignedAddress(void * addr) {
 void * PageAlignAddressUpward(void * addr) {
 	return (void *)((((uintptr_t)addr)+PAGESIZE-1)&~(PAGESIZE-1));
 }
-#ifdef __cplusplus
-extern "C" {
-#endif
-	void createSharedLibrary(){
+void createSharedLibrary(){
 #if !USE_MPROTECT_SNAPSHOT
-		//step 1. create shared memory.
-		if( sTheRecord ) return;
-		int fd = shm_open( "/ModelChecker-Snapshotter", O_RDWR | O_CREAT, 0777 ); //universal permissions.
-		if( -1 == fd ) FAILURE("shm_open");
-		if( -1 == ftruncate( fd, ( size_t )SHARED_MEMORY_DEFAULT + ( size_t )STACK_SIZE_DEFAULT ) ) FAILURE( "ftruncate" );
-		char * memMapBase = ( char * ) mmap( 0, ( size_t )SHARED_MEMORY_DEFAULT + ( size_t )STACK_SIZE_DEFAULT, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0 );
-		if( MAP_FAILED == memMapBase ) FAILURE("mmap");
-		sTheRecord = ( struct Snapshot_t * )memMapBase;
-		sTheRecord->mSharedMemoryBase = memMapBase + sizeof( struct Snapshot_t );
-		sTheRecord->mStackBase = ( char * )memMapBase + ( size_t )SHARED_MEMORY_DEFAULT;
-		sTheRecord->mStackSize = STACK_SIZE_DEFAULT;
-		sTheRecord->mIDToRollback = -1;
-		sTheRecord->currSnapShotID = 0;
-		sTheRecord->mbFinalize = false;
+	//step 1. create shared memory.
+	if( sTheRecord ) return;
+	int fd = shm_open( "/ModelChecker-Snapshotter", O_RDWR | O_CREAT, 0777 ); //universal permissions.
+	if( -1 == fd ) FAILURE("shm_open");
+	if( -1 == ftruncate( fd, ( size_t )SHARED_MEMORY_DEFAULT + ( size_t )STACK_SIZE_DEFAULT ) ) FAILURE( "ftruncate" );
+	char * memMapBase = ( char * ) mmap( 0, ( size_t )SHARED_MEMORY_DEFAULT + ( size_t )STACK_SIZE_DEFAULT, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0 );
+	if( MAP_FAILED == memMapBase ) FAILURE("mmap");
+	sTheRecord = ( struct Snapshot_t * )memMapBase;
+	sTheRecord->mSharedMemoryBase = memMapBase + sizeof( struct Snapshot_t );
+	sTheRecord->mStackBase = ( char * )memMapBase + ( size_t )SHARED_MEMORY_DEFAULT;
+	sTheRecord->mStackSize = STACK_SIZE_DEFAULT;
+	sTheRecord->mIDToRollback = -1;
+	sTheRecord->currSnapShotID = 0;
+	sTheRecord->mbFinalize = false;
 #endif
-	}
-#ifdef __cplusplus
 }
-#endif
 
 /** The initSnapShotLibrary function initializes the Snapshot library.
  *  @param entryPoint the function that should run the program.

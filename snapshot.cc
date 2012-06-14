@@ -183,11 +183,10 @@ void initSnapShotLibrary(unsigned int numbackingpages,
 	getcontext( &savedSnapshotContext );
 	if( !alreadySwapped ){
 		alreadySwapped = 1;
-		ucontext_t currentContext, swappedContext, newContext;
+		ucontext_t swappedContext, newContext;
 		getcontext( &newContext );
 		newContext.uc_stack.ss_sp = sTheRecord->mStackBase;
 		newContext.uc_stack.ss_size = STACK_SIZE_DEFAULT;
-		newContext.uc_link = &currentContext;
 		makecontext( &newContext, entryPoint, 0 );
 		swapcontext( &swappedContext, &newContext );
 	}

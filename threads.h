@@ -22,6 +22,7 @@ typedef enum thread_state {
 
 class ModelAction;
 
+/** @brief A Thread is created for each user-space thread */
 class Thread {
 public:
 	Thread(thrd_t *t, void (*func)(void *), void *a);

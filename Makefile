@@ -30,7 +30,7 @@ mac: LDFLAGS=-ldl
 mac: SHARED=-Wl,-undefined,dynamic_lookup -dynamiclib
 mac: all
 
-docs:
+docs: *.c *.cc *.h
 	doxygen
 
 $(BIN): $(USER_O) $(LIB_SO)

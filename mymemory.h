@@ -35,7 +35,7 @@ void MYFREE(void *ptr);
 void system_free( void * ptr );
 void *system_malloc( size_t size );
 
-/** @brief Provides a non-snapshotting allocators for a STL class.
+/** @brief Provides a non-snapshotting allocator for use in STL classes.
  *
  * The code was adapted from a code example from the book The C++
  * Standard Library - A Tutorial and Reference by Nicolai M. Josuttis,

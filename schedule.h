@@ -11,7 +11,8 @@
 /* Forward declaration */
 class Thread;
 
-/** @brief The Scheduler class controls the Thread execution schedule. */
+/** @brief The Scheduler class performs the mechanics of Thread execution
+ * scheduling. */
 class Scheduler {
 public:
 	Scheduler();

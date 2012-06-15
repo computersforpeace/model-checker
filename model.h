@@ -22,15 +22,30 @@
 /* Forward declaration */
 class NodeStack;
 
+/** @brief The central structure for model-checking */
 class ModelChecker {
 public:
 	ModelChecker();
 	~ModelChecker();
+
+	/** The scheduler to use: tracks the running/ready Threads */
 	class Scheduler *scheduler;
 
+	/** Stores the context for the main model-checking system thread (call
+	 * once)
+	 * @param ctxt The system context structure
+	 */
 	void set_system_context(ucontext_t *ctxt) { system_context = ctxt; }
+
+	/** @returns the context for the main model-checking system thread */
 	ucontext_t * get_system_context(void) { return system_context; }
 
+	/**
+	 * Stores the ModelAction for the current thread action.  Call this
+	 * immediately before switching from user- to system-context to pass
+	 * data between them.
+	 * @param act The ModelAction created by the user-thread action
+	 */
 	void set_current_action(ModelAction *act) { current_action = act; }
 	void check_current_action(void);
 	void print_summary(void);

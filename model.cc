@@ -11,6 +11,7 @@
 
 ModelChecker *model;
 
+/** @brief Constructor */
 ModelChecker::ModelChecker()
 	:
 	/* Initialize default scheduler */
@@ -32,6 +33,7 @@ ModelChecker::ModelChecker()
 {
 }
 
+/** @brief Destructor */
 ModelChecker::~ModelChecker()
 {
 	std::map<int, class Thread *>::iterator it;
@@ -46,6 +48,10 @@ ModelChecker::~ModelChecker()
 	delete scheduler;
 }
 
+/**
+ * Restores user program to initial state and resets all model-checker data
+ * structures.
+ */
 void ModelChecker::reset_to_initial_state()
 {
 	DEBUG("+++ Resetting to initial state +++\n");
@@ -58,21 +64,33 @@ void ModelChecker::reset_to_initial_state()
 	snapshotObject->backTrackBeforeStep(0);
 }
 
+/** @returns a thread ID for a new Thread */
 thread_id_t ModelChecker::get_next_id()
 {
 	return next_thread_id++;
 }
 
+/** @returns the number of user threads created during this execution */
 int ModelChecker::get_num_threads()
 {
 	return next_thread_id;
 }
 
+/** @returns a sequence number for a new ModelAction */
 int ModelChecker::get_next_seq_num()
 {
 	return ++used_sequence_numbers;
 }
 
+/**
+ * Performs the "scheduling" for the model-checker. That is, it checks if the
+ * model-checker has selected a "next thread to run" and returns it, if
+ * available. This function should be called from the Scheduler routine, where
+ * the Scheduler falls back to a default scheduling routine if needed.
+ *
+ * @return The next thread chosen by the model-checker. If the model-checker
+ * makes no selection, retuns NULL.
+ */
 Thread * ModelChecker::schedule_next_thread()
 {
 	Thread *t;
@@ -86,11 +104,11 @@ Thread * ModelChecker::schedule_next_thread()
 }
 
 /**
- * get_next_replay_thread() - Choose the next thread in the replay sequence
+ * Choose the next thread in the replay sequence.
  *
- * If we've reached the 'diverge' point, then we pick a thread from the
- *   backtracking set.
- * Otherwise, we simply return the next thread in the sequence.
+ * If the replay sequence has reached the 'diverge' point, returns a thread
+ * from the backtracking set. Otherwise, simply returns the next thread in the
+ * sequence that is being replayed.
  */
 thread_id_t ModelChecker::get_next_replay_thread()
 {
@@ -118,6 +136,13 @@ thread_id_t ModelChecker::get_next_replay_thread()
 	return tid;
 }
 
+/**
+ * Queries the model-checker for more executions to explore and, if one
+ * exists, resets the model-checker state to execute a new execution.
+ *
+ * @return If there are more executions to explore, return true. Otherwise,
+ * return false.
+ */
 bool ModelChecker::next_execution()
 {
 	DBG();

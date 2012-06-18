@@ -13,9 +13,6 @@ int howManyFreed = 0;
 static mspace sStaticSpace = NULL;
 #endif
 
-//SUBRAMANIAN!!! PLEASE FIX THE MALLOC/FREE/CALLOC/ETC FOR FORK-BASED APPROACH
-//YOU HAVE NOT DONE THIS!!!!!!!!!!!
-
 /** Non-snapshotting malloc for our use. */
 
 void *MYMALLOC(size_t size) {

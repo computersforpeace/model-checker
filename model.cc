@@ -258,6 +258,12 @@ void ModelChecker::check_current_action(void)
 	add_action_to_lists(curr);
 }
 
+
+/**
+ * Adds an action to the per-object, per-thread action vector.
+ * @param act is the ModelAction to add.
+ */
+
 void ModelChecker::add_action_to_lists(ModelAction *act)
 {
 	action_trace->push_back(act);

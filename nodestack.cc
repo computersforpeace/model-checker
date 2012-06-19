@@ -150,22 +150,21 @@ ModelAction * NodeStack::explore_action(ModelAction *act)
 	ASSERT(!node_list.empty());
 
 	if (get_head()->has_been_explored(act->get_tid())) {
-		/* Discard duplicate ModelAction */
-		delete act;
 		iter++;
-	} else { /* Diverging from previous execution */
-		/* Clear out remainder of list */
-		node_list_t::iterator it = iter;
-		it++;
-		clear_node_list(&node_list, it, node_list.end());
-
-		/* Record action */
-		get_head()->explore_child(act);
-		node_list.push_back(new Node(act, model->get_num_threads()));
-		total_nodes++;
-		iter++;
+		return (*iter)->get_action();
 	}
-	return (*iter)->get_action();
+
+	/* Diverging from previous execution; clear out remainder of list */
+	node_list_t::iterator it = iter;
+	it++;
+	clear_node_list(&node_list, it, node_list.end());
+
+	/* Record action */
+	get_head()->explore_child(act);
+	node_list.push_back(new Node(act, model->get_num_threads()));
+	total_nodes++;
+	iter++;
+	return NULL;
 }
 
 Node * NodeStack::get_head()

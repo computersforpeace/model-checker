@@ -230,14 +230,21 @@ void ModelChecker::check_current_action(void)
 	Node *currnode;
 
 	ModelAction *curr = this->current_action;
+	ModelAction *tmp;
 	current_action = NULL;
 	if (!curr) {
 		DEBUG("trying to push NULL action...\n");
 		return;
 	}
 
-	curr = node_stack->explore_action(curr);
-	curr->create_cv(get_parent_action(curr->get_tid()));
+	tmp = node_stack->explore_action(curr);
+	if (tmp) {
+		/* Discard duplicate ModelAction */
+		delete curr;
+		curr = tmp;
+	} else {
+		curr->create_cv(get_parent_action(curr->get_tid()));
+	}
 
 	/* Assign 'creation' parent */
 	if (curr->get_type() == THREAD_CREATE) {

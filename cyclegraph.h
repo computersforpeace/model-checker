@@ -4,6 +4,7 @@
 #include "hashtable.h"
 #include "action.h"
 #include <vector>
+#include <inttypes.h>
 
 class CycleNode;
 

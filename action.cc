@@ -117,8 +117,7 @@ bool ModelAction::is_synchronizing(ModelAction *act)
 
 void ModelAction::create_cv(ModelAction *parent)
 {
-	if (cv)
-		return;
+	ASSERT(cv == NULL);
 
 	if (parent)
 		cv = new ClockVector(parent->cv, this);

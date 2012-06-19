@@ -35,24 +35,24 @@ public:
 	~ModelAction();
 	void print(void);
 
-	thread_id_t get_tid() { return tid; }
-	action_type get_type() { return type; }
-	memory_order get_mo() { return order; }
-	void * get_location() { return location; }
+	thread_id_t get_tid() const { return tid; }
+	action_type get_type() const { return type; }
+	memory_order get_mo() const { return order; }
+	void * get_location() const { return location; }
 	int get_seq_number() const { return seq_number; }
 
-	Node * get_node() { return node; }
+	Node * get_node() const { return node; }
 	void set_node(Node *n) { node = n; }
 
-	bool is_read();
-	bool is_write();
-	bool is_rmw();
-	bool is_acquire();
-	bool is_release();
-	bool is_seqcst();
-	bool same_var(ModelAction *act);
-	bool same_thread(ModelAction *act);
-	bool is_synchronizing(ModelAction *act);
+	bool is_read() const;
+	bool is_write() const;
+	bool is_rmw() const;
+	bool is_acquire() const;
+	bool is_release() const;
+	bool is_seqcst() const;
+	bool same_var(const ModelAction *act) const;
+	bool same_thread(const ModelAction *act) const;
+	bool is_synchronizing(const ModelAction *act) const;
 
 	void create_cv(ModelAction *parent = NULL);
 	void read_from(ModelAction *act);

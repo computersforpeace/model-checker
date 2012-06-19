@@ -26,22 +26,22 @@ ModelAction::~ModelAction()
 		delete cv;
 }
 
-bool ModelAction::is_read()
+bool ModelAction::is_read() const
 {
 	return type == ATOMIC_READ;
 }
 
-bool ModelAction::is_write()
+bool ModelAction::is_write() const
 {
 	return type == ATOMIC_WRITE;
 }
 
-bool ModelAction::is_rmw()
+bool ModelAction::is_rmw() const
 {
 	return type == ATOMIC_RMW;
 }
 
-bool ModelAction::is_acquire()
+bool ModelAction::is_acquire() const
 {
 	switch (order) {
 	case memory_order_acquire:
@@ -53,7 +53,7 @@ bool ModelAction::is_acquire()
 	}
 }
 
-bool ModelAction::is_release()
+bool ModelAction::is_release() const
 {
 	switch (order) {
 	case memory_order_release:
@@ -65,17 +65,17 @@ bool ModelAction::is_release()
 	}
 }
 
-bool ModelAction::is_seqcst()
+bool ModelAction::is_seqcst() const
 {
 	return order==memory_order_seq_cst;
 }
 
-bool ModelAction::same_var(ModelAction *act)
+bool ModelAction::same_var(const ModelAction *act) const
 {
 	return location == act->location;
 }
 
-bool ModelAction::same_thread(ModelAction *act)
+bool ModelAction::same_thread(const ModelAction *act) const
 {
 	return tid == act->tid;
 }
@@ -90,7 +90,7 @@ bool ModelAction::same_thread(ModelAction *act)
  *  @return tells whether we have to explore a reordering.
  */
 
-bool ModelAction::is_synchronizing(ModelAction *act)
+bool ModelAction::is_synchronizing(const ModelAction *act) const
 {
 	//Same thread can't be reordered
 	if (same_thread(act))

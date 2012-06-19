@@ -3,6 +3,7 @@
 #include "common.h"
 #include "model.h"
 
+/** @brief Node constructor */
 Node::Node(ModelAction *act, int nthreads)
 	: action(act),
 	num_threads(nthreads),
@@ -11,12 +12,14 @@ Node::Node(ModelAction *act, int nthreads)
 {
 }
 
+/** @brief Node desctructor */
 Node::~Node()
 {
 	if (action)
 		delete action;
 }
 
+/** Prints debugging info for the ModelAction associated with this Node */
 void Node::print()
 {
 	if (action)
@@ -25,12 +28,23 @@ void Node::print()
 		printf("******** empty action ********\n");
 }
 
+/**
+ * Checks if the Thread associated with this thread ID has been explored from
+ * this Node already.
+ * @param tid is the thread ID to check
+ * @return true if this thread choice has been explored already, false
+ * otherwise
+ */
 bool Node::has_been_explored(thread_id_t tid)
 {
 	int id = id_to_int(tid);
 	return explored_children[id];
 }
 
+/**
+ * Checks if the backtracking set is empty.
+ * @return true if the backtracking set is empty
+ */
 bool Node::backtrack_empty()
 {
 	unsigned int i;
@@ -40,12 +54,25 @@ bool Node::backtrack_empty()
 	return true;
 }
 
+/**
+ * Explore a child Node using a given ModelAction. This updates both the
+ * Node-internal and the ModelAction data to associate the ModelAction with
+ * this Node.
+ * @param act is the ModelAction to explore
+ */
 void Node::explore_child(ModelAction *act)
 {
 	act->set_node(this);
 	explore(act->get_tid());
 }
 
+/**
+ * Records a backtracking reference for a thread choice within this Node.
+ * Provides feedback as to whether this thread choice is already set for
+ * backtracking.
+ * @return false if the thread was already set to be backtracked, true
+ * otherwise
+ */
 bool Node::set_backtrack(thread_id_t id)
 {
 	int i = id_to_int(id);

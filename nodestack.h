@@ -38,6 +38,7 @@ private:
 	int num_threads;
 	std::vector< bool, MyAlloc<bool> > explored_children;
 	std::vector< bool, MyAlloc<bool> > backtrack;
+	int numBacktracks;
 };
 
 typedef std::list<class Node *, MyAlloc< class Node * > > node_list_t;

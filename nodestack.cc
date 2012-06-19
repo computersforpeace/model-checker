@@ -8,7 +8,8 @@ Node::Node(ModelAction *act, int nthreads)
 	: action(act),
 	num_threads(nthreads),
 	explored_children(num_threads),
-	backtrack(num_threads)
+	backtrack(num_threads),
+	numBacktracks(0)
 {
 }
 
@@ -47,11 +48,7 @@ bool Node::has_been_explored(thread_id_t tid)
  */
 bool Node::backtrack_empty()
 {
-	unsigned int i;
-	for (i = 0; i < backtrack.size(); i++)
-		if (backtrack[i] == true)
-			return false;
-	return true;
+	return numBacktracks == 0;
 }
 
 /**
@@ -79,6 +76,7 @@ bool Node::set_backtrack(thread_id_t id)
 	if (backtrack[i])
 		return false;
 	backtrack[i] = true;
+	numBacktracks++;
 	return true;
 }
 
@@ -92,6 +90,7 @@ thread_id_t Node::get_next_backtrack()
 	if (i >= backtrack.size())
 		return THREAD_ID_T_NONE;
 	backtrack[i] = false;
+	numBacktracks--;
 	return int_to_id(i);
 }
 
@@ -103,7 +102,10 @@ bool Node::is_enabled(Thread *t)
 void Node::explore(thread_id_t tid)
 {
 	int i = id_to_int(tid);
-	backtrack[i] = false;
+	if (backtrack[i]) {
+		backtrack[i] = false;
+		numBacktracks--;
+	}
 	explored_children[i] = true;
 }
 

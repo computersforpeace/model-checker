@@ -33,6 +33,17 @@ struct Snapshot * sTheRecord = NULL;
 #endif
 
 #if !USE_MPROTECT_SNAPSHOT
+/** @statics
+*   These variables are necessary because the stack is shared region and 
+*   there exists a race between all processes executing the same function.
+*   To avoid the problem above, we require variables allocated in 'safe' regions.
+*   The bug was actually observed with the forkID, these variables below are
+*   used to indicate the various contexts to which to switch to.
+*
+*   @savedSnapshotContext: contains the point to which takesnapshot() call should switch to.
+*   @savedUserSnapshotContext: contains the point to which the process whose snapshotid is equal to the rollbackid should switch to
+*   @snapshotid: it is a running counter for the various forked processes snapshotid. it is incremented and set in a persistently shared record
+*/
 static ucontext_t savedSnapshotContext;
 static ucontext_t savedUserSnapshotContext;
 static snapshot_id snapshotid = 0;
@@ -185,8 +196,7 @@ void initSnapShotLibrary(unsigned int numbackingpages,
 	/* switch to a new entryPoint context, on a new stack */
 	swapcontext(&savedSnapshotContext, &newContext);
 
-	//add the code to take a snapshot here...
-	//to return to user process, do a second swapcontext...
+	/* switch back here when takesnapshot is called */
 	pid_t forkedID = 0;
 	snapshotid = sTheRecord->currSnapShotID;
 	bool swapContext = false;
@@ -195,13 +205,11 @@ void initSnapShotLibrary(unsigned int numbackingpages,
 		forkedID = fork();
 		if( 0 == forkedID ){
 			ucontext_t currentContext;
-#if 0
-			int dbg = 0;
-			while( !dbg );
-#endif
+			/*If the rollback bool is set{ see below }, switch to the context we need to return to during a rollback*/
 			if( swapContext )
 				swapcontext( &currentContext, &( sTheRecord->mContextToRollback ) );
 			else{
+				/*Child process which is forked as a result of takesnapshot call should switch back to the takesnapshot context*/
 				swapcontext( &currentContext, &savedUserSnapshotContext );
 			}
 		} else {
@@ -218,6 +226,7 @@ void initSnapShotLibrary(unsigned int numbackingpages,
 			if( sTheRecord->mIDToRollback != snapshotid )
 				exit(EXIT_SUCCESS);
 			else{
+				/*This bool indicates that the current process's snapshotid is same as the id to which the rollback needs to occur*/
 				swapContext = true;
 			}
 		}
@@ -299,11 +308,20 @@ void rollBack( snapshot_id theID ){
 	sTheRecord->mIDToRollback = theID;
 	int sTemp = 0;
 	getcontext( &sTheRecord->mContextToRollback );
+	/*
+	* This is used to quit the process on rollback, so that
+	* the process which needs to rollback can quit allowing the process whose snapshotid matches the rollbackid to switch to 
+	* this context and continue....
+	*/
 	if( !sTemp ){
 		sTemp = 1;
 		SSDEBUG("Invoked rollback");
 		exit(EXIT_SUCCESS);
 	}
+    /*
+	* This fix obviates the need for a finalize call. hence less dependences for model-checker....
+    *
+    */
 	sTheRecord->mIDToRollback = -1;
 #endif
 }

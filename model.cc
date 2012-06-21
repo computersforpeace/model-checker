@@ -240,11 +240,18 @@ void ModelChecker::check_current_action(void)
 
 	tmp = node_stack->explore_action(curr);
 	if (tmp) {
-		/* Discard duplicate ModelAction */
+		/* Discard duplicate ModelAction; use action from NodeStack */
 		delete curr;
 		curr = tmp;
 	} else {
+		/*
+		 * Perform one-time actions when pushing new ModelAction onto
+		 * NodeStack
+		 */
 		curr->create_cv(get_parent_action(curr->get_tid()));
+		/* Build may_read_from set */
+		if (curr->is_read())
+			build_reads_from_past(curr);
 	}
 
 	/* Assign 'creation' parent */

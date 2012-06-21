@@ -55,6 +55,7 @@ public:
 	bool is_synchronizing(const ModelAction *act) const;
 
 	void create_cv(ModelAction *parent = NULL);
+	ClockVector * get_cv() const { return cv; }
 	void read_from(ModelAction *act);
 
 	inline bool operator <(const ModelAction& act) const {

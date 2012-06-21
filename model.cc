@@ -6,6 +6,7 @@
 #include "schedule.h"
 #include "snapshot-interface.h"
 #include "common.h"
+#include "clockvector.h"
 
 #define INITIAL_THREAD_ID	0
 
@@ -297,6 +298,44 @@ ModelAction * ModelChecker::get_parent_action(thread_id_t tid)
 	if (!parent)
 		parent = get_thread(tid)->get_creation();
 	return parent;
+}
+
+/**
+ * Build up an initial set of all past writes that this 'read' action may read
+ * from. This set is determined by the clock vector's "happens before"
+ * relationship.
+ * @param curr is the current ModelAction that we are exploring; it must be a
+ * 'read' operation.
+ */
+void ModelChecker::build_reads_from_past(ModelAction *curr)
+{
+	std::vector<action_list_t> *thrd_lists = &(*obj_thrd_map)[curr->get_location()];
+	unsigned int i;
+
+	ASSERT(curr->is_read());
+
+	for (i = 0; i < thrd_lists->size(); i++) {
+		action_list_t *list = &(*thrd_lists)[i];
+		action_list_t::reverse_iterator rit;
+		for (rit = list->rbegin(); rit != list->rend(); rit++) {
+			ModelAction *act = *rit;
+
+			/* Only consider 'write' actions */
+			if (!act->is_write())
+				continue;
+
+			DEBUG("Adding action to may_read_from:\n");
+			if (DBG_ENABLED()) {
+				act->print();
+				curr->print();
+			}
+			curr->get_node()->add_read_from(act);
+
+			/* Include at most one act that "happens before" curr */
+			if (act->happens_before(curr))
+				break;
+		}
+	}
 }
 
 void ModelChecker::print_summary(void)

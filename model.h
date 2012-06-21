@@ -78,6 +78,7 @@ private:
 	void add_action_to_lists(ModelAction *act);
 	ModelAction * get_last_action(thread_id_t tid);
 	ModelAction * get_parent_action(thread_id_t tid);
+	void build_reads_from_past(ModelAction *curr);
 
 	void print_list(action_list_t *list);
 

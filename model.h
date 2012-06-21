@@ -80,8 +80,6 @@ private:
 	ModelAction * get_parent_action(thread_id_t tid);
 	void build_reads_from_past(ModelAction *curr);
 
-	void print_list(action_list_t *list);
-
 	ModelAction *current_action;
 	ModelAction *diverge;
 	thread_id_t nextThread;

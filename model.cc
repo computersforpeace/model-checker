@@ -346,19 +346,7 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 	}
 }
 
-void ModelChecker::print_summary(void)
-{
-	printf("\n");
-	printf("Number of executions: %d\n", num_executions);
-	printf("Total nodes created: %d\n", node_stack->get_total_nodes());
-
-	scheduler->print();
-
-	print_list(action_trace);
-	printf("\n");
-}
-
-void ModelChecker::print_list(action_list_t *list)
+static void print_list(action_list_t *list)
 {
 	action_list_t::iterator it;
 
@@ -369,6 +357,18 @@ void ModelChecker::print_list(action_list_t *list)
 		(*it)->print();
 	}
 	printf("---------------------------------------------------------------------\n");
+}
+
+void ModelChecker::print_summary(void)
+{
+	printf("\n");
+	printf("Number of executions: %d\n", num_executions);
+	printf("Total nodes created: %d\n", node_stack->get_total_nodes());
+
+	scheduler->print();
+
+	print_list(action_trace);
+	printf("\n");
 }
 
 int ModelChecker::add_thread(Thread *t)

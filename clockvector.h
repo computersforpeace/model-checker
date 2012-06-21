@@ -1,3 +1,7 @@
+/** @file clockvector.h
+ *  @brief Implements a clock vector.
+ */
+
 #ifndef __CLOCKVECTOR_H__
 #define __CLOCKVECTOR_H__
 
@@ -12,13 +16,16 @@ public:
 	ClockVector(ClockVector *parent = NULL, ModelAction *act = NULL);
 	~ClockVector();
 	void merge(ClockVector *cv);
-	bool happens_before(ModelAction *act, thread_id_t id);
+	bool synchronized_since(ModelAction *act) const;
 
-	void print();
+	void print() const;
 
 	MEMALLOC
 private:
+	/** @brief Holds the actual clock data, as an array. */
 	int *clock;
+
+	/** @brief The number of threads recorded in clock (i.e., its length).  */
 	int num_threads;
 };
 

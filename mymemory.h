@@ -1,7 +1,14 @@
+/** @file mymemory.h
+ *  @brief Memory allocation functions.
+ */
+
 #ifndef _MY_MEMORY_H
 #define _MY_MEMORY_H
 #include <stdlib.h>
 #include <limits>
+
+/** MEMALLOC declares the allocators for a class to allocate
+ *	memory in the non-snapshotting heap. */
 
 #define MEMALLOC \
 	void * operator new(size_t size) { \
@@ -17,22 +24,28 @@
 		MYFREE(p);\
 	}
 
-/* Empty define; represents opposite of MEMALLOC */
+/** SNAPSHOTALLOC declares the allocators for a class to allocate
+ *	memory in the snapshotting heap. */
+
 #define SNAPSHOTALLOC
 
 void *MYMALLOC(size_t size);
 void MYFREE(void *ptr);
 
-/*
-The following code example is taken from the book
-The C++ Standard Library - A Tutorial and Reference
-by Nicolai M. Josuttis, Addison-Wesley, 1999
-© Copyright Nicolai M. Josuttis 1999
-Permission to copy, use, modify, sell and distribute this software
-is granted provided this copyright notice appears in all copies.
-This software is provided "as is" without express or implied
-warranty, and with no claim as to its suitability for any purpose.
-*/
+void system_free( void * ptr );
+void *system_malloc( size_t size );
+
+/** @brief Provides a non-snapshotting allocator for use in STL classes.
+ *
+ * The code was adapted from a code example from the book The C++
+ * Standard Library - A Tutorial and Reference by Nicolai M. Josuttis,
+ * Addison-Wesley, 1999 © Copyright Nicolai M. Josuttis 1999
+ * Permission to copy, use, modify, sell and distribute this software
+ * is granted provided this copyright notice appears in all copies.
+ * This software is provided "as is" without express or implied
+ * warranty, and with no claim as to its suitability for any purpose.
+ */
+
 template <class T>
    class MyAlloc {
      public:
@@ -101,12 +114,14 @@ template <class T>
        }
    };
 
-// return that all specializations of this allocator are interchangeable
+/** Return that all specializations of this allocator are interchangeable. */
  template <class T1, class T2>
  bool operator== (const MyAlloc<T1>&,
                   const MyAlloc<T2>&) throw() {
      return true;
  }
+
+/** Return that all specializations of this allocator are interchangeable. */
  template <class T1, class T2>
  bool operator!= (const MyAlloc<T1>&,
                   const MyAlloc<T2>&) throw() {
@@ -119,6 +134,8 @@ extern "C" {
 typedef void * mspace;
 extern void* mspace_malloc(mspace msp, size_t bytes);
 extern void mspace_free(mspace msp, void* mem);
+extern void* mspace_realloc(mspace msp, void* mem, size_t newsize);
+extern void* mspace_calloc(mspace msp, size_t n_elements, size_t elem_size);
 extern mspace create_mspace_with_base(void* base, size_t capacity, int locked);
 extern mspace create_mspace(size_t capacity, int locked);
 extern mspace mySpace;

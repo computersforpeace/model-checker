@@ -1,13 +1,20 @@
+/** @file nodestack.h
+ *  @brief Stack of operations for use in backtracking.
+*/
+
 #ifndef __NODESTACK_H__
 #define __NODESTACK_H__
 
 #include <list>
 #include <vector>
+#include <set>
 #include <cstddef>
 #include "threads.h"
 #include "mymemory.h"
 
 class ModelAction;
+
+typedef std::set< ModelAction *, std::less< ModelAction *>, MyAlloc< ModelAction * > > action_set_t;
 
 class Node {
 public:
@@ -24,19 +31,23 @@ public:
 	bool is_enabled(Thread *t);
 	ModelAction * get_action() { return action; }
 
-	void print();
+	void add_read_from(ModelAction *act);
 
-	static int get_total_nodes() { return total_nodes; }
+	void print();
 
 	MEMALLOC
 private:
 	void explore(thread_id_t tid);
 
-	static int total_nodes;
 	ModelAction *action;
 	int num_threads;
 	std::vector< bool, MyAlloc<bool> > explored_children;
 	std::vector< bool, MyAlloc<bool> > backtrack;
+	int numBacktracks;
+
+	/** The set of ModelActions that this the action at this Node may read
+	 *  from. Only meaningful if this Node represents a 'read' action. */
+	action_set_t may_read_from;
 };
 
 typedef std::list<class Node *, MyAlloc< class Node * > > node_list_t;
@@ -50,12 +61,16 @@ public:
 	Node * get_next();
 	void reset_execution();
 
+	int get_total_nodes() { return total_nodes; }
+
 	void print();
 
 	MEMALLOC
 private:
 	node_list_t node_list;
 	node_list_t::iterator iter;
+
+	int total_nodes;
 };
 
 #endif /* __NODESTACK_H__ */

@@ -1,3 +1,7 @@
+/** @file libthreads.h
+ *  @brief Basic Thread Library Functionality.
+ */
+
 #ifndef __LIBTHREADS_H__
 #define __LIBTHREADS_H__
 

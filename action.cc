@@ -26,17 +26,22 @@ ModelAction::~ModelAction()
 		delete cv;
 }
 
-bool ModelAction::is_read()
+bool ModelAction::is_read() const
 {
 	return type == ATOMIC_READ;
 }
 
-bool ModelAction::is_write()
+bool ModelAction::is_write() const
 {
 	return type == ATOMIC_WRITE;
 }
 
-bool ModelAction::is_acquire()
+bool ModelAction::is_rmw() const
+{
+	return type == ATOMIC_RMW;
+}
+
+bool ModelAction::is_acquire() const
 {
 	switch (order) {
 	case memory_order_acquire:
@@ -48,7 +53,7 @@ bool ModelAction::is_acquire()
 	}
 }
 
-bool ModelAction::is_release()
+bool ModelAction::is_release() const
 {
 	switch (order) {
 	case memory_order_release:
@@ -60,32 +65,59 @@ bool ModelAction::is_release()
 	}
 }
 
-bool ModelAction::same_var(ModelAction *act)
+bool ModelAction::is_seqcst() const
+{
+	return order==memory_order_seq_cst;
+}
+
+bool ModelAction::same_var(const ModelAction *act) const
 {
 	return location == act->location;
 }
 
-bool ModelAction::same_thread(ModelAction *act)
+bool ModelAction::same_thread(const ModelAction *act) const
 {
 	return tid == act->tid;
 }
 
-bool ModelAction::is_dependent(ModelAction *act)
+/** The is_synchronizing method should only explore interleavings if:
+ *  (1) the operations are seq_cst and don't commute or
+ *  (2) the reordering may establish or break a synchronization relation.
+ *  Other memory operations will be dealt with by using the reads_from
+ *  relation.
+ *
+ *  @param act is the action to consider exploring a reordering.
+ *  @return tells whether we have to explore a reordering.
+ */
+
+bool ModelAction::is_synchronizing(const ModelAction *act) const
 {
-	if (!is_read() && !is_write())
+	//Same thread can't be reordered
+	if (same_thread(act))
 		return false;
-	if (!act->is_read() && !act->is_write())
+
+	// Different locations commute
+	if (!same_var(act))
 		return false;
-	if (same_var(act) && !same_thread(act) &&
-			(is_write() || act->is_write()))
+	
+	// Explore interleavings of seqcst writes to guarantee total order
+	// of seq_cst operations that don't commute
+	if (is_write() && is_seqcst() && act->is_write() && act->is_seqcst())
 		return true;
+
+	// Explore synchronizing read/write pairs
+	if (is_read() && is_acquire() && act->is_write() && act->is_release())
+		return true;
+	if (is_write() && is_release() && act->is_read() && act->is_acquire())
+		return true;
+
+	// Otherwise handle by reads_from relation
 	return false;
 }
 
 void ModelAction::create_cv(ModelAction *parent)
 {
-	if (cv)
-		return;
+	ASSERT(cv == NULL);
 
 	if (parent)
 		cv = new ClockVector(parent->cv, this);
@@ -99,6 +131,17 @@ void ModelAction::read_from(ModelAction *act)
 	if (act->is_release() && this->is_acquire())
 		cv->merge(act->cv);
 	value = act->value;
+}
+
+/**
+ * Check whether 'this' happens before act, according to the memory-model's
+ * happens before relation. This is checked via the ClockVector constructs.
+ * @return true if this action's thread has synchronized with act's thread
+ * since the execution of act, false otherwise.
+ */
+bool ModelAction::happens_before(ModelAction *act)
+{
+	return act->cv->synchronized_since(this);
 }
 
 void ModelAction::print(void)
@@ -119,6 +162,9 @@ void ModelAction::print(void)
 		break;
 	case ATOMIC_WRITE:
 		type_str = "atomic write";
+		break;
+	case ATOMIC_RMW:
+		type_str = "atomic rmw";
 		break;
 	default:
 		type_str = "unknown type";

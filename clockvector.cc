@@ -7,6 +7,14 @@
 #include "clockvector.h"
 #include "common.h"
 
+/**
+ * Constructs a new ClockVector, given a parent ClockVector and a first
+ * ModelAction. This constructor can assign appropriate default settings if no
+ * parent and/or action is supplied.
+ * @param parent is the previous ClockVector to inherit (i.e., clock from the
+ * same thread or the parent that created this thread)
+ * @param act is an action with which to update the ClockVector
+ */
 ClockVector::ClockVector(ClockVector *parent, ModelAction *act)
 {
 	num_threads = model->get_num_threads();
@@ -19,11 +27,17 @@ ClockVector::ClockVector(ClockVector *parent, ModelAction *act)
 		clock[id_to_int(act->get_tid())] = act->get_seq_number();
 }
 
+/** @brief Destructor */
 ClockVector::~ClockVector()
 {
 	MYFREE(clock);
 }
 
+/**
+ * Merge a clock vector into this vector, using a pairwise vector. The
+ * resulting vector length will be the maximum length of the two being merged.
+ * @param cv is the ClockVector being merged into this vector.
+ */
 void ClockVector::merge(ClockVector *cv)
 {
 	int *clk = clock;
@@ -49,16 +63,29 @@ void ClockVector::merge(ClockVector *cv)
 	clock = clk;
 }
 
-bool ClockVector::happens_before(ModelAction *act, thread_id_t id)
+/**
+ * Check whether this vector's thread has synchronized with another action's
+ * thread. This effectively checks the happens-before relation (or actually,
+ * happens after), but it's easier to compare two ModelAction events directly,
+ * using ModelAction::happens_before.
+ *
+ * @see ModelAction::happens_before
+ *
+ * @return true if this ClockVector's thread has synchronized with act's
+ * thread, false otherwise. That is, this function returns:
+ * <BR><CODE>act <= cv[act->tid]</CODE>
+ */
+bool ClockVector::synchronized_since(ModelAction *act) const
 {
-	int i = id_to_int(id);
+	int i = id_to_int(act->get_tid());
 
 	if (i < num_threads)
-		return act->get_seq_number() < clock[i];
+		return act->get_seq_number() <= clock[i];
 	return false;
 }
 
-void ClockVector::print()
+/** @brief Formats and prints this ClockVector's data. */
+void ClockVector::print() const
 {
 	int i;
 	printf("CV: (");

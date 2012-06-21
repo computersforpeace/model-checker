@@ -1,3 +1,7 @@
+/** @file libatomic.h
+ *  @brief Basic atomic operations to be exposed to user program.
+ */
+
 #ifndef __LIBATOMIC_H__
 #define __LIBATOMIC_H__
 

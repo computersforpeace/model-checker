@@ -6,11 +6,13 @@
 #include "schedule.h"
 #include "snapshot-interface.h"
 #include "common.h"
+#include "clockvector.h"
 
 #define INITIAL_THREAD_ID	0
 
 ModelChecker *model;
 
+/** @brief Constructor */
 ModelChecker::ModelChecker()
 	:
 	/* Initialize default scheduler */
@@ -32,6 +34,7 @@ ModelChecker::ModelChecker()
 {
 }
 
+/** @brief Destructor */
 ModelChecker::~ModelChecker()
 {
 	std::map<int, class Thread *>::iterator it;
@@ -46,6 +49,10 @@ ModelChecker::~ModelChecker()
 	delete scheduler;
 }
 
+/**
+ * Restores user program to initial state and resets all model-checker data
+ * structures.
+ */
 void ModelChecker::reset_to_initial_state()
 {
 	DEBUG("+++ Resetting to initial state +++\n");
@@ -58,21 +65,33 @@ void ModelChecker::reset_to_initial_state()
 	snapshotObject->backTrackBeforeStep(0);
 }
 
+/** @returns a thread ID for a new Thread */
 thread_id_t ModelChecker::get_next_id()
 {
 	return next_thread_id++;
 }
 
+/** @returns the number of user threads created during this execution */
 int ModelChecker::get_num_threads()
 {
 	return next_thread_id;
 }
 
+/** @returns a sequence number for a new ModelAction */
 int ModelChecker::get_next_seq_num()
 {
 	return ++used_sequence_numbers;
 }
 
+/**
+ * Performs the "scheduling" for the model-checker. That is, it checks if the
+ * model-checker has selected a "next thread to run" and returns it, if
+ * available. This function should be called from the Scheduler routine, where
+ * the Scheduler falls back to a default scheduling routine if needed.
+ *
+ * @return The next thread chosen by the model-checker. If the model-checker
+ * makes no selection, retuns NULL.
+ */
 Thread * ModelChecker::schedule_next_thread()
 {
 	Thread *t;
@@ -85,12 +104,12 @@ Thread * ModelChecker::schedule_next_thread()
 	return t;
 }
 
-/*
- * get_next_replay_thread() - Choose the next thread in the replay sequence
+/**
+ * Choose the next thread in the replay sequence.
  *
- * If we've reached the 'diverge' point, then we pick a thread from the
- *   backtracking set.
- * Otherwise, we simply return the next thread in the sequence.
+ * If the replay sequence has reached the 'diverge' point, returns a thread
+ * from the backtracking set. Otherwise, simply returns the next thread in the
+ * sequence that is being replayed.
  */
 thread_id_t ModelChecker::get_next_replay_thread()
 {
@@ -118,6 +137,13 @@ thread_id_t ModelChecker::get_next_replay_thread()
 	return tid;
 }
 
+/**
+ * Queries the model-checker for more executions to explore and, if one
+ * exists, resets the model-checker state to execute a new execution.
+ *
+ * @return If there are more executions to explore, return true. Otherwise,
+ * return false.
+ */
 bool ModelChecker::next_execution()
 {
 	DBG();
@@ -154,7 +180,7 @@ ModelAction * ModelChecker::get_last_conflict(ModelAction *act)
 	action_list_t::reverse_iterator rit;
 	for (rit = action_trace->rbegin(); rit != action_trace->rend(); rit++) {
 		ModelAction *prev = *rit;
-		if (act->is_dependent(prev))
+		if (act->is_synchronizing(prev))
 			return prev;
 	}
 	return NULL;
@@ -205,14 +231,28 @@ void ModelChecker::check_current_action(void)
 	Node *currnode;
 
 	ModelAction *curr = this->current_action;
+	ModelAction *tmp;
 	current_action = NULL;
 	if (!curr) {
 		DEBUG("trying to push NULL action...\n");
 		return;
 	}
 
-	curr = node_stack->explore_action(curr);
-	curr->create_cv(get_parent_action(curr->get_tid()));
+	tmp = node_stack->explore_action(curr);
+	if (tmp) {
+		/* Discard duplicate ModelAction; use action from NodeStack */
+		delete curr;
+		curr = tmp;
+	} else {
+		/*
+		 * Perform one-time actions when pushing new ModelAction onto
+		 * NodeStack
+		 */
+		curr->create_cv(get_parent_action(curr->get_tid()));
+		/* Build may_read_from set */
+		if (curr->is_read())
+			build_reads_from_past(curr);
+	}
 
 	/* Assign 'creation' parent */
 	if (curr->get_type() == THREAD_CREATE) {
@@ -232,6 +272,12 @@ void ModelChecker::check_current_action(void)
 
 	add_action_to_lists(curr);
 }
+
+
+/**
+ * Adds an action to the per-object, per-thread action vector.
+ * @param act is the ModelAction to add.
+ */
 
 void ModelChecker::add_action_to_lists(ModelAction *act)
 {
@@ -261,11 +307,49 @@ ModelAction * ModelChecker::get_parent_action(thread_id_t tid)
 	return parent;
 }
 
+/**
+ * Build up an initial set of all past writes that this 'read' action may read
+ * from. This set is determined by the clock vector's "happens before"
+ * relationship.
+ * @param curr is the current ModelAction that we are exploring; it must be a
+ * 'read' operation.
+ */
+void ModelChecker::build_reads_from_past(ModelAction *curr)
+{
+	std::vector<action_list_t> *thrd_lists = &(*obj_thrd_map)[curr->get_location()];
+	unsigned int i;
+
+	ASSERT(curr->is_read());
+
+	for (i = 0; i < thrd_lists->size(); i++) {
+		action_list_t *list = &(*thrd_lists)[i];
+		action_list_t::reverse_iterator rit;
+		for (rit = list->rbegin(); rit != list->rend(); rit++) {
+			ModelAction *act = *rit;
+
+			/* Only consider 'write' actions */
+			if (!act->is_write())
+				continue;
+
+			DEBUG("Adding action to may_read_from:\n");
+			if (DBG_ENABLED()) {
+				act->print();
+				curr->print();
+			}
+			curr->get_node()->add_read_from(act);
+
+			/* Include at most one act that "happens before" curr */
+			if (act->happens_before(curr))
+				break;
+		}
+	}
+}
+
 void ModelChecker::print_summary(void)
 {
 	printf("\n");
 	printf("Number of executions: %d\n", num_executions);
-	printf("Total nodes created: %d\n", Node::get_total_nodes());
+	printf("Total nodes created: %d\n", node_stack->get_total_nodes());
 
 	scheduler->print();
 

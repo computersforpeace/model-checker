@@ -1,3 +1,7 @@
+/** @file schedule.h
+ *	@brief Thread scheduler.
+ */
+
 #ifndef __SCHEDULE_H__
 #define __SCHEDULE_H__
 
@@ -7,6 +11,8 @@
 /* Forward declaration */
 class Thread;
 
+/** @brief The Scheduler class performs the mechanics of Thread execution
+ * scheduling. */
 class Scheduler {
 public:
 	Scheduler();

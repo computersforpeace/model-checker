@@ -1,3 +1,7 @@
+/** @file snapshot.h
+ *	@brief Snapshotting interface header file.
+ */
+
 #ifndef _SNAPSHOT_H
 #define _SNAPSHOT_H
 
@@ -10,7 +14,7 @@
 #define USE_MPROTECT_SNAPSHOT 1
 
 /* Size of signal stack */
-#define SIGSTACKSIZE 16384
+#define SIGSTACKSIZE 32768
 
 void addMemoryRegionToSnapShot( void * ptr, unsigned int numPages );
 
@@ -18,13 +22,6 @@ snapshot_id takeSnapshot( );
 
 void rollBack( snapshot_id theSnapShot );
 
-void finalize();
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 void createSharedLibrary();
-#ifdef __cplusplus
-};  /* end of extern "C" */
-#endif
+
 #endif

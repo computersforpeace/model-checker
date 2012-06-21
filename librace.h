@@ -1,3 +1,7 @@
+/** @file librace.h
+ *  @brief Interface to check normal memory operations for data races.
+ */
+
 #ifndef __LIBRACE_H__
 #define __LIBRACE_H__
 

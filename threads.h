@@ -1,3 +1,7 @@
+/** @file threads.h
+ *  @brief Model Checker Thread class.
+ */
+
 #ifndef __THREADS_H__
 #define __THREADS_H__
 
@@ -18,6 +22,7 @@ typedef enum thread_state {
 
 class ModelAction;
 
+/** @brief A Thread is created for each user-space thread */
 class Thread {
 public:
 	Thread(thrd_t *t, void (*func)(void *), void *a);

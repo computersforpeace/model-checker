@@ -17,34 +17,47 @@
 #include <sys/wait.h>
 #include <ucontext.h>
 
-//extern declaration definition
-#define FAILURE(mesg) { printf("failed in the API: %s with errno relative message: %s\n", mesg, strerror( errno ) ); exit( -1 ); }
+#define FAILURE(mesg) { printf("failed in the API: %s with errno relative message: %s\n", mesg, strerror( errno ) ); exit(EXIT_FAILURE); }
+
+#ifdef CONFIG_SSDEBUG
+#define SSDEBUG		printf
+#else
+#define SSDEBUG(...)	do { } while (0)
+#endif
+
+/* extern declaration definition */
 #if USE_MPROTECT_SNAPSHOT
 struct SnapShot * snapshotrecord = NULL;
-struct Snapshot_t * sTheRecord = NULL;
 #else
-struct Snapshot_t * sTheRecord = NULL;
+struct Snapshot * sTheRecord = NULL;
 #endif
-void DumpIntoLog( const char * filename, const char * message ){
-#if SSDEBUG
-	static pid_t thePID = getpid();
-	char newFn[ 1024 ] ={ 0 };
-	sprintf( newFn,"%s-%d.txt", filename, thePID );
-	FILE * myFile = fopen( newFn, "w+" );
-	fprintf( myFile, "the message %s: the process id %d\n", message, thePID );
-	fflush( myFile );
-	fclose( myFile );
-	myFile = NULL;
-#endif
-}
+
 #if !USE_MPROTECT_SNAPSHOT
 static ucontext_t savedSnapshotContext;
 static ucontext_t savedUserSnapshotContext;
 static snapshot_id snapshotid = 0;
 #endif
-/* Initialize snapshot data structure */
+
+/** PageAlignedAdressUpdate return a page aligned address for the
+ * address being added as a side effect the numBytes are also changed.
+ */
+static void * PageAlignAddressUpward(void * addr) {
+	return (void *)((((uintptr_t)addr)+PAGESIZE-1)&~(PAGESIZE-1));
+}
+
 #if USE_MPROTECT_SNAPSHOT
-void initSnapShotRecord(unsigned int numbackingpages, unsigned int numsnapshots, unsigned int nummemoryregions) {
+
+/** ReturnPageAlignedAddress returns a page aligned address for the
+ * address being added as a side effect the numBytes are also changed.
+ */
+static void * ReturnPageAlignedAddress(void * addr) {
+	return (void *)(((uintptr_t)addr)&~(PAGESIZE-1));
+}
+
+/** The initSnapShotRecord method initialized the snapshotting data
+ *  structures for the mprotect based snapshot. 
+ */
+static void initSnapShotRecord(unsigned int numbackingpages, unsigned int numsnapshots, unsigned int nummemoryregions) {
 	snapshotrecord=( struct SnapShot * )MYMALLOC(sizeof(struct SnapShot));
 	snapshotrecord->regionsToSnapShot=( struct MemoryRegion * )MYMALLOC(sizeof(struct MemoryRegion)*nummemoryregions);
 	snapshotrecord->backingStoreBasePtr= ( struct SnapShotPage * )MYMALLOC( sizeof( struct SnapShotPage ) * (numbackingpages + 1) );
@@ -59,15 +72,17 @@ void initSnapShotRecord(unsigned int numbackingpages, unsigned int numsnapshots,
 	snapshotrecord->maxBackingPages=numbackingpages;
 	snapshotrecord->maxSnapShots=numsnapshots;
 }
-#endif //nothing to initialize for the fork based snapshotting.
 
-void HandlePF( int sig, siginfo_t *si, void * unused){
-#if USE_MPROTECT_SNAPSHOT
+/** HandlePF is the page fault handler for mprotect based snapshotting
+ * algorithm.
+ */
+static void HandlePF( int sig, siginfo_t *si, void * unused){
 	if( si->si_code == SEGV_MAPERR ){
 		printf("Real Fault at %p\n", si->si_addr);
 		exit( EXIT_FAILURE );
 	}
 	void* addr = ReturnPageAlignedAddress(si->si_addr);
+
 	unsigned int backingpage=snapshotrecord->lastBackingPage++; //Could run out of pages...
 	if (backingpage==snapshotrecord->maxBackingPages) {
 		printf("Out of backing pages at %p\n", si->si_addr);
@@ -83,43 +98,34 @@ void HandlePF( int sig, siginfo_t *si, void * unused){
 		perror("mprotect");
 		// Handle error by quitting?
 	}
+}
 #endif //nothing to handle for non snapshotting case.
-}
 
-//Return a page aligned address for the address being added
-//as a side effect the numBytes are also changed.
-void * ReturnPageAlignedAddress(void * addr) {
-	return (void *)(((uintptr_t)addr)&~(PAGESIZE-1));
-}
-
-//Return a page aligned address for the address being added
-//as a side effect the numBytes are also changed.
-void * PageAlignAddressUpward(void * addr) {
-	return (void *)((((uintptr_t)addr)+PAGESIZE-1)&~(PAGESIZE-1));
-}
-#ifdef __cplusplus
-extern "C" {
-#endif
-	void createSharedLibrary(){
+void createSharedLibrary(){
 #if !USE_MPROTECT_SNAPSHOT
-		//step 1. create shared memory.
-		if( sTheRecord ) return;
-		int fd = shm_open( "/ModelChecker-Snapshotter", O_RDWR | O_CREAT, 0777 ); //universal permissions.
-		if( -1 == fd ) FAILURE("shm_open");
-		if( -1 == ftruncate( fd, ( size_t )SHARED_MEMORY_DEFAULT + ( size_t )STACK_SIZE_DEFAULT ) ) FAILURE( "ftruncate" );
-		char * memMapBase = ( char * ) mmap( 0, ( size_t )SHARED_MEMORY_DEFAULT + ( size_t )STACK_SIZE_DEFAULT, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0 );
-		if( MAP_FAILED == memMapBase ) FAILURE("mmap");
-		sTheRecord = ( struct Snapshot_t * )memMapBase;
-		sTheRecord->mSharedMemoryBase = memMapBase + sizeof( struct Snapshot_t );
-		sTheRecord->mStackBase = ( char * )memMapBase + ( size_t )SHARED_MEMORY_DEFAULT;
-		sTheRecord->mStackSize = STACK_SIZE_DEFAULT;
-		sTheRecord->mIDToRollback = -1;
-		sTheRecord->currSnapShotID = 0;
+	//step 1. create shared memory.
+	if ( sTheRecord )
+		return;
+	int fd = shm_open( "/ModelChecker-Snapshotter", O_RDWR | O_CREAT, 0777 ); //universal permissions.
+	if ( -1 == fd )
+		FAILURE("shm_open");
+	if ( -1 == ftruncate( fd, SHARED_MEMORY_DEFAULT + STACK_SIZE_DEFAULT ) )
+		FAILURE( "ftruncate" );
+	void * memMapBase = mmap( 0, SHARED_MEMORY_DEFAULT + STACK_SIZE_DEFAULT, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0 );
+	if( MAP_FAILED == memMapBase )
+		FAILURE("mmap");
+	sTheRecord = ( struct Snapshot * )memMapBase;
+	sTheRecord->mSharedMemoryBase = (void *)((uintptr_t)memMapBase + sizeof(struct Snapshot));
+	sTheRecord->mStackBase = (void *)((uintptr_t)memMapBase + SHARED_MEMORY_DEFAULT);
+	sTheRecord->mStackSize = STACK_SIZE_DEFAULT;
+	sTheRecord->mIDToRollback = -1;
+	sTheRecord->currSnapShotID = 0;
 #endif
-	}
-#ifdef __cplusplus
 }
-#endif
+
+/** The initSnapShotLibrary function initializes the Snapshot library.
+ *  @param entryPoint the function that should run the program.
+ */
 void initSnapShotLibrary(unsigned int numbackingpages,
 		unsigned int numsnapshots, unsigned int nummemoryregions,
 		unsigned int numheappages, VoidFuncPtr entryPoint) {
@@ -135,11 +141,28 @@ void initSnapShotLibrary(unsigned int numbackingpages,
 	sa.sa_flags = SA_SIGINFO | SA_NODEFER | SA_RESTART | SA_ONSTACK;
 	sigemptyset( &sa.sa_mask );
 	sa.sa_sigaction = HandlePF;
+#ifdef MAC
+	if( sigaction( SIGBUS, &sa, NULL ) == -1 ){
+		printf("SIGACTION CANNOT BE INSTALLED\n");
+		exit(EXIT_FAILURE);
+	}
+#endif
 	if( sigaction( SIGSEGV, &sa, NULL ) == -1 ){
 		printf("SIGACTION CANNOT BE INSTALLED\n");
-		exit(-1);
+		exit(EXIT_FAILURE);
 	}
+
 	initSnapShotRecord(numbackingpages, numsnapshots, nummemoryregions);
+
+	// EVIL HACK: We need to make sure that calls into the HandlePF method don't cause dynamic links
+	// The problem is that we end up protecting state in the dynamic linker...
+	// Solution is to call our signal handler before we start protecting stuff...
+
+	siginfo_t si;
+	memset(&si, 0, sizeof(si));
+	si.si_addr=ss.ss_sp;
+	HandlePF(SIGSEGV, &si, NULL);
+	snapshotrecord->lastBackingPage--; //remove the fake page we copied
 
 	basemySpace=MYMALLOC((numheappages+1)*PAGESIZE);
 	void * pagealignedbase=PageAlignAddressUpward(basemySpace);
@@ -147,38 +170,27 @@ void initSnapShotLibrary(unsigned int numbackingpages,
 	addMemoryRegionToSnapShot(pagealignedbase, numheappages);
 	entryPoint();
 #else
-	//add a signal to indicate that the process is going to terminate.
-	struct sigaction sa;
-	sa.sa_flags = SA_SIGINFO | SA_NODEFER | SA_RESTART;
-	sigemptyset( &sa.sa_mask );
-	sa.sa_sigaction = HandlePF;
-	if( sigaction( SIGUSR1, &sa, NULL ) == -1 ){
-		printf("SIGACTION CANNOT BE INSTALLED\n");
-		exit(-1);
-	}
+
+	basemySpace=system_malloc((numheappages+1)*PAGESIZE);
+	void * pagealignedbase=PageAlignAddressUpward(basemySpace);
+	mySpace = create_mspace_with_base(pagealignedbase,  numheappages*PAGESIZE, 1 );
 	createSharedLibrary();
 
 	//step 2 setup the stack context.
-
-	int alreadySwapped = 0;
-	getcontext( &savedSnapshotContext );
-	if( !alreadySwapped ){
-		alreadySwapped = 1;
-		ucontext_t currentContext, swappedContext, newContext;
-		getcontext( &newContext );
-		newContext.uc_stack.ss_sp = sTheRecord->mStackBase;
-		newContext.uc_stack.ss_size = STACK_SIZE_DEFAULT;
-		newContext.uc_link = &currentContext;
-		makecontext( &newContext, entryPoint, 0 );
-		swapcontext( &swappedContext, &newContext );
-	}
+	ucontext_t newContext;
+	getcontext( &newContext );
+	newContext.uc_stack.ss_sp = sTheRecord->mStackBase;
+	newContext.uc_stack.ss_size = STACK_SIZE_DEFAULT;
+	makecontext( &newContext, entryPoint, 0 );
+	/* switch to a new entryPoint context, on a new stack */
+	swapcontext(&savedSnapshotContext, &newContext);
 
 	//add the code to take a snapshot here...
 	//to return to user process, do a second swapcontext...
 	pid_t forkedID = 0;
 	snapshotid = sTheRecord->currSnapShotID;
 	bool swapContext = false;
-	while( !sTheRecord->mbFinalize ){
+	while( true ){
 		sTheRecord->currSnapShotID=snapshotid+1;
 		forkedID = fork();
 		if( 0 == forkedID ){
@@ -195,17 +207,16 @@ void initSnapShotLibrary(unsigned int numbackingpages,
 		} else {
 			int status;
 			int retVal;
-#if SSDEBUG
-			char mesg[ 1024 ] = { 0 };
-			sprintf( mesg, "The process id of child is %d and the process id of this process is %d and snapshot id is %d", forkedID, getpid(), snapshotid );
-			DumpIntoLog( "ModelSnapshot", mesg );
-#endif
+
+			SSDEBUG("The process id of child is %d and the process id of this process is %d and snapshot id is %d",
+			        forkedID, getpid(), snapshotid );
+
 			do {
 				retVal=waitpid( forkedID, &status, 0 );
 			} while( -1 == retVal && errno == EINTR );
 
 			if( sTheRecord->mIDToRollback != snapshotid )
-				exit(0);
+				exit(EXIT_SUCCESS);
 			else{
 				swapContext = true;
 			}
@@ -214,33 +225,38 @@ void initSnapShotLibrary(unsigned int numbackingpages,
 
 #endif
 }
-/* This function assumes that addr is page aligned */
+
+/** The addMemoryRegionToSnapShot function assumes that addr is page aligned. 
+ */
 void addMemoryRegionToSnapShot( void * addr, unsigned int numPages) {
 #if USE_MPROTECT_SNAPSHOT
 	unsigned int memoryregion=snapshotrecord->lastRegion++;
 	if (memoryregion==snapshotrecord->maxRegions) {
 		printf("Exceeded supported number of memory regions!\n");
-		exit(-1);
+		exit(EXIT_FAILURE);
 	}
 
 	snapshotrecord->regionsToSnapShot[ memoryregion ].basePtr=addr;
 	snapshotrecord->regionsToSnapShot[ memoryregion ].sizeInPages=numPages;
 #endif //NOT REQUIRED IN THE CASE OF FORK BASED SNAPSHOTS.
 }
-//take snapshot
+
+/** The takeSnapshot function takes a snapshot.
+ * @return The snapshot identifier.
+ */
 snapshot_id takeSnapshot( ){
 #if USE_MPROTECT_SNAPSHOT
 	for(unsigned int region=0; region<snapshotrecord->lastRegion;region++) {
 		if( mprotect(snapshotrecord->regionsToSnapShot[region].basePtr, snapshotrecord->regionsToSnapShot[region].sizeInPages*sizeof(struct SnapShotPage), PROT_READ ) == -1 ){
 			perror("mprotect");
 			printf("Failed to mprotect inside of takeSnapShot\n");
-			exit(-1);
+			exit(EXIT_FAILURE);
 		}
 	}
 	unsigned int snapshot=snapshotrecord->lastSnapShot++;
 	if (snapshot==snapshotrecord->maxSnapShots) {
 		printf("Out of snapshots\n");
-		exit(-1);
+		exit(EXIT_FAILURE);
 	}
 	snapshotrecord->snapShots[snapshot].firstBackingPage=snapshotrecord->lastBackingPage;
 
@@ -250,6 +266,10 @@ snapshot_id takeSnapshot( ){
 	return snapshotid;
 #endif
 }
+
+/** The rollBack function rollback to the given snapshot identifier.
+ *  @param theID is the snapshot identifier to rollback to.
+ */
 void rollBack( snapshot_id theID ){
 #if USE_MPROTECT_SNAPSHOT
 	std::map< void *, bool, std::less< void * >, MyAlloc< std::pair< const void *, bool > > > duplicateMap;
@@ -257,7 +277,7 @@ void rollBack( snapshot_id theID ){
 		if( mprotect(snapshotrecord->regionsToSnapShot[region].basePtr, snapshotrecord->regionsToSnapShot[region].sizeInPages*sizeof(struct SnapShotPage), PROT_READ | PROT_WRITE ) == -1 ){
 			perror("mprotect");
 			printf("Failed to mprotect inside of takeSnapShot\n");
-			exit(-1);
+			exit(EXIT_FAILURE);
 		}
 	}
 	for(unsigned int page=snapshotrecord->snapShots[theID].firstBackingPage; page<snapshotrecord->lastBackingPage; page++) {
@@ -281,17 +301,10 @@ void rollBack( snapshot_id theID ){
 	getcontext( &sTheRecord->mContextToRollback );
 	if( !sTemp ){
 		sTemp = 1;
-#if SSDEBUG
-		DumpIntoLog( "ModelSnapshot", "Invoked rollback" );
-#endif
-		exit( 0 );
+		SSDEBUG("Invoked rollback");
+		exit(EXIT_SUCCESS);
 	}
-#endif
-}
-
-void finalize(){
-#if !USE_MPROTECT_SNAPSHOT
-	sTheRecord->mbFinalize = true;
+	sTheRecord->mIDToRollback = -1;
 #endif
 }
 

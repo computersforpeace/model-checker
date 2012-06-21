@@ -1,3 +1,8 @@
+/** @file snapshot-interface.h
+ *  @brief C++ layer on top of snapshotting system.
+ */
+
+
 #ifndef __SNAPINTERFACE_H
 #define __SNAPINTERFACE_H
 #include "mymemory.h"
@@ -8,8 +13,6 @@ typedef void (*VoidFuncPtr)();
 void initSnapShotLibrary(unsigned int numbackingpages,
 		unsigned int numsnapshots, unsigned int nummemoryregions,
 		unsigned int numheappages, VoidFuncPtr entryPoint);
-
-void SnapshotGlobalSegments();
 
 struct stackEntry {
   struct stackEntry *next;

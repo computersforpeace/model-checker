@@ -10,85 +10,114 @@
 #include <cassert>
 #include <vector>
 #include <utility>
+#include <inttypes.h>
+#include "common.h"
+
 
 #define MYBINARYNAME "model"
 #define MYLIBRARYNAME "libmodel.so"
-#define PROCNAME      "/proc/*/maps"
-#define REPLACEPOS		6
-
-typedef std::basic_string<char, std::char_traits<char>, MyAlloc<char> > MyString;
+#define MAPFILE_FORMAT "/proc/%d/maps"
 
 SnapshotStack * snapshotObject;
 
-/*This looks like it might leak memory...  Subramanian should fix this. */
+#ifdef MAC
+/** The SnapshotGlobalSegments function computes the memory regions
+ *	that may contain globals and then configures the snapshotting
+ *	library to snapshot them.
+ */
+static void SnapshotGlobalSegments(){
+	int pid = getpid();
+	char buf[9000], execname[100];
+	FILE *map;
 
-typedef std::basic_stringstream< char, std::char_traits< char >, MyAlloc< char > > MyStringStream;
-std::vector< MyString, MyAlloc< MyString> > splitString( MyString input, char delim ){
-	std::vector< MyString, MyAlloc< MyString > > splits;
-	MyStringStream ss( input );	
-	MyString item;
-	while( std::getline( ss, item, delim ) ){
-		splits.push_back( item );	
+	sprintf(execname, "vmmap -interleaved %d", pid);
+	map=popen(execname, "r");
+
+	if (!map) {
+		perror("popen");
+		exit(EXIT_FAILURE);
 	}
-	return splits;
-}
 
-bool checkPermissions( MyString permStr ){
-	return permStr.find("w") != MyString::npos;
-}
-static void takeSegmentSnapshot( const MyString & lineText ){
-	std::vector< MyString, MyAlloc< MyString > > firstSplit = splitString( lineText, ' ' );
-	if( checkPermissions( firstSplit[ 1 ] ) ){
-		std::vector< MyString, MyAlloc< MyString > > secondSplit = splitString( firstSplit[ 0 ], '-' );    
-		size_t val1 = 0, val2 = 0;
-		sscanf( secondSplit[ 0 ].c_str(), "%zx", &val1 );
-		sscanf( secondSplit[ 1 ].c_str(), "%zx", &val2 );
-		size_t len = ( val2 - val1 ) / PAGESIZE;    
-		if( 0 != len ){
-			addMemoryRegionToSnapShot( ( void * )val1, len );        
+	/* Wait for correct part */
+	while (fgets(buf, sizeof(buf), map)) {
+		if (strstr(buf, "==== regions for process"))
+			break;
+	}
+
+	while (fgets(buf, sizeof(buf), map)) {
+		char regionname[200] = "";
+		char type[23];
+		char smstr[23];
+		char r, w, x;
+		char mr, mw, mx;
+		int size;
+		void *begin, *end;
+
+		//Skip out at the end of the section
+		if (buf[0]=='\n')
+			break;
+		
+		sscanf(buf, "%22s %p-%p [%5dK] %c%c%c/%c%c%c SM=%3s %200s\n", &type, &begin, &end, &size, &r, &w, &x, &mr, &mw, &mx, smstr, regionname);
+
+		if (w == 'w' && (strstr(regionname, MYBINARYNAME) || strstr(regionname, MYLIBRARYNAME))) {
+			size_t len = ((uintptr_t)end - (uintptr_t)begin) / PAGESIZE;
+			if (len != 0)
+				addMemoryRegionToSnapShot(begin, len);
+			DEBUG("%s\n", buf);
+			DEBUG("%45s: %18p - %18p\t%c%c%c%c\n", regionname, begin, end, r, w, x, p);
 		}
 	}
+	pclose(map);
 }
-void SnapshotGlobalSegments(){
-	MyString fn = PROCNAME;
-	static char sProcessSize[ 12 ] = { 0 };
-	std::pair< const char *, bool > dataSect[ 2 ];
-	dataSect[ 0 ] = std::make_pair( MYBINARYNAME, false );
-	dataSect[ 1 ] = std::make_pair( MYLIBRARYNAME, false );
-	static pid_t sProcID = 0;
-	if( 0 == sProcID ) {
-		sProcID = getpid();	
-		sprintf( sProcessSize, "%d", sProcID );
-	}
-	fn.replace( REPLACEPOS, 1, sProcessSize );
-	std::ifstream procName( fn.c_str() );
-	if( procName.is_open() ){
-		MyString line;
-		while( procName.good() ){
-			getline( procName, line );
-			int i;
-			for( i = 0; i < 2; ++i ){
-				if( MyString::npos != line.find( dataSect[ i ].first ) ) break;			
-			}
-			if( i >= 2 || dataSect[ i ].second == true ) continue;
-			dataSect[ i ].second = true;
-			if( !procName.good() )return;
-			getline( procName, line );
-			takeSegmentSnapshot( line );    
-		}	
-	}
-}
+#else
+/** The SnapshotGlobalSegments function computes the memory regions
+ *	that may contain globals and then configures the snapshotting
+ *	library to snapshot them.
+ */
+static void SnapshotGlobalSegments(){
+	int pid = getpid();
+	char buf[9000], filename[100];
+	FILE *map;
 
-//class definition of SnapshotStack.....
-//declaration of constructor....
+	sprintf(filename, MAPFILE_FORMAT, pid);
+	map = fopen(filename, "r");
+	if (!map) {
+		perror("fopen");
+		exit(EXIT_FAILURE);
+	}
+	while (fgets(buf, sizeof(buf), map)) {
+		char regionname[200] = "";
+		char r, w, x, p;
+		void *begin, *end;
+
+		sscanf(buf, "%p-%p %c%c%c%c %*x %*x:%*x %*u %200s\n", &begin, &end, &r, &w, &x, &p, regionname);
+		if (w == 'w' && (strstr(regionname, MYBINARYNAME) || strstr(regionname, MYLIBRARYNAME))) {
+			size_t len = ((uintptr_t)end - (uintptr_t)begin) / PAGESIZE;
+			if (len != 0)
+				addMemoryRegionToSnapShot(begin, len);
+			DEBUG("%45s: %18p - %18p\t%c%c%c%c\n", regionname, begin, end, r, w, x, p);
+		}
+	}
+	fclose(map);
+}
+#endif
+
 SnapshotStack::SnapshotStack(){
 	SnapshotGlobalSegments();
 	stack=NULL;
 }
-	
+
 SnapshotStack::~SnapshotStack(){
 }
-	
+
+
+/** This method returns to the last snapshot before the inputted
+ * sequence number.  This function must be called from the model
+ * checking thread and not from a snapshotted stack.  
+ * @param seqindex is the sequence number to rollback before.  
+ * @return is the sequence number we actually rolled back to.
+ */
+		
 int SnapshotStack::backTrackBeforeStep(int seqindex) {
 	while(true) {
 		if (stack->index<=seqindex) {
@@ -101,6 +130,9 @@ int SnapshotStack::backTrackBeforeStep(int seqindex) {
 		stack=stack->next;
 	}
 }
+
+/** This method takes a snapshot at the given sequence number.
+ */
 
 void SnapshotStack::snapshotStep(int seqindex) {
 	struct stackEntry *tmp=(struct stackEntry *)MYMALLOC(sizeof(struct stackEntry));

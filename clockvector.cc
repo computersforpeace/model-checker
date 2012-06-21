@@ -75,7 +75,7 @@ void ClockVector::merge(ClockVector *cv)
  * thread, false otherwise. That is, this function returns:
  * <BR><CODE>act <= cv[act->tid]</CODE>
  */
-bool ClockVector::synchronized_since(ModelAction *act)
+bool ClockVector::synchronized_since(ModelAction *act) const
 {
 	int i = id_to_int(act->get_tid());
 
@@ -85,7 +85,7 @@ bool ClockVector::synchronized_since(ModelAction *act)
 }
 
 /** @brief Formats and prints this ClockVector's data. */
-void ClockVector::print()
+void ClockVector::print() const
 {
 	int i;
 	printf("CV: (");

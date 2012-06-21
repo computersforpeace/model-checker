@@ -16,9 +16,9 @@ public:
 	ClockVector(ClockVector *parent = NULL, ModelAction *act = NULL);
 	~ClockVector();
 	void merge(ClockVector *cv);
-	bool synchronized_since(ModelAction *act);
+	bool synchronized_since(ModelAction *act) const;
 
-	void print();
+	void print() const;
 
 	MEMALLOC
 private:

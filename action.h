@@ -33,7 +33,7 @@ class ModelAction {
 public:
 	ModelAction(action_type_t type, memory_order order, void *loc, int value);
 	~ModelAction();
-	void print(void);
+	void print(void) const;
 
 	thread_id_t get_tid() const { return tid; }
 	action_type get_type() const { return type; }

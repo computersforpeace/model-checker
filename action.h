@@ -58,6 +58,8 @@ public:
 	ClockVector * get_cv() const { return cv; }
 	void read_from(ModelAction *act);
 
+	bool happens_before(ModelAction *act);
+
 	inline bool operator <(const ModelAction& act) const {
 		return get_seq_number() < act.get_seq_number();
 	}

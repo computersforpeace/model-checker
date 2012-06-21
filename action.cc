@@ -133,6 +133,17 @@ void ModelAction::read_from(ModelAction *act)
 	value = act->value;
 }
 
+/**
+ * Check whether 'this' happens before act, according to the memory-model's
+ * happens before relation. This is checked via the ClockVector constructs.
+ * @return true if this action's thread has synchronized with act's thread
+ * since the execution of act, false otherwise.
+ */
+bool ModelAction::happens_before(ModelAction *act)
+{
+	return act->cv->synchronized_since(this);
+}
+
 void ModelAction::print(void)
 {
 	const char *type_str;

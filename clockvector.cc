@@ -49,12 +49,18 @@ void ClockVector::merge(ClockVector *cv)
 	clock = clk;
 }
 
-bool ClockVector::happens_before(ModelAction *act, thread_id_t id)
+/**
+ *
+ * @return true if this ClockVector's thread has synchronized with act's
+ * thread, false otherwise. That is, this function returns:
+ * <BR><CODE>act <= cv[act->tid]</CODE>
+ */
+bool ClockVector::synchronized_since(ModelAction *act)
 {
-	int i = id_to_int(id);
+	int i = id_to_int(act->get_tid());
 
 	if (i < num_threads)
-		return act->get_seq_number() < clock[i];
+		return act->get_seq_number() <= clock[i];
 	return false;
 }
 

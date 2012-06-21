@@ -16,7 +16,7 @@ public:
 	ClockVector(ClockVector *parent = NULL, ModelAction *act = NULL);
 	~ClockVector();
 	void merge(ClockVector *cv);
-	bool happens_before(ModelAction *act, thread_id_t id);
+	bool synchronized_since(ModelAction *act);
 
 	void print();
 

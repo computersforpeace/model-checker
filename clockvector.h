@@ -22,7 +22,10 @@ public:
 
 	MEMALLOC
 private:
+	/** @brief Holds the actual clock data, as an array. */
 	int *clock;
+
+	/** @brief The number of threads recorded in clock (i.e., its length).  */
 	int num_threads;
 };
 

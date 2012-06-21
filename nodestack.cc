@@ -9,7 +9,8 @@ Node::Node(ModelAction *act, int nthreads)
 	num_threads(nthreads),
 	explored_children(num_threads),
 	backtrack(num_threads),
-	numBacktracks(0)
+	numBacktracks(0),
+	may_read_from()
 {
 }
 
@@ -97,6 +98,15 @@ thread_id_t Node::get_next_backtrack()
 bool Node::is_enabled(Thread *t)
 {
 	return id_to_int(t->get_id()) < num_threads;
+}
+
+/**
+ * Add an action to the may_read_from set.
+ * @param act is the action to add
+ */
+void Node::add_read_from(ModelAction *act)
+{
+	may_read_from.insert(act);
 }
 
 void Node::explore(thread_id_t tid)

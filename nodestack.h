@@ -7,11 +7,14 @@
 
 #include <list>
 #include <vector>
+#include <set>
 #include <cstddef>
 #include "threads.h"
 #include "mymemory.h"
 
 class ModelAction;
+
+typedef std::set< ModelAction *, std::less< ModelAction *>, MyAlloc< ModelAction * > > action_set_t;
 
 class Node {
 public:
@@ -28,6 +31,8 @@ public:
 	bool is_enabled(Thread *t);
 	ModelAction * get_action() { return action; }
 
+	void add_read_from(ModelAction *act);
+
 	void print();
 
 	MEMALLOC
@@ -39,6 +44,10 @@ private:
 	std::vector< bool, MyAlloc<bool> > explored_children;
 	std::vector< bool, MyAlloc<bool> > backtrack;
 	int numBacktracks;
+
+	/** The set of ModelActions that this the action at this Node may read
+	 *  from. Only meaningful if this Node represents a 'read' action. */
+	action_set_t may_read_from;
 };
 
 typedef std::list<class Node *, MyAlloc< class Node * > > node_list_t;

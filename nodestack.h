@@ -18,7 +18,7 @@ typedef std::set< ModelAction *, std::less< ModelAction *>, MyAlloc< ModelAction
 
 class Node {
 public:
-	Node(ModelAction *act = NULL, int nthreads = 1);
+	Node(ModelAction *act = NULL, Node *par = NULL, int nthreads = 1);
 	~Node();
 	/* return true = thread choice has already been explored */
 	bool has_been_explored(thread_id_t tid);
@@ -31,6 +31,10 @@ public:
 	bool is_enabled(Thread *t);
 	ModelAction * get_action() { return action; }
 
+	/** @return the parent Node to this Node; that is, the action that
+	 * occurred previously in the stack. */
+	Node * get_parent() const { return parent; }
+
 	void add_read_from(ModelAction *act);
 
 	void print();
@@ -40,6 +44,7 @@ private:
 	void explore(thread_id_t tid);
 
 	ModelAction *action;
+	Node *parent;
 	int num_threads;
 	std::vector< bool, MyAlloc<bool> > explored_children;
 	std::vector< bool, MyAlloc<bool> > backtrack;

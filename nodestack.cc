@@ -4,8 +4,9 @@
 #include "model.h"
 
 /** @brief Node constructor */
-Node::Node(ModelAction *act, int nthreads)
+Node::Node(ModelAction *act, Node *par, int nthreads)
 	: action(act),
+	parent(par),
 	num_threads(nthreads),
 	explored_children(num_threads),
 	backtrack(num_threads),
@@ -173,7 +174,7 @@ ModelAction * NodeStack::explore_action(ModelAction *act)
 
 	/* Record action */
 	get_head()->explore_child(act);
-	node_list.push_back(new Node(act, model->get_num_threads()));
+	node_list.push_back(new Node(act, get_head(), model->get_num_threads()));
 	total_nodes++;
 	iter++;
 	return NULL;

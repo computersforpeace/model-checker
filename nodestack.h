@@ -16,6 +16,15 @@ class ModelAction;
 
 typedef std::set< ModelAction *, std::less< ModelAction *>, MyAlloc< ModelAction * > > action_set_t;
 
+/**
+ * @brief A single node in a NodeStack
+ *
+ * Represents a single node in the NodeStack. Each Node is associated with up
+ * to one action and up to one parent node. A node holds information
+ * regarding the last action performed (the "associated action"), the thread
+ * choices that have been explored (explored_children) and should be explored
+ * (backtrack), and the actions that the last action may read from.
+ */
 class Node {
 public:
 	Node(ModelAction *act = NULL, Node *par = NULL, int nthreads = 1);
@@ -57,6 +66,14 @@ private:
 
 typedef std::list<class Node *, MyAlloc< class Node * > > node_list_t;
 
+/**
+ * @brief A stack of nodes
+ *
+ * Holds a Node linked-list that can be used for holding backtracking,
+ * may-read-from, and replay information. It is used primarily as a
+ * stack-like structure, in that backtracking points and replay nodes are
+ * only removed from the top (most recent).
+ */
 class NodeStack {
 public:
 	NodeStack();

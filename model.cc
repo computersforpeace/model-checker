@@ -205,6 +205,7 @@ void ModelChecker::set_backtracking(ModelAction *act)
 	if (node->has_been_explored(t->get_id()))
 		return;
 
+	/* Cache the latest backtracking point */
 	if (!next_backtrack || *prev > *next_backtrack)
 		next_backtrack = prev;
 

@@ -3,7 +3,20 @@
 #include "common.h"
 #include "model.h"
 
-/** @brief Node constructor */
+/**
+ * @brief Node constructor
+ *
+ * Constructs a single Node for use in a NodeStack. Each Node is associated
+ * with exactly one ModelAction (exception: the first Node should be created
+ * as an empty stub, to represent the first thread "choice") and up to one
+ * parent.
+ *
+ * @param act The ModelAction to associate with this Node. May be NULL.
+ * @param par The parent Node in the NodeStack. May be NULL if there is no
+ * parent.
+ * @param nthreads The number of threads which exist at this point in the
+ * execution trace.
+ */
 Node::Node(ModelAction *act, Node *par, int nthreads)
 	: action(act),
 	parent(par),
@@ -13,6 +26,8 @@ Node::Node(ModelAction *act, Node *par, int nthreads)
 	numBacktracks(0),
 	may_read_from()
 {
+	if (act)
+		act->set_node(this);
 }
 
 /** @brief Node desctructor */
@@ -54,14 +69,11 @@ bool Node::backtrack_empty()
 }
 
 /**
- * Explore a child Node using a given ModelAction. This updates both the
- * Node-internal and the ModelAction data to associate the ModelAction with
- * this Node.
- * @param act is the ModelAction to explore
+ * Mark the appropriate backtracking infromation for exploring a thread choice.
+ * @param act The ModelAction to explore
  */
 void Node::explore_child(ModelAction *act)
 {
-	act->set_node(this);
 	explore(act->get_tid());
 }
 

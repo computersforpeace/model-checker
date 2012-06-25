@@ -124,7 +124,7 @@ thread_id_t ModelChecker::get_next_replay_thread()
 	next = node_stack->get_next()->get_action();
 
 	if (next == diverge) {
-		Node *node = next->get_node();
+		Node *node = next->get_node()->get_parent();
 
 		/* Reached divergence point */
 		DEBUG("*** Divergence point ***\n");
@@ -196,7 +196,7 @@ void ModelChecker::set_backtracking(ModelAction *act)
 	if (prev == NULL)
 		return;
 
-	node = prev->get_node();
+	node = prev->get_node()->get_parent();
 
 	while (!node->is_enabled(t))
 		t = t->get_parent();
@@ -262,7 +262,7 @@ void ModelChecker::check_current_action(void)
 
 	nextThread = get_next_replay_thread();
 
-	currnode = curr->get_node();
+	currnode = curr->get_node()->get_parent();
 
 	if (!currnode->backtrack_empty())
 		if (!next_backtrack || *curr > *next_backtrack)

@@ -41,13 +41,6 @@ public:
 	/** @returns the context for the main model-checking system thread */
 	ucontext_t * get_system_context(void) { return system_context; }
 
-	/**
-	 * Stores the ModelAction for the current thread action.  Call this
-	 * immediately before switching from user- to system-context to pass
-	 * data between them.
-	 * @param act The ModelAction created by the user-thread action
-	 */
-	void set_current_action(ModelAction *act) { current_action = act; }
 	void check_current_action(void);
 	void print_summary(void);
 	Thread * schedule_next_thread();
@@ -69,6 +62,14 @@ private:
 	int next_thread_id;
 	modelclock_t used_sequence_numbers;
 	int num_executions;
+
+	/**
+	 * Stores the ModelAction for the current thread action.  Call this
+	 * immediately before switching from user- to system-context to pass
+	 * data between them.
+	 * @param act The ModelAction created by the user-thread action
+	 */
+	void set_current_action(ModelAction *act) { current_action = act; }
 
 	ModelAction * get_last_conflict(ModelAction *act);
 	void set_backtracking(ModelAction *act);

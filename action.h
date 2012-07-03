@@ -31,7 +31,7 @@ class ClockVector;
  */
 class ModelAction {
 public:
-	ModelAction(action_type_t type, memory_order order, void *loc, int value);
+	ModelAction(action_type_t type, memory_order order, void *loc, int value = VALUE_NONE);
 	~ModelAction();
 	void print(void) const;
 
@@ -40,9 +40,11 @@ public:
 	memory_order get_mo() const { return order; }
 	void * get_location() const { return location; }
 	int get_seq_number() const { return seq_number; }
+	int get_value() const { return value; }
 
 	Node * get_node() const { return node; }
 	void set_node(Node *n) { node = n; }
+	void set_value(int val) { value = val; }
 
 	bool is_read() const;
 	bool is_write() const;

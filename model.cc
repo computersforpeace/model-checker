@@ -124,7 +124,7 @@ thread_id_t ModelChecker::get_next_replay_thread()
 	next = node_stack->get_next()->get_action();
 
 	if (next == diverge) {
-		Node *node = next->get_node();
+		Node *node = next->get_node()->get_parent();
 
 		/* Reached divergence point */
 		DEBUG("*** Divergence point ***\n");
@@ -196,7 +196,7 @@ void ModelChecker::set_backtracking(ModelAction *act)
 	if (prev == NULL)
 		return;
 
-	node = prev->get_node();
+	node = prev->get_node()->get_parent();
 
 	while (!node->is_enabled(t))
 		t = t->get_parent();
@@ -205,6 +205,7 @@ void ModelChecker::set_backtracking(ModelAction *act)
 	if (node->has_been_explored(t->get_id()))
 		return;
 
+	/* Cache the latest backtracking point */
 	if (!next_backtrack || *prev > *next_backtrack)
 		next_backtrack = prev;
 
@@ -262,7 +263,7 @@ void ModelChecker::check_current_action(void)
 
 	nextThread = get_next_replay_thread();
 
-	currnode = curr->get_node();
+	currnode = curr->get_node()->get_parent();
 
 	if (!currnode->backtrack_empty())
 		if (!next_backtrack || *curr > *next_backtrack)
@@ -273,12 +274,13 @@ void ModelChecker::check_current_action(void)
 	add_action_to_lists(curr);
 }
 
-
 /**
- * Adds an action to the per-object, per-thread action vector.
+ * Performs various bookkeeping operations for the current ModelAction. For
+ * instance, adds action to the per-object, per-thread action vector and to the
+ * action trace list of all thread actions.
+ *
  * @param act is the ModelAction to add.
  */
-
 void ModelChecker::add_action_to_lists(ModelAction *act)
 {
 	action_trace->push_back(act);
@@ -345,19 +347,7 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 	}
 }
 
-void ModelChecker::print_summary(void)
-{
-	printf("\n");
-	printf("Number of executions: %d\n", num_executions);
-	printf("Total nodes created: %d\n", node_stack->get_total_nodes());
-
-	scheduler->print();
-
-	print_list(action_trace);
-	printf("\n");
-}
-
-void ModelChecker::print_list(action_list_t *list)
+static void print_list(action_list_t *list)
 {
 	action_list_t::iterator it;
 
@@ -368,6 +358,18 @@ void ModelChecker::print_list(action_list_t *list)
 		(*it)->print();
 	}
 	printf("---------------------------------------------------------------------\n");
+}
+
+void ModelChecker::print_summary(void)
+{
+	printf("\n");
+	printf("Number of executions: %d\n", num_executions);
+	printf("Total nodes created: %d\n", node_stack->get_total_nodes());
+
+	scheduler->print();
+
+	print_list(action_trace);
+	printf("\n");
 }
 
 int ModelChecker::add_thread(Thread *t)

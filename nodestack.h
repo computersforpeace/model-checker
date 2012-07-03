@@ -61,7 +61,7 @@ private:
 
 	/** The set of ModelActions that this the action at this Node may read
 	 *  from. Only meaningful if this Node represents a 'read' action. */
-	action_set_t *may_read_from;
+	action_set_t may_read_from;
 };
 
 typedef std::list<class Node *, MyAlloc< class Node * > > node_list_t;

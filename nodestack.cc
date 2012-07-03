@@ -24,12 +24,10 @@ Node::Node(ModelAction *act, Node *par, int nthreads)
 	explored_children(num_threads),
 	backtrack(num_threads),
 	numBacktracks(0),
-	may_read_from(NULL)
+	may_read_from()
 {
 	if (act)
 		act->set_node(this);
-	if (act && act->is_read())
-		may_read_from = new action_set_t();
 }
 
 /** @brief Node desctructor */
@@ -121,8 +119,7 @@ bool Node::is_enabled(Thread *t)
  */
 void Node::add_read_from(ModelAction *act)
 {
-	ASSERT(may_read_from);
-	may_read_from->insert(act);
+	may_read_from.insert(act);
 }
 
 void Node::explore(thread_id_t tid)

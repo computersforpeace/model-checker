@@ -50,8 +50,8 @@ mymemory.o: mymemory.h snapshotimp.h snapshot.h mymemory.cc
 snapshot.o: mymemory.h snapshot.h snapshotimp.h snapshot.cc
 	$(CXX) -fPIC -c snapshot.cc $(CPPFLAGS)
 
-$(MODEL_O): $(MODEL_CC) $(MODEL_H)
-	$(CXX) -fPIC -c $(MODEL_CC) $(CPPFLAGS)
+%.o: %.cc $(MODEL_H)
+	$(CXX) -fPIC -c $< $(CPPFLAGS)
 
 clean:
 	rm -f $(BIN) *.o *.so

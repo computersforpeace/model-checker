@@ -144,7 +144,7 @@ bool ModelAction::happens_before(ModelAction *act)
 	return act->cv->synchronized_since(this);
 }
 
-void ModelAction::print(void)
+void ModelAction::print(void) const
 {
 	const char *type_str;
 	switch (this->type) {

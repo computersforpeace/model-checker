@@ -119,7 +119,7 @@ bool Node::is_enabled(Thread *t)
  */
 void Node::add_read_from(ModelAction *act)
 {
-	may_read_from.insert(act);
+	may_read_from.push_back(act);
 }
 
 void Node::explore(thread_id_t tid)

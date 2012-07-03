@@ -7,14 +7,13 @@
 
 #include <list>
 #include <vector>
-#include <set>
 #include <cstddef>
 #include "threads.h"
 #include "mymemory.h"
 
 class ModelAction;
 
-typedef std::set< ModelAction *, std::less< ModelAction *>, MyAlloc< ModelAction * > > action_set_t;
+typedef std::list< ModelAction *, MyAlloc< ModelAction * > > action_set_t;
 
 /**
  * @brief A single node in a NodeStack

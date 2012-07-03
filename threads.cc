@@ -69,7 +69,9 @@ void Thread::complete()
 	}
 }
 
-Thread::Thread(thrd_t *t, void (*func)(void *), void *a) {
+Thread::Thread(thrd_t *t, void (*func)(void *), void *a) :
+	last_action_val(VALUE_NONE)
+{
 	int ret;
 
 	user_thread = t;

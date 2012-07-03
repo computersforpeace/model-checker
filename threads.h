@@ -41,6 +41,21 @@ public:
 	void set_creation(ModelAction *act) { creation = act; }
 	ModelAction * get_creation() { return creation; }
 
+	/**
+	 * Set a return value for the last action in this thread (e.g., for an
+	 * atomic read).
+	 * @param value The value to return
+	 */
+	void set_return_value(int value) { last_action_val = value; }
+
+	/**
+	 * Retrieve a return value for the last action in this thread. Used,
+	 * for instance, for an atomic read to return the 'read' value. Should
+	 * be called from a user context.
+	 * @return The value 'returned' by the action
+	 */
+	int get_return_value() { return last_action_val; }
+
 	friend void thread_startup();
 
 	SNAPSHOTALLOC
@@ -56,6 +71,13 @@ private:
 	thrd_t *user_thread;
 	thread_id_t id;
 	thread_state state;
+
+	/**
+	 * The value returned by the last action in this thread
+	 * @see Thread::set_return_value()
+	 * @see Thread::get_return_value()
+	 */
+	int last_action_val;
 };
 
 Thread * thread_current();

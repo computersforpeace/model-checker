@@ -11,10 +11,9 @@ void atomic_store_explicit(struct atomic_object *obj, int value, memory_order or
 
 int atomic_load_explicit(struct atomic_object *obj, memory_order order)
 {
-	int value = obj->value;
 	DBG();
-	model->switch_to_master(new ModelAction(ATOMIC_READ, order, obj, value));
-	return value;
+	model->switch_to_master(new ModelAction(ATOMIC_READ, order, obj));
+	return thread_current()->get_return_value();
 }
 
 void atomic_init(struct atomic_object *obj, int value)

@@ -117,7 +117,7 @@ bool Node::is_enabled(Thread *t)
  * Add an action to the may_read_from set.
  * @param act is the action to add
  */
-void Node::add_read_from(ModelAction *act)
+void Node::add_read_from(const ModelAction *act)
 {
 	may_read_from.push_back(act);
 }

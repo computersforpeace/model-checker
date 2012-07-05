@@ -13,7 +13,7 @@
 
 class ModelAction;
 
-typedef std::list< ModelAction *, MyAlloc< ModelAction * > > action_set_t;
+typedef std::list< const ModelAction *, MyAlloc< const ModelAction * > > readfrom_set_t;
 
 /**
  * @brief A single node in a NodeStack
@@ -43,7 +43,7 @@ public:
 	 * occurred previously in the stack. */
 	Node * get_parent() const { return parent; }
 
-	void add_read_from(ModelAction *act);
+	void add_read_from(const ModelAction *act);
 
 	void print();
 
@@ -60,7 +60,7 @@ private:
 
 	/** The set of ModelActions that this the action at this Node may read
 	 *  from. Only meaningful if this Node represents a 'read' action. */
-	action_set_t may_read_from;
+	readfrom_set_t may_read_from;
 };
 
 typedef std::list< Node *, MyAlloc< Node * > > node_list_t;

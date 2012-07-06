@@ -84,6 +84,19 @@ bool ClockVector::synchronized_since(ModelAction *act) const
 	return false;
 }
 
+/** 
+ * Gets the clock corresponding to a given thread id from the clock
+ * vector. */
+
+int ClockVector::getClock(thread_id_t thread) {
+	int threadid = id_to_int(thread);
+
+	if (threadid < num_threads)
+		return clock[threadid];
+	else
+		return 0;
+}
+
 /** @brief Formats and prints this ClockVector's data. */
 void ClockVector::print() const
 {

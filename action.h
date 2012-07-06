@@ -58,11 +58,11 @@ public:
 	bool same_thread(const ModelAction *act) const;
 	bool is_synchronizing(const ModelAction *act) const;
 
-	void create_cv(ModelAction *parent = NULL);
+	void create_cv(const ModelAction *parent = NULL);
 	ClockVector * get_cv() const { return cv; }
-	void read_from(ModelAction *act);
+	void read_from(const ModelAction *act);
 
-	bool happens_before(ModelAction *act);
+	bool happens_before(const ModelAction *act) const;
 
 	inline bool operator <(const ModelAction& act) const {
 		return get_seq_number() < act.get_seq_number();

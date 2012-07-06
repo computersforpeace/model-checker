@@ -115,7 +115,7 @@ bool ModelAction::is_synchronizing(const ModelAction *act) const
 	return false;
 }
 
-void ModelAction::create_cv(ModelAction *parent)
+void ModelAction::create_cv(const ModelAction *parent)
 {
 	ASSERT(cv == NULL);
 
@@ -125,7 +125,7 @@ void ModelAction::create_cv(ModelAction *parent)
 		cv = new ClockVector(NULL, this);
 }
 
-void ModelAction::read_from(ModelAction *act)
+void ModelAction::read_from(const ModelAction *act)
 {
 	ASSERT(cv);
 	if (act->is_release() && this->is_acquire())
@@ -139,7 +139,7 @@ void ModelAction::read_from(ModelAction *act)
  * @return true if this action's thread has synchronized with act's thread
  * since the execution of act, false otherwise.
  */
-bool ModelAction::happens_before(ModelAction *act)
+bool ModelAction::happens_before(const ModelAction *act) const
 {
 	return act->cv->synchronized_since(this);
 }

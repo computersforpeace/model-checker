@@ -20,7 +20,7 @@ public:
 	bool synchronized_since(ModelAction *act) const;
 
 	void print() const;
-	int getClock(thread_id_t thread);
+	modelclock_t getClock(thread_id_t thread);
 
 	MEMALLOC
 private:

@@ -29,12 +29,12 @@ void raceCheckRead(thread_id_t thread, void *location, ClockVector *currClock);
  * next 23 bits are write clock vector.  */
 
 struct RaceRecord {
-	int *readClock;
+	modelclock_t *readClock;
 	thread_id_t *thread;
 	int capacity;
 	int numReads;
 	thread_id_t writeThread;
-	int writeClock;
+	modelclock_t writeClock;
 };
 
 #define INITCAPACITY 4

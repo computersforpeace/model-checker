@@ -21,7 +21,7 @@ static uint64_t * lookupAddressEntry(void * address) {
 	struct ShadowBaseTable * basetable=(struct ShadowBaseTable *) currtable->array[(((uintptr_t)address)>>16)&MASK16BIT];
 	if (basetable==NULL) {
 		basetable=(struct ShadowBaseTable *) (currtable->array[(((uintptr_t)address)>>16)&MASK16BIT]=calloc(sizeof(struct ShadowBaseTable),1));
-	}	
+	}
 	return &basetable->array[((uintptr_t)address)&MASK16BIT];
 }
 
@@ -60,23 +60,23 @@ void fullRaceCheckWrite(thread_id_t thread, uint64_t * shadow, ClockVector *curr
 	for(int i=0;i<record->numReads;i++) {
 		modelclock_t readClock = record->readClock[i];
 		thread_id_t readThread = record->thread[i];
-		
+
 		if (readThread != thread && readClock != 0 && currClock->getClock(readThread) <= readClock) {
 			/* We have a datarace */
 			reportDataRace();
 		}
 	}
-	
+
 	/* Check for datarace against last write. */
-	
+
 	modelclock_t writeClock = record->writeClock;
 	thread_id_t writeThread = record->writeThread;
-	
+
 	if (writeThread != thread && writeClock != 0 && currClock->getClock(writeThread) <= writeClock) {
 		/* We have a datarace */
 		reportDataRace();
 	}
-	
+
 	record->numReads=0;
 	record->writeThread=thread;
 	modelclock_t ourClock = currClock->getClock(thread);
@@ -95,14 +95,14 @@ void raceCheckWrite(thread_id_t thread, void *location, ClockVector *currClock) 
 
 	int threadid = id_to_int(thread);
 	modelclock_t ourClock = currClock->getClock(thread);
-	
+
 	/* Thread ID is too large or clock is too large. */
 	if (threadid > MAXTHREADID || ourClock > MAXWRITEVECTOR) {
 		expandRecord(shadow);
 		fullRaceCheckWrite(thread, shadow, currClock);
 		return;
 	}
-	
+
 	/* Check for datarace against last read. */
 
 	modelclock_t readClock = READVECTOR(shadowval);
@@ -117,7 +117,7 @@ void raceCheckWrite(thread_id_t thread, void *location, ClockVector *currClock) 
 
 	modelclock_t writeClock = WRITEVECTOR(shadowval);
 	thread_id_t writeThread = int_to_id(WRTHREADID(shadowval));
-	
+
 	if (writeThread != thread && writeClock != 0 && currClock->getClock(writeThread) <= writeClock) {
 		/* We have a datarace */
 		reportDataRace();
@@ -129,10 +129,10 @@ void fullRaceCheckRead(thread_id_t thread, uint64_t * shadow, ClockVector *currC
 	struct RaceRecord * record=(struct RaceRecord *) (*shadow);
 
 	/* Check for datarace against last write. */
-	
+
 	modelclock_t writeClock = record->writeClock;
 	thread_id_t writeThread = record->writeThread;
-	
+
 	if (writeThread != thread && writeClock != 0 && currClock->getClock(writeThread) <= writeClock) {
 		/* We have a datarace */
 		reportDataRace();
@@ -145,7 +145,7 @@ void fullRaceCheckRead(thread_id_t thread, uint64_t * shadow, ClockVector *currC
 	for(int i=0;i<record->numReads;i++) {
 		modelclock_t readClock = record->readClock[i];
 		thread_id_t readThread = record->thread[i];
-		
+
 		if (readThread != thread && currClock->getClock(readThread) <= readClock) {
 			/* Still need this read in vector */
 			if (copytoindex!=i) {
@@ -155,7 +155,7 @@ void fullRaceCheckRead(thread_id_t thread, uint64_t * shadow, ClockVector *currC
 			copytoindex++;
 		}
 	}
-	
+
 	if (copytoindex>=record->capacity) {
 		int newCapacity=record->capacity*2;
 		thread_id_t *newthread=(thread_id_t *) malloc(sizeof(thread_id_t)*newCapacity);
@@ -170,7 +170,7 @@ void fullRaceCheckRead(thread_id_t thread, uint64_t * shadow, ClockVector *currC
 	}
 
 	modelclock_t ourClock = currClock->getClock(thread);
-	
+
 	record->thread[copytoindex]=thread;
 	record->readClock[copytoindex]=ourClock;
 	record->numReads=copytoindex+1;
@@ -188,7 +188,7 @@ void raceCheckRead(thread_id_t thread, void *location, ClockVector *currClock) {
 
 	int threadid = id_to_int(thread);
 	modelclock_t ourClock = currClock->getClock(thread);
-	
+
 	/* Thread ID is too large or clock is too large. */
 	if (threadid > MAXTHREADID || ourClock > MAXWRITEVECTOR) {
 		expandRecord(shadow);
@@ -200,12 +200,12 @@ void raceCheckRead(thread_id_t thread, void *location, ClockVector *currClock) {
 
 	modelclock_t writeClock = WRITEVECTOR(shadowval);
 	thread_id_t writeThread = int_to_id(WRTHREADID(shadowval));
-	
+
 	if (writeThread != thread && writeClock != 0 && currClock->getClock(writeThread) <= writeClock) {
 		/* We have a datarace */
 		reportDataRace();
 	}
-	
+
 	modelclock_t readClock = READVECTOR(shadowval);
 	thread_id_t readThread = int_to_id(RDTHREADID(shadowval));
 
@@ -215,6 +215,6 @@ void raceCheckRead(thread_id_t thread, void *location, ClockVector *currClock) {
 		fullRaceCheckRead(thread, shadow, currClock);
 		return;
 	}
-		
+
 	*shadow = ENCODEOP(writeThread, writeClock, threadid, ourClock);
 }

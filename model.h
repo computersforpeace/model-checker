@@ -18,6 +18,7 @@
 #include "libatomic.h"
 #include "threads.h"
 #include "action.h"
+#include "clockvector.h"
 
 /* Forward declaration */
 class NodeStack;
@@ -57,7 +58,7 @@ public:
 
 	thread_id_t get_next_id();
 	int get_num_threads();
-	int get_next_seq_num();
+	modelclock_t get_next_seq_num();
 
 	int switch_to_master(ModelAction *act);
 
@@ -66,7 +67,7 @@ public:
 	MEMALLOC
 private:
 	int next_thread_id;
-	int used_sequence_numbers;
+	modelclock_t used_sequence_numbers;
 	int num_executions;
 
 	ModelAction * get_last_conflict(ModelAction *act);

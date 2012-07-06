@@ -18,10 +18,10 @@
 ClockVector::ClockVector(ClockVector *parent, ModelAction *act)
 {
 	num_threads = model->get_num_threads();
-	clock = (int *)MYMALLOC(num_threads * sizeof(int));
+	clock = (modelclock_t *)MYMALLOC(num_threads * sizeof(int));
 	memset(clock, 0, num_threads * sizeof(int));
 	if (parent)
-		std::memcpy(clock, parent->clock, parent->num_threads * sizeof(int));
+		std::memcpy(clock, parent->clock, parent->num_threads * sizeof(modelclock_t));
 
 	if (act)
 		clock[id_to_int(act->get_tid())] = act->get_seq_number();
@@ -40,14 +40,14 @@ ClockVector::~ClockVector()
  */
 void ClockVector::merge(ClockVector *cv)
 {
-	int *clk = clock;
+	modelclock_t *clk = clock;
 	bool resize = false;
 
 	ASSERT(cv != NULL);
 
 	if (cv->num_threads > num_threads) {
 		resize = true;
-		clk = (int *)MYMALLOC(cv->num_threads * sizeof(int));
+		clk = (modelclock_t *)MYMALLOC(cv->num_threads * sizeof(modelclock_t));
 	}
 
 	/* Element-wise maximum */
@@ -103,5 +103,5 @@ void ClockVector::print() const
 	int i;
 	printf("CV: (");
 	for (i = 0; i < num_threads; i++)
-		printf("%2d%s", clock[i], (i == num_threads - 1) ? ")\n" : ", ");
+		printf("%2u%s", clock[i], (i == num_threads - 1) ? ")\n" : ", ");
 }

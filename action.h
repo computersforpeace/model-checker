@@ -11,6 +11,8 @@
 #include "threads.h"
 #include "libatomic.h"
 #include "mymemory.h"
+#include "clockvector.h"
+
 #define VALUE_NONE -1
 
 typedef enum action_type {
@@ -39,7 +41,7 @@ public:
 	action_type get_type() const { return type; }
 	memory_order get_mo() const { return order; }
 	void * get_location() const { return location; }
-	int get_seq_number() const { return seq_number; }
+	modelclock_t get_seq_number() const { return seq_number; }
 	int get_value() const { return value; }
 
 	Node * get_node() const { return node; }
@@ -92,7 +94,7 @@ private:
 	 * saved on the NodeStack. */
 	Node *node;
 	
-	int seq_number;
+	modelclock_t seq_number;
 
 	/** The clock vector stored with this action; only needed if this
 	 * action is a store release? */

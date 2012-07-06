@@ -78,7 +78,7 @@ int ModelChecker::get_num_threads()
 }
 
 /** @returns a sequence number for a new ModelAction */
-int ModelChecker::get_next_seq_num()
+modelclock_t ModelChecker::get_next_seq_num()
 {
 	return ++used_sequence_numbers;
 }

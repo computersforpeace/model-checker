@@ -8,6 +8,7 @@
 #include "threads.h"
 #include "mymemory.h"
 
+typedef unsigned int modelclock_t;
 /* Forward declaration */
 class ModelAction;
 
@@ -24,7 +25,7 @@ public:
 	MEMALLOC
 private:
 	/** @brief Holds the actual clock data, as an array. */
-	int *clock;
+	modelclock_t *clock;
 
 	/** @brief The number of threads recorded in clock (i.e., its length).  */
 	int num_threads;

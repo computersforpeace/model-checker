@@ -26,7 +26,7 @@ ModelChecker::ModelChecker()
 	diverge(NULL),
 	nextThread(THREAD_ID_T_NONE),
 	action_trace(new action_list_t()),
-	thread_map(new std::map<int, class Thread *>),
+	thread_map(new std::map<int, Thread *>),
 	obj_thrd_map(new std::map<void *, std::vector<action_list_t> >()),
 	thrd_last_action(new std::vector<ModelAction *>(1)),
 	node_stack(new NodeStack()),
@@ -37,7 +37,7 @@ ModelChecker::ModelChecker()
 /** @brief Destructor */
 ModelChecker::~ModelChecker()
 {
-	std::map<int, class Thread *>::iterator it;
+	std::map<int, Thread *>::iterator it;
 	for (it = thread_map->begin(); it != thread_map->end(); it++)
 		delete (*it).second;
 	delete thread_map;

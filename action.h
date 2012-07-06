@@ -101,6 +101,6 @@ private:
 	ClockVector *cv;
 };
 
-typedef std::list<class ModelAction *> action_list_t;
+typedef std::list<ModelAction *> action_list_t;
 
 #endif /* __ACTION_H__ */

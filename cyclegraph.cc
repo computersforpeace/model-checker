@@ -1,4 +1,5 @@
 #include "cyclegraph.h"
+#include "action.h"
 
 CycleGraph::CycleGraph() {
 	hasCycles=false;
@@ -24,17 +25,17 @@ void CycleGraph::addEdge(ModelAction *from, ModelAction *to) {
 }
 
 bool CycleGraph::checkReachable(CycleNode *from, CycleNode *to) {
-	std::vector<class CycleNode *> queue;
-	HashTable<class CycleNode *, class CycleNode *, uintptr_t, 4> discovered;
-	
+	std::vector<CycleNode *> queue;
+	HashTable<CycleNode *, CycleNode *, uintptr_t, 4> discovered;
+
 	queue.push_back(from);
 	discovered.put(from, from);
 	while(!queue.empty()) {
-		class CycleNode * node=queue.back();
+		CycleNode * node=queue.back();
 		queue.pop_back();
 		if (node==to)
 			return true;
-		
+
 		for(unsigned int i=0;i<node->getEdges()->size();i++) {
 			CycleNode *next=(*node->getEdges())[i];
 			if (!discovered.contains(next)) {
@@ -50,7 +51,7 @@ CycleNode::CycleNode(ModelAction *modelaction) {
 	action=modelaction;
 }
 
-std::vector<class CycleNode *> * CycleNode::getEdges() {
+std::vector<CycleNode *> * CycleNode::getEdges() {
 	return &edges;
 }
 

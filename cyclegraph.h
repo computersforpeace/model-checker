@@ -2,11 +2,11 @@
 #define CYCLEGRAPH_H
 
 #include "hashtable.h"
-#include "action.h"
 #include <vector>
 #include <inttypes.h>
 
 class CycleNode;
+class ModelAction;
 
 /** @brief A graph of Model Actions for tracking cycles. */
 class CycleGraph {
@@ -17,9 +17,9 @@ class CycleGraph {
 
  private:
 	CycleNode * getNode(ModelAction *);
-	HashTable<class ModelAction *, class CycleNode *, uintptr_t, 4> actionToNode;
+	HashTable<ModelAction *, CycleNode *, uintptr_t, 4> actionToNode;
 	bool checkReachable(CycleNode *from, CycleNode *to);
-	
+
 	bool hasCycles;
 
 };
@@ -28,11 +28,11 @@ class CycleNode {
  public:
 	CycleNode(ModelAction *action);
 	void addEdge(CycleNode * node);
-	std::vector<class CycleNode *> * getEdges();
+	std::vector<CycleNode *> * getEdges();
 
  private:
 	ModelAction *action;
- 	std::vector<class CycleNode *> edges;
+	std::vector<CycleNode *> edges;
 };
 
 #endif

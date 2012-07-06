@@ -64,7 +64,7 @@ private:
 	action_set_t may_read_from;
 };
 
-typedef std::list<class Node *, MyAlloc< class Node * > > node_list_t;
+typedef std::list< Node *, MyAlloc< Node * > > node_list_t;
 
 /**
  * @brief A stack of nodes

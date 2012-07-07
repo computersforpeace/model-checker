@@ -76,6 +76,9 @@ void fullRaceCheckWrite(thread_id_t thread, uint64_t * shadow, ClockVector *curr
 		modelclock_t readClock = record->readClock[i];
 		thread_id_t readThread = record->thread[i];
 
+		/* Note that readClock can't actuall be zero here, so it could be
+			 optimized. */
+
 		if (clock_may_race(currClock, thread, readClock, readThread)) {
 			/* We have a datarace */
 			reportDataRace();
@@ -161,9 +164,13 @@ void fullRaceCheckRead(thread_id_t thread, uint64_t * shadow, ClockVector *currC
 		modelclock_t readClock = record->readClock[i];
 		thread_id_t readThread = record->thread[i];
 
-		/* TODO: should this have different logic than all the other
-		 * 'clock_may_race' calls? */
-		if (readThread != thread && currClock->getClock(readThread) <= readClock) {
+		/*  Note that is not really a datarace check as reads cannott
+				actually race.  It is just determining that this read subsumes
+				another in the sense that either this read races or neither
+				read races. Note that readClock can't actually be zero, so it
+				could be optimized.  */
+
+		if (clock_may_race(currClock, thread, readClock, readThread) {
 			/* Still need this read in vector */
 			if (copytoindex!=i) {
 				record->readClock[copytoindex]=record->readClock[i];

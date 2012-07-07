@@ -272,6 +272,18 @@ void ModelChecker::check_current_action(void)
 	set_backtracking(curr);
 
 	add_action_to_lists(curr);
+
+	/* Assign reads_from values */
+	/* TODO: perform release/acquire synchronization here; include
+	 * reads_from as ModelAction member? */
+	Thread *th = get_thread(curr->get_tid());
+	int value = VALUE_NONE;
+	if (curr->is_read()) {
+		const ModelAction *reads_from = curr->get_node()->get_next_read_from();
+		value = reads_from->get_value();
+		curr->set_value(value);
+	}
+	th->set_return_value(value);
 }
 
 /**

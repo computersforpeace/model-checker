@@ -15,14 +15,17 @@
 
 #define VALUE_NONE -1
 
+/** @brief Represents an action type, identifying one of several types of
+ * ModelAction */
 typedef enum action_type {
-	THREAD_CREATE,
-	THREAD_YIELD,
-	THREAD_JOIN,
-	ATOMIC_READ,
-	ATOMIC_WRITE,
-	ATOMIC_RMW,
-	ATOMIC_INIT
+	THREAD_CREATE,        /**< A thread creation action */
+	THREAD_YIELD,         /**< A thread yield action */
+	THREAD_JOIN,          /**< A thread join action */
+	ATOMIC_READ,          /**< An atomic read action */
+	ATOMIC_WRITE,         /**< An atomic write action */
+	ATOMIC_RMW,           /**< An atomic read-modify-write action */
+	ATOMIC_INIT           /**< Initialization of an atomic object (e.g.,
+	                       *   atomic_init()) */
 } action_type_t;
 
 /* Forward declaration */

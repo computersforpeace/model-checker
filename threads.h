@@ -13,10 +13,19 @@ typedef int thread_id_t;
 
 #define THREAD_ID_T_NONE	-1
 
+/** @brief Represents the state of a user Thread */
 typedef enum thread_state {
+	/** Thread was just created and hasn't run yet */
 	THREAD_CREATED,
+	/** Thread is running */
 	THREAD_RUNNING,
+	/**
+	 * Thread has yielded to the model-checker but is ready to run. Used
+	 * during an action that caused a context switch to the model-checking
+	 * context.
+	 */
 	THREAD_READY,
+	/** Thread has completed its execution */
 	THREAD_COMPLETED
 } thread_state;
 

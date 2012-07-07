@@ -9,6 +9,7 @@
 extern "C" {
 #endif
 
+	/** @brief The memory orders specified by the C11/C++11 memory models */
 	typedef enum memory_order {
 		memory_order_relaxed,
 		memory_order_consume,

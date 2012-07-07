@@ -46,6 +46,14 @@ void Node::print()
 		printf("******** empty action ********\n");
 }
 
+/** @brief Prints info about may_read_from set */
+void Node::print_may_read_from()
+{
+	readfrom_set_t::iterator it;
+	for (it = may_read_from.begin(); it != may_read_from.end(); it++)
+		(*it)->print();
+}
+
 /**
  * Checks if the Thread associated with this thread ID has been explored from
  * this Node already.

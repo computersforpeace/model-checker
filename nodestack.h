@@ -46,6 +46,7 @@ public:
 	void add_read_from(const ModelAction *act);
 
 	void print();
+	void print_may_read_from();
 
 	MEMALLOC
 private:

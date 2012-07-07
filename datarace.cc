@@ -170,7 +170,7 @@ void fullRaceCheckRead(thread_id_t thread, uint64_t * shadow, ClockVector *currC
 				read races. Note that readClock can't actually be zero, so it
 				could be optimized.  */
 
-		if (clock_may_race(currClock, thread, readClock, readThread) {
+		if (clock_may_race(currClock, thread, readClock, readThread)) {
 			/* Still need this read in vector */
 			if (copytoindex!=i) {
 				record->readClock[copytoindex]=record->readClock[i];

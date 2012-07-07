@@ -323,6 +323,9 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 
 	ASSERT(curr->is_read());
 
+	/* Track whether this object has been initialized */
+	bool initialized = false;
+
 	for (i = 0; i < thrd_lists->size(); i++) {
 		action_list_t *list = &(*thrd_lists)[i];
 		action_list_t::reverse_iterator rit;
@@ -341,10 +344,27 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 			curr->get_node()->add_read_from(act);
 
 			/* Include at most one act per-thread that "happens before" curr */
-			if (act->happens_before(curr))
+			if (act->happens_before(curr)) {
+				initialized = true;
 				break;
+			}
 		}
 	}
+
+	if (!initialized) {
+		/* TODO: need a more informative way of reporting errors */
+		printf("ERROR: may read from uninitialized atomic\n");
+	}
+
+	if (DBG_ENABLED() || !initialized) {
+		printf("Reached read action:\n");
+		curr->print();
+		printf("Printing may_read_from\n");
+		curr->get_node()->print_may_read_from();
+		printf("End printing may_read_from\n");
+	}
+
+	ASSERT(initialized);
 }
 
 static void print_list(action_list_t *list)

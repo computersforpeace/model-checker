@@ -5,19 +5,16 @@
 #include "clockvector.h"
 #include "common.h"
 
-ModelAction::ModelAction(action_type_t type, memory_order order, void *loc, int value)
+ModelAction::ModelAction(action_type_t type, memory_order order, void *loc, int value) :
+	type(type),
+	order(order),
+	location(loc),
+	value(value),
+	cv(NULL)
 {
 	Thread *t = thread_current();
-	ModelAction *act = this;
-
-	act->type = type;
-	act->order = order;
-	act->location = loc;
-	act->tid = t->get_id();
-	act->value = value;
-	act->seq_number = model->get_next_seq_num();
-
-	cv = NULL;
+	this->tid = t->get_id();
+	this->seq_number = model->get_next_seq_num();
 }
 
 ModelAction::~ModelAction()

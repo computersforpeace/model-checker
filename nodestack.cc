@@ -130,6 +130,22 @@ void Node::add_read_from(const ModelAction *act)
 	may_read_from.push_back(act);
 }
 
+/**
+ * Gets the next 'may_read_from' action from this Node. Only valid for a node
+ * where this->action is a 'read'.
+ * @todo Perform reads_from backtracking/replay properly, so that this function
+ * may remove elements from may_read_from
+ * @return The first element in may_read_from
+ */
+const ModelAction * Node::get_next_read_from() {
+	const ModelAction *act;
+	ASSERT(!may_read_from.empty());
+	act = may_read_from.front();
+	/* TODO: perform reads_from replay properly */
+	/* may_read_from.pop_front(); */
+	return act;
+}
+
 void Node::explore(thread_id_t tid)
 {
 	int i = id_to_int(tid);

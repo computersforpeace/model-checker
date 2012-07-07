@@ -44,6 +44,7 @@ public:
 	Node * get_parent() const { return parent; }
 
 	void add_read_from(const ModelAction *act);
+	const ModelAction * get_next_read_from();
 
 	void print();
 	void print_may_read_from();

@@ -340,7 +340,7 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 			}
 			curr->get_node()->add_read_from(act);
 
-			/* Include at most one act that "happens before" curr */
+			/* Include at most one act per-thread that "happens before" curr */
 			if (act->happens_before(curr))
 				break;
 		}

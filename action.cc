@@ -33,12 +33,17 @@ bool ModelAction::is_read() const
 
 bool ModelAction::is_write() const
 {
-	return type == ATOMIC_WRITE;
+	return type == ATOMIC_WRITE || type == ATOMIC_INIT;
 }
 
 bool ModelAction::is_rmw() const
 {
 	return type == ATOMIC_RMW;
+}
+
+bool ModelAction::is_initialization() const
+{
+	return type == ATOMIC_INIT;
 }
 
 bool ModelAction::is_acquire() const
@@ -165,6 +170,9 @@ void ModelAction::print(void) const
 		break;
 	case ATOMIC_RMW:
 		type_str = "atomic rmw";
+		break;
+	case ATOMIC_INIT:
+		type_str = "init atomic";
 		break;
 	default:
 		type_str = "unknown type";

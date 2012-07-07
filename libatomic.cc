@@ -19,5 +19,7 @@ int atomic_load_explicit(struct atomic_object *obj, memory_order order)
 
 void atomic_init(struct atomic_object *obj, int value)
 {
+	DBG();
 	obj->value = value;
+	model->switch_to_master(new ModelAction(ATOMIC_INIT, memory_order_relaxed, obj, value));
 }

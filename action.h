@@ -21,7 +21,8 @@ typedef enum action_type {
 	THREAD_JOIN,
 	ATOMIC_READ,
 	ATOMIC_WRITE,
-	ATOMIC_RMW
+	ATOMIC_RMW,
+	ATOMIC_INIT
 } action_type_t;
 
 /* Forward declaration */
@@ -51,6 +52,7 @@ public:
 	bool is_read() const;
 	bool is_write() const;
 	bool is_rmw() const;
+	bool is_initialization() const;
 	bool is_acquire() const;
 	bool is_release() const;
 	bool is_seqcst() const;

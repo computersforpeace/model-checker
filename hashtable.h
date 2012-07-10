@@ -19,7 +19,7 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift>
 		table = (struct hashlistnode<_Key,_Val> **) calloc(initialcapacity, sizeof(struct hashlistnode<_Key,_Val> *));
 		loadfactor = factor;
 		capacity = initialcapacity;
-		threshold = initialcapacity*loadfactor;
+		threshold = (unsigned int) (initialcapacity*loadfactor);
 		mask = (capacity << _Shift)-1;
 		size = 0; // Initial number of elements in the hash
 	}
@@ -111,7 +111,7 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift>
 		
 		table = newtable;          //Update the global hashtable upon resize()
 		capacity = newsize;
-		threshold = newsize * loadfactor;
+		threshold = (unsigned int) (newsize * loadfactor);
 		mask = (newsize << _Shift)-1;
 		
 		for(unsigned int i = 0; i < oldcapacity; i++) {

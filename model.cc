@@ -309,6 +309,10 @@ ModelAction * ModelChecker::get_parent_action(thread_id_t tid)
 	return parent;
 }
 
+ClockVector * ModelChecker::get_cv(thread_id_t tid) {
+	return get_parent_action(tid)->get_cv();
+}
+
 /**
  * Build up an initial set of all past writes that this 'read' action may read
  * from. This set is determined by the clock vector's "happens before"

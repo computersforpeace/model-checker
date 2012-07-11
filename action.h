@@ -47,6 +47,7 @@ public:
 	void * get_location() const { return location; }
 	modelclock_t get_seq_number() const { return seq_number; }
 	int get_value() const { return value; }
+	const ModelAction * get_reads_from() const { return reads_from; }
 
 	Node * get_node() const { return node; }
 	void set_node(Node *n) { node = n; }
@@ -93,6 +94,9 @@ private:
 	/** The value read or written (if RMW, then the value written). This
 	 * should probably be something longer. */
 	int value;
+
+	/** The action that this action reads from. Only valid for reads */
+	const ModelAction *reads_from;
 
 	/** A back reference to a Node in NodeStack, if this ModelAction is
 	 * saved on the NodeStack. */

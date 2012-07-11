@@ -10,6 +10,7 @@ ModelAction::ModelAction(action_type_t type, memory_order order, void *loc, int 
 	order(order),
 	location(loc),
 	value(value),
+	reads_from(NULL),
 	cv(NULL)
 {
 	Thread *t = thread_current();
@@ -132,6 +133,7 @@ void ModelAction::read_from(const ModelAction *act)
 	ASSERT(cv);
 	if (act->is_release() && this->is_acquire())
 		cv->merge(act->cv);
+	reads_from = act;
 	value = act->value;
 }
 
@@ -175,8 +177,10 @@ void ModelAction::print(void) const
 		type_str = "unknown type";
 	}
 
-	printf("(%3d) Thread: %-2d    Action: %-13s    MO: %d    Loc: %14p    Value: %d",
+	printf("(%3d) Thread: %-2d    Action: %-13s    MO: %d    Loc: %14p    Value: %-4d",
 			seq_number, id_to_int(tid), type_str, order, location, value);
+	if (reads_from)
+		printf(" Rf: %d", reads_from->get_seq_number());
 	if (cv) {
 		printf("\t");
 		cv->print();

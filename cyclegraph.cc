@@ -56,7 +56,7 @@ bool CycleGraph::checkReachable(CycleNode *from, CycleNode *to) {
 }
 
 /** Returns whether a CycleGraph contains cycles. */
-bool checkForCycles() {
+bool CycleGraph::checkForCycles() {
 	return hasCycles;
 }
 

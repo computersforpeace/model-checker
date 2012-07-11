@@ -281,7 +281,8 @@ void ModelChecker::check_current_action(void)
 	if (curr->is_read()) {
 		const ModelAction *reads_from = curr->get_node()->get_next_read_from();
 		value = reads_from->get_value();
-		curr->set_value(value);
+		/* Assign reads_from, perform release/acquire synchronization */
+		curr->read_from(reads_from);
 	}
 	th->set_return_value(value);
 }

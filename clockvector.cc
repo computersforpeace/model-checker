@@ -34,11 +34,11 @@ ClockVector::~ClockVector()
 }
 
 /**
- * Merge a clock vector into this vector, using a pairwise vector. The
+ * Merge a clock vector into this vector, using a pairwise comparison. The
  * resulting vector length will be the maximum length of the two being merged.
  * @param cv is the ClockVector being merged into this vector.
  */
-void ClockVector::merge(ClockVector *cv)
+void ClockVector::merge(const ClockVector *cv)
 {
 	modelclock_t *clk = clock;
 	bool resize = false;

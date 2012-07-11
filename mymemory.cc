@@ -20,7 +20,7 @@ void *MYMALLOC(size_t size) {
 	static void *(*mallocp)(size_t size);
 	char *error;
 	void *ptr;
-  
+
 	/* get address of libc malloc */
 	if (!mallocp) {
 		mallocp = ( void * ( * )( size_t ) )dlsym(RTLD_NEXT, "malloc");
@@ -29,7 +29,7 @@ void *MYMALLOC(size_t size) {
 			exit(EXIT_FAILURE);
 		}
 	}
-	ptr = mallocp(size);     
+	ptr = mallocp(size);
 	return ptr;
 #else
 	if( !sTheRecord ){

@@ -90,7 +90,7 @@ private:
 
 	/** The thread id that performed this action. */
 	thread_id_t tid;
-	
+
 	/** The value read or written (if RMW, then the value written). This
 	 * should probably be something longer. */
 	int value;
@@ -98,7 +98,7 @@ private:
 	/** A back reference to a Node in NodeStack, if this ModelAction is
 	 * saved on the NodeStack. */
 	Node *node;
-	
+
 	modelclock_t seq_number;
 
 	/** The clock vector stored with this action; only needed if this

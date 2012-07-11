@@ -45,7 +45,7 @@ static bool clock_may_race(ClockVector *clock1, thread_id_t tid1,
 	return tid1 != tid2 && clock2 != 0 && clock1->getClock(tid2) <= clock2;
 }
 
-/** 
+/**
  * Expands a record from the compact form to the full form.  This is
  * necessary for multiple readers or for very large thread ids or time
  * stamps. */

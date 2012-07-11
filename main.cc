@@ -56,8 +56,9 @@ static void thread_wait_finish(void) {
 void real_main() {
 	thrd_t user_thread;
 	ucontext_t main_context;
-  //Initialize race detector
-  initRaceDetector();
+
+	//Initialize race detector
+	initRaceDetector();
 
 	//Create the singleton SnapshotStack object
 	snapshotObject = new SnapshotStack();

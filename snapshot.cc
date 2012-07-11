@@ -34,7 +34,7 @@ struct Snapshot * sTheRecord = NULL;
 
 #if !USE_MPROTECT_SNAPSHOT
 /** @statics
-*   These variables are necessary because the stack is shared region and 
+*   These variables are necessary because the stack is shared region and
 *   there exists a race between all processes executing the same function.
 *   To avoid the problem above, we require variables allocated in 'safe' regions.
 *   The bug was actually observed with the forkID, these variables below are
@@ -66,7 +66,7 @@ static void * ReturnPageAlignedAddress(void * addr) {
 }
 
 /** The initSnapShotRecord method initialized the snapshotting data
- *  structures for the mprotect based snapshot. 
+ *  structures for the mprotect based snapshot.
  */
 static void initSnapShotRecord(unsigned int numbackingpages, unsigned int numsnapshots, unsigned int nummemoryregions) {
 	snapshotrecord=( struct SnapShot * )MYMALLOC(sizeof(struct SnapShot));
@@ -235,7 +235,7 @@ void initSnapShotLibrary(unsigned int numbackingpages,
 #endif
 }
 
-/** The addMemoryRegionToSnapShot function assumes that addr is page aligned. 
+/** The addMemoryRegionToSnapShot function assumes that addr is page aligned.
  */
 void addMemoryRegionToSnapShot( void * addr, unsigned int numPages) {
 #if USE_MPROTECT_SNAPSHOT
@@ -310,7 +310,7 @@ void rollBack( snapshot_id theID ){
 	getcontext( &sTheRecord->mContextToRollback );
 	/*
 	* This is used to quit the process on rollback, so that
-	* the process which needs to rollback can quit allowing the process whose snapshotid matches the rollbackid to switch to 
+	* the process which needs to rollback can quit allowing the process whose snapshotid matches the rollbackid to switch to
 	* this context and continue....
 	*/
 	if( !sTemp ){

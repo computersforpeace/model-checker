@@ -48,14 +48,14 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift>
 		memset(table, 0, capacity*sizeof(struct hashlistnode<_Key, _Val> *));
 		size=0;
 	}
-	
+
 	void put(_Key key, _Val val) {
 		if(size > threshold) {
 			//Resize
 			unsigned int newsize = capacity << 1;
 			resize(newsize);
 		}
-		
+
 		struct hashlistnode<_Key,_Val> *ptr = table[(((_KeyInt)key) & mask)>>_Shift];
 		size++;
 		struct hashlistnode<_Key,_Val> *search = ptr;
@@ -77,7 +77,7 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift>
 
 	_Val get(_Key key) {
 		struct hashlistnode<_Key,_Val> *search = table[(((_KeyInt)key) & mask)>>_Shift];
-		
+
 		while(search!=NULL) {
 			if (search->key==key) {
 				return search->val;
@@ -89,7 +89,7 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift>
 
 	bool contains(_Key key) {
 		struct hashlistnode<_Key,_Val> *search = table[(((_KeyInt)key) & mask)>>_Shift];
-		
+
 		while(search!=NULL) {
 			if (search->key==key) {
 				return true;
@@ -98,29 +98,29 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift>
 		}
 		return false;
 	}
-	
+
 	void resize(unsigned int newsize) {
 		struct hashlistnode<_Key,_Val> ** oldtable = table;
 		struct hashlistnode<_Key,_Val> ** newtable;
 		unsigned int oldcapacity = capacity;
-		
+
 		if((newtable = (struct hashlistnode<_Key,_Val> **) calloc(newsize, sizeof(struct hashlistnode<_Key,_Val> *))) == NULL) {
 			printf("Calloc error %s %d\n", __FILE__, __LINE__);
 			exit(-1);
 		}
-		
+
 		table = newtable;          //Update the global hashtable upon resize()
 		capacity = newsize;
 		threshold = (unsigned int) (newsize * loadfactor);
 		mask = (newsize << _Shift)-1;
-		
+
 		for(unsigned int i = 0; i < oldcapacity; i++) {
 			struct hashlistnode<_Key, _Val> * bin = oldtable[i];
-			
+
 			while(bin!=NULL) {
 				_Key key=bin->key;
 				struct hashlistnode<_Key, _Val> * next=bin->next;
-				
+
 				unsigned int index = (((_KeyInt)key) & mask) >>_Shift;
 				struct hashlistnode<_Key, _Val> * tmp=newtable[index];
 				bin->next=tmp;
@@ -128,10 +128,10 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift>
 				bin = next;
 			}
 		}
-		
+
 		free(oldtable);            //Free the memory of the old hash table
 	}
-	
+
  private:
 	struct hashlistnode<_Key,_Val> **table;
 	unsigned int capacity;

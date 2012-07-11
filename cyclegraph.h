@@ -19,7 +19,6 @@ class CycleGraph {
 	CycleNode * getNode(ModelAction *);
 	HashTable<ModelAction *, CycleNode *, uintptr_t, 4> actionToNode;
 	bool checkReachable(CycleNode *from, CycleNode *to);
-
 	bool hasCycles;
 
 };

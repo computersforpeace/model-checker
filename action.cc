@@ -153,6 +153,9 @@ void ModelAction::print(void) const
 	case THREAD_CREATE:
 		type_str = "thread create";
 		break;
+	case THREAD_START:
+		type_str = "thread start";
+		break;
 	case THREAD_YIELD:
 		type_str = "thread yield";
 		break;

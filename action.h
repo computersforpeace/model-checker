@@ -19,6 +19,7 @@
  * ModelAction */
 typedef enum action_type {
 	THREAD_CREATE,        /**< A thread creation action */
+	THREAD_START,         /**< First action in each thread */
 	THREAD_YIELD,         /**< A thread yield action */
 	THREAD_JOIN,          /**< A thread join action */
 	ATOMIC_READ,          /**< An atomic read action */

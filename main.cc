@@ -51,7 +51,7 @@ static void thread_wait_finish(void) {
 
 /** The real_main function contains the main model checking loop. */
 
-void real_main() {
+static void real_main() {
 	thrd_t user_thread;
 	ucontext_t main_context;
 

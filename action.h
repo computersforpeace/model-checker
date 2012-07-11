@@ -50,7 +50,6 @@ public:
 
 	Node * get_node() const { return node; }
 	void set_node(Node *n) { node = n; }
-	void set_value(int val) { value = val; }
 
 	bool is_read() const;
 	bool is_write() const;

@@ -9,7 +9,6 @@
 
 /** MEMALLOC declares the allocators for a class to allocate
  *	memory in the non-snapshotting heap. */
-
 #define MEMALLOC \
 	void * operator new(size_t size) { \
 		return MYMALLOC(size);\
@@ -26,7 +25,6 @@
 
 /** SNAPSHOTALLOC declares the allocators for a class to allocate
  *	memory in the snapshotting heap. */
-
 #define SNAPSHOTALLOC
 
 void *MYMALLOC(size_t size);
@@ -45,7 +43,6 @@ void *system_malloc( size_t size );
  * This software is provided "as is" without express or implied
  * warranty, and with no claim as to its suitability for any purpose.
  */
-
 template <class T>
    class MyAlloc {
      public:

@@ -14,7 +14,6 @@ static mspace sStaticSpace = NULL;
 #endif
 
 /** Non-snapshotting malloc for our use. */
-
 void *MYMALLOC(size_t size) {
 #if USE_MPROTECT_SNAPSHOT
 	static void *(*mallocp)(size_t size);
@@ -102,7 +101,6 @@ void * basemySpace = NULL;
 
 /** Adding the fix for not able to allocate through a reimplemented calloc at the beginning before instantiating our allocator
 A bit circumspect about adding an sbrk. linux docs say to avoid using it... */
-
 void * HandleEarlyAllocationRequest( size_t sz ){
 	if( 0 == mySpace ){
 		void * returnAddress = sbrk( sz );
@@ -116,7 +114,6 @@ void * HandleEarlyAllocationRequest( size_t sz ){
 }
 
 /** The fact that I am not expecting more than a handful requests is implicit in my not using a binary search here*/
-
 bool DontFree( void * ptr ){
 	if( howManyFreed == nextRequest ) return false; //a minor optimization to reduce the number of instructions executed on each free call....
 	if( NULL == ptr ) return true;
@@ -130,7 +127,6 @@ bool DontFree( void * ptr ){
 }
 
 /** Snapshotting malloc implementation for user programs. */
-
 void *malloc( size_t size ) {
 	void * earlyReq = HandleEarlyAllocationRequest( size );
 	if( earlyReq ) return earlyReq;
@@ -138,20 +134,17 @@ void *malloc( size_t size ) {
 }
 
 /** Snapshotting free implementation for user programs. */
-
 void free( void * ptr ){
 	if( DontFree( ptr ) ) return;
 	mspace_free( mySpace, ptr );
 }
 
 /** Snapshotting realloc implementation for user programs. */
-
 void *realloc( void *ptr, size_t size ){
 	return mspace_realloc( mySpace, ptr, size );
 }
 
 /** Snapshotting calloc implementation for user programs. */
-
 void * calloc( size_t num, size_t size ){
 	void * earlyReq = HandleEarlyAllocationRequest( size * num );
 	if( earlyReq ) {
@@ -162,25 +155,21 @@ void * calloc( size_t num, size_t size ){
 }
 
 /** Snapshotting new operator for user programs. */
-
 void * operator new(size_t size) throw(std::bad_alloc) {
 	return malloc(size);
 }
 
 /** Snapshotting delete operator for user programs. */
-
 void operator delete(void *p) throw() {
 	free(p);
 }
 
 /** Snapshotting new[] operator for user programs. */
-
 void * operator new[](size_t size) throw(std::bad_alloc) {
 	return malloc(size);
 }
 
 /** Snapshotting delete[] operator for user programs. */
-
 void operator delete[](void *p, size_t size) {
 	free(p);
 }

@@ -2,13 +2,11 @@
 #include "action.h"
 
 /** Initializes a CycleGraph object. */
-
 CycleGraph::CycleGraph() {
 	hasCycles=false;
 }
 
 /** Returns the CycleNode for a given ModelAction. */
-
 CycleNode * CycleGraph::getNode(ModelAction * action) {
 	CycleNode *node=actionToNode.get(action);
 	if (node==NULL) {
@@ -19,7 +17,6 @@ CycleNode * CycleGraph::getNode(ModelAction * action) {
 }
 
 /** Adds an edge between two ModelActions. */
-
 void CycleGraph::addEdge(ModelAction *from, ModelAction *to) {
 	CycleNode *fromnode=getNode(from);
 	CycleNode *tonode=getNode(to);
@@ -31,7 +28,6 @@ void CycleGraph::addEdge(ModelAction *from, ModelAction *to) {
 }
 
 /** Checks whether the first CycleNode can reach the second one. */
-
 bool CycleGraph::checkReachable(CycleNode *from, CycleNode *to) {
 	std::vector<CycleNode *> queue;
 	HashTable<CycleNode *, CycleNode *, uintptr_t, 4> discovered;
@@ -61,19 +57,16 @@ bool CycleGraph::checkForCycles() {
 }
 
 /** Constructor for a CycleNode. */
-
 CycleNode::CycleNode(ModelAction *modelaction) {
 	action=modelaction;
 }
 
 /** Returns a vector of the edges from a CycleNode. */
-
 std::vector<CycleNode *> * CycleNode::getEdges() {
 	return &edges;
 }
 
 /** Adds an edge to a CycleNode. */
-
 void CycleNode::addEdge(CycleNode * node) {
 	edges.push_back(node);
 }

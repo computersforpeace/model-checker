@@ -12,11 +12,10 @@
 #include "model.h"
 #include "snapshot-interface.h"
 
-/** The thread_system_next function takes the next step in the
- *  execution.  @return Returns the 1 if there is another step and 0
- *  otherwise.
+/**
+ * The thread_system_next function takes the next step in the execution.
+ * @return Returns the 1 if there is another step and 0 otherwise.
  */
-
 static int thread_system_next(void) {
 	Thread *curr, *next;
 
@@ -43,7 +42,6 @@ static int thread_system_next(void) {
 /** The thread_wait_finish method runs the current execution until we
  *  have no more steps to take.
  */
-
 static void thread_wait_finish(void) {
 	DBG();
 
@@ -52,7 +50,6 @@ static void thread_wait_finish(void) {
 
 
 /** The real_main function contains the main model checking loop. */
-
 static void real_main() {
 	thrd_t user_thread;
 	ucontext_t main_context;

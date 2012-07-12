@@ -117,7 +117,6 @@ SnapshotStack::~SnapshotStack(){
  * @param seqindex is the sequence number to rollback before.
  * @return is the sequence number we actually rolled back to.
  */
-
 int SnapshotStack::backTrackBeforeStep(int seqindex) {
 	while(true) {
 		if (stack->index<=seqindex) {
@@ -131,9 +130,7 @@ int SnapshotStack::backTrackBeforeStep(int seqindex) {
 	}
 }
 
-/** This method takes a snapshot at the given sequence number.
- */
-
+/** This method takes a snapshot at the given sequence number. */
 void SnapshotStack::snapshotStep(int seqindex) {
 	struct stackEntry *tmp=(struct stackEntry *)MYMALLOC(sizeof(struct stackEntry));
 	tmp->next=stack;

@@ -291,6 +291,8 @@ void ModelChecker::add_action_to_lists(ModelAction *act)
 		vec->resize(next_thread_id);
 	(*vec)[tid].push_back(act);
 
+	if ((int)thrd_last_action->size() <= tid)
+		thrd_last_action->resize(get_num_threads());
 	(*thrd_last_action)[tid] = act;
 }
 

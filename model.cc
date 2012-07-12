@@ -283,14 +283,15 @@ void ModelChecker::check_current_action(void)
  */
 void ModelChecker::add_action_to_lists(ModelAction *act)
 {
+	int tid = id_to_int(act->get_tid());
 	action_trace->push_back(act);
 
 	std::vector<action_list_t> *vec = &(*obj_thrd_map)[act->get_location()];
-	if (id_to_int(act->get_tid()) >= (int)vec->size())
+	if (tid >= (int)vec->size())
 		vec->resize(next_thread_id);
-	(*vec)[id_to_int(act->get_tid())].push_back(act);
+	(*vec)[tid].push_back(act);
 
-	(*thrd_last_action)[id_to_int(act->get_tid())] = act;
+	(*thrd_last_action)[tid] = act;
 }
 
 ModelAction * ModelChecker::get_last_action(thread_id_t tid)

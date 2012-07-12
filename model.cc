@@ -167,14 +167,12 @@ ModelAction * ModelChecker::get_last_conflict(ModelAction *act)
 	action_type type = act->get_type();
 
 	switch (type) {
-		case THREAD_CREATE:
-		case THREAD_YIELD:
-		case THREAD_JOIN:
-			return NULL;
 		case ATOMIC_READ:
 		case ATOMIC_WRITE:
-		default:
+		case ATOMIC_RMW:
 			break;
+		default:
+			return NULL;
 	}
 	/* linear search: from most recent to oldest */
 	action_list_t::reverse_iterator rit;

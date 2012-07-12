@@ -177,8 +177,9 @@ ModelAction * ModelChecker::get_last_conflict(ModelAction *act)
 			return NULL;
 	}
 	/* linear search: from most recent to oldest */
+	action_list_t *list = &(*obj_map)[act->get_location()];
 	action_list_t::reverse_iterator rit;
-	for (rit = action_trace->rbegin(); rit != action_trace->rend(); rit++) {
+	for (rit = list->rbegin(); rit != list->rend(); rit++) {
 		ModelAction *prev = *rit;
 		if (act->is_synchronizing(prev))
 			return prev;

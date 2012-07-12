@@ -23,10 +23,18 @@ Thread * thread_current(void)
 	return model->scheduler->get_current_thread();
 }
 
-/* This method just gets around makecontext not being 64-bit clean */
-
+/**
+ * Provides a startup wrapper for each thread, allowing some initial
+ * model-checking data to be recorded. This method also gets around makecontext
+ * not being 64-bit clean
+ */
 void thread_startup() {
 	Thread * curr_thread = thread_current();
+
+	/* Add dummy "start" action, just to create a first clock vector */
+	model->switch_to_master(new ModelAction(THREAD_START, memory_order_seq_cst, curr_thread));
+
+	/* Call the actual thread function */
 	curr_thread->start_routine(curr_thread->arg);
 }
 
@@ -70,20 +78,19 @@ void Thread::complete()
 }
 
 Thread::Thread(thrd_t *t, void (*func)(void *), void *a) :
+	start_routine(func),
+	arg(a),
+	user_thread(t),
+	state(THREAD_CREATED),
 	last_action_val(VALUE_NONE)
 {
 	int ret;
-
-	user_thread = t;
-	start_routine = func;
-	arg = a;
 
 	/* Initialize state */
 	ret = create_context();
 	if (ret)
 		printf("Error in create_context\n");
 
-	state = THREAD_CREATED;
 	id = model->get_next_id();
 	*user_thread = id;
 	parent = thread_current();

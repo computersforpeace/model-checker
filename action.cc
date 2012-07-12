@@ -102,7 +102,7 @@ bool ModelAction::is_synchronizing(const ModelAction *act) const
 	// Different locations commute
 	if (!same_var(act))
 		return false;
-	
+
 	// Explore interleavings of seqcst writes to guarantee total order
 	// of seq_cst operations that don't commute
 	if (is_write() && is_seqcst() && act->is_write() && act->is_seqcst())
@@ -154,6 +154,9 @@ void ModelAction::print(void) const
 	switch (this->type) {
 	case THREAD_CREATE:
 		type_str = "thread create";
+		break;
+	case THREAD_START:
+		type_str = "thread start";
 		break;
 	case THREAD_YIELD:
 		type_str = "thread yield";

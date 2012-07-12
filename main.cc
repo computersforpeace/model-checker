@@ -6,6 +6,8 @@
 #include "common.h"
 #include "threads.h"
 
+#include "datarace.h"
+
 /* global "model" object */
 #include "model.h"
 #include "snapshot-interface.h"
@@ -54,6 +56,9 @@ static void thread_wait_finish(void) {
 static void real_main() {
 	thrd_t user_thread;
 	ucontext_t main_context;
+
+	//Initialize race detector
+	initRaceDetector();
 
 	//Create the singleton SnapshotStack object
 	snapshotObject = new SnapshotStack();

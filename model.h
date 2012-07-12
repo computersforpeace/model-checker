@@ -1,5 +1,5 @@
 /** @file model.h
- *  @brief Core model checker. 
+ *  @brief Core model checker.
  */
 
 #ifndef __MODEL_H__
@@ -54,7 +54,7 @@ public:
 	modelclock_t get_next_seq_num();
 
 	int switch_to_master(ModelAction *act);
-
+	ClockVector * get_cv(thread_id_t tid);
 	bool next_execution();
 
 	MEMALLOC

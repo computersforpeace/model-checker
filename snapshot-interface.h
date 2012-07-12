@@ -28,7 +28,7 @@ class SnapshotStack {
   int backTrackBeforeStep(int seq_index);
   void snapshotStep(int seq_index);
 
- private: 
+ private:
   struct stackEntry * stack;
 };
 

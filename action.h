@@ -19,6 +19,7 @@
  * ModelAction */
 typedef enum action_type {
 	THREAD_CREATE,        /**< A thread creation action */
+	THREAD_START,         /**< First action in each thread */
 	THREAD_YIELD,         /**< A thread yield action */
 	THREAD_JOIN,          /**< A thread join action */
 	ATOMIC_READ,          /**< An atomic read action */
@@ -90,7 +91,7 @@ private:
 
 	/** The thread id that performed this action. */
 	thread_id_t tid;
-	
+
 	/** The value read or written (if RMW, then the value written). This
 	 * should probably be something longer. */
 	int value;
@@ -101,7 +102,7 @@ private:
 	/** A back reference to a Node in NodeStack, if this ModelAction is
 	 * saved on the NodeStack. */
 	Node *node;
-	
+
 	modelclock_t seq_number;
 
 	/** The clock vector stored with this action; only needed if this

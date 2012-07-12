@@ -56,7 +56,7 @@ static void SnapshotGlobalSegments(){
 		//Skip out at the end of the section
 		if (buf[0]=='\n')
 			break;
-		
+
 		sscanf(buf, "%22s %p-%p [%5dK] %c%c%c/%c%c%c SM=%3s %200s\n", &type, &begin, &end, &size, &r, &w, &x, &mr, &mw, &mx, smstr, regionname);
 
 		if (w == 'w' && (strstr(regionname, MYBINARYNAME) || strstr(regionname, MYLIBRARYNAME))) {
@@ -113,11 +113,11 @@ SnapshotStack::~SnapshotStack(){
 
 /** This method returns to the last snapshot before the inputted
  * sequence number.  This function must be called from the model
- * checking thread and not from a snapshotted stack.  
- * @param seqindex is the sequence number to rollback before.  
+ * checking thread and not from a snapshotted stack.
+ * @param seqindex is the sequence number to rollback before.
  * @return is the sequence number we actually rolled back to.
  */
-		
+
 int SnapshotStack::backTrackBeforeStep(int seqindex) {
 	while(true) {
 		if (stack->index<=seqindex) {

@@ -89,6 +89,11 @@ private:
 	ucontext_t *system_context;
 	action_list_t *action_trace;
 	std::map<int, Thread *> *thread_map;
+
+	/** Per-object list of actions. Maps an object (i.e., memory location)
+	 * to a trace of all actions performed on the object. */
+	std::map<const void *, action_list_t> *obj_map;
+
 	std::map<void *, std::vector<action_list_t> > *obj_thrd_map;
 	std::vector<ModelAction *> *thrd_last_action;
 	NodeStack *node_stack;

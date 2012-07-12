@@ -27,6 +27,7 @@ ModelChecker::ModelChecker()
 	nextThread(THREAD_ID_T_NONE),
 	action_trace(new action_list_t()),
 	thread_map(new std::map<int, Thread *>),
+	obj_map(new std::map<const void *, action_list_t>()),
 	obj_thrd_map(new std::map<void *, std::vector<action_list_t> >()),
 	thrd_last_action(new std::vector<ModelAction *>(1)),
 	node_stack(new NodeStack()),
@@ -43,6 +44,7 @@ ModelChecker::~ModelChecker()
 	delete thread_map;
 
 	delete obj_thrd_map;
+	delete obj_map;
 	delete action_trace;
 	delete thrd_last_action;
 	delete node_stack;
@@ -296,6 +298,8 @@ void ModelChecker::add_action_to_lists(ModelAction *act)
 {
 	int tid = id_to_int(act->get_tid());
 	action_trace->push_back(act);
+
+	(*obj_map)[act->get_location()].push_back(act);
 
 	std::vector<action_list_t> *vec = &(*obj_thrd_map)[act->get_location()];
 	if (tid >= (int)vec->size())

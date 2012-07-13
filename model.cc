@@ -320,6 +320,23 @@ ModelAction * ModelChecker::get_last_action(thread_id_t tid)
 	return (*thrd_last_action)[id_to_int(tid)];
 }
 
+/**
+ * Gets the last memory_order_seq_cst action (in the total global sequence)
+ * performed on a particular object (i.e., memory location).
+ * @param location The object location to check
+ * @return The last seq_cst action performed
+ */
+ModelAction * ModelChecker::get_last_seq_cst(const void *location)
+{
+	action_list_t *list = &(*obj_map)[location];
+	/* Find: max({i in dom(S) | seq_cst(t_i) && isWrite(t_i) && samevar(t_i, t)}) */
+	action_list_t::reverse_iterator rit;
+	for (rit = list->rbegin(); rit != list->rend(); rit++)
+		if ((*rit)->is_write() && (*rit)->is_seqcst())
+			return *rit;
+	return NULL;
+}
+
 ModelAction * ModelChecker::get_parent_action(thread_id_t tid)
 {
 	ModelAction *parent = get_last_action(tid);

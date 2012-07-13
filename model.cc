@@ -363,6 +363,11 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 
 	ASSERT(curr->is_read());
 
+	ModelAction *last_seq_cst = NULL;
+
+	if (curr->is_seqcst())
+		last_seq_cst = get_last_seq_cst(curr->get_location());
+
 	/* Track whether this object has been initialized */
 	bool initialized = false;
 
@@ -376,12 +381,15 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 			if (!act->is_write())
 				continue;
 
-			DEBUG("Adding action to may_read_from:\n");
-			if (DBG_ENABLED()) {
-				act->print();
-				curr->print();
+			/* Don't consider more than one seq_cst write */
+			if (!act->is_seqcst() || act == last_seq_cst) {
+				DEBUG("Adding action to may_read_from:\n");
+				if (DBG_ENABLED()) {
+					act->print();
+					curr->print();
+				}
+				curr->get_node()->add_read_from(act);
 			}
-			curr->get_node()->add_read_from(act);
 
 			/* Include at most one act per-thread that "happens before" curr */
 			if (act->happens_before(curr)) {

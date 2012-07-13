@@ -370,6 +370,10 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 
 	/* Track whether this object has been initialized */
 	bool initialized = false;
+	/* Would each action synchronize if we read from it? */
+	bool all_synch = true;
+	/* Is the may_read_from set empty? (tracked locally) */
+	bool empty = true;
 
 	for (i = 0; i < thrd_lists->size(); i++) {
 		action_list_t *list = &(*thrd_lists)[i];
@@ -389,6 +393,11 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 					curr->print();
 				}
 				curr->get_node()->add_read_from(act);
+				empty = false;
+
+				if (!(act->is_release() && curr->is_acquire())
+						&& !act->same_thread(curr))
+					all_synch = false;
 			}
 
 			/* Include at most one act per-thread that "happens before" curr */
@@ -398,6 +407,9 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 			}
 		}
 	}
+
+	if (!empty && all_synch)
+		initialized = true;
 
 	if (!initialized) {
 		/* TODO: need a more informative way of reporting errors */

@@ -13,7 +13,6 @@
 
 #include "schedule.h"
 #include "mymemory.h"
-#include <utility>
 #include "libthreads.h"
 #include "libatomic.h"
 #include "threads.h"

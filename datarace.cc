@@ -14,7 +14,7 @@ void initRaceDetector() {
  * given address.*/
 static uint64_t * lookupAddressEntry(void * address) {
 	struct ShadowTable *currtable=root;
-#ifdef BIT48
+#if BIT48
 	currtable=(struct ShadowTable *) currtable->array[(((uintptr_t)address)>>32)&MASK16BIT];
 	if (currtable==NULL) {
 		currtable=(struct ShadowTable *) (root->array[(((uintptr_t)address)>>32)&MASK16BIT]=calloc(sizeof(struct ShadowTable),1));

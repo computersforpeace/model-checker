@@ -375,7 +375,9 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 	/* Is the may_read_from set empty? (tracked locally) */
 	bool empty = true;
 
+	/* Iterate over all threads */
 	for (i = 0; i < thrd_lists->size(); i++) {
+		/* Iterate over actions in thread, starting from most recent */
 		action_list_t *list = &(*thrd_lists)[i];
 		action_list_t::reverse_iterator rit;
 		for (rit = list->rbegin(); rit != list->rend(); rit++) {
@@ -464,6 +466,17 @@ void ModelChecker::remove_thread(Thread *t)
 	scheduler->remove_thread(t);
 }
 
+/**
+ * Switch from a user-context to the "master thread" context (a.k.a. system
+ * context). This switch is made with the intention of exploring a particular
+ * model-checking action (described by a ModelAction object). Must be called
+ * from a user-thread context.
+ * @param act The current action that will be explored. May be NULL, although
+ * there is little reason to switch to the model-checker without an action to
+ * explore (note: act == NULL is sometimes used as a hack to allow a thread to
+ * yield control without performing any progress; see thrd_join()).
+ * @return Return status from the 'swap' call (i.e., success/fail, 0/-1)
+ */
 int ModelChecker::switch_to_master(ModelAction *act)
 {
 	Thread *old;

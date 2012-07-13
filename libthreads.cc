@@ -23,11 +23,10 @@ int thrd_create(thrd_t *t, thrd_start_t start_routine, void *arg)
 
 int thrd_join(thrd_t t)
 {
-	int ret = 0;
 	Thread *th = model->get_thread(thrd_to_id(t));
-	while (th->get_state() != THREAD_COMPLETED && !ret)
-		ret = model->switch_to_master(NULL);
-	return ret;
+	while (th->get_state() != THREAD_COMPLETED)
+		model->switch_to_master(NULL);
+	return 0;
 }
 
 int thrd_yield(void)

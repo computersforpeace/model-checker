@@ -365,15 +365,16 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 
 	ModelAction *last_seq_cst = NULL;
 
-	if (curr->is_seqcst())
-		last_seq_cst = get_last_seq_cst(curr->get_location());
-
 	/* Track whether this object has been initialized */
 	bool initialized = false;
-	/* Would each action synchronize if we read from it? */
-	bool all_synch = true;
-	/* Is the may_read_from set empty? (tracked locally) */
-	bool empty = true;
+
+	if (curr->is_seqcst()) {
+		last_seq_cst = get_last_seq_cst(curr->get_location());
+		/* We have to at least see the last sequentially consistent write,
+			 so we are initialized. */
+		if (last_seq_cst != NULL)
+			initialized = true;
+	}
 
 	/* Iterate over all threads */
 	for (i = 0; i < thrd_lists->size(); i++) {
@@ -395,11 +396,6 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 					curr->print();
 				}
 				curr->get_node()->add_read_from(act);
-				empty = false;
-
-				if (!(act->is_release() && curr->is_acquire())
-						&& !act->same_thread(curr))
-					all_synch = false;
 			}
 
 			/* Include at most one act per-thread that "happens before" curr */
@@ -410,14 +406,11 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 		}
 	}
 
-	if (!empty && all_synch)
-		initialized = true;
-
 	if (!initialized) {
 		/* TODO: need a more informative way of reporting errors */
 		printf("ERROR: may read from uninitialized atomic\n");
 	}
-
+	
 	if (DBG_ENABLED() || !initialized) {
 		printf("Reached read action:\n");
 		curr->print();
@@ -425,7 +418,7 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 		curr->get_node()->print_may_read_from();
 		printf("End printing may_read_from\n");
 	}
-
+	
 	ASSERT(initialized);
 }
 

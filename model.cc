@@ -278,7 +278,7 @@ void ModelChecker::check_current_action(void)
 	/* TODO: perform release/acquire synchronization here; include
 	 * reads_from as ModelAction member? */
 	Thread *th = get_thread(curr->get_tid());
-	int value = VALUE_NONE;
+	uint64_t value = VALUE_NONE;
 	if (curr->is_read()) {
 		const ModelAction *reads_from = curr->get_node()->get_next_read_from();
 		value = reads_from->get_value();

@@ -6,6 +6,8 @@
 #define __THREADS_H__
 
 #include <ucontext.h>
+#include <stdint.h>
+
 #include "mymemory.h"
 #include "libthreads.h"
 
@@ -55,7 +57,7 @@ public:
 	 * atomic read).
 	 * @param value The value to return
 	 */
-	void set_return_value(int value) { last_action_val = value; }
+	void set_return_value(uint64_t value) { last_action_val = value; }
 
 	/**
 	 * Retrieve a return value for the last action in this thread. Used,
@@ -63,7 +65,7 @@ public:
 	 * be called from a user context.
 	 * @return The value 'returned' by the action
 	 */
-	int get_return_value() { return last_action_val; }
+	uint64_t get_return_value() { return last_action_val; }
 
 	friend void thread_startup();
 
@@ -86,7 +88,7 @@ private:
 	 * @see Thread::set_return_value()
 	 * @see Thread::get_return_value()
 	 */
-	int last_action_val;
+	uint64_t last_action_val;
 };
 
 Thread * thread_current();

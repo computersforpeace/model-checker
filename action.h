@@ -13,7 +13,10 @@
 #include "mymemory.h"
 #include "clockvector.h"
 
-#define VALUE_NONE -1
+/** Note that this value can be legitimately used by a program, and
+		hence by iteself does not indicate no value. */
+
+#define VALUE_NONE 1234567890
 
 /** @brief Represents an action type, identifying one of several types of
  * ModelAction */
@@ -38,7 +41,7 @@ class ClockVector;
  */
 class ModelAction {
 public:
-	ModelAction(action_type_t type, memory_order order, void *loc, int value = VALUE_NONE);
+	ModelAction(action_type_t type, memory_order order, void *loc, uint64_t value = VALUE_NONE);
 	~ModelAction();
 	void print(void) const;
 
@@ -47,7 +50,7 @@ public:
 	memory_order get_mo() const { return order; }
 	void * get_location() const { return location; }
 	modelclock_t get_seq_number() const { return seq_number; }
-	int get_value() const { return value; }
+	uint64_t get_value() const { return value; }
 	const ModelAction * get_reads_from() const { return reads_from; }
 
 	Node * get_node() const { return node; }
@@ -94,7 +97,7 @@ private:
 
 	/** The value read or written (if RMW, then the value written). This
 	 * should probably be something longer. */
-	int value;
+	uint64_t value;
 
 	/** The action that this action reads from. Only valid for reads */
 	const ModelAction *reads_from;

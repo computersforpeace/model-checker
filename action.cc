@@ -5,7 +5,7 @@
 #include "clockvector.h"
 #include "common.h"
 
-ModelAction::ModelAction(action_type_t type, memory_order order, void *loc, int value) :
+ModelAction::ModelAction(action_type_t type, memory_order order, void *loc, uint64_t value) :
 	type(type),
 	order(order),
 	location(loc),
@@ -180,7 +180,7 @@ void ModelAction::print(void) const
 		type_str = "unknown type";
 	}
 
-	printf("(%3d) Thread: %-2d    Action: %-13s    MO: %d    Loc: %14p    Value: %-4d",
+	printf("(%3d) Thread: %-2d    Action: %-13s    MO: %d    Loc: %14p    Value: %-8u",
 			seq_number, id_to_int(tid), type_str, order, location, value);
 	if (reads_from)
 		printf(" Rf: %d", reads_from->get_seq_number());

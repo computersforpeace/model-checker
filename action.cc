@@ -1,4 +1,6 @@
 #include <stdio.h>
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
 
 #include "model.h"
 #include "action.h"
@@ -180,7 +182,7 @@ void ModelAction::print(void) const
 		type_str = "unknown type";
 	}
 
-	printf("(%3d) Thread: %-2d    Action: %-13s    MO: %d    Loc: %14p    Value: %-8u",
+	printf("(%3d) Thread: %-2d    Action: %-13s    MO: %d    Loc: %14p    Value: %-12" PRIu64,
 			seq_number, id_to_int(tid), type_str, order, location, value);
 	if (reads_from)
 		printf(" Rf: %d", reads_from->get_seq_number());

@@ -83,7 +83,7 @@ public:
 	Node * get_head();
 	Node * get_next();
 	void reset_execution();
-
+	void pop_restofstack();
 	int get_total_nodes() { return total_nodes; }
 
 	void print();

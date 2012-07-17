@@ -132,6 +132,7 @@ thread_id_t ModelChecker::get_next_replay_thread()
 		DEBUG("*** Divergence point ***\n");
 		tid = node->get_next_backtrack();
 		diverge = NULL;
+		node_stack->pop_restofstack();
 	} else {
 		tid = next->get_tid();
 	}

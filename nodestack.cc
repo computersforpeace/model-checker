@@ -198,16 +198,13 @@ ModelAction * NodeStack::explore_action(ModelAction *act)
 	DBG();
 
 	ASSERT(!node_list.empty());
+	node_list_t::iterator it=iter;
+	it++;
 
-	if (get_head()->has_been_explored(act->get_tid())) {
+	if (it != node_list.end()) {
 		iter++;
 		return (*iter)->get_action();
 	}
-
-	/* Diverging from previous execution; clear out remainder of list */
-	node_list_t::iterator it = iter;
-	it++;
-	clear_node_list(&node_list, it, node_list.end());
 
 	/* Record action */
 	get_head()->explore_child(act);
@@ -216,6 +213,16 @@ ModelAction * NodeStack::explore_action(ModelAction *act)
 	iter++;
 	return NULL;
 }
+
+
+void NodeStack::pop_restofstack()
+{
+	/* Diverging from previous execution; clear out remainder of list */
+	node_list_t::iterator it = iter;
+	it++;
+	clear_node_list(&node_list, it, node_list.end());
+}
+
 
 Node * NodeStack::get_head()
 {

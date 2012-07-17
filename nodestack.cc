@@ -109,6 +109,9 @@ thread_id_t Node::get_next_backtrack()
 	for (i = 0; i < backtrack.size(); i++)
 		if (backtrack[i] == true)
 			break;
+	/* Backtrack set was empty? */
+	ASSERT(i != backtrack.size());
+
 	backtrack[i] = false;
 	numBacktracks--;
 	return int_to_id(i);

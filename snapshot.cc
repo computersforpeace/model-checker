@@ -26,11 +26,7 @@
 #endif
 
 /* extern declaration definition */
-#if USE_MPROTECT_SNAPSHOT
 struct SnapShot * snapshotrecord = NULL;
-#else
-struct Snapshot * sTheRecord = NULL;
-#endif
 
 #if !USE_MPROTECT_SNAPSHOT
 /** @statics
@@ -112,35 +108,32 @@ static void HandlePF( int sig, siginfo_t *si, void * unused){
 }
 #endif //nothing to handle for non snapshotting case.
 
-void createSharedLibrary(){
 #if !USE_MPROTECT_SNAPSHOT
+void createSharedMemory(){
 	//step 1. create shared memory.
-	if ( sTheRecord )
-		return;
-	int fd = shm_open( "/ModelChecker-Snapshotter", O_RDWR | O_CREAT, 0777 ); //universal permissions.
-	if ( -1 == fd )
-		FAILURE("shm_open");
-	if ( -1 == ftruncate( fd, SHARED_MEMORY_DEFAULT + STACK_SIZE_DEFAULT ) )
-		FAILURE( "ftruncate" );
-	void * memMapBase = mmap( 0, SHARED_MEMORY_DEFAULT + STACK_SIZE_DEFAULT, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0 );
+	void * memMapBase = mmap( 0, SHARED_MEMORY_DEFAULT + STACK_SIZE_DEFAULT, PROT_READ | PROT_WRITE, MAP_SHARED|MAP_ANON, -1, 0 );
 	if( MAP_FAILED == memMapBase )
 		FAILURE("mmap");
-	sTheRecord = ( struct Snapshot * )memMapBase;
-	sTheRecord->mSharedMemoryBase = (void *)((uintptr_t)memMapBase + sizeof(struct Snapshot));
-	sTheRecord->mStackBase = (void *)((uintptr_t)memMapBase + SHARED_MEMORY_DEFAULT);
-	sTheRecord->mStackSize = STACK_SIZE_DEFAULT;
-	sTheRecord->mIDToRollback = -1;
-	sTheRecord->currSnapShotID = 0;
-#endif
+
+	//Setup snapshot record at top of free region
+	snapshotrecord = ( struct SnapShot * )memMapBase;
+	snapshotrecord->mSharedMemoryBase = (void *)((uintptr_t)memMapBase + sizeof(struct SnapShot));
+	snapshotrecord->mStackBase = (void *)((uintptr_t)memMapBase + SHARED_MEMORY_DEFAULT);
+	snapshotrecord->mStackSize = STACK_SIZE_DEFAULT;
+	snapshotrecord->mIDToRollback = -1;
+	snapshotrecord->currSnapShotID = 0;
 }
+#endif
+
 
 /** The initSnapShotLibrary function initializes the Snapshot library.
  *  @param entryPoint the function that should run the program.
  */
+#if USE_MPROTECT_SNAPSHOT
+
 void initSnapShotLibrary(unsigned int numbackingpages,
 		unsigned int numsnapshots, unsigned int nummemoryregions,
 		unsigned int numheappages, VoidFuncPtr entryPoint) {
-#if USE_MPROTECT_SNAPSHOT
 	/* Setup a stack for our signal handler....  */
 	stack_t ss;
 	ss.ss_sp = MYMALLOC(SIGSTACKSIZE);
@@ -180,17 +173,21 @@ void initSnapShotLibrary(unsigned int numbackingpages,
 	mySpace = create_mspace_with_base(pagealignedbase,  numheappages*PAGESIZE, 1 );
 	addMemoryRegionToSnapShot(pagealignedbase, numheappages);
 	entryPoint();
+}
 #else
-
+void initSnapShotLibrary(unsigned int numbackingpages,
+		unsigned int numsnapshots, unsigned int nummemoryregions,
+		unsigned int numheappages, VoidFuncPtr entryPoint) {
 	basemySpace=system_malloc((numheappages+1)*PAGESIZE);
 	void * pagealignedbase=PageAlignAddressUpward(basemySpace);
 	mySpace = create_mspace_with_base(pagealignedbase,  numheappages*PAGESIZE, 1 );
-	createSharedLibrary();
+	if (!snapshotrecord)
+		createSharedMemory();
 
 	//step 2 setup the stack context.
 	ucontext_t newContext;
 	getcontext( &newContext );
-	newContext.uc_stack.ss_sp = sTheRecord->mStackBase;
+	newContext.uc_stack.ss_sp = snapshotrecord->mStackBase;
 	newContext.uc_stack.ss_size = STACK_SIZE_DEFAULT;
 	makecontext( &newContext, entryPoint, 0 );
 	/* switch to a new entryPoint context, on a new stack */
@@ -198,42 +195,44 @@ void initSnapShotLibrary(unsigned int numbackingpages,
 
 	/* switch back here when takesnapshot is called */
 	pid_t forkedID = 0;
-	snapshotid = sTheRecord->currSnapShotID;
-	bool swapContext = false;
+	snapshotid = snapshotrecord->currSnapShotID;
+	/* This bool indicates that the current process's snapshotid is same
+		 as the id to which the rollback needs to occur */
+
+	bool rollback = false;
 	while( true ){
-		sTheRecord->currSnapShotID=snapshotid+1;
+		snapshotrecord->currSnapShotID=snapshotid+1;
 		forkedID = fork();
+
 		if( 0 == forkedID ){
-			ucontext_t currentContext;
-			/*If the rollback bool is set{ see below }, switch to the context we need to return to during a rollback*/
-			if( swapContext )
-				swapcontext( &currentContext, &( sTheRecord->mContextToRollback ) );
-			else{
-				/*Child process which is forked as a result of takesnapshot call should switch back to the takesnapshot context*/
-				swapcontext( &currentContext, &savedUserSnapshotContext );
+			/* If the rollback bool is set, switch to the context we need to
+				 return to during a rollback. */
+			if( rollback) {
+				setcontext( &( snapshotrecord->mContextToRollback ) );
+			} else {
+				/*Child process which is forked as a result of takesnapshot
+					call should switch back to the takesnapshot context*/
+				setcontext( &savedUserSnapshotContext );
 			}
 		} else {
 			int status;
 			int retVal;
 
-			SSDEBUG("The process id of child is %d and the process id of this process is %d and snapshot id is %d",
+			SSDEBUG("The process id of child is %d and the process id of this process is %d and snapshot id is %d\n",
 			        forkedID, getpid(), snapshotid );
 
 			do {
 				retVal=waitpid( forkedID, &status, 0 );
 			} while( -1 == retVal && errno == EINTR );
 
-			if( sTheRecord->mIDToRollback != snapshotid )
+			if( snapshotrecord->mIDToRollback != snapshotid ) {
 				exit(EXIT_SUCCESS);
-			else{
-				/*This bool indicates that the current process's snapshotid is same as the id to which the rollback needs to occur*/
-				swapContext = true;
 			}
+			rollback = true;
 		}
 	}
-
-#endif
 }
+#endif
 
 /** The addMemoryRegionToSnapShot function assumes that addr is page aligned.
  */
@@ -272,6 +271,7 @@ snapshot_id takeSnapshot( ){
 	return snapshot;
 #else
 	swapcontext( &savedUserSnapshotContext, &savedSnapshotContext );
+	SSDEBUG("TAKESNAPSHOT RETURN\n");
 	return snapshotid;
 #endif
 }
@@ -305,24 +305,25 @@ void rollBack( snapshot_id theID ){
 	snapshotrecord->lastBackingPage=snapshotrecord->snapShots[theID].firstBackingPage;
 	takeSnapshot(); //Make sure current snapshot is still good...All later ones are cleared
 #else
-	sTheRecord->mIDToRollback = theID;
-	int sTemp = 0;
-	getcontext( &sTheRecord->mContextToRollback );
+	snapshotrecord->mIDToRollback = theID;
+	volatile int sTemp = 0;
+	getcontext( &snapshotrecord->mContextToRollback );
 	/*
-	* This is used to quit the process on rollback, so that
-	* the process which needs to rollback can quit allowing the process whose snapshotid matches the rollbackid to switch to
-	* this context and continue....
-	*/
+	 * This is used to quit the process on rollback, so that the process
+	 * which needs to rollback can quit allowing the process whose
+	 * snapshotid matches the rollbackid to switch to this context and
+	 * continue....
+	 */
 	if( !sTemp ){
 		sTemp = 1;
-		SSDEBUG("Invoked rollback");
+		SSDEBUG("Invoked rollback\n");
 		exit(EXIT_SUCCESS);
 	}
-    /*
-	* This fix obviates the need for a finalize call. hence less dependences for model-checker....
-    *
-    */
-	sTheRecord->mIDToRollback = -1;
+	/*
+	 * This fix obviates the need for a finalize call. hence less dependences for model-checker....
+	 *
+	 */
+	snapshotrecord->mIDToRollback = -1;
 #endif
 }
 

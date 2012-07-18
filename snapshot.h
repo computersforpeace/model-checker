@@ -17,11 +17,11 @@
 #define SIGSTACKSIZE 32768
 
 void addMemoryRegionToSnapShot( void * ptr, unsigned int numPages );
-
 snapshot_id takeSnapshot( );
-
 void rollBack( snapshot_id theSnapShot );
 
-void createSharedLibrary();
+#if !USE_MPROTECT_SNAPSHOT
+void createSharedMemory();
+#endif
 
 #endif

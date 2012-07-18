@@ -31,11 +31,11 @@ void *MYMALLOC(size_t size) {
 	ptr = mallocp(size);
 	return ptr;
 #else
-	if( !sTheRecord ){
-		createSharedLibrary();
+	if( !snapshotrecord) {
+		createSharedMemory();
 	}
 	if( NULL == sStaticSpace )
-		sStaticSpace = create_mspace_with_base( ( void * )( sTheRecord->mSharedMemoryBase ), SHARED_MEMORY_DEFAULT -sizeof( struct Snapshot ), 1 );
+		sStaticSpace = create_mspace_with_base( ( void * )( snapshotrecord->mSharedMemoryBase ), SHARED_MEMORY_DEFAULT -sizeof( struct SnapShot ), 1 );
 	return mspace_malloc( sStaticSpace, size );
 #endif
 }

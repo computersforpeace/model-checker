@@ -53,17 +53,17 @@ struct SnapShot {
 	unsigned int maxSnapShots; //Stores the total number of snapshots we allow
 };
 
-//Global reference to snapshot data structure
-extern struct SnapShot * snapshotrecord;
 #else
-struct Snapshot {
+struct SnapShot {
 	void *mSharedMemoryBase;
 	void *mStackBase;
 	size_t mStackSize;
-	snapshot_id mIDToRollback;
+	volatile snapshot_id mIDToRollback;
 	ucontext_t mContextToRollback;
 	snapshot_id currSnapShotID;
 };
-extern struct Snapshot * sTheRecord;
 #endif
+
+//Global reference to snapshot data structure
+extern struct SnapShot * snapshotrecord;
 #endif

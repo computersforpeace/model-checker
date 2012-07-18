@@ -1,0 +1,3 @@
+To run inside MacOS under gdb you need:
+set dont-handle-bad-access 1
+handle SIGBUS nostop noprint

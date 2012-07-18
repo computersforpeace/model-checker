@@ -126,13 +126,20 @@ thread_id_t ModelChecker::get_next_replay_thread()
 	next = node_stack->get_next()->get_action();
 
 	if (next == diverge) {
-		Node *node = next->get_node()->get_parent();
-
+		Node *nextnode = next->get_node();
 		/* Reached divergence point */
+		if (nextnode->increment_read_from()) {
+			/* The next node will read from a different value */
+			tid = next->get_tid();
+			node_stack->pop_restofstack(2);
+		} else {
+			/* Make a different thread execute for next step */
+			Node *node = nextnode->get_parent();
+			tid = node->get_next_backtrack();
+			node_stack->pop_restofstack(1);
+		}
 		DEBUG("*** Divergence point ***\n");
-		tid = node->get_next_backtrack();
 		diverge = NULL;
-		node_stack->pop_restofstack();
 	} else {
 		tid = next->get_tid();
 	}
@@ -231,8 +238,6 @@ ModelAction * ModelChecker::get_next_backtrack()
 
 void ModelChecker::check_current_action(void)
 {
-	Node *currnode;
-
 	ModelAction *curr = this->current_action;
 	ModelAction *tmp;
 	current_action = NULL;
@@ -265,9 +270,10 @@ void ModelChecker::check_current_action(void)
 
 	nextThread = get_next_replay_thread();
 
-	currnode = curr->get_node()->get_parent();
+	Node *currnode = curr->get_node();
+	Node *parnode = currnode->get_parent();
 
-	if (!currnode->backtrack_empty())
+	if (!parnode->backtrack_empty()||!currnode->readsfrom_empty())
 		if (!next_backtrack || *curr > *next_backtrack)
 			next_backtrack = curr;
 
@@ -281,7 +287,7 @@ void ModelChecker::check_current_action(void)
 	Thread *th = get_thread(curr->get_tid());
 	uint64_t value = VALUE_NONE;
 	if (curr->is_read()) {
-		const ModelAction *reads_from = curr->get_node()->get_next_read_from();
+		const ModelAction *reads_from = curr->get_node()->get_read_from();
 		value = reads_from->get_value();
 		/* Assign reads_from, perform release/acquire synchronization */
 		curr->read_from(reads_from);
@@ -361,7 +367,6 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 {
 	std::vector<action_list_t> *thrd_lists = &(*obj_thrd_map)[curr->get_location()];
 	unsigned int i;
-
 	ASSERT(curr->is_read());
 
 	ModelAction *last_seq_cst = NULL;
@@ -389,8 +394,8 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 			if (!act->is_write())
 				continue;
 
-			/* Don't consider more than one seq_cst write */
-			if (!act->is_seqcst() || act == last_seq_cst) {
+			/* Don't consider more than one seq_cst write if we are a seq_cst read. */
+			if (!act->is_seqcst() || !curr->is_seqcst() || act == last_seq_cst) {
 				DEBUG("Adding action to may_read_from:\n");
 				if (DBG_ENABLED()) {
 					act->print();

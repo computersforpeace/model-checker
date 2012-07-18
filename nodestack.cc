@@ -24,7 +24,8 @@ Node::Node(ModelAction *act, Node *par, int nthreads)
 	explored_children(num_threads),
 	backtrack(num_threads),
 	numBacktracks(0),
-	may_read_from()
+	may_read_from(),
+	read_from_index(0)
 {
 	if (act)
 		act->set_node(this);
@@ -73,7 +74,11 @@ bool Node::has_been_explored(thread_id_t tid)
  */
 bool Node::backtrack_empty()
 {
-	return numBacktracks == 0;
+	return (numBacktracks == 0);
+}
+
+bool Node::readsfrom_empty() {
+	return ((read_from_index+1)>=may_read_from.size());
 }
 
 /**
@@ -138,13 +143,14 @@ void Node::add_read_from(const ModelAction *act)
  * may remove elements from may_read_from
  * @return The first element in may_read_from
  */
-const ModelAction * Node::get_next_read_from() {
-	const ModelAction *act;
-	ASSERT(!may_read_from.empty());
-	act = may_read_from.front();
-	/* TODO: perform reads_from replay properly */
-	/* may_read_from.pop_front(); */
-	return act;
+const ModelAction * Node::get_read_from() {
+	ASSERT(read_from_index<may_read_from.size());
+	return may_read_from[read_from_index];
+}
+
+bool Node::increment_read_from() {
+	read_from_index++;
+	return (read_from_index<may_read_from.size());
 }
 
 void Node::explore(thread_id_t tid)
@@ -215,11 +221,12 @@ ModelAction * NodeStack::explore_action(ModelAction *act)
 }
 
 
-void NodeStack::pop_restofstack()
+void NodeStack::pop_restofstack(int numAhead)
 {
 	/* Diverging from previous execution; clear out remainder of list */
 	node_list_t::iterator it = iter;
-	it++;
+	while (numAhead--)
+		it++;
 	clear_node_list(&node_list, it, node_list.end());
 }
 

@@ -13,7 +13,7 @@
 
 class ModelAction;
 
-typedef std::list< const ModelAction *, MyAlloc< const ModelAction * > > readfrom_set_t;
+typedef std::vector< const ModelAction *, MyAlloc< const ModelAction * > > readfrom_set_t;
 
 /**
  * @brief A single node in a NodeStack
@@ -32,6 +32,7 @@ public:
 	bool has_been_explored(thread_id_t tid);
 	/* return true = backtrack set is empty */
 	bool backtrack_empty();
+	bool readsfrom_empty();
 	void explore_child(ModelAction *act);
 	/* return false = thread was already in backtrack */
 	bool set_backtrack(thread_id_t id);
@@ -44,7 +45,8 @@ public:
 	Node * get_parent() const { return parent; }
 
 	void add_read_from(const ModelAction *act);
-	const ModelAction * get_next_read_from();
+	const ModelAction * get_read_from();
+	bool increment_read_from();
 
 	void print();
 	void print_may_read_from();
@@ -63,6 +65,7 @@ private:
 	/** The set of ModelActions that this the action at this Node may read
 	 *  from. Only meaningful if this Node represents a 'read' action. */
 	readfrom_set_t may_read_from;
+	unsigned int read_from_index;
 };
 
 typedef std::list< Node *, MyAlloc< Node * > > node_list_t;
@@ -83,7 +86,7 @@ public:
 	Node * get_head();
 	Node * get_next();
 	void reset_execution();
-	void pop_restofstack();
+	void pop_restofstack(int numAhead);
 	int get_total_nodes() { return total_nodes; }
 
 	void print();

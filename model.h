@@ -21,6 +21,7 @@
 
 /* Forward declaration */
 class NodeStack;
+class CycleGraph;
 
 /** @brief The central structure for model-checking */
 class ModelChecker {
@@ -55,6 +56,7 @@ public:
 	int switch_to_master(ModelAction *act);
 	ClockVector * get_cv(thread_id_t tid);
 	bool next_execution();
+	bool isfeasible();
 
 	MEMALLOC
 private:
@@ -81,6 +83,9 @@ private:
 	ModelAction * get_parent_action(thread_id_t tid);
 	ModelAction * get_last_seq_cst(const void *location);
 	void build_reads_from_past(ModelAction *curr);
+	void r_modification_order(ModelAction * curr, const ModelAction *rf);
+	void w_modification_order(ModelAction * curr);
+
 
 	ModelAction *current_action;
 	ModelAction *diverge;
@@ -98,6 +103,7 @@ private:
 	std::vector<ModelAction *> *thrd_last_action;
 	NodeStack *node_stack;
 	ModelAction *next_backtrack;
+	CycleGraph * cyclegraph;
 };
 
 extern ModelChecker *model;

@@ -31,6 +31,8 @@ static int thread_system_next(void) {
 			ASSERT(false);
 	}
 	next = model->scheduler->next_thread();
+	if (!model->isfeasible())
+		return 1;
 	if (next)
 		next->set_state(THREAD_RUNNING);
 	DEBUG("(%d, %d)\n", curr ? curr->get_id() : -1, next ? next->get_id() : -1);

@@ -7,6 +7,7 @@
 #include "snapshot-interface.h"
 #include "common.h"
 #include "clockvector.h"
+#include "cyclegraph.h"
 
 #define INITIAL_THREAD_ID	0
 
@@ -31,7 +32,8 @@ ModelChecker::ModelChecker()
 	obj_thrd_map(new std::map<void *, std::vector<action_list_t> >()),
 	thrd_last_action(new std::vector<ModelAction *>(1)),
 	node_stack(new NodeStack()),
-	next_backtrack(NULL)
+	next_backtrack(NULL),
+	cyclegraph(new CycleGraph())
 {
 }
 
@@ -49,6 +51,7 @@ ModelChecker::~ModelChecker()
 	delete thrd_last_action;
 	delete node_stack;
 	delete scheduler;
+	delete cyclegraph;
 }
 
 /**
@@ -279,8 +282,6 @@ void ModelChecker::check_current_action(void)
 
 	set_backtracking(curr);
 
-	add_action_to_lists(curr);
-
 	/* Assign reads_from values */
 	/* TODO: perform release/acquire synchronization here; include
 	 * reads_from as ModelAction member? */
@@ -291,8 +292,80 @@ void ModelChecker::check_current_action(void)
 		value = reads_from->get_value();
 		/* Assign reads_from, perform release/acquire synchronization */
 		curr->read_from(reads_from);
+		r_modification_order(curr,reads_from);
+	} else if (curr->is_write()) {
+		w_modification_order(curr);
 	}
+
 	th->set_return_value(value);
+
+	/* Add action to list last.  */
+	add_action_to_lists(curr);
+}
+
+bool ModelChecker::isfeasible() {
+	return !cyclegraph->checkForCycles();
+}
+
+void ModelChecker::r_modification_order(ModelAction * curr, const ModelAction *rf) {
+	std::vector<action_list_t> *thrd_lists = &(*obj_thrd_map)[curr->get_location()];
+	unsigned int i;
+	ASSERT(curr->is_read());
+
+	/* Iterate over all threads */
+	for (i = 0; i < thrd_lists->size(); i++) {
+		/* Iterate over actions in thread, starting from most recent */
+		action_list_t *list = &(*thrd_lists)[i];
+		action_list_t::reverse_iterator rit;
+		for (rit = list->rbegin(); rit != list->rend(); rit++) {
+			ModelAction *act = *rit;
+
+			/* Include at most one act per-thread that "happens before" curr */
+			if (act->happens_before(curr)) {
+				if (act->is_read()) {
+					const ModelAction * prevreadfrom=act->get_reads_from();
+					if (rf!=prevreadfrom)
+						cyclegraph->addEdge(rf, prevreadfrom);
+				} else if (rf!=act) {
+					cyclegraph->addEdge(rf, act);
+				}
+				break;
+			}
+		}
+	}
+}
+
+void ModelChecker::w_modification_order(ModelAction * curr) {
+	std::vector<action_list_t> *thrd_lists = &(*obj_thrd_map)[curr->get_location()];
+	unsigned int i;
+	ASSERT(curr->is_write());
+
+	if (curr->is_seqcst()) {
+		/* We have to at least see the last sequentially consistent write,
+			 so we are initialized. */
+		ModelAction * last_seq_cst=get_last_seq_cst(curr->get_location());
+		if (last_seq_cst!=NULL)
+			cyclegraph->addEdge(curr, last_seq_cst);
+	}
+
+	/* Iterate over all threads */
+	for (i = 0; i < thrd_lists->size(); i++) {
+		/* Iterate over actions in thread, starting from most recent */
+		action_list_t *list = &(*thrd_lists)[i];
+		action_list_t::reverse_iterator rit;
+		for (rit = list->rbegin(); rit != list->rend(); rit++) {
+			ModelAction *act = *rit;
+
+			/* Include at most one act per-thread that "happens before" curr */
+			if (act->happens_before(curr)) {
+				if (act->is_read()) {
+					cyclegraph->addEdge(curr, act->get_reads_from());
+				} else
+					cyclegraph->addEdge(curr, act);
+				break;
+			}
+		}
+	}
 }
 
 /**
@@ -446,6 +519,8 @@ void ModelChecker::print_summary(void)
 	printf("\n");
 	printf("Number of executions: %d\n", num_executions);
 	printf("Total nodes created: %d\n", node_stack->get_total_nodes());
+	if (!isfeasible())
+		printf("INFEASIBLE EXECUTION!\n");
 
 	scheduler->print();
 

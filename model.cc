@@ -516,11 +516,17 @@ static void print_list(action_list_t *list)
 
 void ModelChecker::print_summary(void)
 {
+	if (!isfeasible()) {
+		if (DBG_ENABLED())
+			printf("INFEASIBLE EXECUTION!\n");
+		else
+			return;
+	}
+
 	printf("\n");
 	printf("Number of executions: %d\n", num_executions);
 	printf("Total nodes created: %d\n", node_stack->get_total_nodes());
-	if (!isfeasible())
-		printf("INFEASIBLE EXECUTION!\n");
+
 
 	scheduler->print();
 

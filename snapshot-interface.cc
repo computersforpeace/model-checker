@@ -57,7 +57,7 @@ static void SnapshotGlobalSegments(){
 		if (buf[0]=='\n')
 			break;
 
-		sscanf(buf, "%22s %p-%p [%5dK] %c%c%c/%c%c%c SM=%3s %200s\n", &type, &begin, &end, &size, &r, &w, &x, &mr, &mw, &mx, smstr, regionname);
+		sscanf(buf, "%22s %p-%p [%5dK] %c%c%c/%c%c%c SM=%3s %200s\n", type, &begin, &end, &size, &r, &w, &x, &mr, &mw, &mx, smstr, regionname);
 
 		if (w == 'w' && (strstr(regionname, MYBINARYNAME) || strstr(regionname, MYLIBRARYNAME))) {
 			size_t len = ((uintptr_t)end - (uintptr_t)begin) / PAGESIZE;

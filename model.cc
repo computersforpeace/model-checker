@@ -332,10 +332,9 @@ bool ModelChecker::isfeasible() {
 /** Process a RMW by converting previous read into a RMW. */
 void ModelChecker::process_rmw(ModelAction * act) {
 	int tid = id_to_int(act->get_tid());
-	std::vector<action_list_t> *vec = &(*obj_thrd_map)[act->get_location()];
-	ASSERT(tid < (int) vec->size());
-	ModelAction *lastread=(*vec)[tid].back();
+	ModelAction *lastread=get_last_action(tid);
 	lastread->upgrade_rmw(act);
+	cyclegraph->addRMWEdge(lastread->get_reads_from(),lastread);
 }
 
 /**

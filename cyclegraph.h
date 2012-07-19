@@ -15,6 +15,7 @@ class CycleGraph {
 	~CycleGraph();
 	void addEdge(const ModelAction *from, const ModelAction *to);
 	bool checkForCycles();
+	void addRMWEdge(const ModelAction *from, const ModelAction *to);
 
  private:
 	CycleNode * getNode(const ModelAction *);
@@ -28,10 +29,12 @@ class CycleNode {
 	CycleNode(const ModelAction *action);
 	void addEdge(CycleNode * node);
 	std::vector<CycleNode *> * getEdges();
+	bool setRMW();
 
  private:
 	const ModelAction *action;
 	std::vector<CycleNode *> edges;
+	bool hasRMW;
 };
 
 #endif

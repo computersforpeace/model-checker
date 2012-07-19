@@ -30,6 +30,29 @@ void CycleGraph::addEdge(const ModelAction *from, const ModelAction *to) {
 	fromnode->addEdge(tonode);
 }
 
+void CycleGraph::addRMWEdge(const ModelAction *from, const ModelAction *rmw) {
+	CycleNode *fromnode=getNode(from);
+	CycleNode *rmwnode=getNode(rmw);
+
+	/* Two RMW actions cannot read from the same write. */
+	if (fromnode->setRMW())
+		hasCycles=true;
+
+	/* Transfer all outgoing edges from the from node to the rmw node */
+	/* This process cannot add a cycle because rmw should not have any
+		 incoming edges yet.*/
+	std::vector<CycleNode *> * edges=fromnode->getEdges();
+	for(unsigned int i=0;edges->size();i++) {
+		CycleNode * tonode=(*edges)[i];
+		rmwnode->addEdge(tonode);
+	}
+	if (!hasCycles) {
+		hasCycles=checkReachable(rmwnode, fromnode);
+	}
+	fromnode->addEdge(rmwnode);
+}
+
+
 /** Checks whether the first CycleNode can reach the second one. */
 bool CycleGraph::checkReachable(CycleNode *from, CycleNode *to) {
 	std::vector<CycleNode *> queue;
@@ -72,4 +95,10 @@ std::vector<CycleNode *> * CycleNode::getEdges() {
 /** Adds an edge to a CycleNode. */
 void CycleNode::addEdge(CycleNode * node) {
 	edges.push_back(node);
+}
+
+bool CycleNode::setRMW() {
+	bool oldhasRMW=hasRMW;
+	hasRMW=true;
+	return oldhasRMW;
 }

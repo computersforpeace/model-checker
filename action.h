@@ -80,6 +80,8 @@ public:
 		return get_seq_number() > act.get_seq_number();
 	}
 
+	void upgrade_rmw(ModelAction * act);
+
 	MEMALLOC
 private:
 
@@ -95,8 +97,7 @@ private:
 	/** The thread id that performed this action. */
 	thread_id_t tid;
 
-	/** The value read or written (if RMW, then the value written). This
-	 * should probably be something longer. */
+	/** The value written (for write or RMW; undefined for read) */
 	uint64_t value;
 
 	/** The action that this action reads from. Only valid for reads */

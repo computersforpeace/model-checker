@@ -83,6 +83,7 @@ private:
 	ModelAction * get_parent_action(thread_id_t tid);
 	ModelAction * get_last_seq_cst(const void *location);
 	void build_reads_from_past(ModelAction *curr);
+	void process_rmw(ModelAction * curr);
 	void r_modification_order(ModelAction * curr, const ModelAction *rf);
 	void w_modification_order(ModelAction * curr);
 

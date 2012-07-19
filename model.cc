@@ -252,6 +252,15 @@ void ModelChecker::check_current_action(void)
 		return;
 	}
 
+	if (curr->is_rmw()) {
+		//We have a RMW action
+		process_rmw(curr);
+		//Force the current thread to continue since the RMW should be atomic
+		nextThread = thread_current()->get_id();
+		delete curr;
+		return;
+	}
+
 	tmp = node_stack->explore_action(curr);
 	if (tmp) {
 		/* Discard duplicate ModelAction; use action from NodeStack */
@@ -273,6 +282,10 @@ void ModelChecker::check_current_action(void)
 		Thread *th = (Thread *)curr->get_location();
 		th->set_creation(curr);
 	}
+
+	/* Is there a better interface for setting the next thread rather
+		 than this field/convoluted approach?  Perhaps like just returning
+		 it or something? */
 
 	nextThread = get_next_replay_thread();
 
@@ -308,6 +321,15 @@ void ModelChecker::check_current_action(void)
 
 bool ModelChecker::isfeasible() {
 	return !cyclegraph->checkForCycles();
+}
+
+/** Process a RMW by converting previous read into a RMW. */
+void ModelChecker::process_rmw(ModelAction * act) {
+	int tid = id_to_int(act->get_tid());
+	std::vector<action_list_t> *vec = &(*obj_thrd_map)[act->get_location()];
+	ASSERT(tid < (int) vec->size());
+	ModelAction *lastread=(*vec)[tid].back();
+	lastread->upgrade_rmw(act);
 }
 
 void ModelChecker::r_modification_order(ModelAction * curr, const ModelAction *rf) {

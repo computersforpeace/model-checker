@@ -73,56 +73,54 @@ inline void atomic_flag::fence( memory_order __x__ ) const volatile
 #endif
 
 
-#define _ATOMIC_LOAD_( __a__, __x__ ) \
-({ volatile __typeof__((__a__)->__f__)* __p__ = &((__a__)->__f__); \
-   volatile atomic_flag* __g__ = __atomic_flag_for_address__( __p__ ); \
-   __atomic_flag_wait_explicit__( __g__, __x__ ); \
-   __typeof__((__a__)->__f__) __r__ = *__p__; \
-   atomic_flag_clear_explicit( __g__, __x__ ); \
-   __r__; })
+/*
+        The remainder of the example implementation uses the following
+        macros. These macros exploit GNU extensions for value-returning
+        blocks (AKA statement expressions) and __typeof__.
 
-#define _ATOMIC_STORE_( __a__, __m__, __x__ ) \
-({ volatile __typeof__((__a__)->__f__)* __p__ = &((__a__)->__f__); \
-   __typeof__(__m__) __v__ = (__m__); \
-   volatile atomic_flag* __g__ = __atomic_flag_for_address__( __p__ ); \
-   __atomic_flag_wait_explicit__( __g__, __x__ ); \
-   *__p__ = __v__; \
-   atomic_flag_clear_explicit( __g__, __x__ ); \
-   __v__; })
+        The macros rely on data fields of atomic structs being named __f__.
+        Other symbols used are __a__=atomic, __e__=expected, __f__=field,
+        __g__=flag, __m__=modified, __o__=operation, __r__=result,
+        __p__=pointer to field, __v__=value (for single evaluation),
+        __x__=memory-ordering, and __y__=memory-ordering.
+*/
 
-#define _ATOMIC_MODIFY_( __a__, __o__, __m__, __x__ ) \
-({ volatile __typeof__((__a__)->__f__)* __p__ = &((__a__)->__f__); \
-   __typeof__(__m__) __v__ = (__m__); \
-   volatile atomic_flag* __g__ = __atomic_flag_for_address__( __p__ ); \
-   __atomic_flag_wait_explicit__( __g__, __x__ ); \
-   __typeof__((__a__)->__f__) __r__ = *__p__; \
-   *__p__ __o__ __v__; \
-   atomic_flag_clear_explicit( __g__, __x__ ); \
-   __r__; })
-
-#define _ATOMIC_CMPSWP_( __a__, __e__, __m__, __x__ ) \
-({ volatile __typeof__((__a__)->__f__)* __p__ = &((__a__)->__f__); \
-   __typeof__(__e__) __q__ = (__e__); \
-   __typeof__(__m__) __v__ = (__m__); \
-   bool __r__; \
-   volatile atomic_flag* __g__ = __atomic_flag_for_address__( __p__ ); \
-   __atomic_flag_wait_explicit__( __g__, __x__ ); \
-   __typeof__((__a__)->__f__) __t__ = *__p__; \
-   if ( __t__ == *__q__ ) { *__p__ = __v__; __r__ = true; } \
-   else { *__q__ = __t__; __r__ = false; } \
-   atomic_flag_clear_explicit( __g__, __x__ ); \
-   __r__; })
-
-#define _ATOMIC_FENCE_( __a__, __x__ ) \
-({ volatile __typeof__((__a__)->__f__)* __p__ = &((__a__)->__f__); \
-   volatile atomic_flag* __g__ = __atomic_flag_for_address__( __p__ ); \
-   atomic_flag_fence( __g__, __x__ ); \
-   })
+#define _ATOMIC_LOAD_( __a__, __x__ )																		\
+	({ model->switch_to_master(new ModelAction(ATOMIC_READ, __x__, __a__)); \
+		((__typeof__((__a__)->__f__)) (thread_current()->get_return_value())); \
+	})
 
 
-#define ATOMIC_INTEGRAL_LOCK_FREE 0
-#define ATOMIC_ADDRESS_LOCK_FREE 0
+#define _ATOMIC_STORE_( __a__, __m__, __x__ )														\
+	({__typeof__(__m__) __v__ = (__m__);																	\
+		model->switch_to_master(new ModelAction(ATOMIC_WRITE, __x__, __a__, __v__)); \
+		__v__; })
 
+#define _ATOMIC_MODIFY_( __a__, __o__, __m__, __x__ )										\
+	({ model->switch_to_master(new ModelAction(ATOMIC_READ, __x__, __a__));	\
+		__typeof__((__a__)->__f__) __old__=(__typeof__((__a__)->__f__)) thread_current()->get_return_value();	\
+		__typeof__(__m__) __v__ = (__m__);																	\
+		__typeof__((__a__)->__f__) __copy__= __old__;												\
+		__copy__ __o__ __v__;																								\
+		model->switch_to_master(new ModelAction(ATOMIC_RMW, __x__, __a__, __copy__));	\
+		__old__; })
+
+#define _ATOMIC_CMPSWP_( __a__, __e__, __m__, __x__ )										\
+  ({ __typeof__(__e__) __q__ = (__e__);																	\
+		__typeof__(__m__) __v__ = (__m__);																	\
+		bool __r__;																													\
+		model->switch_to_master(new ModelAction(ATOMIC_READ, __x__, __a__)); \
+		__typeof__((__a__)->__f__) __t__=(__typeof__((__a__)->__f__)) thread_current()->get_return_value();	\
+		if (__t__ == * __q__ ) {																						\
+			model->switch_to_master(new ModelAction(ATOMIC_RMW, __x__, __a__, __v__)); __r__ = true; } \
+		else {  *__q__ = __t__;  __r__ = false;}														\
+		__r__; })
+
+#define _ATOMIC_FENCE_( __a__, __x__ )					\
+	({ ASSERT(0);})
+
+#define ATOMIC_INTEGRAL_LOCK_FREE 1
+#define ATOMIC_ADDRESS_LOCK_FREE 1
 
 typedef struct atomic_bool
 {

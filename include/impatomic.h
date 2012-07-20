@@ -86,33 +86,37 @@ inline void atomic_flag::fence( memory_order __x__ ) const volatile
 */
 
 #define _ATOMIC_LOAD_( __a__, __x__ )																		\
-	({ model->switch_to_master(new ModelAction(ATOMIC_READ, __x__, __a__)); \
+	({ volatile __typeof__((__a__)->__f__)* __p__ = ((__a__)->__f__);			\
+		model->switch_to_master(new ModelAction(ATOMIC_READ, __x__, __p__)); \
 		((__typeof__((__a__)->__f__)) (thread_current()->get_return_value())); \
 	})
 
 
 #define _ATOMIC_STORE_( __a__, __m__, __x__ )														\
-	({__typeof__(__m__) __v__ = (__m__);																	\
-		model->switch_to_master(new ModelAction(ATOMIC_WRITE, __x__, __a__, __v__)); \
+	({ volatile __typeof__((__a__)->__f__)* __p__ = ((__a__)->__f__);			\
+		__typeof__(__m__) __v__ = (__m__);																	\
+		model->switch_to_master(new ModelAction(ATOMIC_WRITE, __x__, __p__, __v__)); \
 		__v__; })
 
 #define _ATOMIC_MODIFY_( __a__, __o__, __m__, __x__ )										\
-	({ model->switch_to_master(new ModelAction(ATOMIC_READ, __x__, __a__));	\
+	({ volatile __typeof__((__a__)->__f__)* __p__ = ((__a__)->__f__);			\
+    model->switch_to_master(new ModelAction(ATOMIC_READ, __x__, __p__)); \
 		__typeof__((__a__)->__f__) __old__=(__typeof__((__a__)->__f__)) thread_current()->get_return_value();	\
 		__typeof__(__m__) __v__ = (__m__);																	\
 		__typeof__((__a__)->__f__) __copy__= __old__;												\
 		__copy__ __o__ __v__;																								\
-		model->switch_to_master(new ModelAction(ATOMIC_RMW, __x__, __a__, __copy__));	\
+		model->switch_to_master(new ModelAction(ATOMIC_RMW, __x__, __p__, __copy__));	\
 		__old__; })
 
 #define _ATOMIC_CMPSWP_( __a__, __e__, __m__, __x__ )										\
-  ({ __typeof__(__e__) __q__ = (__e__);																	\
+	({ volatile __typeof__((__a__)->__f__)* __p__ = ((__a__)->__f__);			\
+		__typeof__(__e__) __q__ = (__e__);																	\
 		__typeof__(__m__) __v__ = (__m__);																	\
 		bool __r__;																													\
-		model->switch_to_master(new ModelAction(ATOMIC_READ, __x__, __a__)); \
+		model->switch_to_master(new ModelAction(ATOMIC_READ, __x__, __p__)); \
 		__typeof__((__a__)->__f__) __t__=(__typeof__((__a__)->__f__)) thread_current()->get_return_value();	\
 		if (__t__ == * __q__ ) {																						\
-			model->switch_to_master(new ModelAction(ATOMIC_RMW, __x__, __a__, __v__)); __r__ = true; } \
+			model->switch_to_master(new ModelAction(ATOMIC_RMW, __x__, __p__, __v__)); __r__ = true; } \
 		else {  *__q__ = __t__;  __r__ = false;}														\
 		__r__; })
 
@@ -2116,11 +2120,9 @@ inline void atomic_fence
 inline void* atomic_fetch_add_explicit
 ( volatile atomic_address* __a__, ptrdiff_t __m__, memory_order __x__ )
 { void* volatile* __p__ = &((__a__)->__f__);
-  volatile atomic_flag* __g__ = __atomic_flag_for_address__( __p__ );
-  __atomic_flag_wait_explicit__( __g__, __x__ );
-  void* __r__ = *__p__;
-  *__p__ = (void*)((char*)(*__p__) + __m__);
-  atomic_flag_clear_explicit( __g__, __x__ );
+	model->switch_to_master(new ModelAction(ATOMIC_READ, __x__, __p__));
+	void* __r__ = (void *) thread_current()->get_return_value();
+	model->switch_to_master(new ModelAction(ATOMIC_RMW, __x__, __p__, (void*)((char*)(*__p__) + __m__)));
   return __r__; }
 
 inline void* atomic_fetch_add
@@ -2131,11 +2133,9 @@ inline void* atomic_fetch_add
 inline void* atomic_fetch_sub_explicit
 ( volatile atomic_address* __a__, ptrdiff_t __m__, memory_order __x__ )
 { void* volatile* __p__ = &((__a__)->__f__);
-  volatile atomic_flag* __g__ = __atomic_flag_for_address__( __p__ );
-  __atomic_flag_wait_explicit__( __g__, __x__ );
-  void* __r__ = *__p__;
-  *__p__ = (void*)((char*)(*__p__) - __m__);
-  atomic_flag_clear_explicit( __g__, __x__ );
+	model->switch_to_master(new ModelAction(ATOMIC_READ, __x__, __p__));
+	void* __r__ = (void *) thread_current()->get_return_value();
+	model->switch_to_master(new ModelAction(ATOMIC_RMW, __x__, __p__, (void*)((char*)(*__p__) - __m__)));
   return __r__; }
 
 inline void* atomic_fetch_sub

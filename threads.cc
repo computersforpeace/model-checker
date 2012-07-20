@@ -1,3 +1,8 @@
+/** @file threads.cc
+ *  @brief Thread functions.
+ */
+
+
 #include "libthreads.h"
 #include "common.h"
 #include "threads.h"
@@ -27,12 +32,12 @@ Thread * thread_current(void)
  * Provides a startup wrapper for each thread, allowing some initial
  * model-checking data to be recorded. This method also gets around makecontext
  * not being 64-bit clean
+ * @todo We should make the START event always immediately follow the
+ * CREATE event, so we don't get redundant traces...
  */
+
 void thread_startup() {
 	Thread * curr_thread = thread_current();
-
-	/* TODO -- we should make this event always immediately follow the
-		 CREATE event, so we don't get redundant traces...  */
 
 	/* Add dummy "start" action, just to create a first clock vector */
 	model->switch_to_master(new ModelAction(THREAD_START, std::memory_order_seq_cst, curr_thread));

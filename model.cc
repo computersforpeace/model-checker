@@ -536,7 +536,7 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 	}
 
 	if (!initialized) {
-		/* TODO: need a more informative way of reporting errors */
+		/** @todo Need a more informative way of reporting errors. */
 		printf("ERROR: may read from uninitialized atomic\n");
 	}
 

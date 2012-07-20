@@ -114,7 +114,7 @@ bool Node::set_backtrack(thread_id_t id)
 
 thread_id_t Node::get_next_backtrack()
 {
-	/* TODO: find next backtrack */
+	/** @todo Find next backtrack */
 	unsigned int i;
 	for (i = 0; i < backtrack.size(); i++)
 		if (backtrack[i] == true)

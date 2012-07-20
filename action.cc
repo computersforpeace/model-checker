@@ -103,11 +103,9 @@ void ModelAction::copy_typeandorder(ModelAction * act) {
 /** This method changes an existing read part of an RMW action into either:
  *  (1) a full RMW action in case of the completed write or
  *  (2) a READ action in case a failed action.
+ * @todo  If the memory_order changes, we may potentially need to update our
+ * clock vector.
  */
-
-//TODO:  If the memory_order changes, we may potentially need to update our
-//clock vector.
-
 void ModelAction::process_rmw(ModelAction * act) {
 	this->order=act->order;
 	if (act->is_rmwc())
@@ -127,7 +125,6 @@ void ModelAction::process_rmw(ModelAction * act) {
  *  @param act is the action to consider exploring a reordering.
  *  @return tells whether we have to explore a reordering.
  */
-
 bool ModelAction::is_synchronizing(const ModelAction *act) const
 {
 	//Same thread can't be reordered

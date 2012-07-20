@@ -14,6 +14,15 @@ void model_init_action(void * obj, uint64_t val) {
 	model->switch_to_master(new ModelAction(ATOMIC_INIT, memory_order_relaxed, obj, val));
 }
 
+uint64_t model_rmwr_action(void *obj, memory_order ord) {
+	model->switch_to_master(new ModelAction(ATOMIC_RMWR, ord, obj));
+	return thread_current()->get_return_value();
+}
+
 void model_rmw_action(void *obj, memory_order ord, uint64_t val) {
 	model->switch_to_master(new ModelAction(ATOMIC_RMW, ord, obj, val));
+}
+
+void model_rmwc_action(void *obj, memory_order ord) {
+	model->switch_to_master(new ModelAction(ATOMIC_RMWC, ord, obj));
 }

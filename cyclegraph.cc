@@ -20,35 +20,53 @@ CycleNode * CycleGraph::getNode(const ModelAction * action) {
 }
 
 /** Adds an edge between two ModelActions. */
-void CycleGraph::addEdge(const ModelAction *from, const ModelAction *to) {
+
+//the event to happens after the event from
+
+void CycleGraph::addEdge(const ModelAction *to, const ModelAction *from) {
 	CycleNode *fromnode=getNode(from);
 	CycleNode *tonode=getNode(to);
+
 	if (!hasCycles) {
 		// Check for Cycles
 		hasCycles=checkReachable(tonode, fromnode);
 	}
 	fromnode->addEdge(tonode);
+
+	CycleNode * rmwnode=fromnode->getRMW();
+
+	//If the fromnode has a rmwnode that is not the tonode, we
+	//should add an edge between its rmwnode and the tonode
+
+	if (rmwnode!=NULL&&rmwnode!=tonode) {
+		if (!hasCycles) {
+			// Check for Cycles
+			hasCycles=checkReachable(tonode, rmwnode);
+		}
+		rmwnode->addEdge(tonode);
+	}
 }
 
-void CycleGraph::addRMWEdge(const ModelAction *from, const ModelAction *rmw) {
+//event rmw that reads from the node from
+
+void CycleGraph::addRMWEdge(const ModelAction *rmw, const ModelAction * from) {
 	CycleNode *fromnode=getNode(from);
 	CycleNode *rmwnode=getNode(rmw);
 
 	/* Two RMW actions cannot read from the same write. */
-	if (fromnode->setRMW())
+	if (fromnode->setRMW(rmwnode)) {
 		hasCycles=true;
+	}
 
 	/* Transfer all outgoing edges from the from node to the rmw node */
 	/* This process cannot add a cycle because rmw should not have any
 		 incoming edges yet.*/
 	std::vector<CycleNode *> * edges=fromnode->getEdges();
-	for(unsigned int i=0;edges->size();i++) {
+	for(unsigned int i=0;i<edges->size();i++) {
 		CycleNode * tonode=(*edges)[i];
 		rmwnode->addEdge(tonode);
 	}
-	if (!hasCycles) {
-		hasCycles=checkReachable(rmwnode, fromnode);
-	}
+
 	fromnode->addEdge(rmwnode);
 }
 
@@ -85,6 +103,7 @@ bool CycleGraph::checkForCycles() {
 /** Constructor for a CycleNode. */
 CycleNode::CycleNode(const ModelAction *modelaction) {
 	action=modelaction;
+	hasRMW=NULL;
 }
 
 /** Returns a vector of the edges from a CycleNode. */
@@ -97,8 +116,12 @@ void CycleNode::addEdge(CycleNode * node) {
 	edges.push_back(node);
 }
 
-bool CycleNode::setRMW() {
-	bool oldhasRMW=hasRMW;
-	hasRMW=true;
-	return oldhasRMW;
+CycleNode* CycleNode::getRMW() {
+	return hasRMW;
+}
+
+bool CycleNode::setRMW(CycleNode * node) {
+	CycleNode * oldhasRMW=hasRMW;
+	hasRMW=node;
+	return (oldhasRMW!=NULL);
 }

@@ -250,36 +250,37 @@ ModelAction * ModelChecker::get_next_backtrack()
 void ModelChecker::check_current_action(void)
 {
 	ModelAction *curr = this->current_action;
-	ModelAction *tmp;
-	current_action = NULL;
+	bool already_added = false;
+	this->current_action = NULL;
 	if (!curr) {
 		DEBUG("trying to push NULL action...\n");
 		return;
 	}
 
-	if (curr->is_rmw()) {
-		//We have a RMW action
-		process_rmw(curr);
-		//Force the current thread to continue since the RMW should be atomic
-		nextThread = thread_current()->get_id();
+	if (curr->is_rmwc()||curr->is_rmw()) {
+		ModelAction *tmp=process_rmw(curr);
+		already_added = true;
 		delete curr;
-		return;
-	}
-
-	tmp = node_stack->explore_action(curr);
-	if (tmp) {
-		/* Discard duplicate ModelAction; use action from NodeStack */
-		delete curr;
-		curr = tmp;
+		curr=tmp;
 	} else {
-		/*
-		 * Perform one-time actions when pushing new ModelAction onto
-		 * NodeStack
-		 */
-		curr->create_cv(get_parent_action(curr->get_tid()));
-		/* Build may_read_from set */
-		if (curr->is_read())
-			build_reads_from_past(curr);
+		ModelAction * tmp = node_stack->explore_action(curr);
+		if (tmp) {
+			/* Discard duplicate ModelAction; use action from NodeStack */
+			/* First restore type and order in case of RMW operation */
+			if (curr->is_rmwr())
+				tmp->copy_typeandorder(curr);
+			delete curr;
+			curr = tmp;
+		} else {
+			/*
+			 * Perform one-time actions when pushing new ModelAction onto
+			 * NodeStack
+			 */
+			curr->create_cv(get_parent_action(curr->get_tid()));
+			/* Build may_read_from set */
+			if (curr->is_read())
+				build_reads_from_past(curr);
+		}
 	}
 
 	/* Assign 'creation' parent */
@@ -287,21 +288,6 @@ void ModelChecker::check_current_action(void)
 		Thread *th = (Thread *)curr->get_location();
 		th->set_creation(curr);
 	}
-
-	/* Is there a better interface for setting the next thread rather
-		 than this field/convoluted approach?  Perhaps like just returning
-		 it or something? */
-
-	nextThread = get_next_replay_thread();
-
-	Node *currnode = curr->get_node();
-	Node *parnode = currnode->get_parent();
-
-	if (!parnode->backtrack_empty()||!currnode->readsfrom_empty())
-		if (!next_backtrack || *curr > *next_backtrack)
-			next_backtrack = curr;
-
-	set_backtracking(curr);
 
 	/* Assign reads_from values */
 	Thread *th = get_thread(curr->get_tid());
@@ -318,8 +304,30 @@ void ModelChecker::check_current_action(void)
 
 	th->set_return_value(value);
 
-	/* Add action to list last.  */
-	add_action_to_lists(curr);
+	/* Add action to list.  */
+	if (!already_added)
+		add_action_to_lists(curr);
+
+	/* Do not split atomic actions. */
+	if (curr->is_rmwr()) {
+		nextThread = thread_current()->get_id();
+		return;
+	}
+
+	/* Is there a better interface for setting the next thread rather
+		 than this field/convoluted approach?  Perhaps like just returning
+		 it or something? */
+
+	nextThread = get_next_replay_thread();
+
+	Node *currnode = curr->get_node();
+	Node *parnode = currnode->get_parent();
+
+	if (!parnode->backtrack_empty()||!currnode->readsfrom_empty())
+		if (!next_backtrack || *curr > *next_backtrack)
+			next_backtrack = curr;
+
+	set_backtracking(curr);
 }
 
 /** @returns whether the current trace is feasible. */
@@ -327,12 +335,14 @@ bool ModelChecker::isfeasible() {
 	return !cyclegraph->checkForCycles();
 }
 
-/** Process a RMW by converting previous read into a RMW. */
-void ModelChecker::process_rmw(ModelAction * act) {
+/** Close out a RMWR by converting previous RMWR into a RMW or READ. */
+ModelAction * ModelChecker::process_rmw(ModelAction * act) {
 	int tid = id_to_int(act->get_tid());
 	ModelAction *lastread=get_last_action(tid);
-	lastread->upgrade_rmw(act);
-	cyclegraph->addRMWEdge(lastread->get_reads_from(),lastread);
+	lastread->process_rmw(act);
+	if (act->is_rmw())
+		cyclegraph->addRMWEdge(lastread, lastread->get_reads_from());
+	return lastread;
 }
 
 /**

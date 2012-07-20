@@ -6,7 +6,7 @@ namespace std {
 
 bool atomic_flag_test_and_set_explicit ( volatile atomic_flag * __a__, memory_order __x__ ) {
 	volatile bool * __p__ = &((__a__)->__f__);
-	model->switch_to_master(new ModelAction(ATOMIC_READ, __x__, (void *) __p__));
+	model->switch_to_master(new ModelAction(ATOMIC_RMWR, __x__, (void *) __p__));
 	bool result = (bool) thread_current()->get_return_value();
 	model->switch_to_master(new ModelAction(ATOMIC_RMW, __x__, (void *) __p__, true));
 	return result;

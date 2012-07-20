@@ -91,7 +91,8 @@ public:
 		return get_seq_number() > act.get_seq_number();
 	}
 
-	void upgrade_rmw(ModelAction * act);
+	void process_rmw(ModelAction * act);
+	void copy_typeandorder(ModelAction * act);
 
 	MEMALLOC
 private:

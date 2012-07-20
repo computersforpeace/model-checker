@@ -29,12 +29,13 @@ class CycleNode {
 	CycleNode(const ModelAction *action);
 	void addEdge(CycleNode * node);
 	std::vector<CycleNode *> * getEdges();
-	bool setRMW();
+	bool setRMW(CycleNode *);
+	CycleNode* getRMW();
 
  private:
 	const ModelAction *action;
 	std::vector<CycleNode *> edges;
-	bool hasRMW;
+	CycleNode * hasRMW;
 };
 
 #endif

@@ -92,7 +92,7 @@ inline void atomic_flag::fence( memory_order __x__ ) const volatile
 
 #define _ATOMIC_MODIFY_( __a__, __o__, __m__, __x__ )										\
 	({ volatile __typeof__((__a__)->__f__)* __p__ = & ((__a__)->__f__);			\
-	__typeof__((__a__)->__f__) __old__=(__typeof__((__a__)->__f__)) model_read_action((void *)__p__, __x__); \
+	__typeof__((__a__)->__f__) __old__=(__typeof__((__a__)->__f__)) model_rmwr_action((void *)__p__, __x__); \
 	__typeof__(__m__) __v__ = (__m__);																		\
 	__typeof__((__a__)->__f__) __copy__= __old__;													\
 	__copy__ __o__ __v__;																									\
@@ -104,10 +104,10 @@ inline void atomic_flag::fence( memory_order __x__ ) const volatile
 		__typeof__(__e__) __q__ = (__e__);																	\
 		__typeof__(__m__) __v__ = (__m__);																	\
 		bool __r__;																													\
-		__typeof__((__a__)->__f__) __t__=(__typeof__((__a__)->__f__)) model_read_action((void *)__p__, __x__);\
+		__typeof__((__a__)->__f__) __t__=(__typeof__((__a__)->__f__)) model_rmwr_action((void *)__p__, __x__);\
 		if (__t__ == * __q__ ) {																						\
 			model_rmw_action((void *)__p__, __x__, (uint64_t) __v__); __r__ = true; } \
-		else {  *__q__ = __t__;  __r__ = false;}														\
+		else {  model_rmwc_action((void *)__p__, __x__); *__q__ = __t__;  __r__ = false;} \
 		__r__; })
 
 //TODO
@@ -2121,7 +2121,7 @@ inline void* atomic_fetch_add_explicit
 ( volatile atomic_address* __a__, ptrdiff_t __m__, memory_order __x__ )
 {
 	void* volatile* __p__ = &((__a__)->__f__);
-	void* __r__ = (void *) model_read_action((void *)__p__, __x__);
+	void* __r__ = (void *) model_rmwr_action((void *)__p__, __x__);
 	model_rmw_action((void *)__p__, __x__, (uint64_t) ((char*)(*__p__) + __m__));
   return __r__; }
 
@@ -2134,7 +2134,7 @@ inline void* atomic_fetch_sub_explicit
 ( volatile atomic_address* __a__, ptrdiff_t __m__, memory_order __x__ )
 {
 	void* volatile* __p__ = &((__a__)->__f__);
-	void* __r__ = (void *) model_read_action((void *)__p__, __x__);
+	void* __r__ = (void *) model_rmwr_action((void *)__p__, __x__);
 	model_rmw_action((void *)__p__, __x__, (uint64_t)((char*)(*__p__) - __m__));
   return __r__; }
 

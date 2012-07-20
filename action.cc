@@ -95,13 +95,19 @@ bool ModelAction::same_thread(const ModelAction *act) const
 	return tid == act->tid;
 }
 
-void ModelAction::upgrade_rmw(ModelAction * act) {
-	ASSERT(is_read());
-	ASSERT(act->is_rmw());
-	//Upgrade our type to the act's type
+void ModelAction::copy_typeandorder(ModelAction * act) {
 	this->type=act->type;
 	this->order=act->order;
-	this->value=act->value;
+}
+
+void ModelAction::process_rmw(ModelAction * act) {
+	this->order=act->order;
+	if (act->is_rmwc())
+		this->type=ATOMIC_READ;
+	else if (act->is_rmw()) {
+		this->type=ATOMIC_RMW;
+		this->value=act->value;
+	}
 }
 
 /** The is_synchronizing method should only explore interleavings if:
@@ -206,7 +212,7 @@ void ModelAction::print(void) const
 		type_str = "unknown type";
 	}
 
-	uint64_t valuetoprint=type==ATOMIC_READ?reads_from->value:value;
+	uint64_t valuetoprint=type==ATOMIC_READ?(reads_from!=NULL?reads_from->value:VALUE_NONE):value;
 
 	printf("(%3d) Thread: %-2d    Action: %-13s    MO: %d    Loc: %14p    Value: %-12" PRIu64,
 			seq_number, id_to_int(tid), type_str, order, location, valuetoprint);

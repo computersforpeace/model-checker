@@ -118,7 +118,6 @@ Thread * ModelChecker::schedule_next_thread()
  */
 thread_id_t ModelChecker::get_next_replay_thread()
 {
-	ModelAction *next;
 	thread_id_t tid;
 
 	/* Have we completed exploring the preselected path? */
@@ -126,7 +125,7 @@ thread_id_t ModelChecker::get_next_replay_thread()
 		return THREAD_ID_T_NONE;
 
 	/* Else, we are trying to replay an execution */
-	next = node_stack->get_next()->get_action();
+	ModelAction * next = node_stack->get_next()->get_action();
 
 	if (next == diverge) {
 		Node *nextnode = next->get_node();
@@ -308,17 +307,16 @@ void ModelChecker::check_current_action(void)
 	if (!already_added)
 		add_action_to_lists(curr);
 
-	/* Do not split atomic actions. */
-	if (curr->is_rmwr()) {
-		nextThread = thread_current()->get_id();
-		return;
-	}
-
 	/* Is there a better interface for setting the next thread rather
 		 than this field/convoluted approach?  Perhaps like just returning
 		 it or something? */
 
-	nextThread = get_next_replay_thread();
+	/* Do not split atomic actions. */
+	if (curr->is_rmwr()) {
+		nextThread = thread_current()->get_id();
+	} else {
+		nextThread = get_next_replay_thread();
+	}
 
 	Node *currnode = curr->get_node();
 	Node *parnode = currnode->get_parent();

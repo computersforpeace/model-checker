@@ -51,9 +51,6 @@ extern void __atomic_flag_wait__
 ( volatile atomic_flag* );
 extern void __atomic_flag_wait_explicit__
 ( volatile atomic_flag*, memory_order );
-extern volatile atomic_flag* __atomic_flag_for_address__
-( const volatile void* __z__ )
-__attribute__((const));
 
 #ifdef __cplusplus
 }
@@ -123,7 +120,14 @@ inline void atomic_flag::fence( memory_order __x__ ) const volatile
 #define _ATOMIC_FENCE_( __a__, __x__ )					\
 	({ ASSERT(0);})
 
-#define ATOMIC_INTEGRAL_LOCK_FREE 1
+#define ATOMIC_CHAR_LOCK_FREE 1
+#define ATOMIC_CHAR16_T_LOCK_FREE 1
+#define ATOMIC_CHAR32_T_LOCK_FREE 1
+#define ATOMIC_WCHAR_T_LOCK_FREE 1
+#define ATOMIC_SHORT_LOCK_FREE 1
+#define ATOMIC_INT_LOCK_FREE 1
+#define ATOMIC_LONG_LOCK_FREE 1
+#define ATOMIC_LLONG_LOCK_FREE 1
 #define ATOMIC_ADDRESS_LOCK_FREE 1
 
 typedef struct atomic_bool

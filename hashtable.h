@@ -36,7 +36,7 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift=0, void * (*
 			struct hashlistnode<_Key,_Val> * bin = table[i];
 			while(bin!=NULL) {
 				struct hashlistnode<_Key,_Val> * next=bin->next;
-				_free(bin);
+				delete bin;
 				bin=next;
 			}
 		}
@@ -65,7 +65,7 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift=0, void * (*
 			struct hashlistnode<_Key,_Val> * bin = table[i];
 			while(bin!=NULL) {
 				struct hashlistnode<_Key,_Val> * next=bin->next;
-				_free(bin);
+				delete bin;
 				bin=next;
 			}
 		}
@@ -93,7 +93,7 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift=0, void * (*
 			search=search->next;
 		}
 
-		struct hashlistnode<_Key,_Val> *newptr=(struct hashlistnode<_Key,_Val> *)_malloc(sizeof(struct hashlistnode<_Key,_Val>));
+		struct hashlistnode<_Key,_Val> *newptr=(struct hashlistnode<_Key,_Val> *)new struct hashlistnode<_Key,_Val>;
 		newptr->key=key;
 		newptr->val=val;
 		newptr->next=ptr;

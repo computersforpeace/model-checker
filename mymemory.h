@@ -28,6 +28,7 @@
 #define SNAPSHOTALLOC
 
 void *MYMALLOC(size_t size);
+void *MYCALLOC(size_t count, size_t size);
 void MYFREE(void *ptr);
 
 void system_free( void * ptr );

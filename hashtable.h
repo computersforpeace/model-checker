@@ -18,7 +18,7 @@ template<typename _Key, typename _Val>
 /** Hashtable class.  By default it is snapshotting, but you can pass
 		in your own allocation functions. */
 
-template<typename _Key, typename _Val, typename _KeyInt, int _Shift, void * (* _malloc)(size_t)=malloc, void * (* _calloc)(size_t, size_t)=calloc, void (*_free)(void *)=free>
+template<typename _Key, typename _Val, typename _KeyInt, int _Shift=0, void * (* _malloc)(size_t)=malloc, void * (* _calloc)(size_t, size_t)=calloc, void (*_free)(void *)=free>
 	class HashTable {
  public:
 	HashTable(unsigned int initialcapacity=1024, double factor=0.5) {
@@ -100,6 +100,32 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift, void * (* _
 		table[(((_KeyInt)key)&mask)>>_Shift]=newptr;
 	}
 
+	/** Put a key entry into the table. */
+  _Val * ensureptr(_Key key) {
+		if(size > threshold) {
+			//Resize
+		  unsigned int newsize = capacity << 1;
+		  resize(newsize);
+	  }
+
+	  struct hashlistnode<_Key,_Val> *ptr = table[(((_KeyInt)key) & mask)>>_Shift];
+		size++;
+		struct hashlistnode<_Key,_Val> *search = ptr;
+
+		while(search!=NULL) {
+			if (search->key==key) {
+				return &search->val;
+			}
+			search=search->next;
+		}
+
+		struct hashlistnode<_Key,_Val> *newptr=(struct hashlistnode<_Key,_Val> *)new struct hashlistnode<_Key,_Val>;
+		newptr->key=key;
+		newptr->next=ptr;
+		table[(((_KeyInt)key)&mask)>>_Shift]=newptr;
+		return &newptr->val;
+	}
+
 	/** Lookup the corresponding value for the given key. */
 	_Val get(_Key key) {
 		struct hashlistnode<_Key,_Val> *search = table[(((_KeyInt)key) & mask)>>_Shift];
@@ -111,6 +137,19 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift, void * (* _
 			search=search->next;
 		}
 		return (_Val)0;
+	}
+
+	/** Lookup the corresponding value for the given key. */
+	_Val * getptr(_Key key) {
+		struct hashlistnode<_Key,_Val> *search = table[(((_KeyInt)key) & mask)>>_Shift];
+
+		while(search!=NULL) {
+			if (search->key==key) {
+				return & search->val;
+			}
+			search=search->next;
+		}
+		return (_Val *) NULL;
 	}
 
 	/** Check whether the table contains a value for the given key. */

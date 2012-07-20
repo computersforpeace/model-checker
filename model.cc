@@ -27,9 +27,9 @@ ModelChecker::ModelChecker()
 	diverge(NULL),
 	nextThread(THREAD_ID_T_NONE),
 	action_trace(new action_list_t()),
-	thread_map(new std::map<int, Thread *>),
-	obj_map(new std::map<const void *, action_list_t>()),
-	obj_thrd_map(new std::map<void *, std::vector<action_list_t> >()),
+	thread_map(new HashTable<int, Thread *, int>()),
+	obj_map(new HashTable<const void *, action_list_t, uintptr_t, 4>()),
+	obj_thrd_map(new HashTable<void *, std::vector<action_list_t>, uintptr_t, 4 >()),
 	thrd_last_action(new std::vector<ModelAction *>(1)),
 	node_stack(new NodeStack()),
 	next_backtrack(NULL),
@@ -40,9 +40,9 @@ ModelChecker::ModelChecker()
 /** @brief Destructor */
 ModelChecker::~ModelChecker()
 {
-	std::map<int, Thread *>::iterator it;
+	/*	std::map<int, Thread *>::iterator it;
 	for (it = thread_map->begin(); it != thread_map->end(); it++)
-		delete (*it).second;
+	delete (*it).second;*/
 	delete thread_map;
 
 	delete obj_thrd_map;
@@ -102,7 +102,7 @@ Thread * ModelChecker::schedule_next_thread()
 	Thread *t;
 	if (nextThread == THREAD_ID_T_NONE)
 		return NULL;
-	t = (*thread_map)[id_to_int(nextThread)];
+	t = thread_map->get(id_to_int(nextThread));
 
 	ASSERT(t != NULL);
 
@@ -190,7 +190,7 @@ ModelAction * ModelChecker::get_last_conflict(ModelAction *act)
 			return NULL;
 	}
 	/* linear search: from most recent to oldest */
-	action_list_t *list = &(*obj_map)[act->get_location()];
+	action_list_t *list = obj_map->ensureptr(act->get_location());
 	action_list_t::reverse_iterator rit;
 	for (rit = list->rbegin(); rit != list->rend(); rit++) {
 		ModelAction *prev = *rit;
@@ -349,7 +349,7 @@ ModelAction * ModelChecker::process_rmw(ModelAction * act) {
  * @param rf The action that curr reads from. Must be a write.
  */
 void ModelChecker::r_modification_order(ModelAction * curr, const ModelAction *rf) {
-	std::vector<action_list_t> *thrd_lists = &(*obj_thrd_map)[curr->get_location()];
+	std::vector<action_list_t> *thrd_lists = obj_thrd_map->ensureptr(curr->get_location());
 	unsigned int i;
 	ASSERT(curr->is_read());
 
@@ -381,7 +381,7 @@ void ModelChecker::r_modification_order(ModelAction * curr, const ModelAction *r
  * @param curr The current action. Must be a write.
  */
 void ModelChecker::w_modification_order(ModelAction * curr) {
-	std::vector<action_list_t> *thrd_lists = &(*obj_thrd_map)[curr->get_location()];
+	std::vector<action_list_t> *thrd_lists = obj_thrd_map->ensureptr(curr->get_location());
 	unsigned int i;
 	ASSERT(curr->is_write());
 
@@ -425,9 +425,9 @@ void ModelChecker::add_action_to_lists(ModelAction *act)
 	int tid = id_to_int(act->get_tid());
 	action_trace->push_back(act);
 
-	(*obj_map)[act->get_location()].push_back(act);
+	obj_map->ensureptr(act->get_location())->push_back(act);
 
-	std::vector<action_list_t> *vec = &(*obj_thrd_map)[act->get_location()];
+	std::vector<action_list_t> *vec = obj_thrd_map->ensureptr(act->get_location());
 	if (tid >= (int)vec->size())
 		vec->resize(next_thread_id);
 	(*vec)[tid].push_back(act);
@@ -453,7 +453,7 @@ ModelAction * ModelChecker::get_last_action(thread_id_t tid)
  */
 ModelAction * ModelChecker::get_last_seq_cst(const void *location)
 {
-	action_list_t *list = &(*obj_map)[location];
+	action_list_t *list = obj_map->ensureptr(location);
 	/* Find: max({i in dom(S) | seq_cst(t_i) && isWrite(t_i) && samevar(t_i, t)}) */
 	action_list_t::reverse_iterator rit;
 	for (rit = list->rbegin(); rit != list->rend(); rit++)
@@ -488,7 +488,7 @@ ClockVector * ModelChecker::get_cv(thread_id_t tid) {
  */
 void ModelChecker::build_reads_from_past(ModelAction *curr)
 {
-	std::vector<action_list_t> *thrd_lists = &(*obj_thrd_map)[curr->get_location()];
+	std::vector<action_list_t> *thrd_lists = obj_thrd_map->ensureptr(curr->get_location());
 	unsigned int i;
 	ASSERT(curr->is_read());
 
@@ -580,7 +580,7 @@ void ModelChecker::print_summary(void)
 
 int ModelChecker::add_thread(Thread *t)
 {
-	(*thread_map)[id_to_int(t->get_id())] = t;
+	thread_map->put(id_to_int(t->get_id()), t);
 	scheduler->add_thread(t);
 	return 0;
 }

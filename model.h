@@ -6,7 +6,6 @@
 #define __MODEL_H__
 
 #include <list>
-#include <map>
 #include <vector>
 #include <cstddef>
 #include <ucontext.h>
@@ -46,7 +45,7 @@ public:
 
 	int add_thread(Thread *t);
 	void remove_thread(Thread *t);
-	Thread * get_thread(thread_id_t tid) { return (*thread_map)[id_to_int(tid)]; }
+	Thread * get_thread(thread_id_t tid) { return thread_map->get(id_to_int(tid)); }
 
 	thread_id_t get_next_id();
 	int get_num_threads();
@@ -93,13 +92,13 @@ private:
 
 	ucontext_t *system_context;
 	action_list_t *action_trace;
-	std::map<int, Thread *> *thread_map;
+	HashTable<int, Thread *, int> *thread_map;
 
 	/** Per-object list of actions. Maps an object (i.e., memory location)
 	 * to a trace of all actions performed on the object. */
-	std::map<const void *, action_list_t> *obj_map;
+	HashTable<const void *, action_list_t, uintptr_t, 4> *obj_map;
 
-	std::map<void *, std::vector<action_list_t> > *obj_thrd_map;
+	HashTable<void *, std::vector<action_list_t>, uintptr_t, 4 > *obj_thrd_map;
 	std::vector<ModelAction *> *thrd_last_action;
 	NodeStack *node_stack;
 	ModelAction *next_backtrack;

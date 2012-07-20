@@ -3,7 +3,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include <stdlib.h>
-#include <map>
+#include "hashtable.h"
 #include <cstring>
 #include <cstdio>
 #include "snapshot.h"
@@ -281,7 +281,7 @@ snapshot_id takeSnapshot( ){
  */
 void rollBack( snapshot_id theID ){
 #if USE_MPROTECT_SNAPSHOT
-	std::map< void *, bool, std::less< void * >, MyAlloc< std::pair< const void *, bool > > > duplicateMap;
+	HashTable< void *, bool, uintptr_t, 4, MYMALLOC, MYCALLOC, MYFREE> duplicateMap;
 	for(unsigned int region=0; region<snapshotrecord->lastRegion;region++) {
 		if( mprotect(snapshotrecord->regionsToSnapShot[region].basePtr, snapshotrecord->regionsToSnapShot[region].sizeInPages*sizeof(struct SnapShotPage), PROT_READ | PROT_WRITE ) == -1 ){
 			perror("mprotect");
@@ -290,14 +290,8 @@ void rollBack( snapshot_id theID ){
 		}
 	}
 	for(unsigned int page=snapshotrecord->snapShots[theID].firstBackingPage; page<snapshotrecord->lastBackingPage; page++) {
-		bool oldVal = false;
-		if( duplicateMap.find( snapshotrecord->backingRecords[page].basePtrOfPage ) != duplicateMap.end() ){
-			oldVal = true;
-		}
-		else{
-			duplicateMap[ snapshotrecord->backingRecords[page].basePtrOfPage ] = true;
-		}
-		if(  !oldVal ){
+		if( !duplicateMap.contains(snapshotrecord->backingRecords[page].basePtrOfPage )) {
+			duplicateMap.put(snapshotrecord->backingRecords[page].basePtrOfPage, true);
 			memcpy(snapshotrecord->backingRecords[page].basePtrOfPage, &snapshotrecord->backingStore[page], sizeof(struct SnapShotPage));
 		}
 	}

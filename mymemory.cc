@@ -13,10 +13,37 @@ int howManyFreed = 0;
 static mspace sStaticSpace = NULL;
 #endif
 
+/** Non-snapshotting calloc for our use. */
+void *MYCALLOC(size_t count, size_t size) {
+#if USE_MPROTECT_SNAPSHOT
+	static void *(*callocp)(size_t count, size_t size)=NULL;
+	char *error;
+	void *ptr;
+
+	/* get address of libc malloc */
+	if (!callocp) {
+		callocp = ( void * ( * )( size_t, size_t ) )dlsym(RTLD_NEXT, "calloc");
+		if ((error = dlerror()) != NULL) {
+			fputs(error, stderr);
+			exit(EXIT_FAILURE);
+		}
+	}
+	ptr = callocp(count, size);
+	return ptr;
+#else
+	if( !snapshotrecord) {
+		createSharedMemory();
+	}
+	if( NULL == sStaticSpace )
+		sStaticSpace = create_mspace_with_base( ( void * )( snapshotrecord->mSharedMemoryBase ), SHARED_MEMORY_DEFAULT -sizeof( struct SnapShot ), 1 );
+	return mspace_calloc( sStaticSpace, count, size );
+#endif
+}
+
 /** Non-snapshotting malloc for our use. */
 void *MYMALLOC(size_t size) {
 #if USE_MPROTECT_SNAPSHOT
-	static void *(*mallocp)(size_t size);
+	static void *(*mallocp)(size_t size)=NULL;
 	char *error;
 	void *ptr;
 

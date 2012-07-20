@@ -1,3 +1,7 @@
+/** @file cmodelint.h
+ *  @brief C interface to the model checker.
+ */
+
 #ifndef CMODELINT_H
 #define CMODELINT_H
 #include <inttypes.h>

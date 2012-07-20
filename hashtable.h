@@ -1,3 +1,7 @@
+/** @file hashtable.h
+ *  @brief Hashtable.  Standard chained bucket variety.
+ */
+
 #ifndef HASHTABLE_H
 #define HASHTABLE_H
 
@@ -36,6 +40,7 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift>
 		free(table);
 	}
 
+	/** Reset the table to its initial state. */
 	void reset() {
 		for(int i=0;i<capacity;i++) {
 			struct hashlistnode<_Key,_Val> * bin = table[i];
@@ -49,6 +54,7 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift>
 		size=0;
 	}
 
+	/** Put a key value pair into the table. */
 	void put(_Key key, _Val val) {
 		if(size > threshold) {
 			//Resize
@@ -75,6 +81,7 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift>
 		table[(((_KeyInt)key)&mask)>>_Shift]=newptr;
 	}
 
+	/** Lookup the corresponding value for the given key. */
 	_Val get(_Key key) {
 		struct hashlistnode<_Key,_Val> *search = table[(((_KeyInt)key) & mask)>>_Shift];
 
@@ -87,6 +94,7 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift>
 		return (_Val)0;
 	}
 
+	/** Check whether the table contains a value for the given key. */
 	bool contains(_Key key) {
 		struct hashlistnode<_Key,_Val> *search = table[(((_KeyInt)key) & mask)>>_Shift];
 
@@ -99,6 +107,7 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift>
 		return false;
 	}
 
+	/** Resize the table. */
 	void resize(unsigned int newsize) {
 		struct hashlistnode<_Key,_Val> ** oldtable = table;
 		struct hashlistnode<_Key,_Val> ** newtable;

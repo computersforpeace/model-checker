@@ -19,10 +19,10 @@ CycleNode * CycleGraph::getNode(const ModelAction * action) {
 	return node;
 }
 
-/** Adds an edge between two ModelActions. */
-
-//the event to happens after the event from
-
+/**
+ * Adds an edge between two ModelActions.  The ModelAction to happens after the
+ * ModelAction from.
+ */
 void CycleGraph::addEdge(const ModelAction *to, const ModelAction *from) {
 	CycleNode *fromnode=getNode(from);
 	CycleNode *tonode=getNode(to);
@@ -47,8 +47,11 @@ void CycleGraph::addEdge(const ModelAction *to, const ModelAction *from) {
 	}
 }
 
-//event rmw that reads from the node from
-
+/** Handles special case of a RMW action.  The ModelAction rmw reads
+ *  from the ModelAction from.  The key differences are: (1) no write
+ *  can occur in between the rmw and the from action.  Only one RMW
+ *  action can read from a given write.
+ */
 void CycleGraph::addRMWEdge(const ModelAction *rmw, const ModelAction * from) {
 	CycleNode *fromnode=getNode(from);
 	CycleNode *rmwnode=getNode(rmw);
@@ -116,10 +119,12 @@ void CycleNode::addEdge(CycleNode * node) {
 	edges.push_back(node);
 }
 
+/** Get the RMW CycleNode that reads from the current CycleNode. */
 CycleNode* CycleNode::getRMW() {
 	return hasRMW;
 }
 
+/** Set a RMW action node that reads from the current CycleNode. */
 bool CycleNode::setRMW(CycleNode * node) {
 	CycleNode * oldhasRMW=hasRMW;
 	hasRMW=node;

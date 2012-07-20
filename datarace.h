@@ -1,3 +1,7 @@
+/** @file datarace.h
+ *  @brief Data race detection code.
+ */
+
 #ifndef DATARACE_H
 #include "config.h"
 #include <stdint.h>
@@ -19,7 +23,7 @@ void raceCheckRead(thread_id_t thread, void *location, ClockVector *currClock);
 
 
 
-/** Encoding idea:
+/** Basic encoding idea:
  *	 (void *) Either:
  *	 (1) points to a full record or
  *

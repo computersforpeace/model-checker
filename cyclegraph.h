@@ -1,3 +1,7 @@
+/** @file cyclegraph.h @brief Data structure to track ordering
+ *  constraints on modification order.  The idea is to see whether a
+ *  total order exists that satisfies the ordering constriants.*/
+
 #ifndef CYCLEGRAPH_H
 #define CYCLEGRAPH_H
 

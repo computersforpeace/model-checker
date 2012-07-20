@@ -100,6 +100,14 @@ void ModelAction::copy_typeandorder(ModelAction * act) {
 	this->order=act->order;
 }
 
+/** This method changes an existing read part of an RMW action into either:
+ *  (1) a full RMW action in case of the completed write or
+ *  (2) a READ action in case a failed action.
+ */
+
+//TODO:  If the memory_order changes, we may potentially need to update our
+//clock vector.
+
 void ModelAction::process_rmw(ModelAction * act) {
 	this->order=act->order;
 	if (act->is_rmwc())
@@ -155,6 +163,8 @@ void ModelAction::create_cv(const ModelAction *parent)
 		cv = new ClockVector(NULL, this);
 }
 
+
+/** Update the model action's read_from action */
 void ModelAction::read_from(const ModelAction *act)
 {
 	ASSERT(cv);

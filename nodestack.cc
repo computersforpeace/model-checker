@@ -77,6 +77,11 @@ bool Node::backtrack_empty()
 	return (numBacktracks == 0);
 }
 
+
+/**
+ * Checks whether the readsfrom set for this node is empty.
+ * @return true if the readsfrom set is empty.
+ */
 bool Node::readsfrom_empty() {
 	return ((read_from_index+1)>=may_read_from.size());
 }
@@ -148,6 +153,10 @@ const ModelAction * Node::get_read_from() {
 	return may_read_from[read_from_index];
 }
 
+/**
+ * Increments the index into the readsfrom set to explore the next item.
+ * @return Returns false if we have explored all items.
+ */
 bool Node::increment_read_from() {
 	read_from_index++;
 	return (read_from_index<may_read_from.size());
@@ -225,7 +234,8 @@ ModelAction * NodeStack::explore_action(ModelAction *act)
  * destructor for each. This function is provided an offset which determines
  * how many nodes (relative to the current replay state) to save before popping
  * the stack.
- * @param numAhead The number of nodes to skip forward before popping the stack.
+ * @param numAhead gives the number of Nodes (including this Node) to skip over
+ * before removing nodes.
  */
 void NodeStack::pop_restofstack(int numAhead)
 {

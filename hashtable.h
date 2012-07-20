@@ -15,12 +15,15 @@ template<typename _Key, typename _Val>
 		struct hashlistnode<_Key,_Val> *next;
 	};
 
-template<typename _Key, typename _Val, typename _KeyInt, int _Shift>
+/** Hashtable class.  By default it is snapshotting, but you can pass
+		in your own allocation functions. */
+
+template<typename _Key, typename _Val, typename _KeyInt, int _Shift, void * (* _malloc)(size_t)=malloc, void * (* _calloc)(size_t, size_t)=calloc, void (*_free)(void *)=free>
 	class HashTable {
  public:
 	HashTable(unsigned int initialcapacity=1024, double factor=0.5) {
 		// Allocate space for the hash table
-		table = (struct hashlistnode<_Key,_Val> **) calloc(initialcapacity, sizeof(struct hashlistnode<_Key,_Val> *));
+		table = (struct hashlistnode<_Key,_Val> **) _calloc(initialcapacity, sizeof(struct hashlistnode<_Key,_Val> *));
 		loadfactor = factor;
 		capacity = initialcapacity;
 		threshold = (unsigned int) (initialcapacity*loadfactor);
@@ -33,11 +36,27 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift>
 			struct hashlistnode<_Key,_Val> * bin = table[i];
 			while(bin!=NULL) {
 				struct hashlistnode<_Key,_Val> * next=bin->next;
-				free(bin);
+				_free(bin);
 				bin=next;
 			}
 		}
-		free(table);
+		_free(table);
+	}
+
+	void * operator new(size_t size) {
+		return _malloc(size);
+	}
+
+	void operator delete(void *p, size_t size) {
+		_free(p);
+	}
+
+	void * operator new[](size_t size) {
+		return _malloc(size);
+	}
+
+	void operator delete[](void *p, size_t size) {\
+		_free(p);
 	}
 
 	/** Reset the table to its initial state. */
@@ -46,7 +65,7 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift>
 			struct hashlistnode<_Key,_Val> * bin = table[i];
 			while(bin!=NULL) {
 				struct hashlistnode<_Key,_Val> * next=bin->next;
-				free(bin);
+				_free(bin);
 				bin=next;
 			}
 		}
@@ -74,7 +93,7 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift>
 			search=search->next;
 		}
 
-		struct hashlistnode<_Key,_Val> *newptr=(struct hashlistnode<_Key,_Val> *)malloc(sizeof(struct hashlistnode<_Key,_Val>));
+		struct hashlistnode<_Key,_Val> *newptr=(struct hashlistnode<_Key,_Val> *)_malloc(sizeof(struct hashlistnode<_Key,_Val>));
 		newptr->key=key;
 		newptr->val=val;
 		newptr->next=ptr;
@@ -113,7 +132,7 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift>
 		struct hashlistnode<_Key,_Val> ** newtable;
 		unsigned int oldcapacity = capacity;
 
-		if((newtable = (struct hashlistnode<_Key,_Val> **) calloc(newsize, sizeof(struct hashlistnode<_Key,_Val> *))) == NULL) {
+		if((newtable = (struct hashlistnode<_Key,_Val> **) _calloc(newsize, sizeof(struct hashlistnode<_Key,_Val> *))) == NULL) {
 			printf("Calloc error %s %d\n", __FILE__, __LINE__);
 			exit(-1);
 		}
@@ -138,7 +157,7 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift>
 			}
 		}
 
-		free(oldtable);            //Free the memory of the old hash table
+		_free(oldtable);            //Free the memory of the old hash table
 	}
 
  private:

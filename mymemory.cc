@@ -126,38 +126,41 @@ mspace mySpace = NULL;
 /** This global references the unaligned memory address that was malloced for the snapshotting heap */
 void * basemySpace = NULL;
 
-/** Adding the fix for not able to allocate through a reimplemented calloc at the beginning before instantiating our allocator
-A bit circumspect about adding an sbrk. linux docs say to avoid using it... */
+/** Bootstrap allocation.  Problem is that the dynamic linker calls
+ *  require calloc to work and calloc requires the dynamic linker to
+ *	work.  */
+
+#define BOOTSTRAPBYTES 4096
+char bootstrapmemory[BOOTSTRAPBYTES];
+size_t offset=0;
+
 void * HandleEarlyAllocationRequest( size_t sz ){
-	if( 0 == mySpace ){
-		void * returnAddress = sbrk( sz );
-		if( nextRequest >= REQUESTS_BEFORE_ALLOC ){
-			exit( EXIT_FAILURE );
-		}
-		allocatedReqs[ nextRequest++ ] = ( size_t )returnAddress;
-		return returnAddress;
+	/*Align to 8 byte boundary*/
+	sz=(sz+7)&~7;
+
+	if (sz > (BOOTSTRAPBYTES-offset)) {
+		printf("OUT OF BOOTSTRAP MEMORY\n");
+		exit(EXIT_FAILURE);
 	}
-	return NULL;
+
+	void * pointer= (void *) & bootstrapmemory[offset];
+	offset+=sz;
+	return pointer;
 }
 
-/** The fact that I am not expecting more than a handful requests is implicit in my not using a binary search here*/
+/** Check whether this is bootstrapped memory that we should not
+		free. */
+
 bool DontFree( void * ptr ){
-	if( howManyFreed == nextRequest ) return false; //a minor optimization to reduce the number of instructions executed on each free call....
-	if( NULL == ptr ) return true;
-	for( int i =  nextRequest - 1; i >= 0; --i ){
-		if( allocatedReqs[ i ] ==  ( size_t )ptr ) {
-			++howManyFreed;
-			return true;
-		}
-	}
-	return false;
+	return (ptr>=(&bootstrapmemory[0])&&ptr<(&bootstrapmemory[BOOTSTRAPBYTES]));
 }
 
 /** Snapshotting malloc implementation for user programs. */
 void *malloc( size_t size ) {
-	void * earlyReq = HandleEarlyAllocationRequest( size );
-	if( earlyReq ) return earlyReq;
-	return mspace_malloc( mySpace, size );
+	if (mySpace)
+		return mspace_malloc( mySpace, size );
+	else
+		return HandleEarlyAllocationRequest( size );
 }
 
 /** Snapshotting free implementation for user programs. */
@@ -173,12 +176,13 @@ void *realloc( void *ptr, size_t size ){
 
 /** Snapshotting calloc implementation for user programs. */
 void * calloc( size_t num, size_t size ){
-	void * earlyReq = HandleEarlyAllocationRequest( size * num );
-	if( earlyReq ) {
-		std::memset( earlyReq, 0, size * num );
-		return earlyReq;
+	if (mySpace)
+		return mspace_calloc( mySpace, num, size );
+	else {
+		void *tmp=HandleEarlyAllocationRequest( size * num );
+		std::memset( tmp, 0, size * num );
+		return tmp;
 	}
-	return mspace_calloc( mySpace, num, size );
 }
 
 /** Snapshotting new operator for user programs. */

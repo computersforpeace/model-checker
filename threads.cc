@@ -2,7 +2,6 @@
  *  @brief Thread functions.
  */
 
-
 #include "libthreads.h"
 #include "common.h"
 #include "threads.h"
@@ -10,17 +9,19 @@
 /* global "model" object */
 #include "model.h"
 
-#define STACK_SIZE (1024 * 1024)
-
+/** Allocate a stack for a new thread. */
 static void * stack_allocate(size_t size)
 {
 	return malloc(size);
 }
 
+/** Free a stack for a terminated thread. */
 static void stack_free(void *stack)
 {
 	free(stack);
 }
+
+/** Return the currently executing thread. */
 
 Thread * thread_current(void)
 {
@@ -45,6 +46,11 @@ void thread_startup() {
 	/* Call the actual thread function */
 	curr_thread->start_routine(curr_thread->arg);
 }
+
+/** Create a thread context for a new thread so we can use
+ *  setcontext/getcontext/swapcontext to swap it out.
+ *  @return 0 on success.
+ */
 
 int Thread::create_context()
 {
@@ -75,6 +81,9 @@ int Thread::swap(ucontext_t *ctxt, Thread *t)
 	return swapcontext(ctxt, &t->context);
 }
 
+
+/** Terminate a thread and free its stack. */
+
 void Thread::complete()
 {
 	if (state != THREAD_COMPLETED) {
@@ -84,6 +93,12 @@ void Thread::complete()
 			stack_free(stack);
 	}
 }
+
+/** Create a new thread. 
+ *  Takes the following parameters:
+ *  @param t The thread identifier of the newly created thread.
+ *  @param func  The function that the thread will call.
+ *  @param a The parameter to pass to this function. */
 
 Thread::Thread(thrd_t *t, void (*func)(void *), void *a) :
 	start_routine(func),
@@ -109,6 +124,8 @@ Thread::~Thread()
 	complete();
 	model->remove_thread(this);
 }
+
+/** Return the thread_id_t corresponding to this Thread object. */
 
 thread_id_t Thread::get_id()
 {

@@ -6,15 +6,7 @@
 #define _SNAPSHOT_H
 
 #include "snapshot-interface.h"
-
-#define PAGESIZE 4096
-
-/* If USE_MPROTECT_SNAPSHOT=1, then snapshot by using mmap() and mprotect()
-   If USE_MPROTECT_SNAPSHOT=0, then snapshot by using fork() */
-#define USE_MPROTECT_SNAPSHOT 1
-
-/* Size of signal stack */
-#define SIGSTACKSIZE 32768
+#include "config.h"
 
 void addMemoryRegionToSnapShot( void * ptr, unsigned int numPages );
 snapshot_id takeSnapshot( );

@@ -16,10 +16,12 @@
 #include "threads.h"
 #include "action.h"
 #include "clockvector.h"
+#include "hashtable.h"
 
 /* Forward declaration */
 class NodeStack;
 class CycleGraph;
+class Promise;
 
 /** @brief The central structure for model-checking */
 class ModelChecker {
@@ -99,6 +101,7 @@ private:
 	HashTable<const void *, action_list_t, uintptr_t, 4> *obj_map;
 
 	HashTable<void *, std::vector<action_list_t>, uintptr_t, 4 > *obj_thrd_map;
+	std::vector<Promise *> * promises;
 	std::vector<ModelAction *> *thrd_last_action;
 	NodeStack *node_stack;
 	ModelAction *next_backtrack;

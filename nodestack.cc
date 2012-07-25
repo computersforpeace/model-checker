@@ -25,7 +25,9 @@ Node::Node(ModelAction *act, Node *par, int nthreads)
 	backtrack(num_threads),
 	numBacktracks(0),
 	may_read_from(),
-	read_from_index(0)
+	read_from_index(0),
+	future_values(),
+	future_index(0)
 {
 	if (act)
 		act->set_node(this);
@@ -54,6 +56,19 @@ void Node::print_may_read_from()
 	for (it = may_read_from.begin(); it != may_read_from.end(); it++)
 		(*it)->print();
 }
+
+/**
+ * Adds a value from a weakly ordered future write to backtrack to.
+ * @param value is the value to backtrack to.
+ */
+
+void Node::add_future_value(uint64_t value) {
+	for(int i=0;i<future_values.size();i++)
+		if (future_values[i]==value)
+			return;
+	future_values.push_back(value);
+}
+
 
 /**
  * Checks if the Thread associated with this thread ID has been explored from
@@ -86,8 +101,17 @@ bool Node::readsfrom_empty() {
 	return ((read_from_index+1)>=may_read_from.size());
 }
 
+/** 
+ * Checks whether the future_values set for this node is empty.
+ * @return true if the future_values set is empty.
+ */
+
+bool Node::futurevalues_empty() {
+	return ((future_index+1)>=future_values.size());
+}
+
 /**
- * Mark the appropriate backtracking infromation for exploring a thread choice.
+ * Mark the appropriate backtracking information for exploring a thread choice.
  * @param act The ModelAction to explore
  */
 void Node::explore_child(ModelAction *act)
@@ -142,6 +166,17 @@ void Node::add_read_from(const ModelAction *act)
 }
 
 /**
+ * Gets the next 'future_value' value from this Node. Only valid for a node
+ * where this->action is a 'read'.
+ * @return The first element in future_values
+ */
+
+uint64_t Node::get_future_value() {
+	ASSERT(future_index<future_values.size());
+	return future_values[future_index];
+}
+
+/**
  * Gets the next 'may_read_from' action from this Node. Only valid for a node
  * where this->action is a 'read'.
  * @todo Perform reads_from backtracking/replay properly, so that this function
@@ -160,6 +195,16 @@ const ModelAction * Node::get_read_from() {
 bool Node::increment_read_from() {
 	read_from_index++;
 	return (read_from_index<may_read_from.size());
+}
+
+/**
+ * Increments the index into the future_values set to explore the next item.
+ * @return Returns false if we have explored all values.
+ */
+
+bool Node::increment_future_values() {
+	future_index++;
+	return (future_index<future_values.size());
 }
 
 void Node::explore(thread_id_t tid)

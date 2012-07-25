@@ -14,6 +14,7 @@
 class ModelAction;
 
 typedef std::vector< const ModelAction *, MyAlloc< const ModelAction * > > readfrom_set_t;
+typedef std::vector< uint64_t, MyAlloc< uint64_t > > futurevalues_t;
 
 /**
  * @brief A single node in a NodeStack
@@ -33,6 +34,7 @@ public:
 	/* return true = backtrack set is empty */
 	bool backtrack_empty();
 	bool readsfrom_empty();
+	bool futurevalues_empty();
 	void explore_child(ModelAction *act);
 	/* return false = thread was already in backtrack */
 	bool set_backtrack(thread_id_t id);
@@ -44,9 +46,12 @@ public:
 	 * occurred previously in the stack. */
 	Node * get_parent() const { return parent; }
 
+	void add_future_value(uint64_t value);
 	void add_read_from(const ModelAction *act);
 	const ModelAction * get_read_from();
+	uint64_t get_future_value();
 	bool increment_read_from();
+	bool increment_future_values();
 
 	void print();
 	void print_may_read_from();
@@ -66,6 +71,9 @@ private:
 	 *  from. Only meaningful if this Node represents a 'read' action. */
 	readfrom_set_t may_read_from;
 	unsigned int read_from_index;
+
+	futurevalues_t future_values;
+	unsigned int future_index;
 };
 
 typedef std::list< Node *, MyAlloc< Node * > > node_list_t;

@@ -8,6 +8,7 @@
 #include "common.h"
 #include "clockvector.h"
 #include "cyclegraph.h"
+#include "promise.h"
 
 #define INITIAL_THREAD_ID	0
 
@@ -30,6 +31,7 @@ ModelChecker::ModelChecker()
 	thread_map(new HashTable<int, Thread *, int>()),
 	obj_map(new HashTable<const void *, action_list_t, uintptr_t, 4>()),
 	obj_thrd_map(new HashTable<void *, std::vector<action_list_t>, uintptr_t, 4 >()),
+	promises(new std::vector<Promise *>(1)),
 	thrd_last_action(new std::vector<ModelAction *>(1)),
 	node_stack(new NodeStack()),
 	next_backtrack(NULL),

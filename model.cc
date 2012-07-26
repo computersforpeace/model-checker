@@ -31,11 +31,12 @@ ModelChecker::ModelChecker()
 	thread_map(new HashTable<int, Thread *, int>()),
 	obj_map(new HashTable<const void *, action_list_t, uintptr_t, 4>()),
 	obj_thrd_map(new HashTable<void *, std::vector<action_list_t>, uintptr_t, 4 >()),
-	promises(new std::vector<Promise *>(1)),
+	promises(new std::vector<Promise *>()),
 	thrd_last_action(new std::vector<ModelAction *>(1)),
 	node_stack(new NodeStack()),
 	next_backtrack(NULL),
-	cyclegraph(new CycleGraph())
+	cyclegraph(new CycleGraph()),
+	failed_promise(false)
 {
 }
 
@@ -69,6 +70,7 @@ void ModelChecker::reset_to_initial_state()
 	used_sequence_numbers = 0;
 	nextThread = 0;
 	next_backtrack = NULL;
+	failed_promise = false;
 	snapshotObject->backTrackBeforeStep(0);
 }
 
@@ -133,7 +135,11 @@ thread_id_t ModelChecker::get_next_replay_thread()
 		Node *nextnode = next->get_node();
 		/* Reached divergence point */
 		if (nextnode->increment_read_from()) {
-			/* The next node will read from a different value */
+			/* The next node will read from a different value. */
+			tid = next->get_tid();
+			node_stack->pop_restofstack(2);
+		} else if (nextnode->increment_future_values()) {
+			/* The next node will try to read from a different future value. */
 			tid = next->get_tid();
 			node_stack->pop_restofstack(2);
 		} else {
@@ -290,15 +296,28 @@ void ModelChecker::check_current_action(void)
 		th->set_creation(curr);
 	}
 
+	/* Deal with new thread */
+	if (curr->get_type() == THREAD_START) {
+		check_promises(NULL, curr->get_cv());
+	}
+
 	/* Assign reads_from values */
 	Thread *th = get_thread(curr->get_tid());
 	uint64_t value = VALUE_NONE;
 	if (curr->is_read()) {
 		const ModelAction *reads_from = curr->get_node()->get_read_from();
-		value = reads_from->get_value();
-		/* Assign reads_from, perform release/acquire synchronization */
-		curr->read_from(reads_from);
-		r_modification_order(curr,reads_from);
+		if (reads_from!=NULL) {
+			value = reads_from->get_value();
+			/* Assign reads_from, perform release/acquire synchronization */
+			curr->read_from(reads_from);
+			r_modification_order(curr,reads_from);
+		} else {
+			/* Read from future value */
+			value = curr->get_node()->get_future_value();
+			curr->read_from(NULL);
+			Promise * valuepromise=new Promise(curr, value);
+			promises->push_back(valuepromise);
+		}
 	} else if (curr->is_write()) {
 		w_modification_order(curr);
 	}
@@ -323,16 +342,16 @@ void ModelChecker::check_current_action(void)
 	Node *currnode = curr->get_node();
 	Node *parnode = currnode->get_parent();
 
-	if (!parnode->backtrack_empty()||!currnode->readsfrom_empty())
+	if (!parnode->backtrack_empty()||!currnode->readsfrom_empty()||!currnode->futurevalues_empty())
 		if (!next_backtrack || *curr > *next_backtrack)
 			next_backtrack = curr;
-
+	
 	set_backtracking(curr);
 }
 
 /** @returns whether the current trace is feasible. */
 bool ModelChecker::isfeasible() {
-	return !cyclegraph->checkForCycles();
+	return !cyclegraph->checkForCycles() && !failed_promise;
 }
 
 /** Close out a RMWR by converting previous RMWR into a RMW or READ. */
@@ -410,6 +429,21 @@ void ModelChecker::w_modification_order(ModelAction * curr) {
 				} else
 					cyclegraph->addEdge(curr, act);
 				break;
+			} else {
+				if (act->is_read()&&!act->is_synchronizing(curr)&&!act->same_thread(curr)) {
+					/* We have an action that:
+						 (1) did not happen before us
+						 (2) is a read and we are a write
+						 (3) cannot synchronize with us
+						 (4) is in a different thread 
+						 =>
+						 that read could potentially read from our write.
+					*/
+
+					if (act->get_node()->add_future_value(curr->get_value())&&
+							(!next_backtrack || *act > * next_backtrack))
+						next_backtrack = act;
+				}
 			}
 		}
 	}
@@ -479,6 +513,25 @@ ModelAction * ModelChecker::get_parent_action(thread_id_t tid)
  */
 ClockVector * ModelChecker::get_cv(thread_id_t tid) {
 	return get_parent_action(tid)->get_cv();
+}
+
+/** Checks promises in response to change in ClockVector Threads. */
+
+void ModelChecker::check_promises(ClockVector *old_cv, ClockVector * merge_cv) {
+	for(unsigned int i=0;i<promises->size();i++) {
+		Promise * promise=(*promises)[i];
+		const ModelAction * act=promise->get_action();
+		if ((old_cv==NULL||!old_cv->synchronized_since(act))&&
+				merge_cv->synchronized_since(act)) {
+			//This thread is no longer able to send values back to satisfy the promise
+			int num_synchronized_threads=promise->increment_threads();
+			if (num_synchronized_threads==model->get_num_threads()) {
+				//Promise has failed
+				failed_promise = true;
+				return;
+			}
+		}
+	}
 }
 
 /**

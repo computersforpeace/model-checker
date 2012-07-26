@@ -14,6 +14,9 @@ class ModelAction;
 class Promise {
  public:
 	Promise(ModelAction * act, uint64_t value);
+	const ModelAction * get_action() { return read; }
+	int increment_threads() { return ++numthreads; }
+	
  private:
 	uint64_t value;
 	ModelAction *read;

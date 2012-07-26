@@ -57,6 +57,7 @@ public:
 	ClockVector * get_cv(thread_id_t tid);
 	bool next_execution();
 	bool isfeasible();
+	void check_promises(ClockVector *old_cv, ClockVector * merge_cv);
 
 	MEMALLOC
 private:
@@ -86,8 +87,7 @@ private:
 	ModelAction * process_rmw(ModelAction * curr);
 	void r_modification_order(ModelAction * curr, const ModelAction *rf);
 	void w_modification_order(ModelAction * curr);
-
-
+	
 	ModelAction *current_action;
 	ModelAction *diverge;
 	thread_id_t nextThread;
@@ -106,6 +106,7 @@ private:
 	NodeStack *node_stack;
 	ModelAction *next_backtrack;
 	CycleGraph * cyclegraph;
+	bool failed_promise;
 };
 
 extern ModelChecker *model;

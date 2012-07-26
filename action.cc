@@ -165,9 +165,20 @@ void ModelAction::create_cv(const ModelAction *parent)
 void ModelAction::read_from(const ModelAction *act)
 {
 	ASSERT(cv);
-	if (act->is_release() && this->is_acquire())
+	if (act->is_release() && this->is_acquire()) {
+		synchronized(act);
 		cv->merge(act->cv);
+	}
 	reads_from = act;
+}
+
+
+/** Synchronize the current thread with the thread corresponding to
+ *  the ModelAction parameter. */
+
+void ModelAction::synchronized(const ModelAction *act) {
+	model->check_promises(cv, act->cv);
+	cv->merge(act->cv);
 }
 
 /**

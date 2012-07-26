@@ -81,6 +81,8 @@ public:
 	void create_cv(const ModelAction *parent = NULL);
 	ClockVector * get_cv() const { return cv; }
 	void read_from(const ModelAction *act);
+	void synchronized(const ModelAction *act);
+
 
 	bool happens_before(const ModelAction *act) const;
 

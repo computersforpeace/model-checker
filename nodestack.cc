@@ -62,11 +62,12 @@ void Node::print_may_read_from()
  * @param value is the value to backtrack to.
  */
 
-void Node::add_future_value(uint64_t value) {
+bool Node::add_future_value(uint64_t value) {
 	for(int i=0;i<future_values.size();i++)
 		if (future_values[i]==value)
-			return;
+			return false;
 	future_values.push_back(value);
+	return true;
 }
 
 
@@ -184,8 +185,10 @@ uint64_t Node::get_future_value() {
  * @return The first element in may_read_from
  */
 const ModelAction * Node::get_read_from() {
-	ASSERT(read_from_index<may_read_from.size());
-	return may_read_from[read_from_index];
+	if (read_from_index<may_read_from.size())
+		return may_read_from[read_from_index];
+	else
+		return NULL;
 }
 
 /**

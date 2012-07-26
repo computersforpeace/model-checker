@@ -46,7 +46,7 @@ public:
 	 * occurred previously in the stack. */
 	Node * get_parent() const { return parent; }
 
-	void add_future_value(uint64_t value);
+	bool add_future_value(uint64_t value);
 	void add_read_from(const ModelAction *act);
 	const ModelAction * get_read_from();
 	uint64_t get_future_value();

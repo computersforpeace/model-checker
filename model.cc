@@ -22,7 +22,6 @@ ModelChecker::ModelChecker()
 	/* First thread created will have id INITIAL_THREAD_ID */
 	next_thread_id(INITIAL_THREAD_ID),
 	used_sequence_numbers(0),
-
 	num_executions(0),
 	current_action(NULL),
 	diverge(NULL),
@@ -320,6 +319,7 @@ void ModelChecker::check_current_action(void)
 		}
 	} else if (curr->is_write()) {
 		w_modification_order(curr);
+		resolve_promises(curr);
 	}
 
 	th->set_return_value(value);
@@ -515,6 +515,24 @@ ClockVector * ModelChecker::get_cv(thread_id_t tid) {
 	return get_parent_action(tid)->get_cv();
 }
 
+
+/** Resolve promises. */
+
+void ModelChecker::resolve_promises(ModelAction *curr) {
+	for(unsigned int i=0;i<promises->size();i++) {
+		Promise * promise=(*promises)[i];
+		const ModelAction * act=promise->get_action();
+		if (!act->happens_before(curr)&&
+				act->is_read()&&
+				!act->is_synchronizing(curr)&&
+				!act->same_thread(curr)&&
+				promise->get_value()==curr->get_value()) {
+			
+			
+		}
+	}
+}
+
 /** Checks promises in response to change in ClockVector Threads. */
 
 void ModelChecker::check_promises(ClockVector *old_cv, ClockVector * merge_cv) {
@@ -567,7 +585,7 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 		action_list_t::reverse_iterator rit;
 		for (rit = list->rbegin(); rit != list->rend(); rit++) {
 			ModelAction *act = *rit;
-
+			
 			/* Only consider 'write' actions */
 			if (!act->is_write())
 				continue;

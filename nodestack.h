@@ -15,6 +15,7 @@ class ModelAction;
 
 typedef std::vector< const ModelAction *, MyAlloc< const ModelAction * > > readfrom_set_t;
 typedef std::vector< uint64_t, MyAlloc< uint64_t > > futurevalues_t;
+typedef std::vector< uint32_t, MyAlloc< uint32_t > > promises_t;
 
 /**
  * @brief A single node in a NodeStack
@@ -33,8 +34,7 @@ public:
 	bool has_been_explored(thread_id_t tid);
 	/* return true = backtrack set is empty */
 	bool backtrack_empty();
-	bool readsfrom_empty();
-	bool futurevalues_empty();
+
 	void explore_child(ModelAction *act);
 	/* return false = thread was already in backtrack */
 	bool set_backtrack(thread_id_t id);
@@ -47,11 +47,19 @@ public:
 	Node * get_parent() const { return parent; }
 
 	bool add_future_value(uint64_t value);
+	uint64_t get_future_value();
+	bool increment_future_values();
+	bool futurevalues_empty();
+
 	void add_read_from(const ModelAction *act);
 	const ModelAction * get_read_from();
-	uint64_t get_future_value();
 	bool increment_read_from();
-	bool increment_future_values();
+	bool readsfrom_empty();
+
+	void set_promise(uint32_t i);
+	bool get_promise(uint32_t i);
+	bool increment_promises();
+	bool promises_empty();
 
 	void print();
 	void print_may_read_from();
@@ -73,6 +81,7 @@ private:
 	unsigned int read_from_index;
 
 	futurevalues_t future_values;
+	promises_t promises;
 	unsigned int future_index;
 };
 

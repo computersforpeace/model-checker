@@ -57,17 +57,58 @@ void Node::print_may_read_from()
 		(*it)->print();
 }
 
+void Node::set_promise(uint32_t i) {
+	if (i>=promises.size())
+		promises.resize(i+1,0);
+	promises[i]=1;
+}
+
+bool Node::get_promise(uint32_t i) {
+	return (promises[i]==2);
+}
+
+bool Node::increment_promises() {
+	for (unsigned int i=0;i<promises.size();i++) {
+		if (promises[i]==1) {
+			promises[i]=2;
+			do {
+				i--;
+				if (promises[i]==2)
+					promises[i]=1;
+			} while(i>0);
+			return true;
+		}
+	}
+	return false;
+}
+
+bool Node::promises_empty() {
+	for (unsigned int i=0;i<promises.size();i++)
+		if (promises[i]==1)
+			return false;
+	return true;
+}
+
 /**
  * Adds a value from a weakly ordered future write to backtrack to.
  * @param value is the value to backtrack to.
  */
 
 bool Node::add_future_value(uint64_t value) {
-	for(int i=0;i<future_values.size();i++)
+	for(unsigned int i=0;i<future_values.size();i++)
 		if (future_values[i]==value)
 			return false;
 	future_values.push_back(value);
 	return true;
+}
+
+/** 
+ * Checks whether the future_values set for this node is empty.
+ * @return true if the future_values set is empty.
+ */
+
+bool Node::futurevalues_empty() {
+	return ((future_index+1)>=future_values.size());
 }
 
 
@@ -102,14 +143,7 @@ bool Node::readsfrom_empty() {
 	return ((read_from_index+1)>=may_read_from.size());
 }
 
-/** 
- * Checks whether the future_values set for this node is empty.
- * @return true if the future_values set is empty.
- */
 
-bool Node::futurevalues_empty() {
-	return ((future_index+1)>=future_values.size());
-}
 
 /**
  * Mark the appropriate backtracking information for exploring a thread choice.

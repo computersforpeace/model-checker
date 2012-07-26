@@ -16,6 +16,7 @@ class Promise {
 	Promise(ModelAction * act, uint64_t value);
 	const ModelAction * get_action() { return read; }
 	int increment_threads() { return ++numthreads; }
+	uint64_t get_value() { return value; }
 	
  private:
 	uint64_t value;

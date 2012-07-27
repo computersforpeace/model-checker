@@ -195,7 +195,7 @@ bool ModelAction::happens_before(const ModelAction *act) const
 
 void ModelAction::print(void) const
 {
-	const char *type_str;
+	const char *type_str, *mo_str;
 	switch (this->type) {
 	case THREAD_CREATE:
 		type_str = "thread create";
@@ -233,8 +233,29 @@ void ModelAction::print(void) const
 
 	uint64_t valuetoprint=type==ATOMIC_READ?(reads_from!=NULL?reads_from->value:VALUE_NONE):value;
 
-	printf("(%3d) Thread: %-2d    Action: %-13s    MO: %d    Loc: %14p    Value: %-12" PRIu64,
-			seq_number, id_to_int(tid), type_str, order, location, valuetoprint);
+	switch (this->order) {
+	case std::memory_order_relaxed:
+		mo_str = "relaxed";
+		break;
+	case std::memory_order_acquire:
+		mo_str = "acquire";
+		break;
+	case std::memory_order_release:
+		mo_str = "release";
+		break;
+	case std::memory_order_acq_rel:
+		mo_str = "acq_rel";
+		break;
+	case std::memory_order_seq_cst:
+		mo_str = "seq_cst";
+		break;
+	default:
+		mo_str = "unknown";
+		break;
+	}
+
+	printf("(%3d) Thread: %-2d   Action: %-13s   MO: %7s  Loc: %14p  Value: %-12" PRIu64,
+			seq_number, id_to_int(tid), type_str, mo_str, location, valuetoprint);
 	if (reads_from)
 		printf(" Rf: %d", reads_from->get_seq_number());
 	if (cv) {

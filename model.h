@@ -57,6 +57,7 @@ public:
 	ClockVector * get_cv(thread_id_t tid);
 	bool next_execution();
 	bool isfeasible();
+	bool isfinalfeasible();
 	void check_promises(ClockVector *old_cv, ClockVector * merge_cv);
 
 	MEMALLOC

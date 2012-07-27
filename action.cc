@@ -152,7 +152,8 @@ bool ModelAction::is_synchronizing(const ModelAction *act) const
 
 void ModelAction::create_cv(const ModelAction *parent)
 {
-	ASSERT(cv == NULL);
+	if (cv)
+		delete cv;
 
 	if (parent)
 		cv = new ClockVector(parent->cv, this);
@@ -165,7 +166,7 @@ void ModelAction::create_cv(const ModelAction *parent)
 void ModelAction::read_from(const ModelAction *act)
 {
 	ASSERT(cv);
-	if (act->is_release() && this->is_acquire()) {
+	if (act!=NULL && act->is_release() && this->is_acquire()) {
 		synchronized(act);
 		cv->merge(act->cv);
 	}

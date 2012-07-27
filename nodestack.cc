@@ -27,7 +27,7 @@ Node::Node(ModelAction *act, Node *par, int nthreads)
 	may_read_from(),
 	read_from_index(0),
 	future_values(),
-	future_index(0)
+	future_index(-1)
 {
 	if (act)
 		act->set_node(this);
@@ -71,11 +71,11 @@ bool Node::increment_promises() {
 	for (unsigned int i=0;i<promises.size();i++) {
 		if (promises[i]==1) {
 			promises[i]=2;
-			do {
+			while (i>0) {
 				i--;
 				if (promises[i]==2)
 					promises[i]=1;
-			} while(i>0);
+			}
 			return true;
 		}
 	}
@@ -98,6 +98,7 @@ bool Node::add_future_value(uint64_t value) {
 	for(unsigned int i=0;i<future_values.size();i++)
 		if (future_values[i]==value)
 			return false;
+
 	future_values.push_back(value);
 	return true;
 }

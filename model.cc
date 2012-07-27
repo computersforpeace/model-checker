@@ -173,7 +173,7 @@ bool ModelChecker::next_execution()
 
 	num_executions++;
 
-	if (isfeasible() || DBG_ENABLED())
+	if (isfinalfeasible() || DBG_ENABLED())
 		print_summary();
 
 	if ((diverge = model->get_next_backtrack()) == NULL)
@@ -279,6 +279,12 @@ void ModelChecker::check_current_action(void)
 			/* First restore type and order in case of RMW operation */
 			if (curr->is_rmwr())
 				tmp->copy_typeandorder(curr);
+
+			/* If we have diverged, we need to reset the clock vector. */
+			if (diverge==NULL) {
+				tmp->create_cv(get_parent_action(tmp->get_tid()));
+			}
+			
 			delete curr;
 			curr = tmp;
 		} else {
@@ -358,6 +364,11 @@ void ModelChecker::check_current_action(void)
 /** @returns whether the current trace is feasible. */
 bool ModelChecker::isfeasible() {
 	return !cyclegraph->checkForCycles() && !failed_promise;
+}
+
+/** Returns whether the current trace is feasible. */
+bool ModelChecker::isfinalfeasible() {
+	return isfeasible() && promises->size()==0;
 }
 
 /** Close out a RMWR by converting previous RMWR into a RMW or READ. */
@@ -445,7 +456,6 @@ void ModelChecker::w_modification_order(ModelAction * curr) {
 						 =>
 						 that read could potentially read from our write.
 					*/
-
 					if (act->get_node()->add_future_value(curr->get_value())&&
 							(!next_backtrack || *act > * next_backtrack))
 						next_backtrack = act;
@@ -525,13 +535,15 @@ ClockVector * ModelChecker::get_cv(thread_id_t tid) {
 /** Resolve promises. */
 
 void ModelChecker::resolve_promises(ModelAction *write) {
-	for(unsigned int i=0;i<promises->size();i++) {
-		Promise * promise=(*promises)[i];
+	for(unsigned int i=0, promise_index=0;promise_index<promises->size(); i++) {
+		Promise * promise=(*promises)[promise_index];
 		if (write->get_node()->get_promise(i)) {
 			ModelAction * read=promise->get_action();
 			read->read_from(write);
 			r_modification_order(read, write);
-		}
+			promises->erase(promises->begin()+promise_index);
+		} else
+			promise_index++;
 	}
 }
 
@@ -661,7 +673,7 @@ void ModelChecker::print_summary(void)
 
 	scheduler->print();
 
-	if (!isfeasible())
+	if (!isfinalfeasible())
 		printf("INFEASIBLE EXECUTION!\n");
 	print_list(action_trace);
 	printf("\n");

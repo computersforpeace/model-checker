@@ -67,7 +67,7 @@ bool Node::get_promise(uint32_t i) {
 	return (promises[i]==2);
 }
 
-bool Node::increment_promises() {
+bool Node::increment_promise() {
 	for (unsigned int i=0;i<promises.size();i++) {
 		if (promises[i]==1) {
 			promises[i]=2;
@@ -82,7 +82,7 @@ bool Node::increment_promises() {
 	return false;
 }
 
-bool Node::promises_empty() {
+bool Node::promise_empty() {
 	for (unsigned int i=0;i<promises.size();i++)
 		if (promises[i]==1)
 			return false;
@@ -108,7 +108,7 @@ bool Node::add_future_value(uint64_t value) {
  * @return true if the future_values set is empty.
  */
 
-bool Node::futurevalues_empty() {
+bool Node::future_value_empty() {
 	return ((future_index+1)>=future_values.size());
 }
 
@@ -140,7 +140,7 @@ bool Node::backtrack_empty()
  * Checks whether the readsfrom set for this node is empty.
  * @return true if the readsfrom set is empty.
  */
-bool Node::readsfrom_empty() {
+bool Node::read_from_empty() {
 	return ((read_from_index+1)>=may_read_from.size());
 }
 
@@ -240,7 +240,7 @@ bool Node::increment_read_from() {
  * @return Returns false if we have explored all values.
  */
 
-bool Node::increment_future_values() {
+bool Node::increment_future_value() {
 	future_index++;
 	return (future_index<future_values.size());
 }

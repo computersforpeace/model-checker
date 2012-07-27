@@ -48,18 +48,18 @@ public:
 
 	bool add_future_value(uint64_t value);
 	uint64_t get_future_value();
-	bool increment_future_values();
-	bool futurevalues_empty();
+	bool increment_future_value();
+	bool future_value_empty();
 
 	void add_read_from(const ModelAction *act);
 	const ModelAction * get_read_from();
 	bool increment_read_from();
-	bool readsfrom_empty();
+	bool read_from_empty();
 
 	void set_promise(uint32_t i);
 	bool get_promise(uint32_t i);
-	bool increment_promises();
-	bool promises_empty();
+	bool increment_promise();
+	bool promise_empty();
 
 	void print();
 	void print_may_read_from();

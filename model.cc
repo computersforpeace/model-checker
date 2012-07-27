@@ -133,7 +133,7 @@ thread_id_t ModelChecker::get_next_replay_thread()
 	if (next == diverge) {
 		Node *nextnode = next->get_node();
 		/* Reached divergence point */
-		if (nextnode->increment_promises()) {
+		if (nextnode->increment_promise()) {
 			/* The next node will try to satisfy a different set of promises. */
 			tid = next->get_tid();
 			node_stack->pop_restofstack(2);
@@ -141,7 +141,7 @@ thread_id_t ModelChecker::get_next_replay_thread()
 			/* The next node will read from a different value. */
 			tid = next->get_tid();
 			node_stack->pop_restofstack(2);
-		} else if (nextnode->increment_future_values()) {
+		} else if (nextnode->increment_future_value()) {
 			/* The next node will try to read from a different future value. */
 			tid = next->get_tid();
 			node_stack->pop_restofstack(2);
@@ -354,7 +354,7 @@ void ModelChecker::check_current_action(void)
 	Node *currnode = curr->get_node();
 	Node *parnode = currnode->get_parent();
 
-	if (!parnode->backtrack_empty()||!currnode->readsfrom_empty()||!currnode->futurevalues_empty()||!currnode->promises_empty())
+	if (!parnode->backtrack_empty()||!currnode->read_from_empty()||!currnode->future_value_empty()||!currnode->promise_empty())
 		if (!next_backtrack || *curr > *next_backtrack)
 			next_backtrack = curr;
 	

@@ -76,7 +76,7 @@ void Node::set_promise(uint32_t i) {
  */
 
 bool Node::get_promise(uint32_t i) {
-	return (promises[i]==2);
+	return (i<promises.size())&&(promises[i]==2);
 }
 
 /** This method increments to the next combination of promises.

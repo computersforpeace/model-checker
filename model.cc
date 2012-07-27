@@ -361,12 +361,12 @@ void ModelChecker::check_current_action(void)
 	set_backtracking(curr);
 }
 
-/** @returns whether the current trace is feasible. */
+/** @returns whether the current partial trace is feasible. */
 bool ModelChecker::isfeasible() {
 	return !cyclegraph->checkForCycles() && !failed_promise;
 }
 
-/** Returns whether the current trace is feasible. */
+/** Returns whether the current completed trace is feasible. */
 bool ModelChecker::isfinalfeasible() {
 	return isfeasible() && promises->size()==0;
 }
@@ -532,7 +532,7 @@ ClockVector * ModelChecker::get_cv(thread_id_t tid) {
 }
 
 
-/** Resolve promises. */
+/** Resolve the given promises. */
 
 void ModelChecker::resolve_promises(ModelAction *write) {
 	for(unsigned int i=0, promise_index=0;promise_index<promises->size(); i++) {
@@ -546,6 +546,9 @@ void ModelChecker::resolve_promises(ModelAction *write) {
 			promise_index++;
 	}
 }
+
+/** Compute the set of promises that could potentially be satisfied by
+ *  this action. */
 
 void ModelChecker::compute_promises(ModelAction *curr) {
 	for(unsigned int i=0;i<promises->size();i++) {

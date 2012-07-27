@@ -57,15 +57,32 @@ void Node::print_may_read_from()
 		(*it)->print();
 }
 
+/** This method sets a promise to explore meeting with the given
+ *  node. 
+ *  @param i is the promise index.
+ */
+
 void Node::set_promise(uint32_t i) {
 	if (i>=promises.size())
 		promises.resize(i+1,0);
 	promises[i]=1;
 }
 
+/** This method looks up whether a given promise should be satisfied
+ *  by this node.
+ *
+ * @param i is the promise index.
+ * @return true if the promise should be satisfied by the given model action.
+ */
+
 bool Node::get_promise(uint32_t i) {
 	return (promises[i]==2);
 }
+
+/** This method increments to the next combination of promises.
+ *
+ * @return true if we have a valid combination.
+ */
 
 bool Node::increment_promise() {
 	for (unsigned int i=0;i<promises.size();i++) {
@@ -81,6 +98,11 @@ bool Node::increment_promise() {
 	}
 	return false;
 }
+
+/** This method returns whether the promise set is empty. 
+ *
+ *  @return true if we have explored all promise combinations.
+ */
 
 bool Node::promise_empty() {
 	for (unsigned int i=0;i<promises.size();i++)

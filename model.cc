@@ -133,7 +133,11 @@ thread_id_t ModelChecker::get_next_replay_thread()
 	if (next == diverge) {
 		Node *nextnode = next->get_node();
 		/* Reached divergence point */
-		if (nextnode->increment_read_from()) {
+		if (nextnode->increment_promises()) {
+			/* The next node will try to satisfy a different set of promises. */
+			tid = next->get_tid();
+			node_stack->pop_restofstack(2);
+		} else if (nextnode->increment_read_from()) {
 			/* The next node will read from a different value. */
 			tid = next->get_tid();
 			node_stack->pop_restofstack(2);
@@ -286,6 +290,8 @@ void ModelChecker::check_current_action(void)
 			/* Build may_read_from set */
 			if (curr->is_read())
 				build_reads_from_past(curr);
+			if (curr->is_write())
+				compute_promises(curr);
 		}
 	}
 
@@ -342,7 +348,7 @@ void ModelChecker::check_current_action(void)
 	Node *currnode = curr->get_node();
 	Node *parnode = currnode->get_parent();
 
-	if (!parnode->backtrack_empty()||!currnode->readsfrom_empty()||!currnode->futurevalues_empty())
+	if (!parnode->backtrack_empty()||!currnode->readsfrom_empty()||!currnode->futurevalues_empty()||!currnode->promises_empty())
 		if (!next_backtrack || *curr > *next_backtrack)
 			next_backtrack = curr;
 	
@@ -518,7 +524,18 @@ ClockVector * ModelChecker::get_cv(thread_id_t tid) {
 
 /** Resolve promises. */
 
-void ModelChecker::resolve_promises(ModelAction *curr) {
+void ModelChecker::resolve_promises(ModelAction *write) {
+	for(unsigned int i=0;i<promises->size();i++) {
+		Promise * promise=(*promises)[i];
+		if (write->get_node()->get_promise(i)) {
+			ModelAction * read=promise->get_action();
+			read->read_from(write);
+			r_modification_order(read, write);
+		}
+	}
+}
+
+void ModelChecker::compute_promises(ModelAction *curr) {
 	for(unsigned int i=0;i<promises->size();i++) {
 		Promise * promise=(*promises)[i];
 		const ModelAction * act=promise->get_action();
@@ -527,8 +544,7 @@ void ModelChecker::resolve_promises(ModelAction *curr) {
 				!act->is_synchronizing(curr)&&
 				!act->same_thread(curr)&&
 				promise->get_value()==curr->get_value()) {
-			
-			
+			curr->get_node()->set_promise(i);
 		}
 	}
 }

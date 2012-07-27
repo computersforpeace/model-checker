@@ -79,6 +79,7 @@ private:
 	ModelAction * get_next_backtrack();
 	void reset_to_initial_state();
 	void resolve_promises(ModelAction *curr);
+	void compute_promises(ModelAction *curr);
 
 	void add_action_to_lists(ModelAction *act);
 	ModelAction * get_last_action(thread_id_t tid);

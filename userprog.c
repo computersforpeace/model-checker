@@ -1,48 +1,38 @@
 #include <stdio.h>
-#include <stdlib.h>
 
 #include "libthreads.h"
 #include "librace.h"
 #include "stdatomic.h"
 
-static void a(atomic_int *obj)
+atomic_int x;
+atomic_int y;
+
+static void a(void *obj)
 {
-	int i;
-	int ret;
+	int r1=atomic_load_explicit(&y, memory_order_relaxed);
+	atomic_store_explicit(&x, r1, memory_order_relaxed);
+	printf("r1=%u\n",r1);
+}
 
-	store_32(&i, 10);
-	printf("load 32 yields: %d\n", load_32(&i));
-
-	for (i = 0; i < 2; i++) {
-		printf("Thread %d, loop %d\n", thrd_current(), i);
-		switch (i % 2) {
-		case 1:
-			ret = atomic_load(obj);
-			printf("Read value: %d\n", ret);
-			break;
-		case 0:
-			atomic_store(obj, i + 1);
-			printf("Write value: %d\n", i + 1);
-			break;
-		}
-	}
+static void b(void *obj)
+{
+	int r2=atomic_load_explicit(&x, memory_order_relaxed);
+	atomic_store_explicit(&y, 42, memory_order_relaxed);
+	printf("r2=%u\n",r2);
 }
 
 void user_main()
 {
 	thrd_t t1, t2;
-	atomic_int *obj;
 
-	obj = malloc(sizeof(*obj));
-
-	atomic_init(obj, 0);
+	atomic_init(&x, 0);
+	atomic_init(&y, 0);
 
 	printf("Thread %d: creating 2 threads\n", thrd_current());
-	thrd_create(&t1, (thrd_start_t)&a, obj);
-	thrd_create(&t2, (thrd_start_t)&a, obj);
+	thrd_create(&t1, (thrd_start_t)&a, NULL);
+	thrd_create(&t2, (thrd_start_t)&b, NULL);
 
 	thrd_join(t1);
 	thrd_join(t2);
-	free(obj);
 	printf("Thread %d is finished\n", thrd_current());
 }

@@ -88,6 +88,7 @@ private:
 	ModelAction * get_last_seq_cst(const void *location);
 	void build_reads_from_past(ModelAction *curr);
 	ModelAction * process_rmw(ModelAction * curr);
+	void post_r_modification_order(ModelAction * curr, const ModelAction *rf);
 	void r_modification_order(ModelAction * curr, const ModelAction *rf);
 	void w_modification_order(ModelAction * curr);
 

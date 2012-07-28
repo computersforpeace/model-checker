@@ -403,13 +403,50 @@ void ModelChecker::r_modification_order(ModelAction * curr, const ModelAction *r
 			if (act->happens_before(curr)) {
 				if (act->is_read()) {
 					const ModelAction * prevreadfrom=act->get_reads_from();
-					if (rf!=prevreadfrom)
+					if (prevreadfrom!=NULL&&rf!=prevreadfrom)
 						cyclegraph->addEdge(rf, prevreadfrom);
 				} else if (rf!=act) {
 					cyclegraph->addEdge(rf, act);
 				}
 				break;
 			}
+		}
+	}
+}
+
+/** Updates the cyclegraph with the constraints imposed from the
+ *  current read. */
+void ModelChecker::post_r_modification_order(ModelAction * curr, const ModelAction *rf) {
+	std::vector<action_list_t> *thrd_lists = obj_thrd_map->ensureptr(curr->get_location());
+	unsigned int i;
+	ASSERT(curr->is_read());
+
+	/* Iterate over all threads */
+	for (i = 0; i < thrd_lists->size(); i++) {
+		/* Iterate over actions in thread, starting from most recent */
+		action_list_t *list = &(*thrd_lists)[i];
+		action_list_t::reverse_iterator rit;
+		ModelAction *lastact=NULL;
+
+		/* Find last action that happens after curr */
+		for (rit = list->rbegin(); rit != list->rend(); rit++) {
+			ModelAction *act = *rit;
+			if (curr->happens_before(act)) {
+				lastact=act;
+			} else
+				break;
+		}
+
+			/* Include at most one act per-thread that "happens before" curr */
+		if (lastact!=NULL) {
+			if (lastact->is_read()) {
+				const ModelAction * postreadfrom=lastact->get_reads_from();
+				if (postreadfrom!=NULL&&rf!=postreadfrom)
+					cyclegraph->addEdge(postreadfrom, rf);
+			} else if (rf!=lastact) {
+				cyclegraph->addEdge(lastact, rf);
+			}
+			break;
 		}
 	}
 }
@@ -541,6 +578,7 @@ void ModelChecker::resolve_promises(ModelAction *write) {
 			ModelAction * read=promise->get_action();
 			read->read_from(write);
 			r_modification_order(read, write);
+			post_r_modification_order(read, write);
 			promises->erase(promises->begin()+promise_index);
 		} else
 			promise_index++;

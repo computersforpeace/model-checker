@@ -220,7 +220,13 @@ ModelAction * NodeStack::explore_action(ModelAction *act)
 	return NULL;
 }
 
-
+/**
+ * Empties the stack of all trailing nodes after a given position and calls the
+ * destructor for each. This function is provided an offset which determines
+ * how many nodes (relative to the current replay state) to save before popping
+ * the stack.
+ * @param numAhead The number of nodes to skip forward before popping the stack.
+ */
 void NodeStack::pop_restofstack(int numAhead)
 {
 	/* Diverging from previous execution; clear out remainder of list */
@@ -229,7 +235,6 @@ void NodeStack::pop_restofstack(int numAhead)
 		it++;
 	clear_node_list(&node_list, it, node_list.end());
 }
-
 
 Node * NodeStack::get_head()
 {

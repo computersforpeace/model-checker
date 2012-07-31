@@ -25,7 +25,7 @@ void CycleGraph::addEdge(const ModelAction *from, const ModelAction *to) {
 	CycleNode *tonode=getNode(to);
 	if (!hasCycles) {
 		// Check for Cycles
-		hasCycles=checkReachable(fromnode, tonode);
+		hasCycles=checkReachable(tonode, fromnode);
 	}
 	fromnode->addEdge(tonode);
 }

@@ -162,7 +162,10 @@ bool ModelChecker::next_execution()
 	DBG();
 
 	num_executions++;
-	print_summary();
+
+	if (isfeasible() || DBG_ENABLED())
+		print_summary();
+
 	if ((diverge = model->get_next_backtrack()) == NULL)
 		return false;
 
@@ -516,20 +519,14 @@ static void print_list(action_list_t *list)
 
 void ModelChecker::print_summary(void)
 {
-	if (!isfeasible()) {
-		if (DBG_ENABLED())
-			printf("INFEASIBLE EXECUTION!\n");
-		else
-			return;
-	}
-
 	printf("\n");
 	printf("Number of executions: %d\n", num_executions);
 	printf("Total nodes created: %d\n", node_stack->get_total_nodes());
 
-
 	scheduler->print();
 
+	if (!isfeasible())
+		printf("INFEASIBLE EXECUTION!\n");
 	print_list(action_trace);
 	printf("\n");
 }

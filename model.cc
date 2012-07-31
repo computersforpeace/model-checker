@@ -235,6 +235,11 @@ void ModelChecker::set_backtracking(ModelAction *act)
 	}
 }
 
+/**
+ * Returns last backtracking point. The model checker will explore a different
+ * path for this point in the next execution.
+ * @return The ModelAction at which the next execution should diverge.
+ */
 ModelAction * ModelChecker::get_next_backtrack()
 {
 	ModelAction *next = next_backtrack;
@@ -319,6 +324,7 @@ void ModelChecker::check_current_action(void)
 	add_action_to_lists(curr);
 }
 
+/** @returns whether the current trace is feasible. */
 bool ModelChecker::isfeasible() {
 	return !cyclegraph->checkForCycles();
 }
@@ -332,6 +338,11 @@ void ModelChecker::process_rmw(ModelAction * act) {
 	lastread->upgrade_rmw(act);
 }
 
+/**
+ * Updates the cyclegraph with the constraints imposed from the current read.
+ * @param curr The current action. Must be a read.
+ * @param rf The action that curr reads from. Must be a write.
+ */
 void ModelChecker::r_modification_order(ModelAction * curr, const ModelAction *rf) {
 	std::vector<action_list_t> *thrd_lists = &(*obj_thrd_map)[curr->get_location()];
 	unsigned int i;
@@ -360,6 +371,10 @@ void ModelChecker::r_modification_order(ModelAction * curr, const ModelAction *r
 	}
 }
 
+/**
+ * Updates the cyclegraph with the constraints imposed from the current write.
+ * @param curr The current action. Must be a write.
+ */
 void ModelChecker::w_modification_order(ModelAction * curr) {
 	std::vector<action_list_t> *thrd_lists = &(*obj_thrd_map)[curr->get_location()];
 	unsigned int i;
@@ -450,6 +465,11 @@ ModelAction * ModelChecker::get_parent_action(thread_id_t tid)
 	return parent;
 }
 
+/**
+ * Returns the clock vector for a given thread.
+ * @param tid The thread whose clock vector we want
+ * @return Desired clock vector
+ */
 ClockVector * ModelChecker::get_cv(thread_id_t tid) {
 	return get_parent_action(tid)->get_cv();
 }

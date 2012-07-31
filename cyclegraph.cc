@@ -6,8 +6,11 @@ CycleGraph::CycleGraph() {
 	hasCycles=false;
 }
 
+CycleGraph::~CycleGraph() {
+}
+
 /** Returns the CycleNode for a given ModelAction. */
-CycleNode * CycleGraph::getNode(ModelAction * action) {
+CycleNode * CycleGraph::getNode(const ModelAction * action) {
 	CycleNode *node=actionToNode.get(action);
 	if (node==NULL) {
 		node=new CycleNode(action);
@@ -17,7 +20,7 @@ CycleNode * CycleGraph::getNode(ModelAction * action) {
 }
 
 /** Adds an edge between two ModelActions. */
-void CycleGraph::addEdge(ModelAction *from, ModelAction *to) {
+void CycleGraph::addEdge(const ModelAction *from, const ModelAction *to) {
 	CycleNode *fromnode=getNode(from);
 	CycleNode *tonode=getNode(to);
 	if (!hasCycles) {
@@ -57,7 +60,7 @@ bool CycleGraph::checkForCycles() {
 }
 
 /** Constructor for a CycleNode. */
-CycleNode::CycleNode(ModelAction *modelaction) {
+CycleNode::CycleNode(const ModelAction *modelaction) {
 	action=modelaction;
 }
 

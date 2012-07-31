@@ -12,25 +12,25 @@ class ModelAction;
 class CycleGraph {
  public:
 	CycleGraph();
-	void addEdge(ModelAction *from, ModelAction *to);
+	~CycleGraph();
+	void addEdge(const ModelAction *from, const ModelAction *to);
 	bool checkForCycles();
 
  private:
-	CycleNode * getNode(ModelAction *);
-	HashTable<ModelAction *, CycleNode *, uintptr_t, 4> actionToNode;
+	CycleNode * getNode(const ModelAction *);
+	HashTable<const ModelAction *, CycleNode *, uintptr_t, 4> actionToNode;
 	bool checkReachable(CycleNode *from, CycleNode *to);
 	bool hasCycles;
-
 };
 
 class CycleNode {
  public:
-	CycleNode(ModelAction *action);
+	CycleNode(const ModelAction *action);
 	void addEdge(CycleNode * node);
 	std::vector<CycleNode *> * getEdges();
 
  private:
-	ModelAction *action;
+	const ModelAction *action;
 	std::vector<CycleNode *> edges;
 };
 

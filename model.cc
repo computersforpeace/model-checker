@@ -304,8 +304,6 @@ void ModelChecker::check_current_action(void)
 	set_backtracking(curr);
 
 	/* Assign reads_from values */
-	/* TODO: perform release/acquire synchronization here; include
-	 * reads_from as ModelAction member? */
 	Thread *th = get_thread(curr->get_tid());
 	uint64_t value = VALUE_NONE;
 	if (curr->is_read()) {

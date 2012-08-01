@@ -31,6 +31,9 @@ Thread * thread_current(void)
 void thread_startup() {
 	Thread * curr_thread = thread_current();
 
+	/* TODO -- we should make this event always immediately follow the
+		 CREATE event, so we don't get redundant traces...  */
+
 	/* Add dummy "start" action, just to create a first clock vector */
 	model->switch_to_master(new ModelAction(THREAD_START, memory_order_seq_cst, curr_thread));
 

@@ -11,7 +11,14 @@
 #include "threads.h"
 #include "mymemory.h"
 #include "clockvector.h"
-#include "libatomic.h"
+#include "memoryorder.h"
+
+using std::memory_order;
+using std::memory_order_relaxed;
+using std::memory_order_acquire;
+using std::memory_order_release;
+using std::memory_order_acq_rel;
+using std::memory_order_seq_cst;
 
 /** Note that this value can be legitimately used by a program, and
 		hence by iteself does not indicate no value. */

@@ -531,7 +531,7 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 		/* TODO: need a more informative way of reporting errors */
 		printf("ERROR: may read from uninitialized atomic\n");
 	}
-	
+
 	if (DBG_ENABLED() || !initialized) {
 		printf("Reached read action:\n");
 		curr->print();
@@ -539,7 +539,7 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 		curr->get_node()->print_may_read_from();
 		printf("End printing may_read_from\n");
 	}
-	
+
 	ASSERT(initialized);
 }
 
@@ -595,10 +595,8 @@ void ModelChecker::remove_thread(Thread *t)
  */
 int ModelChecker::switch_to_master(ModelAction *act)
 {
-	Thread *old;
-
 	DBG();
-	old = thread_current();
+	Thread * old = thread_current();
 	set_current_action(act);
 	old->set_state(THREAD_READY);
 	return Thread::swap(old, get_system_context());

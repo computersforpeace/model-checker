@@ -34,9 +34,9 @@ typedef enum action_type {
 	THREAD_JOIN,          /**< A thread join action */
 	ATOMIC_READ,          /**< An atomic read action */
 	ATOMIC_WRITE,         /**< An atomic write action */
-	ATOMIC_RMWR,          /**< The read of an atomic read-modify-write action */
-	ATOMIC_RMW,           /**< The write of an atomic read-modify-write action */
-	ATOMIC_RMWC,          /**< Terminate an atomic read-modify-write action w/o write */
+	ATOMIC_RMWR,          /**< The read part of an atomic RMW action */
+	ATOMIC_RMW,           /**< The write part of an atomic RMW action */
+	ATOMIC_RMWC,          /**< Convert an atomic RMW action into a READ */
 	ATOMIC_INIT           /**< Initialization of an atomic object (e.g.,
 	                       *   atomic_init()) */
 } action_type_t;

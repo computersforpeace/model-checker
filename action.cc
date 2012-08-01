@@ -49,9 +49,9 @@ bool ModelAction::is_initialization() const
 bool ModelAction::is_acquire() const
 {
 	switch (order) {
-	case memory_order_acquire:
-	case memory_order_acq_rel:
-	case memory_order_seq_cst:
+	case std::memory_order_acquire:
+	case std::memory_order_acq_rel:
+	case std::memory_order_seq_cst:
 		return true;
 	default:
 		return false;
@@ -61,9 +61,9 @@ bool ModelAction::is_acquire() const
 bool ModelAction::is_release() const
 {
 	switch (order) {
-	case memory_order_release:
-	case memory_order_acq_rel:
-	case memory_order_seq_cst:
+	case std::memory_order_release:
+	case std::memory_order_acq_rel:
+	case std::memory_order_seq_cst:
 		return true;
 	default:
 		return false;
@@ -72,7 +72,7 @@ bool ModelAction::is_release() const
 
 bool ModelAction::is_seqcst() const
 {
-	return order==memory_order_seq_cst;
+	return order==std::memory_order_seq_cst;
 }
 
 bool ModelAction::same_var(const ModelAction *act) const

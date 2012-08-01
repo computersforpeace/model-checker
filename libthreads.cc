@@ -17,7 +17,7 @@ int thrd_create(thrd_t *t, thrd_start_t start_routine, void *arg)
 	ret = model->add_thread(thread);
 	DEBUG("create thread %d\n", id_to_int(thrd_to_id(*t)));
 	/* seq_cst is just a 'don't care' parameter */
-	model->switch_to_master(new ModelAction(THREAD_CREATE, memory_order_seq_cst, thread, VALUE_NONE));
+	model->switch_to_master(new ModelAction(THREAD_CREATE, std::memory_order_seq_cst, thread, VALUE_NONE));
 	return ret;
 }
 
@@ -32,7 +32,7 @@ int thrd_join(thrd_t t)
 int thrd_yield(void)
 {
 	/* seq_cst is just a 'don't care' parameter */
-	return model->switch_to_master(new ModelAction(THREAD_YIELD, memory_order_seq_cst, NULL, VALUE_NONE));
+	return model->switch_to_master(new ModelAction(THREAD_YIELD, std::memory_order_seq_cst, NULL, VALUE_NONE));
 }
 
 thrd_t thrd_current(void)

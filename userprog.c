@@ -2,8 +2,8 @@
 #include <stdlib.h>
 
 #include "libthreads.h"
-#include "libatomic.h"
 #include "librace.h"
+#include "stdatomic.h"
 
 static void a(atomic_int *obj)
 {

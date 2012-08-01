@@ -35,7 +35,7 @@ void thread_startup() {
 		 CREATE event, so we don't get redundant traces...  */
 
 	/* Add dummy "start" action, just to create a first clock vector */
-	model->switch_to_master(new ModelAction(THREAD_START, memory_order_seq_cst, curr_thread));
+	model->switch_to_master(new ModelAction(THREAD_START, std::memory_order_seq_cst, curr_thread));
 
 	/* Call the actual thread function */
 	curr_thread->start_routine(curr_thread->arg);

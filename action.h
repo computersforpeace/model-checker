@@ -9,9 +9,9 @@
 #include <cstddef>
 
 #include "threads.h"
-#include "libatomic.h"
 #include "mymemory.h"
 #include "clockvector.h"
+#include "libatomic.h"
 
 /** Note that this value can be legitimately used by a program, and
 		hence by iteself does not indicate no value. */

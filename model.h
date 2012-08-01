@@ -14,7 +14,6 @@
 #include "schedule.h"
 #include "mymemory.h"
 #include "libthreads.h"
-#include "libatomic.h"
 #include "threads.h"
 #include "action.h"
 #include "clockvector.h"

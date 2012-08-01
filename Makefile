@@ -8,15 +8,15 @@ LIB_SO=lib$(LIB_NAME).so
 USER_O=userprog.o
 USER_H=libthreads.h libatomic.h
 
-MODEL_CC=libthreads.cc schedule.cc libatomic.cc model.cc threads.cc librace.cc action.cc nodestack.cc clockvector.cc main.cc snapshot-interface.cc cyclegraph.cc datarace.cc
-MODEL_O=libthreads.o schedule.o libatomic.o model.o threads.o librace.o action.o nodestack.o clockvector.o main.o snapshot-interface.o cyclegraph.o datarace.o
-MODEL_H=libthreads.h schedule.h common.h libatomic.h model.h threads.h librace.h action.h nodestack.h clockvector.h snapshot-interface.h cyclegraph.h hashtable.h datarace.h config.h
+MODEL_CC=libthreads.cc schedule.cc model.cc threads.cc librace.cc action.cc nodestack.cc clockvector.cc main.cc snapshot-interface.cc cyclegraph.cc datarace.cc impatomic.cc cmodelint.cc
+MODEL_O=libthreads.o schedule.o model.o threads.o librace.o action.o nodestack.o clockvector.o main.o snapshot-interface.o cyclegraph.o datarace.o impatomic.o cmodelint.o
+MODEL_H=libthreads.h schedule.h common.h libatomic.h model.h threads.h librace.h action.h nodestack.h clockvector.h snapshot-interface.h cyclegraph.h hashtable.h datarace.h config.h include/impatomic.h include/cstdatomic include/stdatomic.h cmodelint.h
 
 SHMEM_CC=snapshot.cc malloc.c mymemory.cc
 SHMEM_O=snapshot.o malloc.o mymemory.o
 SHMEM_H=snapshot.h snapshotimp.h mymemory.h
 
-CPPFLAGS=-Wall -g -O0
+CPPFLAGS=-Wall -g -O0 -Iinclude -I.
 LDFLAGS=-ldl -lrt
 SHARED=-shared
 

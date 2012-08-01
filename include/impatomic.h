@@ -1,21 +1,11 @@
+#include "memoryorder.h"
+#include "cmodelint.h"
 
 #ifdef __cplusplus
-#include <cstddef>
 namespace std {
-#else
-#include <stddef.h>
-#include <stdbool.h>
 #endif
 
-
 #define CPP0X( feature )
-
-
-typedef enum memory_order {
-    memory_order_relaxed, memory_order_acquire, memory_order_release,
-    memory_order_acq_rel, memory_order_seq_cst
-} memory_order;
-
 
 typedef struct atomic_flag
 {
@@ -82,43 +72,48 @@ inline void atomic_flag::fence( memory_order __x__ ) const volatile
         __x__=memory-ordering, and __y__=memory-ordering.
 */
 
-#define _ATOMIC_LOAD_( __a__, __x__ )																		\
-	({ volatile __typeof__((__a__)->__f__)* __p__ = ((__a__)->__f__);			\
-		model->switch_to_master(new ModelAction(ATOMIC_READ, __x__, __p__)); \
-		((__typeof__((__a__)->__f__)) (thread_current()->get_return_value())); \
-	})
-
+#define _ATOMIC_LOAD_( __a__, __x__ )																	\
+	({ volatile __typeof__((__a__)->__f__)* __p__ = & ((__a__)->__f__);		\
+		__typeof__((__a__)->__f__) __r__ = (__typeof__((__a__)->__f__))model_read_action((void *)__p__, __x__);	\
+		__r__; })
 
 #define _ATOMIC_STORE_( __a__, __m__, __x__ )														\
-	({ volatile __typeof__((__a__)->__f__)* __p__ = ((__a__)->__f__);			\
+	({ volatile __typeof__((__a__)->__f__)* __p__ = & ((__a__)->__f__);			\
 		__typeof__(__m__) __v__ = (__m__);																	\
-		model->switch_to_master(new ModelAction(ATOMIC_WRITE, __x__, __p__, __v__)); \
+		model_write_action((void *) __p__,  __x__, (uint64_t) __v__);				\
+		__v__; })
+
+
+#define _ATOMIC_INIT_( __a__, __m__ )														\
+	({ volatile __typeof__((__a__)->__f__)* __p__ = & ((__a__)->__f__);			\
+		__typeof__(__m__) __v__ = (__m__);																	\
+		model_init_action((void *) __p__,  (uint64_t) __v__);				\
 		__v__; })
 
 #define _ATOMIC_MODIFY_( __a__, __o__, __m__, __x__ )										\
-	({ volatile __typeof__((__a__)->__f__)* __p__ = ((__a__)->__f__);			\
-    model->switch_to_master(new ModelAction(ATOMIC_READ, __x__, __p__)); \
-		__typeof__((__a__)->__f__) __old__=(__typeof__((__a__)->__f__)) thread_current()->get_return_value();	\
-		__typeof__(__m__) __v__ = (__m__);																	\
-		__typeof__((__a__)->__f__) __copy__= __old__;												\
-		__copy__ __o__ __v__;																								\
-		model->switch_to_master(new ModelAction(ATOMIC_RMW, __x__, __p__, __copy__));	\
-		__old__; })
+	({ volatile __typeof__((__a__)->__f__)* __p__ = & ((__a__)->__f__);			\
+	__typeof__((__a__)->__f__) __old__=(__typeof__((__a__)->__f__)) model_read_action((void *)__p__, __x__); \
+	__typeof__(__m__) __v__ = (__m__);																		\
+	__typeof__((__a__)->__f__) __copy__= __old__;													\
+	__copy__ __o__ __v__;																									\
+	model_rmw_action((void *)__p__, __x__, (uint64_t) __copy__);					\
+	__old__; })
 
 #define _ATOMIC_CMPSWP_( __a__, __e__, __m__, __x__ )										\
-	({ volatile __typeof__((__a__)->__f__)* __p__ = ((__a__)->__f__);			\
+	({ volatile __typeof__((__a__)->__f__)* __p__ = & ((__a__)->__f__);			\
 		__typeof__(__e__) __q__ = (__e__);																	\
 		__typeof__(__m__) __v__ = (__m__);																	\
 		bool __r__;																													\
-		model->switch_to_master(new ModelAction(ATOMIC_READ, __x__, __p__)); \
-		__typeof__((__a__)->__f__) __t__=(__typeof__((__a__)->__f__)) thread_current()->get_return_value();	\
+		__typeof__((__a__)->__f__) __t__=(__typeof__((__a__)->__f__)) model_read_action((void *)__p__, __x__);\
 		if (__t__ == * __q__ ) {																						\
-			model->switch_to_master(new ModelAction(ATOMIC_RMW, __x__, __p__, __v__)); __r__ = true; } \
+			model_rmw_action((void *)__p__, __x__, (uint64_t) __v__); __r__ = true; } \
 		else {  *__q__ = __t__;  __r__ = false;}														\
 		__r__; })
 
+//TODO
 #define _ATOMIC_FENCE_( __a__, __x__ )					\
-	({ ASSERT(0);})
+({ ;})
+
 
 #define ATOMIC_CHAR_LOCK_FREE 1
 #define ATOMIC_CHAR16_T_LOCK_FREE 1
@@ -1547,15 +1542,16 @@ template<> struct atomic< wchar_t > : atomic_wchar_t
 #ifdef __cplusplus
 
 
-inline bool atomic_is_lock_free( const volatile atomic_bool* __a__ )
+inline bool atomic_is_lock_free
+( const volatile atomic_bool* __a__ )
 { return false; }
 
 inline bool atomic_load_explicit
 ( volatile atomic_bool* __a__, memory_order __x__ )
 { return _ATOMIC_LOAD_( __a__, __x__ ); }
 
-inline bool atomic_load( volatile atomic_bool* __a__ )
-{ return atomic_load_explicit( __a__, memory_order_seq_cst ); }
+inline bool atomic_load
+( volatile atomic_bool* __a__ ) { return atomic_load_explicit( __a__, memory_order_seq_cst ); }
 
 inline void atomic_store_explicit
 ( volatile atomic_bool* __a__, bool __m__, memory_order __x__ )
@@ -1608,7 +1604,7 @@ inline void atomic_store
 
 inline void* atomic_swap_explicit
 ( volatile atomic_address* __a__, void* __m__, memory_order __x__ )
-{ return _ATOMIC_MODIFY_( __a__, =, __m__, __x__ ); }
+{ return _ATOMIC_MODIFY_( __a__, =, __m__,  __x__ ); }
 
 inline void* atomic_swap
 ( volatile atomic_address* __a__, void* __m__ )
@@ -2123,10 +2119,10 @@ inline void atomic_fence
 
 inline void* atomic_fetch_add_explicit
 ( volatile atomic_address* __a__, ptrdiff_t __m__, memory_order __x__ )
-{ void* volatile* __p__ = &((__a__)->__f__);
-	model->switch_to_master(new ModelAction(ATOMIC_READ, __x__, __p__));
-	void* __r__ = (void *) thread_current()->get_return_value();
-	model->switch_to_master(new ModelAction(ATOMIC_RMW, __x__, __p__, (void*)((char*)(*__p__) + __m__)));
+{
+	void* volatile* __p__ = &((__a__)->__f__);
+	void* __r__ = (void *) model_read_action((void *)__p__, __x__);
+	model_rmw_action((void *)__p__, __x__, (uint64_t) ((char*)(*__p__) + __m__));
   return __r__; }
 
 inline void* atomic_fetch_add
@@ -2136,16 +2132,15 @@ inline void* atomic_fetch_add
 
 inline void* atomic_fetch_sub_explicit
 ( volatile atomic_address* __a__, ptrdiff_t __m__, memory_order __x__ )
-{ void* volatile* __p__ = &((__a__)->__f__);
-	model->switch_to_master(new ModelAction(ATOMIC_READ, __x__, __p__));
-	void* __r__ = (void *) thread_current()->get_return_value();
-	model->switch_to_master(new ModelAction(ATOMIC_RMW, __x__, __p__, (void*)((char*)(*__p__) - __m__)));
+{
+	void* volatile* __p__ = &((__a__)->__f__);
+	void* __r__ = (void *) model_read_action((void *)__p__, __x__);
+	model_rmw_action((void *)__p__, __x__, (uint64_t)((char*)(*__p__) - __m__));
   return __r__; }
 
 inline void* atomic_fetch_sub
 ( volatile atomic_address* __a__, ptrdiff_t __m__ )
 { return atomic_fetch_sub_explicit( __a__, __m__, memory_order_seq_cst ); }
-
 
 inline char atomic_fetch_add_explicit
 ( volatile atomic_char* __a__, char __m__, memory_order __x__ )
@@ -2153,7 +2148,7 @@ inline char atomic_fetch_add_explicit
 
 inline char atomic_fetch_add
 ( volatile atomic_char* __a__, char __m__ )
-{ atomic_fetch_add_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_add_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline char atomic_fetch_sub_explicit
@@ -2162,7 +2157,7 @@ inline char atomic_fetch_sub_explicit
 
 inline char atomic_fetch_sub
 ( volatile atomic_char* __a__, char __m__ )
-{ atomic_fetch_sub_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_sub_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline char atomic_fetch_and_explicit
@@ -2171,7 +2166,7 @@ inline char atomic_fetch_and_explicit
 
 inline char atomic_fetch_and
 ( volatile atomic_char* __a__, char __m__ )
-{ atomic_fetch_and_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_and_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline char atomic_fetch_or_explicit
@@ -2180,7 +2175,7 @@ inline char atomic_fetch_or_explicit
 
 inline char atomic_fetch_or
 ( volatile atomic_char* __a__, char __m__ )
-{ atomic_fetch_or_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_or_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline char atomic_fetch_xor_explicit
@@ -2189,7 +2184,7 @@ inline char atomic_fetch_xor_explicit
 
 inline char atomic_fetch_xor
 ( volatile atomic_char* __a__, char __m__ )
-{ atomic_fetch_xor_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_xor_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline signed char atomic_fetch_add_explicit
@@ -2198,7 +2193,7 @@ inline signed char atomic_fetch_add_explicit
 
 inline signed char atomic_fetch_add
 ( volatile atomic_schar* __a__, signed char __m__ )
-{ atomic_fetch_add_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_add_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline signed char atomic_fetch_sub_explicit
@@ -2207,7 +2202,7 @@ inline signed char atomic_fetch_sub_explicit
 
 inline signed char atomic_fetch_sub
 ( volatile atomic_schar* __a__, signed char __m__ )
-{ atomic_fetch_sub_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_sub_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline signed char atomic_fetch_and_explicit
@@ -2216,7 +2211,7 @@ inline signed char atomic_fetch_and_explicit
 
 inline signed char atomic_fetch_and
 ( volatile atomic_schar* __a__, signed char __m__ )
-{ atomic_fetch_and_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_and_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline signed char atomic_fetch_or_explicit
@@ -2225,7 +2220,7 @@ inline signed char atomic_fetch_or_explicit
 
 inline signed char atomic_fetch_or
 ( volatile atomic_schar* __a__, signed char __m__ )
-{ atomic_fetch_or_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_or_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline signed char atomic_fetch_xor_explicit
@@ -2234,7 +2229,7 @@ inline signed char atomic_fetch_xor_explicit
 
 inline signed char atomic_fetch_xor
 ( volatile atomic_schar* __a__, signed char __m__ )
-{ atomic_fetch_xor_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_xor_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline unsigned char atomic_fetch_add_explicit
@@ -2243,7 +2238,7 @@ inline unsigned char atomic_fetch_add_explicit
 
 inline unsigned char atomic_fetch_add
 ( volatile atomic_uchar* __a__, unsigned char __m__ )
-{ atomic_fetch_add_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_add_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline unsigned char atomic_fetch_sub_explicit
@@ -2252,7 +2247,7 @@ inline unsigned char atomic_fetch_sub_explicit
 
 inline unsigned char atomic_fetch_sub
 ( volatile atomic_uchar* __a__, unsigned char __m__ )
-{ atomic_fetch_sub_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_sub_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline unsigned char atomic_fetch_and_explicit
@@ -2261,7 +2256,7 @@ inline unsigned char atomic_fetch_and_explicit
 
 inline unsigned char atomic_fetch_and
 ( volatile atomic_uchar* __a__, unsigned char __m__ )
-{ atomic_fetch_and_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_and_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline unsigned char atomic_fetch_or_explicit
@@ -2270,7 +2265,7 @@ inline unsigned char atomic_fetch_or_explicit
 
 inline unsigned char atomic_fetch_or
 ( volatile atomic_uchar* __a__, unsigned char __m__ )
-{ atomic_fetch_or_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_or_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline unsigned char atomic_fetch_xor_explicit
@@ -2279,7 +2274,7 @@ inline unsigned char atomic_fetch_xor_explicit
 
 inline unsigned char atomic_fetch_xor
 ( volatile atomic_uchar* __a__, unsigned char __m__ )
-{ atomic_fetch_xor_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_xor_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline short atomic_fetch_add_explicit
@@ -2288,7 +2283,7 @@ inline short atomic_fetch_add_explicit
 
 inline short atomic_fetch_add
 ( volatile atomic_short* __a__, short __m__ )
-{ atomic_fetch_add_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_add_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline short atomic_fetch_sub_explicit
@@ -2297,7 +2292,7 @@ inline short atomic_fetch_sub_explicit
 
 inline short atomic_fetch_sub
 ( volatile atomic_short* __a__, short __m__ )
-{ atomic_fetch_sub_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_sub_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline short atomic_fetch_and_explicit
@@ -2306,7 +2301,7 @@ inline short atomic_fetch_and_explicit
 
 inline short atomic_fetch_and
 ( volatile atomic_short* __a__, short __m__ )
-{ atomic_fetch_and_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_and_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline short atomic_fetch_or_explicit
@@ -2315,7 +2310,7 @@ inline short atomic_fetch_or_explicit
 
 inline short atomic_fetch_or
 ( volatile atomic_short* __a__, short __m__ )
-{ atomic_fetch_or_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_or_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline short atomic_fetch_xor_explicit
@@ -2324,7 +2319,7 @@ inline short atomic_fetch_xor_explicit
 
 inline short atomic_fetch_xor
 ( volatile atomic_short* __a__, short __m__ )
-{ atomic_fetch_xor_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_xor_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline unsigned short atomic_fetch_add_explicit
@@ -2333,7 +2328,7 @@ inline unsigned short atomic_fetch_add_explicit
 
 inline unsigned short atomic_fetch_add
 ( volatile atomic_ushort* __a__, unsigned short __m__ )
-{ atomic_fetch_add_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_add_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline unsigned short atomic_fetch_sub_explicit
@@ -2342,7 +2337,7 @@ inline unsigned short atomic_fetch_sub_explicit
 
 inline unsigned short atomic_fetch_sub
 ( volatile atomic_ushort* __a__, unsigned short __m__ )
-{ atomic_fetch_sub_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_sub_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline unsigned short atomic_fetch_and_explicit
@@ -2351,7 +2346,7 @@ inline unsigned short atomic_fetch_and_explicit
 
 inline unsigned short atomic_fetch_and
 ( volatile atomic_ushort* __a__, unsigned short __m__ )
-{ atomic_fetch_and_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_and_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline unsigned short atomic_fetch_or_explicit
@@ -2360,7 +2355,7 @@ inline unsigned short atomic_fetch_or_explicit
 
 inline unsigned short atomic_fetch_or
 ( volatile atomic_ushort* __a__, unsigned short __m__ )
-{ atomic_fetch_or_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_or_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline unsigned short atomic_fetch_xor_explicit
@@ -2369,7 +2364,7 @@ inline unsigned short atomic_fetch_xor_explicit
 
 inline unsigned short atomic_fetch_xor
 ( volatile atomic_ushort* __a__, unsigned short __m__ )
-{ atomic_fetch_xor_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_xor_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline int atomic_fetch_add_explicit
@@ -2378,7 +2373,7 @@ inline int atomic_fetch_add_explicit
 
 inline int atomic_fetch_add
 ( volatile atomic_int* __a__, int __m__ )
-{ atomic_fetch_add_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_add_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline int atomic_fetch_sub_explicit
@@ -2387,7 +2382,7 @@ inline int atomic_fetch_sub_explicit
 
 inline int atomic_fetch_sub
 ( volatile atomic_int* __a__, int __m__ )
-{ atomic_fetch_sub_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_sub_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline int atomic_fetch_and_explicit
@@ -2396,7 +2391,7 @@ inline int atomic_fetch_and_explicit
 
 inline int atomic_fetch_and
 ( volatile atomic_int* __a__, int __m__ )
-{ atomic_fetch_and_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_and_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline int atomic_fetch_or_explicit
@@ -2405,7 +2400,7 @@ inline int atomic_fetch_or_explicit
 
 inline int atomic_fetch_or
 ( volatile atomic_int* __a__, int __m__ )
-{ atomic_fetch_or_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_or_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline int atomic_fetch_xor_explicit
@@ -2414,7 +2409,7 @@ inline int atomic_fetch_xor_explicit
 
 inline int atomic_fetch_xor
 ( volatile atomic_int* __a__, int __m__ )
-{ atomic_fetch_xor_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_xor_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline unsigned int atomic_fetch_add_explicit
@@ -2423,7 +2418,7 @@ inline unsigned int atomic_fetch_add_explicit
 
 inline unsigned int atomic_fetch_add
 ( volatile atomic_uint* __a__, unsigned int __m__ )
-{ atomic_fetch_add_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_add_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline unsigned int atomic_fetch_sub_explicit
@@ -2432,7 +2427,7 @@ inline unsigned int atomic_fetch_sub_explicit
 
 inline unsigned int atomic_fetch_sub
 ( volatile atomic_uint* __a__, unsigned int __m__ )
-{ atomic_fetch_sub_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_sub_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline unsigned int atomic_fetch_and_explicit
@@ -2441,7 +2436,7 @@ inline unsigned int atomic_fetch_and_explicit
 
 inline unsigned int atomic_fetch_and
 ( volatile atomic_uint* __a__, unsigned int __m__ )
-{ atomic_fetch_and_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_and_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline unsigned int atomic_fetch_or_explicit
@@ -2450,7 +2445,7 @@ inline unsigned int atomic_fetch_or_explicit
 
 inline unsigned int atomic_fetch_or
 ( volatile atomic_uint* __a__, unsigned int __m__ )
-{ atomic_fetch_or_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_or_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline unsigned int atomic_fetch_xor_explicit
@@ -2459,7 +2454,7 @@ inline unsigned int atomic_fetch_xor_explicit
 
 inline unsigned int atomic_fetch_xor
 ( volatile atomic_uint* __a__, unsigned int __m__ )
-{ atomic_fetch_xor_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_xor_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline long atomic_fetch_add_explicit
@@ -2468,7 +2463,7 @@ inline long atomic_fetch_add_explicit
 
 inline long atomic_fetch_add
 ( volatile atomic_long* __a__, long __m__ )
-{ atomic_fetch_add_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_add_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline long atomic_fetch_sub_explicit
@@ -2477,7 +2472,7 @@ inline long atomic_fetch_sub_explicit
 
 inline long atomic_fetch_sub
 ( volatile atomic_long* __a__, long __m__ )
-{ atomic_fetch_sub_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_sub_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline long atomic_fetch_and_explicit
@@ -2486,7 +2481,7 @@ inline long atomic_fetch_and_explicit
 
 inline long atomic_fetch_and
 ( volatile atomic_long* __a__, long __m__ )
-{ atomic_fetch_and_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_and_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline long atomic_fetch_or_explicit
@@ -2495,7 +2490,7 @@ inline long atomic_fetch_or_explicit
 
 inline long atomic_fetch_or
 ( volatile atomic_long* __a__, long __m__ )
-{ atomic_fetch_or_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_or_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline long atomic_fetch_xor_explicit
@@ -2504,7 +2499,7 @@ inline long atomic_fetch_xor_explicit
 
 inline long atomic_fetch_xor
 ( volatile atomic_long* __a__, long __m__ )
-{ atomic_fetch_xor_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_xor_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline unsigned long atomic_fetch_add_explicit
@@ -2513,7 +2508,7 @@ inline unsigned long atomic_fetch_add_explicit
 
 inline unsigned long atomic_fetch_add
 ( volatile atomic_ulong* __a__, unsigned long __m__ )
-{ atomic_fetch_add_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_add_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline unsigned long atomic_fetch_sub_explicit
@@ -2522,7 +2517,7 @@ inline unsigned long atomic_fetch_sub_explicit
 
 inline unsigned long atomic_fetch_sub
 ( volatile atomic_ulong* __a__, unsigned long __m__ )
-{ atomic_fetch_sub_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_sub_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline unsigned long atomic_fetch_and_explicit
@@ -2531,7 +2526,7 @@ inline unsigned long atomic_fetch_and_explicit
 
 inline unsigned long atomic_fetch_and
 ( volatile atomic_ulong* __a__, unsigned long __m__ )
-{ atomic_fetch_and_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_and_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline unsigned long atomic_fetch_or_explicit
@@ -2540,7 +2535,7 @@ inline unsigned long atomic_fetch_or_explicit
 
 inline unsigned long atomic_fetch_or
 ( volatile atomic_ulong* __a__, unsigned long __m__ )
-{ atomic_fetch_or_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_or_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline unsigned long atomic_fetch_xor_explicit
@@ -2549,7 +2544,7 @@ inline unsigned long atomic_fetch_xor_explicit
 
 inline unsigned long atomic_fetch_xor
 ( volatile atomic_ulong* __a__, unsigned long __m__ )
-{ atomic_fetch_xor_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_xor_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline long long atomic_fetch_add_explicit
@@ -2558,7 +2553,7 @@ inline long long atomic_fetch_add_explicit
 
 inline long long atomic_fetch_add
 ( volatile atomic_llong* __a__, long long __m__ )
-{ atomic_fetch_add_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_add_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline long long atomic_fetch_sub_explicit
@@ -2567,7 +2562,7 @@ inline long long atomic_fetch_sub_explicit
 
 inline long long atomic_fetch_sub
 ( volatile atomic_llong* __a__, long long __m__ )
-{ atomic_fetch_sub_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_sub_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline long long atomic_fetch_and_explicit
@@ -2576,7 +2571,7 @@ inline long long atomic_fetch_and_explicit
 
 inline long long atomic_fetch_and
 ( volatile atomic_llong* __a__, long long __m__ )
-{ atomic_fetch_and_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_and_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline long long atomic_fetch_or_explicit
@@ -2585,7 +2580,7 @@ inline long long atomic_fetch_or_explicit
 
 inline long long atomic_fetch_or
 ( volatile atomic_llong* __a__, long long __m__ )
-{ atomic_fetch_or_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_or_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline long long atomic_fetch_xor_explicit
@@ -2594,7 +2589,7 @@ inline long long atomic_fetch_xor_explicit
 
 inline long long atomic_fetch_xor
 ( volatile atomic_llong* __a__, long long __m__ )
-{ atomic_fetch_xor_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_xor_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline unsigned long long atomic_fetch_add_explicit
@@ -2603,7 +2598,7 @@ inline unsigned long long atomic_fetch_add_explicit
 
 inline unsigned long long atomic_fetch_add
 ( volatile atomic_ullong* __a__, unsigned long long __m__ )
-{ atomic_fetch_add_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_add_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline unsigned long long atomic_fetch_sub_explicit
@@ -2612,7 +2607,7 @@ inline unsigned long long atomic_fetch_sub_explicit
 
 inline unsigned long long atomic_fetch_sub
 ( volatile atomic_ullong* __a__, unsigned long long __m__ )
-{ atomic_fetch_sub_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_sub_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline unsigned long long atomic_fetch_and_explicit
@@ -2621,7 +2616,7 @@ inline unsigned long long atomic_fetch_and_explicit
 
 inline unsigned long long atomic_fetch_and
 ( volatile atomic_ullong* __a__, unsigned long long __m__ )
-{ atomic_fetch_and_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_and_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline unsigned long long atomic_fetch_or_explicit
@@ -2630,7 +2625,7 @@ inline unsigned long long atomic_fetch_or_explicit
 
 inline unsigned long long atomic_fetch_or
 ( volatile atomic_ullong* __a__, unsigned long long __m__ )
-{ atomic_fetch_or_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_or_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline unsigned long long atomic_fetch_xor_explicit
@@ -2639,7 +2634,7 @@ inline unsigned long long atomic_fetch_xor_explicit
 
 inline unsigned long long atomic_fetch_xor
 ( volatile atomic_ullong* __a__, unsigned long long __m__ )
-{ atomic_fetch_xor_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_xor_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline wchar_t atomic_fetch_add_explicit
@@ -2648,7 +2643,7 @@ inline wchar_t atomic_fetch_add_explicit
 
 inline wchar_t atomic_fetch_add
 ( volatile atomic_wchar_t* __a__, wchar_t __m__ )
-{ atomic_fetch_add_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_add_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline wchar_t atomic_fetch_sub_explicit
@@ -2657,7 +2652,7 @@ inline wchar_t atomic_fetch_sub_explicit
 
 inline wchar_t atomic_fetch_sub
 ( volatile atomic_wchar_t* __a__, wchar_t __m__ )
-{ atomic_fetch_sub_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_sub_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline wchar_t atomic_fetch_and_explicit
@@ -2666,7 +2661,7 @@ inline wchar_t atomic_fetch_and_explicit
 
 inline wchar_t atomic_fetch_and
 ( volatile atomic_wchar_t* __a__, wchar_t __m__ )
-{ atomic_fetch_and_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_and_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline wchar_t atomic_fetch_or_explicit
@@ -2675,7 +2670,7 @@ inline wchar_t atomic_fetch_or_explicit
 
 inline wchar_t atomic_fetch_or
 ( volatile atomic_wchar_t* __a__, wchar_t __m__ )
-{ atomic_fetch_or_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_or_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 inline wchar_t atomic_fetch_xor_explicit
@@ -2684,7 +2679,7 @@ inline wchar_t atomic_fetch_xor_explicit
 
 inline wchar_t atomic_fetch_xor
 ( volatile atomic_wchar_t* __a__, wchar_t __m__ )
-{ atomic_fetch_xor_explicit( __a__, __m__, memory_order_seq_cst ); }
+{ return atomic_fetch_xor_explicit( __a__, __m__, memory_order_seq_cst ); }
 
 
 #else
@@ -2698,6 +2693,9 @@ _ATOMIC_LOAD_( __a__, memory_order_seq_cst )
 
 #define atomic_load_explicit( __a__, __x__ ) \
 _ATOMIC_LOAD_( __a__, __x__ )
+
+#define atomic_init( __a__, __m__ ) \
+_ATOMIC_INIT_( __a__, __m__ )
 
 #define atomic_store( __a__, __m__ ) \
 _ATOMIC_STORE_( __a__, __m__, memory_order_seq_cst )

@@ -284,7 +284,7 @@ void ModelChecker::check_current_action(void)
 			if (diverge==NULL) {
 				tmp->create_cv(get_parent_action(tmp->get_tid()));
 			}
-			
+
 			delete curr;
 			curr = tmp;
 		} else {
@@ -357,7 +357,7 @@ void ModelChecker::check_current_action(void)
 	if (!parnode->backtrack_empty()||!currnode->read_from_empty()||!currnode->future_value_empty()||!currnode->promise_empty())
 		if (!next_backtrack || *curr > *next_backtrack)
 			next_backtrack = curr;
-	
+
 	set_backtracking(curr);
 }
 
@@ -452,7 +452,7 @@ void ModelChecker::w_modification_order(ModelAction * curr) {
 						 (1) did not happen before us
 						 (2) is a read and we are a write
 						 (3) cannot synchronize with us
-						 (4) is in a different thread 
+						 (4) is in a different thread
 						 =>
 						 that read could potentially read from our write.
 					*/
@@ -616,7 +616,7 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 		action_list_t::reverse_iterator rit;
 		for (rit = list->rbegin(); rit != list->rend(); rit++) {
 			ModelAction *act = *rit;
-			
+
 			/* Only consider 'write' actions */
 			if (!act->is_write())
 				continue;

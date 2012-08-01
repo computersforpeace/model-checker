@@ -63,7 +63,7 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift=0, void * (*
 		return _malloc(size);
 	}
 
-  void operator delete(void *p, size_t size) {
+	void operator delete(void *p, size_t size) {
 		_free(p);
 	}
 
@@ -117,7 +117,7 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift=0, void * (*
 	}
 
 	/** Put a key entry into the table. */
-  _Val * ensureptr(_Key key) {
+	_Val * ensureptr(_Key key) {
 		if(size > threshold) {
 			//Resize
 		  unsigned int newsize = capacity << 1;

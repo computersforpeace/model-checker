@@ -90,7 +90,7 @@ private:
 	ModelAction * process_rmw(ModelAction * curr);
 	void r_modification_order(ModelAction * curr, const ModelAction *rf);
 	void w_modification_order(ModelAction * curr);
-	
+
 	ModelAction *current_action;
 	ModelAction *diverge;
 	thread_id_t nextThread;

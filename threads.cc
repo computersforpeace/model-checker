@@ -94,7 +94,7 @@ void Thread::complete()
 	}
 }
 
-/** Create a new thread. 
+/** Create a new thread.
  *  Takes the following parameters:
  *  @param t The thread identifier of the newly created thread.
  *  @param func  The function that the thread will call.

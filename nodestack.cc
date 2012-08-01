@@ -58,7 +58,7 @@ void Node::print_may_read_from()
 }
 
 /** This method sets a promise to explore meeting with the given
- *  node. 
+ *  node.
  *  @param i is the promise index.
  */
 
@@ -99,7 +99,7 @@ bool Node::increment_promise() {
 	return false;
 }
 
-/** This method returns whether the promise set is empty. 
+/** This method returns whether the promise set is empty.
  *
  *  @return true if we have explored all promise combinations.
  */
@@ -125,7 +125,7 @@ bool Node::add_future_value(uint64_t value) {
 	return true;
 }
 
-/** 
+/**
  * Checks whether the future_values set for this node is empty.
  * @return true if the future_values set is empty.
  */

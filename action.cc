@@ -28,7 +28,7 @@ ModelAction::~ModelAction()
 
 bool ModelAction::is_read() const
 {
-	return type == ATOMIC_READ || type == ATOMIC_RMW;
+	return type == ATOMIC_READ || type == ATOMIC_RMWR || type == ATOMIC_RMW;
 }
 
 bool ModelAction::is_write() const
@@ -36,9 +36,19 @@ bool ModelAction::is_write() const
 	return type == ATOMIC_WRITE || type == ATOMIC_RMW || type == ATOMIC_INIT;
 }
 
+bool ModelAction::is_rmwr() const
+{
+	return type == ATOMIC_RMWR;
+}
+
 bool ModelAction::is_rmw() const
 {
 	return type == ATOMIC_RMW;
+}
+
+bool ModelAction::is_rmwc() const
+{
+	return type == ATOMIC_RMWC;
 }
 
 bool ModelAction::is_initialization() const
@@ -182,6 +192,12 @@ void ModelAction::print(void) const
 		break;
 	case ATOMIC_RMW:
 		type_str = "atomic rmw";
+		break;
+	case ATOMIC_RMWR:
+		type_str = "atomic rmwr";
+		break;
+	case ATOMIC_RMWC:
+		type_str = "atomic rmwc";
 		break;
 	case ATOMIC_INIT:
 		type_str = "init atomic";

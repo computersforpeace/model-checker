@@ -353,7 +353,8 @@ void ModelChecker::check_current_action(void)
 	Node *currnode = curr->get_node();
 	Node *parnode = currnode->get_parent();
 
-	if (!parnode->backtrack_empty()||!currnode->read_from_empty()||!currnode->future_value_empty()||!currnode->promise_empty())
+	if (!parnode->backtrack_empty() || !currnode->read_from_empty() ||
+	          !currnode->future_value_empty() || !currnode->promise_empty())
 		if (!next_backtrack || *curr > *next_backtrack)
 			next_backtrack = curr;
 

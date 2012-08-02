@@ -127,7 +127,6 @@ bool Node::future_value_empty() {
 	return ((future_index+1)>=future_values.size());
 }
 
-
 /**
  * Checks if the Thread associated with this thread ID has been explored from
  * this Node already.
@@ -150,7 +149,6 @@ bool Node::backtrack_empty()
 	return (numBacktracks == 0);
 }
 
-
 /**
  * Checks whether the readsfrom set for this node is empty.
  * @return true if the readsfrom set is empty.
@@ -158,8 +156,6 @@ bool Node::backtrack_empty()
 bool Node::read_from_empty() {
 	return ((read_from_index+1)>=may_read_from.size());
 }
-
-
 
 /**
  * Mark the appropriate backtracking information for exploring a thread choice.
@@ -221,7 +217,6 @@ void Node::add_read_from(const ModelAction *act)
  * where this->action is a 'read'.
  * @return The first element in future_values
  */
-
 uint64_t Node::get_future_value() {
 	ASSERT(future_index<future_values.size());
 	return future_values[future_index];

@@ -41,9 +41,8 @@ ModelChecker::ModelChecker() :
 /** @brief Destructor */
 ModelChecker::~ModelChecker()
 {
-	/*	std::map<int, Thread *>::iterator it;
-	for (it = thread_map->begin(); it != thread_map->end(); it++)
-	delete (*it).second;*/
+	for (int i = 0; i < get_num_threads(); i++)
+		delete thread_map->get(i);
 	delete thread_map;
 
 	delete obj_thrd_map;

@@ -42,7 +42,14 @@ public:
 	ucontext_t * get_system_context(void) { return system_context; }
 
 	void check_current_action(void);
-	void print_summary(void);
+
+	/**
+	 * Prints an execution summary with trace information.
+	 * @param feasible Formats outputting according to whether or not the
+	 * current trace is feasible. Defaults to feasible = true.
+	 */
+	void print_summary(bool feasible = true);
+
 	Thread * schedule_next_thread();
 
 	int add_thread(Thread *t);

@@ -1,12 +1,9 @@
 CC=gcc
 CXX=g++
 
-BIN=model
 LIB_NAME=model
 LIB_SO=lib$(LIB_NAME).so
 
-USER_O=userprog.o
-USER_H=libthreads.h
 
 MODEL_CC=libthreads.cc schedule.cc model.cc threads.cc librace.cc action.cc nodestack.cc clockvector.cc main.cc snapshot-interface.cc cyclegraph.cc datarace.cc impatomic.cc cmodelint.cc promise.cc
 MODEL_O=libthreads.o schedule.o model.o threads.o librace.o action.o nodestack.o clockvector.o main.o snapshot-interface.o cyclegraph.o datarace.o impatomic.o cmodelint.o promise.o
@@ -20,7 +17,7 @@ CPPFLAGS=-Wall -g -O0 -Iinclude -I.
 LDFLAGS=-ldl -lrt
 SHARED=-shared
 
-all: $(BIN)
+all: $(LIB_SO)
 
 debug: CPPFLAGS += -DCONFIG_DEBUG
 debug: all
@@ -32,11 +29,6 @@ mac: all
 
 docs: *.c *.cc *.h
 	doxygen
-
-$(BIN): $(USER_O) $(LIB_SO)
-	$(CXX) -o $(BIN) $(USER_O) -L. -l$(LIB_NAME)
-
-# note: implicit rule for generating $(USER_O) (i.e., userprog.c -> userprog.o)
 
 $(LIB_SO): $(MODEL_O) $(MODEL_H) $(SHMEM_O) $(SHMEM_H)
 	$(CXX) $(SHARED) -o $(LIB_SO) $(MODEL_O) $(SHMEM_O) $(LDFLAGS)
@@ -54,7 +46,7 @@ snapshot.o: mymemory.h snapshot.h snapshotimp.h snapshot.cc
 	$(CXX) -fPIC -c $< $(CPPFLAGS)
 
 clean:
-	rm -f $(BIN) *.o *.so
+	rm -f *.o *.so
 
 mrclean: clean
 	rm -rf docs

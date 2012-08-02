@@ -12,7 +12,9 @@ CPPFLAGS += -Iinclude -I.
 LDFLAGS=-ldl -lrt
 SHARED=-shared
 
-all: $(LIB_SO)
+TESTS=test
+
+all: $(LIB_SO) tests
 
 debug: CPPFLAGS += -DCONFIG_DEBUG
 debug: all
@@ -42,9 +44,13 @@ snapshot.o: mymemory.h snapshot.h snapshotimp.h snapshot.cc
 
 clean:
 	rm -f *.o *.so
+	$(MAKE) -C $(TESTS) clean
 
 mrclean: clean
 	rm -rf docs
 
 tags::
 	ctags -R
+
+tests:: $(LIB_SO)
+	$(MAKE) -C $(TESTS)

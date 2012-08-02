@@ -9,10 +9,10 @@
 #include <stdio.h>
 
 template<typename _Key, typename _Val, void * (* _malloc)(size_t), void * (* _calloc)(size_t, size_t), void (*_free)(void *)>
-	struct hashlistnode {
-		_Key key;
-		_Val val;
-		struct hashlistnode<_Key,_Val, _malloc, _calloc, _free> *next;
+struct hashlistnode {
+	_Key key;
+	_Val val;
+	struct hashlistnode<_Key,_Val, _malloc, _calloc, _free> *next;
 
 	void * operator new(size_t size) {
 		return _malloc(size);
@@ -29,11 +29,12 @@ template<typename _Key, typename _Val, void * (* _malloc)(size_t), void * (* _ca
 	void operator delete[](void *p, size_t size) {
 		_free(p);
 	}
-	};
+};
 
-/** Hashtable class.  By default it is snapshotting, but you can pass
-		in your own allocation functions. */
-
+/**
+ * Hashtable class.  By default it is snapshotting, but you can pass in your
+ * own allocation functions.
+ */
 template<typename _Key, typename _Val, typename _KeyInt, int _Shift=0, void * (* _malloc)(size_t)=malloc, void * (* _calloc)(size_t, size_t)=calloc, void (*_free)(void *)=free>
 	class HashTable {
  public:
@@ -118,13 +119,13 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift=0, void * (*
 
 	/** Put a key entry into the table. */
 	_Val * ensureptr(_Key key) {
-		if(size > threshold) {
+		if (size > threshold) {
 			//Resize
-		  unsigned int newsize = capacity << 1;
-		  resize(newsize);
-	  }
+			unsigned int newsize = capacity << 1;
+			resize(newsize);
+		}
 
-	  struct hashlistnode<_Key,_Val, _malloc, _calloc, _free> *ptr = table[(((_KeyInt)key) & mask)>>_Shift];
+		struct hashlistnode<_Key,_Val, _malloc, _calloc, _free> *ptr = table[(((_KeyInt)key) & mask)>>_Shift];
 		size++;
 		struct hashlistnode<_Key,_Val, _malloc, _calloc, _free> *search = ptr;
 

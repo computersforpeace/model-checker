@@ -15,8 +15,7 @@
 ModelChecker *model;
 
 /** @brief Constructor */
-ModelChecker::ModelChecker()
-	:
+ModelChecker::ModelChecker() :
 	/* Initialize default scheduler */
 	scheduler(new Scheduler()),
 	/* First thread created will have id INITIAL_THREAD_ID */

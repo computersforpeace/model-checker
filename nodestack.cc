@@ -57,33 +57,29 @@ void Node::print_may_read_from()
 		(*it)->print();
 }
 
-/** This method sets a promise to explore meeting with the given
- *  node.
- *  @param i is the promise index.
+/**
+ * Sets a promise to explore meeting with the given node.
+ * @param i is the promise index.
  */
-
 void Node::set_promise(uint32_t i) {
 	if (i>=promises.size())
 		promises.resize(i+1,0);
 	promises[i]=1;
 }
 
-/** This method looks up whether a given promise should be satisfied
- *  by this node.
- *
- * @param i is the promise index.
+/**
+ * Looks up whether a given promise should be satisfied by this node.
+ * @param i The promise index.
  * @return true if the promise should be satisfied by the given model action.
  */
-
 bool Node::get_promise(uint32_t i) {
 	return (i<promises.size())&&(promises[i]==2);
 }
 
-/** This method increments to the next combination of promises.
- *
+/**
+ * Increments to the next combination of promises.
  * @return true if we have a valid combination.
  */
-
 bool Node::increment_promise() {
 	for (unsigned int i=0;i<promises.size();i++) {
 		if (promises[i]==1) {
@@ -99,11 +95,10 @@ bool Node::increment_promise() {
 	return false;
 }
 
-/** This method returns whether the promise set is empty.
- *
- *  @return true if we have explored all promise combinations.
+/**
+ * Returns whether the promise set is empty.
+ * @return true if we have explored all promise combinations.
  */
-
 bool Node::promise_empty() {
 	for (unsigned int i=0;i<promises.size();i++)
 		if (promises[i]==1)
@@ -115,7 +110,6 @@ bool Node::promise_empty() {
  * Adds a value from a weakly ordered future write to backtrack to.
  * @param value is the value to backtrack to.
  */
-
 bool Node::add_future_value(uint64_t value) {
 	for(unsigned int i=0;i<future_values.size();i++)
 		if (future_values[i]==value)
@@ -129,7 +123,6 @@ bool Node::add_future_value(uint64_t value) {
  * Checks whether the future_values set for this node is empty.
  * @return true if the future_values set is empty.
  */
-
 bool Node::future_value_empty() {
 	return ((future_index+1)>=future_values.size());
 }
@@ -261,7 +254,6 @@ bool Node::increment_read_from() {
  * Increments the index into the future_values set to explore the next item.
  * @return Returns false if we have explored all values.
  */
-
 bool Node::increment_future_value() {
 	future_index++;
 	return (future_index<future_values.size());
@@ -278,7 +270,7 @@ void Node::explore(thread_id_t tid)
 }
 
 static void clear_node_list(node_list_t *list, node_list_t::iterator start,
-					       node_list_t::iterator end)
+                                               node_list_t::iterator end)
 {
 	node_list_t::iterator it;
 

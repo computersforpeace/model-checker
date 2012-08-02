@@ -123,8 +123,8 @@ int SnapshotStack::backTrackBeforeStep(int seqindex) {
 			return stack->index;
 		}
 		struct stackEntry *tmp=stack;
-		MYFREE(tmp);
 		stack=stack->next;
+		MYFREE(tmp);
 	}
 }
 

@@ -230,8 +230,6 @@ uint64_t Node::get_future_value() {
 /**
  * Gets the next 'may_read_from' action from this Node. Only valid for a node
  * where this->action is a 'read'.
- * @todo Perform reads_from backtracking/replay properly, so that this function
- * may remove elements from may_read_from
  * @return The first element in may_read_from
  */
 const ModelAction * Node::get_read_from() {

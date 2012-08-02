@@ -1,9 +1,4 @@
-CC=gcc
-CXX=g++
-
-LIB_NAME=model
-LIB_SO=lib$(LIB_NAME).so
-
+include common.mk
 
 MODEL_CC=libthreads.cc schedule.cc model.cc threads.cc librace.cc action.cc nodestack.cc clockvector.cc main.cc snapshot-interface.cc cyclegraph.cc datarace.cc impatomic.cc cmodelint.cc promise.cc
 MODEL_O=libthreads.o schedule.o model.o threads.o librace.o action.o nodestack.o clockvector.o main.o snapshot-interface.o cyclegraph.o datarace.o impatomic.o cmodelint.o promise.o
@@ -13,7 +8,7 @@ SHMEM_CC=snapshot.cc malloc.c mymemory.cc
 SHMEM_O=snapshot.o malloc.o mymemory.o
 SHMEM_H=snapshot.h snapshotimp.h mymemory.h
 
-CPPFLAGS=-Wall -g -O0 -Iinclude -I.
+CPPFLAGS += -Iinclude -I.
 LDFLAGS=-ldl -lrt
 SHARED=-shared
 

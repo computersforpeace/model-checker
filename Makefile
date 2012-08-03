@@ -6,7 +6,7 @@ MODEL_H=libthreads.h schedule.h common.h model.h threads.h librace.h action.h no
 
 SHMEM_CC=snapshot.cc malloc.c mymemory.cc
 SHMEM_O=snapshot.o malloc.o mymemory.o
-SHMEM_H=snapshot.h snapshotimp.h mymemory.h
+SHMEM_H=snapshot.h snapshotimp.h mymemory.h config.h
 
 CPPFLAGS += -Iinclude -I.
 LDFLAGS=-ldl -lrt
@@ -33,10 +33,10 @@ $(LIB_SO): $(MODEL_O) $(MODEL_H) $(SHMEM_O) $(SHMEM_H)
 malloc.o: malloc.c
 	$(CC) -fPIC -c malloc.c -DMSPACES -DONLY_MSPACES $(CPPFLAGS)
 
-mymemory.o: mymemory.h snapshotimp.h snapshot.h mymemory.cc
+mymemory.o: mymemory.h snapshotimp.h snapshot.h mymemory.cc config.h
 	$(CXX) -fPIC -c mymemory.cc $(CPPFLAGS)
 
-snapshot.o: mymemory.h snapshot.h snapshotimp.h snapshot.cc
+snapshot.o: mymemory.h snapshot.h snapshotimp.h snapshot.cc config.h
 	$(CXX) -fPIC -c snapshot.cc $(CPPFLAGS)
 
 %.o: %.cc $(MODEL_H)

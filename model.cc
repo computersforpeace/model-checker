@@ -339,7 +339,7 @@ void ModelChecker::check_current_action(void)
 	if (!already_added)
 		add_action_to_lists(curr);
 
-	/* Is there a better interface for setting the next thread rather
+	/** @todo Is there a better interface for setting the next thread rather
 		 than this field/convoluted approach?  Perhaps like just returning
 		 it or something? */
 

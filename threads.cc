@@ -71,11 +71,27 @@ int Thread::create_context()
 	return 0;
 }
 
+/**
+ * Swaps the current context to another thread of execution. This form switches
+ * from a user Thread to a system context.
+ * @param t Thread representing the current context
+ * @param ctxt Context to switch to
+ * @return Does not return, unless we return to Thread t's context. See
+ * swapcontext(3) (returns 0 for success, -1 for failure).
+ */
 int Thread::swap(Thread *t, ucontext_t *ctxt)
 {
 	return swapcontext(&t->context, ctxt);
 }
 
+/**
+ * Swaps the current context to another thread of execution. This form switches
+ * from a system context to a user Thread.
+ * @param t Thread representing the current context
+ * @param ctxt Context to switch to
+ * @return Does not return, unless we return to Thread t's context. See
+ * swapcontext(3) (returns 0 for success, -1 for failure).
+ */
 int Thread::swap(ucontext_t *ctxt, Thread *t)
 {
 	return swapcontext(ctxt, &t->context);
@@ -83,7 +99,6 @@ int Thread::swap(ucontext_t *ctxt, Thread *t)
 
 
 /** Terminate a thread and free its stack. */
-
 void Thread::complete()
 {
 	if (state != THREAD_COMPLETED) {

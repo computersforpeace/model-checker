@@ -26,4 +26,6 @@ do { \
 	} \
 } while (0);
 
+#define error_msg(...) fprintf(stderr, "Error: " __VA_ARGS__)
+
 #endif /* __COMMON_H__ */

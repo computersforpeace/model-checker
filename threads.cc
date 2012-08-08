@@ -36,8 +36,8 @@ Thread * thread_current(void)
  * @todo We should make the START event always immediately follow the
  * CREATE event, so we don't get redundant traces...
  */
-
-void thread_startup() {
+void thread_startup()
+{
 	Thread * curr_thread = thread_current();
 
 	/* Add dummy "start" action, just to create a first clock vector */

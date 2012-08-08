@@ -58,11 +58,19 @@ static void thread_wait_finish(void) {
 	while (!thread_system_next());
 }
 
+static void parse_options(struct model_params *params, int argc, char **argv) {
+}
+
+int main_argc;
+char **main_argv;
 
 /** The real_main function contains the main model checking loop. */
 static void real_main() {
 	thrd_t user_thread;
 	ucontext_t main_context;
+	struct model_params params;
+
+	parse_options(&params, main_argc, main_argv);
 
 	//Initialize race detector
 	initRaceDetector();
@@ -70,7 +78,7 @@ static void real_main() {
 	//Create the singleton SnapshotStack object
 	snapshotObject = new SnapshotStack();
 
-	model = new ModelChecker();
+	model = new ModelChecker(params);
 
 	if (getcontext(&main_context))
 		return;
@@ -91,17 +99,13 @@ static void real_main() {
 	DEBUG("Exiting\n");
 }
 
-int main_numargs;
-char ** main_args;
-
 /**
  * Main function.  Just initializes snapshotting library and the
  * snapshotting library calls the real_main function.
  */
-int main(int numargs, char ** args) {
-	/* Stash this stuff in case someone wants it eventually */
-	main_numargs=numargs;
-	main_args=args;
+int main(int argc, char ** argv) {
+	main_argc = argc;
+	main_argv = argv;
 
 	/* Let's jump in quickly and start running stuff */
 	initSnapShotLibrary(10000, 1024, 1024, 1000, &real_main);

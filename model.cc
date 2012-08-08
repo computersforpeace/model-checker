@@ -15,13 +15,14 @@
 ModelChecker *model;
 
 /** @brief Constructor */
-ModelChecker::ModelChecker() :
+ModelChecker::ModelChecker(struct model_params params) :
 	/* Initialize default scheduler */
 	scheduler(new Scheduler()),
 	/* First thread created will have id INITIAL_THREAD_ID */
 	next_thread_id(INITIAL_THREAD_ID),
 	used_sequence_numbers(0),
 	num_executions(0),
+	params(params),
 	current_action(NULL),
 	diverge(NULL),
 	nextThread(THREAD_ID_T_NONE),

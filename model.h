@@ -23,10 +23,17 @@ class NodeStack;
 class CycleGraph;
 class Promise;
 
+/**
+ * Model checker parameter structure. Holds run-time configuration options for
+ * the model checker.
+ */
+struct model_params {
+};
+
 /** @brief The central structure for model-checking */
 class ModelChecker {
 public:
-	ModelChecker();
+	ModelChecker(struct model_params params);
 	~ModelChecker();
 
 	/** The scheduler to use: tracks the running/ready Threads */
@@ -72,6 +79,8 @@ private:
 	int next_thread_id;
 	modelclock_t used_sequence_numbers;
 	int num_executions;
+
+	const model_params params;
 
 	/**
 	 * Stores the ModelAction for the current thread action.  Call this

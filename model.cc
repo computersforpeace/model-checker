@@ -172,9 +172,8 @@ bool ModelChecker::next_execution()
 
 	num_executions++;
 
-	bool feasible = isfinalfeasible();
-	if (feasible || DBG_ENABLED())
-		print_summary(feasible);
+	if (isfinalfeasible() || DBG_ENABLED())
+		print_summary();
 
 	if ((diverge = model->get_next_backtrack()) == NULL)
 		return false;
@@ -704,7 +703,7 @@ static void print_list(action_list_t *list)
 	printf("---------------------------------------------------------------------\n");
 }
 
-void ModelChecker::print_summary(bool feasible)
+void ModelChecker::print_summary()
 {
 	printf("\n");
 	printf("Number of executions: %d\n", num_executions);
@@ -712,7 +711,7 @@ void ModelChecker::print_summary(bool feasible)
 
 	scheduler->print();
 
-	if (!feasible)
+	if (!isfinalfeasible())
 		printf("INFEASIBLE EXECUTION!\n");
 	print_list(action_trace);
 	printf("\n");

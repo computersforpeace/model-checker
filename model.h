@@ -50,12 +50,8 @@ public:
 
 	void check_current_action(void);
 
-	/**
-	 * Prints an execution summary with trace information.
-	 * @param feasible Formats outputting according to whether or not the
-	 * current trace is feasible. Defaults to feasible = true.
-	 */
-	void print_summary(bool feasible = true);
+	/** Prints an execution summary with trace information. */
+	void print_summary();
 
 	Thread * schedule_next_thread();
 

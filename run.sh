@@ -16,13 +16,9 @@ export LD_LIBRARY_PATH=.
 
 [ $# -gt 0 ] && [ "$1" != "gdb" ] && BIN=$1 && shift
 
-if [ $# -gt 0 ]; then
-	if [ "$1" = "gdb" ]; then
-		gdb $BIN
-	else
-		echo "Invalid argument(s)"
-		exit 1
-	fi
-else
-	$BIN
+if [ $# -gt 0 ] && [ "$1" = "gdb" ]; then
+	shift
+	gdb $BIN $@
 fi
+
+$BIN $@

@@ -266,11 +266,11 @@ void ModelChecker::check_current_action(void)
 		return;
 	}
 
-	if (curr->is_rmwc()||curr->is_rmw()) {
-		ModelAction *tmp=process_rmw(curr);
+	if (curr->is_rmwc() || curr->is_rmw()) {
+		ModelAction *tmp = process_rmw(curr);
 		already_added = true;
 		delete curr;
-		curr=tmp;
+		curr = tmp;
 	} else {
 		ModelAction * tmp = node_stack->explore_action(curr);
 		if (tmp) {
@@ -280,9 +280,8 @@ void ModelChecker::check_current_action(void)
 				tmp->copy_typeandorder(curr);
 
 			/* If we have diverged, we need to reset the clock vector. */
-			if (diverge==NULL) {
+			if (diverge == NULL)
 				tmp->create_cv(get_parent_action(tmp->get_tid()));
-			}
 
 			delete curr;
 			curr = tmp;
@@ -307,16 +306,15 @@ void ModelChecker::check_current_action(void)
 	}
 
 	/* Deal with new thread */
-	if (curr->get_type() == THREAD_START) {
+	if (curr->get_type() == THREAD_START)
 		check_promises(NULL, curr->get_cv());
-	}
 
 	/* Assign reads_from values */
 	Thread *th = get_thread(curr->get_tid());
 	uint64_t value = VALUE_NONE;
 	if (curr->is_read()) {
 		const ModelAction *reads_from = curr->get_node()->get_read_from();
-		if (reads_from!=NULL) {
+		if (reads_from != NULL) {
 			value = reads_from->get_value();
 			/* Assign reads_from, perform release/acquire synchronization */
 			curr->read_from(reads_from);
@@ -325,7 +323,7 @@ void ModelChecker::check_current_action(void)
 			/* Read from future value */
 			value = curr->get_node()->get_future_value();
 			curr->read_from(NULL);
-			Promise * valuepromise=new Promise(curr, value);
+			Promise * valuepromise = new Promise(curr, value);
 			promises->push_back(valuepromise);
 		}
 	} else if (curr->is_write()) {
@@ -344,11 +342,10 @@ void ModelChecker::check_current_action(void)
 		 it or something? */
 
 	/* Do not split atomic actions. */
-	if (curr->is_rmwr()) {
+	if (curr->is_rmwr())
 		nextThread = thread_current()->get_id();
-	} else {
+	else
 		nextThread = get_next_replay_thread();
-	}
 
 	Node *currnode = curr->get_node();
 	Node *parnode = currnode->get_parent();
@@ -368,13 +365,13 @@ bool ModelChecker::isfeasible() {
 
 /** Returns whether the current completed trace is feasible. */
 bool ModelChecker::isfinalfeasible() {
-	return isfeasible() && promises->size()==0;
+	return isfeasible() && promises->size() == 0;
 }
 
 /** Close out a RMWR by converting previous RMWR into a RMW or READ. */
 ModelAction * ModelChecker::process_rmw(ModelAction * act) {
 	int tid = id_to_int(act->get_tid());
-	ModelAction *lastread=get_last_action(tid);
+	ModelAction *lastread = get_last_action(tid);
 	lastread->process_rmw(act);
 	if (act->is_rmw())
 		cyclegraph->addRMWEdge(lastread, lastread->get_reads_from());
@@ -402,10 +399,10 @@ void ModelChecker::r_modification_order(ModelAction * curr, const ModelAction *r
 			/* Include at most one act per-thread that "happens before" curr */
 			if (act->happens_before(curr)) {
 				if (act->is_read()) {
-					const ModelAction * prevreadfrom=act->get_reads_from();
-					if (prevreadfrom!=NULL&&rf!=prevreadfrom)
+					const ModelAction * prevreadfrom = act->get_reads_from();
+					if (prevreadfrom != NULL && rf != prevreadfrom)
 						cyclegraph->addEdge(rf, prevreadfrom);
-				} else if (rf!=act) {
+				} else if (rf != act) {
 					cyclegraph->addEdge(rf, act);
 				}
 				break;
@@ -426,24 +423,24 @@ void ModelChecker::post_r_modification_order(ModelAction * curr, const ModelActi
 		/* Iterate over actions in thread, starting from most recent */
 		action_list_t *list = &(*thrd_lists)[i];
 		action_list_t::reverse_iterator rit;
-		ModelAction *lastact=NULL;
+		ModelAction *lastact = NULL;
 
 		/* Find last action that happens after curr */
 		for (rit = list->rbegin(); rit != list->rend(); rit++) {
 			ModelAction *act = *rit;
 			if (curr->happens_before(act)) {
-				lastact=act;
+				lastact = act;
 			} else
 				break;
 		}
 
 			/* Include at most one act per-thread that "happens before" curr */
-		if (lastact!=NULL) {
+		if (lastact != NULL) {
 			if (lastact->is_read()) {
-				const ModelAction * postreadfrom=lastact->get_reads_from();
-				if (postreadfrom!=NULL&&rf!=postreadfrom)
+				const ModelAction * postreadfrom = lastact->get_reads_from();
+				if (postreadfrom != NULL&&rf != postreadfrom)
 					cyclegraph->addEdge(postreadfrom, rf);
-			} else if (rf!=lastact) {
+			} else if (rf != lastact) {
 				cyclegraph->addEdge(lastact, rf);
 			}
 			break;
@@ -463,8 +460,8 @@ void ModelChecker::w_modification_order(ModelAction * curr) {
 	if (curr->is_seqcst()) {
 		/* We have to at least see the last sequentially consistent write,
 			 so we are initialized. */
-		ModelAction * last_seq_cst=get_last_seq_cst(curr->get_location());
-		if (last_seq_cst!=NULL)
+		ModelAction * last_seq_cst = get_last_seq_cst(curr->get_location());
+		if (last_seq_cst != NULL)
 			cyclegraph->addEdge(curr, last_seq_cst);
 	}
 
@@ -572,10 +569,10 @@ ClockVector * ModelChecker::get_cv(thread_id_t tid) {
 /** Resolve the given promises. */
 
 void ModelChecker::resolve_promises(ModelAction *write) {
-	for(unsigned int i=0, promise_index=0;promise_index<promises->size(); i++) {
-		Promise * promise=(*promises)[promise_index];
+	for (unsigned int i = 0, promise_index = 0;promise_index<promises->size(); i++) {
+		Promise * promise = (*promises)[promise_index];
 		if (write->get_node()->get_promise(i)) {
-			ModelAction * read=promise->get_action();
+			ModelAction * read = promise->get_action();
 			read->read_from(write);
 			r_modification_order(read, write);
 			post_r_modification_order(read, write);
@@ -589,14 +586,14 @@ void ModelChecker::resolve_promises(ModelAction *write) {
  *  this action. */
 
 void ModelChecker::compute_promises(ModelAction *curr) {
-	for(unsigned int i=0;i<promises->size();i++) {
-		Promise * promise=(*promises)[i];
-		const ModelAction * act=promise->get_action();
+	for (unsigned int i = 0;i<promises->size();i++) {
+		Promise * promise = (*promises)[i];
+		const ModelAction * act = promise->get_action();
 		if (!act->happens_before(curr)&&
 				act->is_read()&&
 				!act->is_synchronizing(curr)&&
 				!act->same_thread(curr)&&
-				promise->get_value()==curr->get_value()) {
+				promise->get_value() == curr->get_value()) {
 			curr->get_node()->set_promise(i);
 		}
 	}
@@ -605,14 +602,14 @@ void ModelChecker::compute_promises(ModelAction *curr) {
 /** Checks promises in response to change in ClockVector Threads. */
 
 void ModelChecker::check_promises(ClockVector *old_cv, ClockVector * merge_cv) {
-	for(unsigned int i=0;i<promises->size();i++) {
-		Promise * promise=(*promises)[i];
-		const ModelAction * act=promise->get_action();
-		if ((old_cv==NULL||!old_cv->synchronized_since(act))&&
+	for (unsigned int i = 0;i<promises->size();i++) {
+		Promise * promise = (*promises)[i];
+		const ModelAction * act = promise->get_action();
+		if ((old_cv == NULL||!old_cv->synchronized_since(act))&&
 				merge_cv->synchronized_since(act)) {
 			//This thread is no longer able to send values back to satisfy the promise
-			int num_synchronized_threads=promise->increment_threads();
-			if (num_synchronized_threads==model->get_num_threads()) {
+			int num_synchronized_threads = promise->increment_threads();
+			if (num_synchronized_threads == model->get_num_threads()) {
 				//Promise has failed
 				failed_promise = true;
 				return;

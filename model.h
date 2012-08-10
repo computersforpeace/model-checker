@@ -36,14 +36,8 @@ public:
 	ModelChecker(struct model_params params);
 	~ModelChecker();
 
-	/** Stores the context for the main model-checking system thread (call
-	 * once)
-	 * @param ctxt The system context structure
-	 */
-	void set_system_context(ucontext_t *ctxt) { system_context = ctxt; }
-
 	/** @returns the context for the main model-checking system thread */
-	ucontext_t * get_system_context(void) { return system_context; }
+	ucontext_t * get_system_context() { return &system_context; }
 
 	void check_current_action(void);
 
@@ -115,7 +109,7 @@ private:
 	ModelAction *diverge;
 	thread_id_t nextThread;
 
-	ucontext_t *system_context;
+	ucontext_t system_context;
 	action_list_t *action_trace;
 	HashTable<int, Thread *, int> *thread_map;
 

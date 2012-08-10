@@ -21,7 +21,6 @@ char **main_argv;
 /** The real_main function contains the main model checking loop. */
 static void real_main() {
 	thrd_t user_thread;
-	ucontext_t main_context;
 	struct model_params params;
 
 	parse_options(&params, main_argc, main_argv);
@@ -33,11 +32,6 @@ static void real_main() {
 	snapshotObject = new SnapshotStack();
 
 	model = new ModelChecker(params);
-
-	if (getcontext(&main_context))
-		return;
-
-	model->set_system_context(&main_context);
 
 	snapshotObject->snapshotStep(0);
 	do {

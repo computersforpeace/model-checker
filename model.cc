@@ -749,7 +749,7 @@ int ModelChecker::switch_to_master(ModelAction *act)
 	Thread * old = thread_current();
 	set_current_action(act);
 	old->set_state(THREAD_READY);
-	return Thread::swap(old, get_system_context());
+	return Thread::swap(old, &system_context);
 }
 
 /**
@@ -785,7 +785,7 @@ bool ModelChecker::take_step() {
 	if (!next)
 		return false;
 	/* Return false only if swap fails with an error */
-	return (Thread::swap(get_system_context(), next) == 0);
+	return (Thread::swap(&system_context, next) == 0);
 }
 
 /** Runs the current execution until threre are no more steps to take. */

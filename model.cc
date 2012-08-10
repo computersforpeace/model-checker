@@ -716,11 +716,15 @@ void ModelChecker::print_summary()
 	printf("\n");
 }
 
-int ModelChecker::add_thread(Thread *t)
+/**
+ * Add a Thread to the system for the first time. Should only be called once
+ * per thread.
+ * @param t The Thread to add
+ */
+void ModelChecker::add_thread(Thread *t)
 {
 	thread_map->put(id_to_int(t->get_id()), t);
 	scheduler->add_thread(t);
-	return 0;
 }
 
 void ModelChecker::remove_thread(Thread *t)

@@ -39,8 +39,6 @@ public:
 	/** @returns the context for the main model-checking system thread */
 	ucontext_t * get_system_context() { return &system_context; }
 
-	void check_current_action(void);
-
 	/** Prints an execution summary with trace information. */
 	void print_summary();
 
@@ -84,6 +82,7 @@ private:
 	 * @param act The ModelAction created by the user-thread action
 	 */
 	void set_current_action(ModelAction *act) { current_action = act; }
+	void check_current_action();
 
 	bool take_step();
 

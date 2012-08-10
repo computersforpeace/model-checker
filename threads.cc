@@ -73,8 +73,9 @@ int Thread::create_context()
 /**
  * Swaps the current context to another thread of execution. This form switches
  * from a user Thread to a system context.
- * @param t Thread representing the current context
- * @param ctxt Context to switch to
+ * @param t Thread representing the currently-running thread. The current
+ * context is saved here.
+ * @param ctxt Context to which we will swap. Must hold a valid system context.
  * @return Does not return, unless we return to Thread t's context. See
  * swapcontext(3) (returns 0 for success, -1 for failure).
  */
@@ -86,9 +87,9 @@ int Thread::swap(Thread *t, ucontext_t *ctxt)
 /**
  * Swaps the current context to another thread of execution. This form switches
  * from a system context to a user Thread.
- * @param t Thread representing the current context
- * @param ctxt Context to switch to
- * @return Does not return, unless we return to Thread t's context. See
+ * @param ctxt System context variable to which to save the current context.
+ * @param t Thread to which we will swap. Must hold a valid user context.
+ * @return Does not return, unless we return to the system context (ctxt). See
  * swapcontext(3) (returns 0 for success, -1 for failure).
  */
 int Thread::swap(ucontext_t *ctxt, Thread *t)

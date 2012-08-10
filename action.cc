@@ -167,7 +167,6 @@ void ModelAction::read_from(const ModelAction *act)
 	ASSERT(cv);
 	if (act!=NULL && act->is_release() && this->is_acquire()) {
 		synchronize_with(act);
-		cv->merge(act->cv);
 	}
 	reads_from = act;
 }

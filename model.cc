@@ -747,3 +747,46 @@ int ModelChecker::switch_to_master(ModelAction *act)
 	old->set_state(THREAD_READY);
 	return Thread::swap(old, get_system_context());
 }
+
+/**
+ * Takes the next step in the execution, if possible.
+ * @return Returns true (success) if a step was taken and false otherwise.
+ */
+bool ModelChecker::take_step() {
+	Thread *curr, *next;
+
+	curr = thread_current();
+	if (curr) {
+		if (curr->get_state() == THREAD_READY) {
+			check_current_action();
+			scheduler->add_thread(curr);
+		} else if (curr->get_state() == THREAD_RUNNING) {
+			/* Stopped while running; i.e., completed */
+			curr->complete();
+		} else {
+			ASSERT(false);
+		}
+	}
+	next = scheduler->next_thread();
+
+	/* Infeasible -> don't take any more steps */
+	if (!isfeasible())
+		return false;
+
+	if (next)
+		next->set_state(THREAD_RUNNING);
+	DEBUG("(%d, %d)\n", curr ? curr->get_id() : -1, next ? next->get_id() : -1);
+
+	/* next == NULL -> don't take any more steps */
+	if (!next)
+		return false;
+	/* Return false only if swap fails with an error */
+	return (Thread::swap(get_system_context(), next) == 0);
+}
+
+/** Runs the current execution until threre are no more steps to take. */
+void ModelChecker::finish_execution() {
+	DBG();
+
+	while (take_step());
+}

@@ -70,6 +70,8 @@ public:
 	bool isfinalfeasible();
 	void check_promises(ClockVector *old_cv, ClockVector * merge_cv);
 
+	void finish_execution();
+
 	MEMALLOC
 private:
 	int next_thread_id;
@@ -85,6 +87,8 @@ private:
 	 * @param act The ModelAction created by the user-thread action
 	 */
 	void set_current_action(ModelAction *act) { current_action = act; }
+
+	bool take_step();
 
 	ModelAction * get_last_conflict(ModelAction *act);
 	void set_backtracking(ModelAction *act);

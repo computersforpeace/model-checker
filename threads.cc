@@ -26,7 +26,7 @@ static void stack_free(void *stack)
 Thread * thread_current(void)
 {
 	ASSERT(model);
-	return model->scheduler->get_current_thread();
+	return model->get_current_thread();
 }
 
 /**

@@ -36,9 +36,6 @@ public:
 	ModelChecker(struct model_params params);
 	~ModelChecker();
 
-	/** The scheduler to use: tracks the running/ready Threads */
-	Scheduler *scheduler;
-
 	/** Stores the context for the main model-checking system thread (call
 	 * once)
 	 * @param ctxt The system context structure
@@ -63,6 +60,9 @@ public:
 	int get_num_threads();
 	modelclock_t get_next_seq_num();
 
+	/** @return The currently executing Thread. */
+	Thread * get_current_thread() { return scheduler->get_current_thread(); }
+
 	int switch_to_master(ModelAction *act);
 	ClockVector * get_cv(thread_id_t tid);
 	bool next_execution();
@@ -74,6 +74,9 @@ public:
 
 	MEMALLOC
 private:
+	/** The scheduler to use: tracks the running/ready Threads */
+	Scheduler *scheduler;
+
 	int next_thread_id;
 	modelclock_t used_sequence_numbers;
 	int num_executions;

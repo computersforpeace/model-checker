@@ -475,25 +475,24 @@ void ModelChecker::w_modification_order(ModelAction * curr) {
 
 			/* Include at most one act per-thread that "happens before" curr */
 			if (act->happens_before(curr)) {
-				if (act->is_read()) {
+				if (act->is_read())
 					cyclegraph->addEdge(curr, act->get_reads_from());
-				} else
+				else
 					cyclegraph->addEdge(curr, act);
 				break;
-			} else {
-				if (act->is_read()&&!act->is_synchronizing(curr)&&!act->same_thread(curr)) {
-					/* We have an action that:
-						 (1) did not happen before us
-						 (2) is a read and we are a write
-						 (3) cannot synchronize with us
-						 (4) is in a different thread
-						 =>
-						 that read could potentially read from our write.
-					*/
-					if (act->get_node()->add_future_value(curr->get_value())&&
-							(!next_backtrack || *act > * next_backtrack))
-						next_backtrack = act;
-				}
+			} else if (act->is_read() && !act->is_synchronizing(curr) &&
+			                             !act->same_thread(curr)) {
+				/* We have an action that:
+				   (1) did not happen before us
+				   (2) is a read and we are a write
+				   (3) cannot synchronize with us
+				   (4) is in a different thread
+				   =>
+				   that read could potentially read from our write.
+				 */
+				if (act->get_node()->add_future_value(curr->get_value()) &&
+						(!next_backtrack || *act > *next_backtrack))
+					next_backtrack = act;
 			}
 		}
 	}

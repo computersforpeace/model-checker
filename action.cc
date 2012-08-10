@@ -161,23 +161,23 @@ void ModelAction::create_cv(const ModelAction *parent)
 		cv = new ClockVector(NULL, this);
 }
 
-
 /** Update the model action's read_from action */
 void ModelAction::read_from(const ModelAction *act)
 {
 	ASSERT(cv);
 	if (act!=NULL && act->is_release() && this->is_acquire()) {
-		synchronized(act);
+		synchronize_with(act);
 		cv->merge(act->cv);
 	}
 	reads_from = act;
 }
 
-
-/** Synchronize the current thread with the thread corresponding to
- *  the ModelAction parameter. */
-
-void ModelAction::synchronized(const ModelAction *act) {
+/**
+ * Synchronize the current thread with the thread corresponding to the
+ * ModelAction parameter.
+ * @param act The ModelAction to synchronize with
+ */
+void ModelAction::synchronize_with(const ModelAction *act) {
 	model->check_promises(cv, act->cv);
 	cv->merge(act->cv);
 }

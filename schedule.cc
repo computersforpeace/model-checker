@@ -67,7 +67,7 @@ Thread * Scheduler::get_current_thread() const
  * Print debugging information about the current state of the scheduler. Only
  * prints something if debugging is enabled.
  */
-void Scheduler::print()
+void Scheduler::print() const
 {
 	if (current)
 		DEBUG("Current thread: %d\n", current->get_id());
@@ -75,7 +75,7 @@ void Scheduler::print()
 		DEBUG("No current thread\n");
 	DEBUG("Num. threads in ready list: %zu\n", readyList.size());
 
-	std::list<Thread *, MyAlloc< Thread * > >::iterator it;
+	std::list<Thread *, MyAlloc< Thread * > >::const_iterator it;
 	for (it = readyList.begin(); it != readyList.end(); it++)
 		DEBUG("In ready list: thread %d\n", (*it)->get_id());
 }

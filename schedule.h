@@ -20,7 +20,7 @@ public:
 	void remove_thread(Thread *t);
 	Thread * next_thread();
 	Thread * get_current_thread() const;
-	void print();
+	void print() const;
 
 	SNAPSHOTALLOC
 private:

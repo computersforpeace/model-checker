@@ -22,7 +22,6 @@ static void stack_free(void *stack)
 }
 
 /** Return the currently executing thread. */
-
 Thread * thread_current(void)
 {
 	ASSERT(model);
@@ -47,11 +46,11 @@ void thread_startup()
 	curr_thread->start_routine(curr_thread->arg);
 }
 
-/** Create a thread context for a new thread so we can use
- *  setcontext/getcontext/swapcontext to swap it out.
- *  @return 0 on success.
+/**
+ * Create a thread context for a new thread so we can use
+ * setcontext/getcontext/swapcontext to swap it out.
+ * @return 0 on success; otherwise, non-zero error condition
  */
-
 int Thread::create_context()
 {
 	int ret;
@@ -109,12 +108,12 @@ void Thread::complete()
 	}
 }
 
-/** Create a new thread.
- *  Takes the following parameters:
- *  @param t The thread identifier of the newly created thread.
- *  @param func  The function that the thread will call.
- *  @param a The parameter to pass to this function. */
-
+/**
+ * Construct a new thread.
+ * @param t The thread identifier of the newly created thread.
+ * @param func The function that the thread will call.
+ * @param a The parameter to pass to this function.
+ */
 Thread::Thread(thrd_t *t, void (*func)(void *), void *a) :
 	start_routine(func),
 	arg(a),
@@ -134,14 +133,14 @@ Thread::Thread(thrd_t *t, void (*func)(void *), void *a) :
 	parent = thread_current();
 }
 
+/** Destructor */
 Thread::~Thread()
 {
 	complete();
 	model->remove_thread(this);
 }
 
-/** Return the thread_id_t corresponding to this Thread object. */
-
+/** @return The thread_id_t corresponding to this Thread object. */
 thread_id_t Thread::get_id()
 {
 	return id;

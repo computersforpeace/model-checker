@@ -3,17 +3,26 @@
 #include "common.h"
 #include "model.h"
 
+/** Constructor */
 Scheduler::Scheduler() :
 	current(NULL)
 {
 }
 
+/**
+ * Add a Thread to the scheduler's ready list.
+ * @param t The Thread to add
+ */
 void Scheduler::add_thread(Thread *t)
 {
 	DEBUG("thread %d\n", t->get_id());
 	readyList.push_back(t);
 }
 
+/**
+ * Remove a given Thread from the scheduler.
+ * @param t The Thread to remove
+ */
 void Scheduler::remove_thread(Thread *t)
 {
 	if (current == t)
@@ -22,7 +31,11 @@ void Scheduler::remove_thread(Thread *t)
 		readyList.remove(t);
 }
 
-Thread * Scheduler::next_thread(void)
+/**
+ * Remove one Thread from the scheduler. This implementation performs FIFO.
+ * @return The next Thread to run
+ */
+Thread * Scheduler::next_thread()
 {
 	Thread *t = model->schedule_next_thread();
 
@@ -42,11 +55,18 @@ Thread * Scheduler::next_thread(void)
 	return t;
 }
 
-Thread * Scheduler::get_current_thread(void)
+/**
+ * @return The currently-running Thread
+ */
+Thread * Scheduler::get_current_thread() const
 {
 	return current;
 }
 
+/**
+ * Print debugging information about the current state of the scheduler. Only
+ * prints something if debugging is enabled.
+ */
 void Scheduler::print()
 {
 	if (current)

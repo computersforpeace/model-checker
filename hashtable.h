@@ -134,7 +134,6 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift=0, void * (*
 			resize(capacity << 1);
 
 		struct hashlistnode<_Key,_Val, _malloc, _calloc, _free> *ptr = table[(((_KeyInt)key) & mask)>>_Shift];
-		size++;
 		struct hashlistnode<_Key,_Val, _malloc, _calloc, _free> *search = ptr;
 
 		while(search!=NULL) {
@@ -150,6 +149,7 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift=0, void * (*
 		newptr->val=val;
 		newptr->next=ptr;
 		table[(((_KeyInt)key)&mask)>>_Shift]=newptr;
+		size++;
 	}
 
 	/** Put a key entry into the table. */
@@ -158,7 +158,6 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift=0, void * (*
 			resize(capacity << 1);
 
 		struct hashlistnode<_Key,_Val, _malloc, _calloc, _free> *ptr = table[(((_KeyInt)key) & mask)>>_Shift];
-		size++;
 		struct hashlistnode<_Key,_Val, _malloc, _calloc, _free> *search = ptr;
 
 		while(search!=NULL) {
@@ -172,6 +171,7 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift=0, void * (*
 		newptr->key=key;
 		newptr->next=ptr;
 		table[(((_KeyInt)key)&mask)>>_Shift]=newptr;
+		size++;
 		return &newptr->val;
 	}
 

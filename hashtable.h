@@ -153,7 +153,7 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift=0, void * (*
 	}
 
 	/** Put a key entry into the table. */
-	_Val * ensureptr(_Key key) {
+	_Val * get_safe_ptr(_Key key) {
 		if (size > threshold)
 			resize(capacity << 1);
 

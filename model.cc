@@ -200,7 +200,7 @@ ModelAction * ModelChecker::get_last_conflict(ModelAction *act)
 			return NULL;
 	}
 	/* linear search: from most recent to oldest */
-	action_list_t *list = obj_map->ensureptr(act->get_location());
+	action_list_t *list = obj_map->get_safe_ptr(act->get_location());
 	action_list_t::reverse_iterator rit;
 	for (rit = list->rbegin(); rit != list->rend(); rit++) {
 		ModelAction *prev = *rit;
@@ -384,7 +384,7 @@ ModelAction * ModelChecker::process_rmw(ModelAction * act) {
  * @param rf The action that curr reads from. Must be a write.
  */
 void ModelChecker::r_modification_order(ModelAction * curr, const ModelAction *rf) {
-	std::vector<action_list_t> *thrd_lists = obj_thrd_map->ensureptr(curr->get_location());
+	std::vector<action_list_t> *thrd_lists = obj_thrd_map->get_safe_ptr(curr->get_location());
 	unsigned int i;
 	ASSERT(curr->is_read());
 
@@ -414,7 +414,7 @@ void ModelChecker::r_modification_order(ModelAction * curr, const ModelAction *r
 /** Updates the cyclegraph with the constraints imposed from the
  *  current read. */
 void ModelChecker::post_r_modification_order(ModelAction * curr, const ModelAction *rf) {
-	std::vector<action_list_t> *thrd_lists = obj_thrd_map->ensureptr(curr->get_location());
+	std::vector<action_list_t> *thrd_lists = obj_thrd_map->get_safe_ptr(curr->get_location());
 	unsigned int i;
 	ASSERT(curr->is_read());
 
@@ -453,7 +453,7 @@ void ModelChecker::post_r_modification_order(ModelAction * curr, const ModelActi
  * @param curr The current action. Must be a write.
  */
 void ModelChecker::w_modification_order(ModelAction * curr) {
-	std::vector<action_list_t> *thrd_lists = obj_thrd_map->ensureptr(curr->get_location());
+	std::vector<action_list_t> *thrd_lists = obj_thrd_map->get_safe_ptr(curr->get_location());
 	unsigned int i;
 	ASSERT(curr->is_write());
 
@@ -510,9 +510,9 @@ void ModelChecker::add_action_to_lists(ModelAction *act)
 	int tid = id_to_int(act->get_tid());
 	action_trace->push_back(act);
 
-	obj_map->ensureptr(act->get_location())->push_back(act);
+	obj_map->get_safe_ptr(act->get_location())->push_back(act);
 
-	std::vector<action_list_t> *vec = obj_thrd_map->ensureptr(act->get_location());
+	std::vector<action_list_t> *vec = obj_thrd_map->get_safe_ptr(act->get_location());
 	if (tid >= (int)vec->size())
 		vec->resize(next_thread_id);
 	(*vec)[tid].push_back(act);
@@ -538,7 +538,7 @@ ModelAction * ModelChecker::get_last_action(thread_id_t tid)
  */
 ModelAction * ModelChecker::get_last_seq_cst(const void *location)
 {
-	action_list_t *list = obj_map->ensureptr(location);
+	action_list_t *list = obj_map->get_safe_ptr(location);
 	/* Find: max({i in dom(S) | seq_cst(t_i) && isWrite(t_i) && samevar(t_i, t)}) */
 	action_list_t::reverse_iterator rit;
 	for (rit = list->rbegin(); rit != list->rend(); rit++)
@@ -626,7 +626,7 @@ void ModelChecker::check_promises(ClockVector *old_cv, ClockVector * merge_cv) {
  */
 void ModelChecker::build_reads_from_past(ModelAction *curr)
 {
-	std::vector<action_list_t> *thrd_lists = obj_thrd_map->ensureptr(curr->get_location());
+	std::vector<action_list_t> *thrd_lists = obj_thrd_map->get_safe_ptr(curr->get_location());
 	unsigned int i;
 	ASSERT(curr->is_read());
 

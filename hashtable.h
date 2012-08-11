@@ -116,7 +116,7 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift=0, void * (*
 
 	/** Reset the table to its initial state. */
 	void reset() {
-		for(int i=0;i<capacity;i++) {
+		for(unsigned int i=0;i<capacity;i++) {
 			struct hashlistnode<_Key,_Val, _malloc, _calloc, _free> * bin = table[i];
 			while(bin!=NULL) {
 				struct hashlistnode<_Key,_Val, _malloc, _calloc, _free> * next=bin->next;
@@ -130,11 +130,8 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift=0, void * (*
 
 	/** Put a key value pair into the table. */
 	void put(_Key key, _Val val) {
-		if(size > threshold) {
-			//Resize
-			unsigned int newsize = capacity << 1;
-			resize(newsize);
-		}
+		if (size > threshold)
+			resize(capacity << 1);
 
 		struct hashlistnode<_Key,_Val, _malloc, _calloc, _free> *ptr = table[(((_KeyInt)key) & mask)>>_Shift];
 		size++;
@@ -157,11 +154,8 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift=0, void * (*
 
 	/** Put a key entry into the table. */
 	_Val * ensureptr(_Key key) {
-		if (size > threshold) {
-			//Resize
-			unsigned int newsize = capacity << 1;
-			resize(newsize);
-		}
+		if (size > threshold)
+			resize(capacity << 1);
 
 		struct hashlistnode<_Key,_Val, _malloc, _calloc, _free> *ptr = table[(((_KeyInt)key) & mask)>>_Shift];
 		size++;

@@ -152,7 +152,16 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift=0, void * (*
 		size++;
 	}
 
-	/** Put a key entry into the table. */
+	/**
+	 * @brief Get a valid pointer to a value corresponding to a given key
+	 *
+	 * Ensure that key is present in the hash table, then return a pointer
+	 * to its value bin. This may require either creating a new bin for
+	 * this key (with a default-constructed value) or simply locating and
+	 * returning a pointer to an existing value.
+	 * @param key The key to check
+	 * @return A pointer to the value in the table
+	 */
 	_Val * get_safe_ptr(_Key key) {
 		if (size > threshold)
 			resize(capacity << 1);

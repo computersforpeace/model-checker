@@ -23,11 +23,17 @@ class CycleGraph {
 
  private:
 	CycleNode * getNode(const ModelAction *);
+
+	/** @brief A table for mapping ModelActions to CycleNodes */
 	HashTable<const ModelAction *, CycleNode *, uintptr_t, 4> actionToNode;
+
 	bool checkReachable(CycleNode *from, CycleNode *to);
+
+	/** @brief A flag: true if this graph contains cycles */
 	bool hasCycles;
 };
 
+/** @brief A node within a CycleGraph; corresponds to one ModelAction */
 class CycleNode {
  public:
 	CycleNode(const ModelAction *action);
@@ -37,8 +43,14 @@ class CycleNode {
 	CycleNode* getRMW();
 
  private:
+	/** @brief The ModelAction that this node represents */
 	const ModelAction *action;
+
+	/** @brief The edges leading out from this node */
 	std::vector<CycleNode *> edges;
+
+	/** Pointer to a RMW node that reads from this node, or NULL, if none
+	 * exists */
 	CycleNode * hasRMW;
 };
 

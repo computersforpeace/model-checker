@@ -2,15 +2,21 @@
 #include "action.h"
 
 /** Initializes a CycleGraph object. */
-CycleGraph::CycleGraph() {
-	hasCycles=false;
+CycleGraph::CycleGraph() :
+	hasCycles(false)
+{
 }
 
+/** CycleGraph destructor */
 CycleGraph::~CycleGraph() {
 }
 
-/** Returns the CycleNode for a given ModelAction. */
-CycleNode * CycleGraph::getNode(const ModelAction * action) {
+/**
+ * @brief Returns the CycleNode corresponding to a given ModelAction
+ * @param action The ModelAction to find a node for
+ * @return The CycleNode paired with this action
+ */
+CycleNode * CycleGraph::getNode(const ModelAction *action) {
 	CycleNode *node=actionToNode.get(action);
 	if (node==NULL) {
 		node=new CycleNode(action);
@@ -20,8 +26,10 @@ CycleNode * CycleGraph::getNode(const ModelAction * action) {
 }
 
 /**
- * Adds an edge between two ModelActions.  The ModelAction to happens after the
- * ModelAction from.
+ * Adds an edge between two ModelActions. The ModelAction @a to is ordered
+ * after the ModelAction @a from.
+ * @param to The edge points to this ModelAction
+ * @param from The edge comes from this ModelAction
  */
 void CycleGraph::addEdge(const ModelAction *to, const ModelAction *from) {
 	CycleNode *fromnode=getNode(from);
@@ -52,7 +60,7 @@ void CycleGraph::addEdge(const ModelAction *to, const ModelAction *from) {
  *  can occur in between the rmw and the from action.  Only one RMW
  *  action can read from a given write.
  */
-void CycleGraph::addRMWEdge(const ModelAction *rmw, const ModelAction * from) {
+void CycleGraph::addRMWEdge(const ModelAction *rmw, const ModelAction *from) {
 	CycleNode *fromnode=getNode(from);
 	CycleNode *rmwnode=getNode(rmw);
 
@@ -74,7 +82,12 @@ void CycleGraph::addRMWEdge(const ModelAction *rmw, const ModelAction * from) {
 }
 
 
-/** Checks whether the first CycleNode can reach the second one. */
+/**
+ * Checks whether one CycleNode can reach another.
+ * @param from The CycleNode from which to begin exploration
+ * @param to The CycleNode to reach
+ * @return True, @a from can reach @a to; otherwise, false
+ */
 bool CycleGraph::checkReachable(CycleNode *from, CycleNode *to) {
 	std::vector<CycleNode *> queue;
 	HashTable<CycleNode *, CycleNode *, uintptr_t, 4> discovered;
@@ -98,34 +111,46 @@ bool CycleGraph::checkReachable(CycleNode *from, CycleNode *to) {
 	return false;
 }
 
-/** Returns whether a CycleGraph contains cycles. */
+/** @returns whether a CycleGraph contains cycles. */
 bool CycleGraph::checkForCycles() {
 	return hasCycles;
 }
 
-/** Constructor for a CycleNode. */
-CycleNode::CycleNode(const ModelAction *modelaction) {
-	action=modelaction;
-	hasRMW=NULL;
+/**
+ * Constructor for a CycleNode.
+ * @param modelaction The ModelAction for this node
+ */
+CycleNode::CycleNode(const ModelAction *modelaction) :
+	action(modelaction),
+	hasRMW(NULL)
+{
 }
 
-/** Returns a vector of the edges from a CycleNode. */
+/** @returns a vector of the edges from a CycleNode. */
 std::vector<CycleNode *> * CycleNode::getEdges() {
 	return &edges;
 }
 
-/** Adds an edge to a CycleNode. */
-void CycleNode::addEdge(CycleNode * node) {
+/**
+ * Adds an edge from this CycleNode to another CycleNode.
+ * @param node The node to which we add a directed edge
+ */
+void CycleNode::addEdge(CycleNode *node) {
 	edges.push_back(node);
 }
 
-/** Get the RMW CycleNode that reads from the current CycleNode. */
-CycleNode* CycleNode::getRMW() {
+/** @returns the RMW CycleNode that reads from the current CycleNode */
+CycleNode * CycleNode::getRMW() {
 	return hasRMW;
 }
 
-/** Set a RMW action node that reads from the current CycleNode. */
-bool CycleNode::setRMW(CycleNode * node) {
+/**
+ * Set a RMW action node that reads from the current CycleNode.
+ * @param node The RMW that reads from the current node
+ * @return True, if this node already was read by another RMW; false otherwise
+ * @see CycleGraph::addRMWEdge
+ */
+bool CycleNode::setRMW(CycleNode *node) {
 	CycleNode * oldhasRMW=hasRMW;
 	hasRMW=node;
 	return (oldhasRMW!=NULL);

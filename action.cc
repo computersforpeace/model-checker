@@ -1,6 +1,7 @@
 #include <stdio.h>
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
+#include <vector>
 
 #include "model.h"
 #include "action.h"
@@ -166,8 +167,11 @@ void ModelAction::read_from(const ModelAction *act)
 {
 	ASSERT(cv);
 	reads_from = act;
-	if (act!=NULL && act->is_release() && this->is_acquire()) {
-		synchronize_with(act);
+	if (act != NULL && this->is_acquire()) {
+		std::vector<const ModelAction *> release_heads;
+		model->get_release_seq_heads(this, &release_heads);
+		for (unsigned int i = 0; i < release_heads.size(); i++)
+			synchronize_with(release_heads[i]);
 	}
 }
 

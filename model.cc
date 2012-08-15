@@ -504,6 +504,128 @@ void ModelChecker::w_modification_order(ModelAction * curr) {
 }
 
 /**
+ * Finds the head(s) of the release sequence(s) containing a given ModelAction.
+ * The ModelAction under consideration is expected to be taking part in
+ * release/acquire synchronization as an object of the "reads from" relation.
+ * Note that this can only provide release sequence support for RMW chains
+ * which do not read from the future, as those actions cannot be traced until
+ * their "promise" is fulfilled. Similarly, we may not even establish the
+ * presence of a release sequence with certainty, as some modification order
+ * constraints may be decided further in the future. Thus, this function
+ * "returns" two pieces of data: a pass-by-reference vector of @a release_heads
+ * and a boolean representing certainty.
+ *
+ * @todo Finish lazy updating, when promises are fulfilled in the future
+ * @param rf The action that might be part of a release sequence. Must be a
+ * write.
+ * @param release_heads A pass-by-reference style return parameter.  After
+ * execution of this function, release_heads will contain the heads of all the
+ * relevant release sequences, if any exists
+ * @return true, if the ModelChecker is certain that release_heads is complete;
+ * false otherwise
+ */
+bool ModelChecker::release_seq_head(const ModelAction *rf,
+                std::vector<const ModelAction *> *release_heads) const
+{
+	ASSERT(rf->is_write());
+	if (!rf) {
+		/* read from future: need to settle this later */
+		return false; /* incomplete */
+	}
+	if (rf->is_release())
+		release_heads->push_back(rf);
+	if (rf->is_rmw()) {
+		if (rf->is_acquire())
+			return true; /* complete */
+		return release_seq_head(rf->get_reads_from(), release_heads);
+	}
+	if (rf->is_release())
+		return true; /* complete */
+
+	/* else relaxed write; check modification order for contiguous subsequence
+	 * -> rf must be same thread as release */
+	int tid = id_to_int(rf->get_tid());
+	std::vector<action_list_t> *thrd_lists = obj_thrd_map->get_safe_ptr(rf->get_location());
+	action_list_t *list = &(*thrd_lists)[tid];
+	action_list_t::const_reverse_iterator rit;
+
+	/* Find rf in the thread list */
+	for (rit = list->rbegin(); rit != list->rend(); rit++)
+		if (*rit == rf)
+			break;
+
+	/* Find the last write/release */
+	for (; rit != list->rend(); rit++)
+		if ((*rit)->is_release())
+			break;
+	if (rit == list->rend()) {
+		/* No write-release in this thread */
+		return true; /* complete */
+	}
+	ModelAction *release = *rit;
+
+	ASSERT(rf->same_thread(release));
+
+	bool certain = true;
+	for (unsigned int i = 0; i < thrd_lists->size(); i++) {
+		if (id_to_int(rf->get_tid()) == (int)i)
+			continue;
+		list = &(*thrd_lists)[i];
+		for (rit = list->rbegin(); rit != list->rend(); rit++) {
+			const ModelAction *act = *rit;
+			if (!act->is_write())
+				continue;
+			/* Reach synchronization -> this thread is complete */
+			if (act->happens_before(release))
+				break;
+			if (rf->happens_before(act))
+				continue;
+
+			/* Check modification order */
+			if (mo_graph->checkReachable(rf, act))
+				/* rf --mo--> act */
+				continue;
+			if (mo_graph->checkReachable(act, release))
+				/* act --mo--> release */
+				break;
+			if (mo_graph->checkReachable(release, act) &&
+			              mo_graph->checkReachable(act, rf)) {
+				/* release --mo-> act --mo--> rf */
+				return true; /* complete */
+			}
+			certain = false;
+		}
+	}
+
+	if (certain)
+		release_heads->push_back(release);
+	return certain;
+}
+
+/**
+ * A public interface for getting the release sequence head(s) with which a
+ * given ModelAction must synchronize. This function only returns a non-empty
+ * result when it can locate a release sequence head with certainty. Otherwise,
+ * it may mark the internal state of the ModelChecker so that it will handle
+ * the release sequence at a later time, causing @a act to update its
+ * synchronization at some later point in execution.
+ * @param act The 'acquire' action that may read from a release sequence
+ * @param release_heads A pass-by-reference return parameter. Will be filled
+ * with the head(s) of the release sequence(s), if they exists with certainty.
+ * @see ModelChecker::release_seq_head
+ */
+void ModelChecker::get_release_seq_heads(ModelAction *act,
+                std::vector<const ModelAction *> *release_heads)
+{
+	const ModelAction *rf = act->get_reads_from();
+	bool complete;
+	complete = release_seq_head(rf, release_heads);
+	if (!complete) {
+		/** @todo complete lazy checking */
+	}
+}
+
+/**
  * Performs various bookkeeping operations for the current ModelAction. For
  * instance, adds action to the per-object, per-thread action vector and to the
  * action trace list of all thread actions.

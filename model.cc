@@ -716,11 +716,15 @@ void ModelChecker::print_summary()
 	printf("\n");
 }
 
-int ModelChecker::add_thread(Thread *t)
+/**
+ * Add a Thread to the system for the first time. Should only be called once
+ * per thread.
+ * @param t The Thread to add
+ */
+void ModelChecker::add_thread(Thread *t)
 {
 	thread_map->put(id_to_int(t->get_id()), t);
 	scheduler->add_thread(t);
-	return 0;
 }
 
 void ModelChecker::remove_thread(Thread *t)
@@ -745,5 +749,48 @@ int ModelChecker::switch_to_master(ModelAction *act)
 	Thread * old = thread_current();
 	set_current_action(act);
 	old->set_state(THREAD_READY);
-	return Thread::swap(old, get_system_context());
+	return Thread::swap(old, &system_context);
+}
+
+/**
+ * Takes the next step in the execution, if possible.
+ * @return Returns true (success) if a step was taken and false otherwise.
+ */
+bool ModelChecker::take_step() {
+	Thread *curr, *next;
+
+	curr = thread_current();
+	if (curr) {
+		if (curr->get_state() == THREAD_READY) {
+			check_current_action();
+			scheduler->add_thread(curr);
+		} else if (curr->get_state() == THREAD_RUNNING) {
+			/* Stopped while running; i.e., completed */
+			curr->complete();
+		} else {
+			ASSERT(false);
+		}
+	}
+	next = scheduler->next_thread();
+
+	/* Infeasible -> don't take any more steps */
+	if (!isfeasible())
+		return false;
+
+	if (next)
+		next->set_state(THREAD_RUNNING);
+	DEBUG("(%d, %d)\n", curr ? curr->get_id() : -1, next ? next->get_id() : -1);
+
+	/* next == NULL -> don't take any more steps */
+	if (!next)
+		return false;
+	/* Return false only if swap fails with an error */
+	return (Thread::swap(&system_context, next) == 0);
+}
+
+/** Runs the current execution until threre are no more steps to take. */
+void ModelChecker::finish_execution() {
+	DBG();
+
+	while (take_step());
 }

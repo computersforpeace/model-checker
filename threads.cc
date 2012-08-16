@@ -22,11 +22,10 @@ static void stack_free(void *stack)
 }
 
 /** Return the currently executing thread. */
-
 Thread * thread_current(void)
 {
 	ASSERT(model);
-	return model->scheduler->get_current_thread();
+	return model->get_current_thread();
 }
 
 /**
@@ -47,11 +46,11 @@ void thread_startup()
 	curr_thread->start_routine(curr_thread->arg);
 }
 
-/** Create a thread context for a new thread so we can use
- *  setcontext/getcontext/swapcontext to swap it out.
- *  @return 0 on success.
+/**
+ * Create a thread context for a new thread so we can use
+ * setcontext/getcontext/swapcontext to swap it out.
+ * @return 0 on success; otherwise, non-zero error condition
  */
-
 int Thread::create_context()
 {
 	int ret;
@@ -74,8 +73,9 @@ int Thread::create_context()
 /**
  * Swaps the current context to another thread of execution. This form switches
  * from a user Thread to a system context.
- * @param t Thread representing the current context
- * @param ctxt Context to switch to
+ * @param t Thread representing the currently-running thread. The current
+ * context is saved here.
+ * @param ctxt Context to which we will swap. Must hold a valid system context.
  * @return Does not return, unless we return to Thread t's context. See
  * swapcontext(3) (returns 0 for success, -1 for failure).
  */
@@ -87,9 +87,9 @@ int Thread::swap(Thread *t, ucontext_t *ctxt)
 /**
  * Swaps the current context to another thread of execution. This form switches
  * from a system context to a user Thread.
- * @param t Thread representing the current context
- * @param ctxt Context to switch to
- * @return Does not return, unless we return to Thread t's context. See
+ * @param ctxt System context variable to which to save the current context.
+ * @param t Thread to which we will swap. Must hold a valid user context.
+ * @return Does not return, unless we return to the system context (ctxt). See
  * swapcontext(3) (returns 0 for success, -1 for failure).
  */
 int Thread::swap(ucontext_t *ctxt, Thread *t)
@@ -109,12 +109,12 @@ void Thread::complete()
 	}
 }
 
-/** Create a new thread.
- *  Takes the following parameters:
- *  @param t The thread identifier of the newly created thread.
- *  @param func  The function that the thread will call.
- *  @param a The parameter to pass to this function. */
-
+/**
+ * Construct a new thread.
+ * @param t The thread identifier of the newly created thread.
+ * @param func The function that the thread will call.
+ * @param a The parameter to pass to this function.
+ */
 Thread::Thread(thrd_t *t, void (*func)(void *), void *a) :
 	start_routine(func),
 	arg(a),
@@ -134,14 +134,14 @@ Thread::Thread(thrd_t *t, void (*func)(void *), void *a) :
 	parent = thread_current();
 }
 
+/** Destructor */
 Thread::~Thread()
 {
 	complete();
 	model->remove_thread(this);
 }
 
-/** Return the thread_id_t corresponding to this Thread object. */
-
+/** @return The thread_id_t corresponding to this Thread object. */
 thread_id_t Thread::get_id()
 {
 	return id;

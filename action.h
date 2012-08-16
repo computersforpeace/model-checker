@@ -81,8 +81,6 @@ public:
 	void create_cv(const ModelAction *parent = NULL);
 	ClockVector * get_cv() const { return cv; }
 	void read_from(const ModelAction *act);
-	void synchronized(const ModelAction *act);
-
 
 	bool happens_before(const ModelAction *act) const;
 
@@ -98,6 +96,7 @@ public:
 
 	MEMALLOC
 private:
+	void synchronize_with(const ModelAction *act);
 
 	/** Type of action (read, write, thread create, thread yield, thread join) */
 	action_type type;

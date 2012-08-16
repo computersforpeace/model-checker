@@ -11,14 +11,13 @@
 int thrd_create(thrd_t *t, thrd_start_t start_routine, void *arg)
 {
 	Thread *thread;
-	int ret;
 	DBG();
 	thread = new Thread(t, start_routine, arg);
-	ret = model->add_thread(thread);
+	model->add_thread(thread);
 	DEBUG("create thread %d\n", id_to_int(thrd_to_id(*t)));
 	/* seq_cst is just a 'don't care' parameter */
 	model->switch_to_master(new ModelAction(THREAD_CREATE, std::memory_order_seq_cst, thread, VALUE_NONE));
-	return ret;
+	return 0;
 }
 
 int thrd_join(thrd_t t)

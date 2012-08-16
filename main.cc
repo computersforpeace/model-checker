@@ -12,52 +12,6 @@
 #include "model.h"
 #include "snapshot-interface.h"
 
-/**
- * The thread_system_next function takes the next step in the execution, if
- * possible.
- * @return Returns 0 (success) if there is another step and non-zero otherwise.
- */
-static int thread_system_next(void) {
-	Thread *curr, *next;
-
-	curr = thread_current();
-	if (curr) {
-		if (curr->get_state() == THREAD_READY) {
-			model->check_current_action();
-			model->scheduler->add_thread(curr);
-		} else if (curr->get_state() == THREAD_RUNNING) {
-			/* Stopped while running; i.e., completed */
-			curr->complete();
-		} else {
-			ASSERT(false);
-		}
-	}
-	next = model->scheduler->next_thread();
-
-	/* Infeasible -> don't take any more steps */
-	if (!model->isfeasible())
-		return 1;
-
-	if (next)
-		next->set_state(THREAD_RUNNING);
-	DEBUG("(%d, %d)\n", curr ? curr->get_id() : -1, next ? next->get_id() : -1);
-
-	/* next == NULL -> don't take any more steps */
-	if (!next)
-		return 1;
-	/* Return non-zero only if swap fails with an error */
-	return Thread::swap(model->get_system_context(), next);
-}
-
-/** The thread_wait_finish method runs the current execution until we
- *  have no more steps to take.
- */
-static void thread_wait_finish(void) {
-	DBG();
-
-	while (!thread_system_next());
-}
-
 static void parse_options(struct model_params *params, int argc, char **argv) {
 }
 
@@ -67,7 +21,6 @@ char **main_argv;
 /** The real_main function contains the main model checking loop. */
 static void real_main() {
 	thrd_t user_thread;
-	ucontext_t main_context;
 	struct model_params params;
 
 	parse_options(&params, main_argc, main_argv);
@@ -80,18 +33,13 @@ static void real_main() {
 
 	model = new ModelChecker(params);
 
-	if (getcontext(&main_context))
-		return;
-
-	model->set_system_context(&main_context);
-
 	snapshotObject->snapshotStep(0);
 	do {
 		/* Start user program */
 		model->add_thread(new Thread(&user_thread, (void (*)(void *)) &user_main, NULL));
 
 		/* Wait for all threads to complete */
-		thread_wait_finish();
+		model->finish_execution();
 	} while (model->next_execution());
 
 	delete model;

@@ -18,13 +18,16 @@ public:
 	Scheduler();
 	void add_thread(Thread *t);
 	void remove_thread(Thread *t);
-	Thread * next_thread(void);
-	Thread * get_current_thread(void);
-	void print();
+	Thread * next_thread();
+	Thread * get_current_thread() const;
+	void print() const;
 
 	SNAPSHOTALLOC
 private:
+	/** The list of available Threads that are not currently running */
 	std::list<Thread *> readyList;
+
+	/** The currently-running Thread */
 	Thread *current;
 };
 

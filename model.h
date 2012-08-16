@@ -36,32 +36,24 @@ public:
 	ModelChecker(struct model_params params);
 	~ModelChecker();
 
-	/** The scheduler to use: tracks the running/ready Threads */
-	Scheduler *scheduler;
-
-	/** Stores the context for the main model-checking system thread (call
-	 * once)
-	 * @param ctxt The system context structure
-	 */
-	void set_system_context(ucontext_t *ctxt) { system_context = ctxt; }
-
 	/** @returns the context for the main model-checking system thread */
-	ucontext_t * get_system_context(void) { return system_context; }
-
-	void check_current_action(void);
+	ucontext_t * get_system_context() { return &system_context; }
 
 	/** Prints an execution summary with trace information. */
 	void print_summary();
 
 	Thread * schedule_next_thread();
 
-	int add_thread(Thread *t);
+	void add_thread(Thread *t);
 	void remove_thread(Thread *t);
 	Thread * get_thread(thread_id_t tid) { return thread_map->get(id_to_int(tid)); }
 
 	thread_id_t get_next_id();
 	int get_num_threads();
 	modelclock_t get_next_seq_num();
+
+	/** @return The currently executing Thread. */
+	Thread * get_current_thread() { return scheduler->get_current_thread(); }
 
 	int switch_to_master(ModelAction *act);
 	ClockVector * get_cv(thread_id_t tid);
@@ -70,8 +62,13 @@ public:
 	bool isfinalfeasible();
 	void check_promises(ClockVector *old_cv, ClockVector * merge_cv);
 
+	void finish_execution();
+
 	MEMALLOC
 private:
+	/** The scheduler to use: tracks the running/ready Threads */
+	Scheduler *scheduler;
+
 	int next_thread_id;
 	modelclock_t used_sequence_numbers;
 	int num_executions;
@@ -85,6 +82,9 @@ private:
 	 * @param act The ModelAction created by the user-thread action
 	 */
 	void set_current_action(ModelAction *act) { current_action = act; }
+	void check_current_action();
+
+	bool take_step();
 
 	ModelAction * get_last_conflict(ModelAction *act);
 	void set_backtracking(ModelAction *act);
@@ -108,7 +108,7 @@ private:
 	ModelAction *diverge;
 	thread_id_t nextThread;
 
-	ucontext_t *system_context;
+	ucontext_t system_context;
 	action_list_t *action_trace;
 	HashTable<int, Thread *, int> *thread_map;
 

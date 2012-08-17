@@ -81,6 +81,21 @@ void CycleGraph::addRMWEdge(const ModelAction *from, const ModelAction *rmw) {
 	fromnode->addEdge(rmwnode);
 }
 
+/**
+ * Checks whether one ModelAction can reach another.
+ * @param from The ModelAction from which to begin exploration
+ * @param to The ModelAction to reach
+ * @return True, @a from can reach @a to; otherwise, false
+ */
+bool CycleGraph::checkReachable(const ModelAction *from, const ModelAction *to) {
+	CycleNode *fromnode = actionToNode.get(from);
+	CycleNode *tonode = actionToNode.get(to);
+
+	if (!fromnode || !tonode)
+		return false;
+
+	return checkReachable(fromnode, tonode);
+}
 
 /**
  * Checks whether one CycleNode can reach another.

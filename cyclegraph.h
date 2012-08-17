@@ -21,6 +21,8 @@ class CycleGraph {
 	bool checkForCycles();
 	void addRMWEdge(const ModelAction *from, const ModelAction *rmw);
 
+	bool checkReachable(const ModelAction *from, const ModelAction *to);
+
  private:
 	CycleNode * getNode(const ModelAction *);
 

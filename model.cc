@@ -34,7 +34,7 @@ ModelChecker::ModelChecker(struct model_params params) :
 	thrd_last_action(new std::vector<ModelAction *>(1)),
 	node_stack(new NodeStack()),
 	next_backtrack(NULL),
-	cyclegraph(new CycleGraph()),
+	mo_graph(new CycleGraph()),
 	failed_promise(false)
 {
 }
@@ -57,7 +57,7 @@ ModelChecker::~ModelChecker()
 	delete thrd_last_action;
 	delete node_stack;
 	delete scheduler;
-	delete cyclegraph;
+	delete mo_graph;
 }
 
 /**
@@ -365,7 +365,7 @@ void ModelChecker::check_current_action(void)
 
 /** @returns whether the current partial trace is feasible. */
 bool ModelChecker::isfeasible() {
-	return !cyclegraph->checkForCycles() && !failed_promise;
+	return !mo_graph->checkForCycles() && !failed_promise;
 }
 
 /** Returns whether the current completed trace is feasible. */
@@ -379,12 +379,12 @@ ModelAction * ModelChecker::process_rmw(ModelAction * act) {
 	ModelAction *lastread = get_last_action(tid);
 	lastread->process_rmw(act);
 	if (act->is_rmw())
-		cyclegraph->addRMWEdge(lastread, lastread->get_reads_from());
+		mo_graph->addRMWEdge(lastread, lastread->get_reads_from());
 	return lastread;
 }
 
 /**
- * Updates the cyclegraph with the constraints imposed from the current read.
+ * Updates the mo_graph with the constraints imposed from the current read.
  * @param curr The current action. Must be a read.
  * @param rf The action that curr reads from. Must be a write.
  */
@@ -406,9 +406,9 @@ void ModelChecker::r_modification_order(ModelAction * curr, const ModelAction *r
 				if (act->is_read()) {
 					const ModelAction * prevreadfrom = act->get_reads_from();
 					if (prevreadfrom != NULL && rf != prevreadfrom)
-						cyclegraph->addEdge(rf, prevreadfrom);
+						mo_graph->addEdge(rf, prevreadfrom);
 				} else if (rf != act) {
-					cyclegraph->addEdge(rf, act);
+					mo_graph->addEdge(rf, act);
 				}
 				break;
 			}
@@ -416,8 +416,7 @@ void ModelChecker::r_modification_order(ModelAction * curr, const ModelAction *r
 	}
 }
 
-/** Updates the cyclegraph with the constraints imposed from the
- *  current read. */
+/** Updates the mo_graph with the constraints imposed from the current read. */
 void ModelChecker::post_r_modification_order(ModelAction * curr, const ModelAction *rf) {
 	std::vector<action_list_t> *thrd_lists = obj_thrd_map->get_safe_ptr(curr->get_location());
 	unsigned int i;
@@ -444,9 +443,9 @@ void ModelChecker::post_r_modification_order(ModelAction * curr, const ModelActi
 			if (lastact->is_read()) {
 				const ModelAction * postreadfrom = lastact->get_reads_from();
 				if (postreadfrom != NULL&&rf != postreadfrom)
-					cyclegraph->addEdge(postreadfrom, rf);
+					mo_graph->addEdge(postreadfrom, rf);
 			} else if (rf != lastact) {
-				cyclegraph->addEdge(lastact, rf);
+				mo_graph->addEdge(lastact, rf);
 			}
 			break;
 		}
@@ -454,7 +453,7 @@ void ModelChecker::post_r_modification_order(ModelAction * curr, const ModelActi
 }
 
 /**
- * Updates the cyclegraph with the constraints imposed from the current write.
+ * Updates the mo_graph with the constraints imposed from the current write.
  * @param curr The current action. Must be a write.
  */
 void ModelChecker::w_modification_order(ModelAction * curr) {
@@ -467,7 +466,7 @@ void ModelChecker::w_modification_order(ModelAction * curr) {
 			 so we are initialized. */
 		ModelAction * last_seq_cst = get_last_seq_cst(curr->get_location());
 		if (last_seq_cst != NULL)
-			cyclegraph->addEdge(curr, last_seq_cst);
+			mo_graph->addEdge(curr, last_seq_cst);
 	}
 
 	/* Iterate over all threads */
@@ -481,9 +480,9 @@ void ModelChecker::w_modification_order(ModelAction * curr) {
 			/* Include at most one act per-thread that "happens before" curr */
 			if (act->happens_before(curr)) {
 				if (act->is_read())
-					cyclegraph->addEdge(curr, act->get_reads_from());
+					mo_graph->addEdge(curr, act->get_reads_from());
 				else
-					cyclegraph->addEdge(curr, act);
+					mo_graph->addEdge(curr, act);
 				break;
 			} else if (act->is_read() && !act->is_synchronizing(curr) &&
 			                             !act->same_thread(curr)) {

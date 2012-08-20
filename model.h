@@ -121,7 +121,7 @@ private:
 	std::vector<ModelAction *> *thrd_last_action;
 	NodeStack *node_stack;
 	ModelAction *next_backtrack;
-	CycleGraph * cyclegraph;
+	CycleGraph *mo_graph;
 	bool failed_promise;
 };
 

@@ -165,10 +165,10 @@ void ModelAction::create_cv(const ModelAction *parent)
 void ModelAction::read_from(const ModelAction *act)
 {
 	ASSERT(cv);
+	reads_from = act;
 	if (act!=NULL && act->is_release() && this->is_acquire()) {
 		synchronize_with(act);
 	}
-	reads_from = act;
 }
 
 /**

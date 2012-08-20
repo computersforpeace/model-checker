@@ -121,7 +121,24 @@ private:
 	std::vector<ModelAction *> *thrd_last_action;
 	NodeStack *node_stack;
 	ModelAction *next_backtrack;
+
+	/**
+	 * @brief The modification order graph
+	 *
+	 * A direceted acyclic graph recording observations of the modification
+	 * order on all the atomic objects in the system. This graph should
+	 * never contain any cycles, as that represents a violation of the
+	 * memory model (total ordering). This graph really consists of many
+	 * disjoint (unconnected) subgraphs, each graph corresponding to a
+	 * separate ordering on a distinct object.
+	 *
+	 * Note that the edges in this graph actually represent the "ordered
+	 * after" relation, such that <tt>a --> b</tt> means <tt>a</tt> was
+	 * ordered after <tt>b</tt>, or in the traditional sense of
+	 * modification order, <tt>b --mo--> a</tt>.
+	 */
 	CycleGraph *mo_graph;
+
 	bool failed_promise;
 };
 

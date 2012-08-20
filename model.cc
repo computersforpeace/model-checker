@@ -49,6 +49,11 @@ ModelChecker::~ModelChecker()
 	delete obj_thrd_map;
 	delete obj_map;
 	delete action_trace;
+
+	for (unsigned int i = 0; i < promises->size(); i++)
+		delete (*promises)[i];
+	delete promises;
+
 	delete thrd_last_action;
 	delete node_stack;
 	delete scheduler;

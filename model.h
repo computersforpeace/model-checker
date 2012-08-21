@@ -132,10 +132,9 @@ private:
 	 * disjoint (unconnected) subgraphs, each graph corresponding to a
 	 * separate ordering on a distinct object.
 	 *
-	 * Note that the edges in this graph actually represent the "ordered
-	 * after" relation, such that <tt>a --> b</tt> means <tt>a</tt> was
-	 * ordered after <tt>b</tt>, or in the traditional sense of
-	 * modification order, <tt>b --mo--> a</tt>.
+	 * The edges in this graph represent the "ordered before" relation,
+	 * such that <tt>a --> b</tt> means <tt>a</tt> was ordered before
+	 * <tt>b</tt>.
 	 */
 	CycleGraph *mo_graph;
 

@@ -379,7 +379,7 @@ ModelAction * ModelChecker::process_rmw(ModelAction * act) {
 	ModelAction *lastread = get_last_action(tid);
 	lastread->process_rmw(act);
 	if (act->is_rmw())
-		mo_graph->addRMWEdge(lastread, lastread->get_reads_from());
+		mo_graph->addRMWEdge(lastread->get_reads_from(), lastread);
 	return lastread;
 }
 
@@ -406,9 +406,9 @@ void ModelChecker::r_modification_order(ModelAction * curr, const ModelAction *r
 				if (act->is_read()) {
 					const ModelAction * prevreadfrom = act->get_reads_from();
 					if (prevreadfrom != NULL && rf != prevreadfrom)
-						mo_graph->addEdge(rf, prevreadfrom);
+						mo_graph->addEdge(prevreadfrom, rf);
 				} else if (rf != act) {
-					mo_graph->addEdge(rf, act);
+					mo_graph->addEdge(act, rf);
 				}
 				break;
 			}
@@ -443,9 +443,9 @@ void ModelChecker::post_r_modification_order(ModelAction * curr, const ModelActi
 			if (lastact->is_read()) {
 				const ModelAction * postreadfrom = lastact->get_reads_from();
 				if (postreadfrom != NULL&&rf != postreadfrom)
-					mo_graph->addEdge(postreadfrom, rf);
+					mo_graph->addEdge(rf, postreadfrom);
 			} else if (rf != lastact) {
-				mo_graph->addEdge(lastact, rf);
+				mo_graph->addEdge(rf, lastact);
 			}
 			break;
 		}
@@ -466,7 +466,7 @@ void ModelChecker::w_modification_order(ModelAction * curr) {
 			 so we are initialized. */
 		ModelAction * last_seq_cst = get_last_seq_cst(curr->get_location());
 		if (last_seq_cst != NULL)
-			mo_graph->addEdge(curr, last_seq_cst);
+			mo_graph->addEdge(last_seq_cst, curr);
 	}
 
 	/* Iterate over all threads */
@@ -480,9 +480,9 @@ void ModelChecker::w_modification_order(ModelAction * curr) {
 			/* Include at most one act per-thread that "happens before" curr */
 			if (act->happens_before(curr)) {
 				if (act->is_read())
-					mo_graph->addEdge(curr, act->get_reads_from());
+					mo_graph->addEdge(act->get_reads_from(), curr);
 				else
-					mo_graph->addEdge(curr, act);
+					mo_graph->addEdge(act, curr);
 				break;
 			} else if (act->is_read() && !act->is_synchronizing(curr) &&
 			                             !act->same_thread(curr)) {

@@ -19,7 +19,7 @@ class CycleGraph {
 	~CycleGraph();
 	void addEdge(const ModelAction *from, const ModelAction *to);
 	bool checkForCycles();
-	void addRMWEdge(const ModelAction *from, const ModelAction *to);
+	void addRMWEdge(const ModelAction *from, const ModelAction *rmw);
 
  private:
 	CycleNode * getNode(const ModelAction *);

@@ -31,7 +31,7 @@ CycleNode * CycleGraph::getNode(const ModelAction *action) {
  * @param to The edge points to this ModelAction
  * @param from The edge comes from this ModelAction
  */
-void CycleGraph::addEdge(const ModelAction *to, const ModelAction *from) {
+void CycleGraph::addEdge(const ModelAction *from, const ModelAction *to) {
 	CycleNode *fromnode=getNode(from);
 	CycleNode *tonode=getNode(to);
 
@@ -60,7 +60,7 @@ void CycleGraph::addEdge(const ModelAction *to, const ModelAction *from) {
  *  can occur in between the rmw and the from action.  Only one RMW
  *  action can read from a given write.
  */
-void CycleGraph::addRMWEdge(const ModelAction *rmw, const ModelAction *from) {
+void CycleGraph::addRMWEdge(const ModelAction *from, const ModelAction *rmw) {
 	CycleNode *fromnode=getNode(from);
 	CycleNode *rmwnode=getNode(rmw);
 

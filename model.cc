@@ -564,22 +564,22 @@ ModelAction * ModelChecker::get_parent_action(thread_id_t tid)
  * @param tid The thread whose clock vector we want
  * @return Desired clock vector
  */
-ClockVector * ModelChecker::get_cv(thread_id_t tid) {
+ClockVector * ModelChecker::get_cv(thread_id_t tid)
+{
 	return get_parent_action(tid)->get_cv();
 }
 
-
 /** Resolve the given promises. */
-
-void ModelChecker::resolve_promises(ModelAction *write) {
-	for (unsigned int i = 0, promise_index = 0;promise_index<promises->size(); i++) {
-		Promise * promise = (*promises)[promise_index];
+void ModelChecker::resolve_promises(ModelAction *write)
+{
+	for (unsigned int i = 0, promise_index = 0; promise_index < promises->size(); i++) {
+		Promise *promise = (*promises)[promise_index];
 		if (write->get_node()->get_promise(i)) {
-			ModelAction * read = promise->get_action();
+			ModelAction *read = promise->get_action();
 			read->read_from(write);
 			r_modification_order(read, write);
 			post_r_modification_order(read, write);
-			promises->erase(promises->begin()+promise_index);
+			promises->erase(promises->begin() + promise_index);
 		} else
 			promise_index++;
 	}
@@ -587,15 +587,15 @@ void ModelChecker::resolve_promises(ModelAction *write) {
 
 /** Compute the set of promises that could potentially be satisfied by
  *  this action. */
-
-void ModelChecker::compute_promises(ModelAction *curr) {
-	for (unsigned int i = 0;i<promises->size();i++) {
-		Promise * promise = (*promises)[i];
-		const ModelAction * act = promise->get_action();
-		if (!act->happens_before(curr)&&
-				act->is_read()&&
-				!act->is_synchronizing(curr)&&
-				!act->same_thread(curr)&&
+void ModelChecker::compute_promises(ModelAction *curr)
+{
+	for (unsigned int i = 0; i < promises->size(); i++) {
+		Promise *promise = (*promises)[i];
+		const ModelAction *act = promise->get_action();
+		if (!act->happens_before(curr) &&
+				act->is_read() &&
+				!act->is_synchronizing(curr) &&
+				!act->same_thread(curr) &&
 				promise->get_value() == curr->get_value()) {
 			curr->get_node()->set_promise(i);
 		}
@@ -603,12 +603,12 @@ void ModelChecker::compute_promises(ModelAction *curr) {
 }
 
 /** Checks promises in response to change in ClockVector Threads. */
-
-void ModelChecker::check_promises(ClockVector *old_cv, ClockVector * merge_cv) {
-	for (unsigned int i = 0;i<promises->size();i++) {
-		Promise * promise = (*promises)[i];
-		const ModelAction * act = promise->get_action();
-		if ((old_cv == NULL||!old_cv->synchronized_since(act))&&
+void ModelChecker::check_promises(ClockVector *old_cv, ClockVector *merge_cv)
+{
+	for (unsigned int i = 0; i < promises->size(); i++) {
+		Promise *promise = (*promises)[i];
+		const ModelAction *act = promise->get_action();
+		if ((old_cv == NULL || !old_cv->synchronized_since(act)) &&
 				merge_cv->synchronized_since(act)) {
 			//This thread is no longer able to send values back to satisfy the promise
 			int num_synchronized_threads = promise->increment_threads();

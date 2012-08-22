@@ -61,9 +61,9 @@ void Node::print_may_read_from()
  * @param i is the promise index.
  */
 void Node::set_promise(unsigned int i) {
-	if (i>=promises.size())
-		promises.resize(i+1,0);
-	promises[i]=1;
+	if (i >= promises.size())
+		promises.resize(i + 1, 0);
+	promises[i] = 1;
 }
 
 /**
@@ -72,7 +72,7 @@ void Node::set_promise(unsigned int i) {
  * @return true if the promise should be satisfied by the given model action.
  */
 bool Node::get_promise(unsigned int i) {
-	return (i<promises.size())&&(promises[i]==2);
+	return (i < promises.size()) && (promises[i] == 2);
 }
 
 /**
@@ -80,13 +80,13 @@ bool Node::get_promise(unsigned int i) {
  * @return true if we have a valid combination.
  */
 bool Node::increment_promise() {
-	for (unsigned int i=0;i<promises.size();i++) {
-		if (promises[i]==1) {
-			promises[i]=2;
-			while (i>0) {
+	for (unsigned int i = 0; i < promises.size(); i++) {
+		if (promises[i] == 1) {
+			promises[i] = 2;
+			while (i > 0) {
 				i--;
-				if (promises[i]==2)
-					promises[i]=1;
+				if (promises[i] == 2)
+					promises[i] = 1;
 			}
 			return true;
 		}
@@ -99,8 +99,8 @@ bool Node::increment_promise() {
  * @return true if we have explored all promise combinations.
  */
 bool Node::promise_empty() {
-	for (unsigned int i=0;i<promises.size();i++)
-		if (promises[i]==1)
+	for (unsigned int i = 0; i < promises.size();i++)
+		if (promises[i] == 1)
 			return false;
 	return true;
 }
@@ -110,8 +110,8 @@ bool Node::promise_empty() {
  * @param value is the value to backtrack to.
  */
 bool Node::add_future_value(uint64_t value) {
-	for(unsigned int i=0;i<future_values.size();i++)
-		if (future_values[i]==value)
+	for (unsigned int i = 0; i < future_values.size(); i++)
+		if (future_values[i] == value)
 			return false;
 
 	future_values.push_back(value);
@@ -123,7 +123,7 @@ bool Node::add_future_value(uint64_t value) {
  * @return true if the future_values set is empty.
  */
 bool Node::future_value_empty() {
-	return ((future_index+1)>=future_values.size());
+	return ((future_index + 1) >= future_values.size());
 }
 
 /**
@@ -153,7 +153,7 @@ bool Node::backtrack_empty()
  * @return true if the readsfrom set is empty.
  */
 bool Node::read_from_empty() {
-	return ((read_from_index+1)>=may_read_from.size());
+	return ((read_from_index+1) >= may_read_from.size());
 }
 
 /**
@@ -227,7 +227,7 @@ uint64_t Node::get_future_value() {
  * @return The first element in may_read_from
  */
 const ModelAction * Node::get_read_from() {
-	if (read_from_index<may_read_from.size())
+	if (read_from_index < may_read_from.size())
 		return may_read_from[read_from_index];
 	else
 		return NULL;
@@ -239,7 +239,7 @@ const ModelAction * Node::get_read_from() {
  */
 bool Node::increment_read_from() {
 	read_from_index++;
-	return (read_from_index<may_read_from.size());
+	return (read_from_index < may_read_from.size());
 }
 
 /**
@@ -248,7 +248,7 @@ bool Node::increment_read_from() {
  */
 bool Node::increment_future_value() {
 	future_index++;
-	return (future_index<future_values.size());
+	return (future_index < future_values.size());
 }
 
 void Node::explore(thread_id_t tid)

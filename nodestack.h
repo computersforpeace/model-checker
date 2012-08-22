@@ -14,6 +14,19 @@
 class ModelAction;
 
 /**
+ * A flag used for the promise counting/combination problem within a node,
+ * denoting whether a particular Promise is
+ * <ol><li>@b applicable: can be satisfied by this Node's ModelAction and</li>
+ * <li>@b fulfilled: satisfied by this Node's ModelAction under the current
+ * configuration.</li></ol>
+ */
+typedef enum {
+	PROMISE_IGNORE = 0, /**< This promise is inapplicable; ignore it */
+	PROMISE_UNFULFILLED, /**< This promise is applicable but unfulfilled */
+	PROMISE_FULFILLED /**< This promise is applicable and fulfilled */
+} promise_t;
+
+/**
  * @brief A single node in a NodeStack
  *
  * Represents a single node in the NodeStack. Each Node is associated with up
@@ -78,7 +91,7 @@ private:
 	unsigned int read_from_index;
 
 	std::vector< uint64_t, MyAlloc< uint64_t > > future_values;
-	std::vector< unsigned int, MyAlloc<unsigned int> > promises;
+	std::vector< promise_t, MyAlloc<promise_t> > promises;
 	unsigned int future_index;
 };
 

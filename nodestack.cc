@@ -62,8 +62,8 @@ void Node::print_may_read_from()
  */
 void Node::set_promise(unsigned int i) {
 	if (i >= promises.size())
-		promises.resize(i + 1, 0);
-	promises[i] = 1;
+		promises.resize(i + 1, PROMISE_IGNORE);
+	promises[i] = PROMISE_UNFULFILLED;
 }
 
 /**
@@ -72,7 +72,7 @@ void Node::set_promise(unsigned int i) {
  * @return true if the promise should be satisfied by the given model action.
  */
 bool Node::get_promise(unsigned int i) {
-	return (i < promises.size()) && (promises[i] == 2);
+	return (i < promises.size()) && (promises[i] == PROMISE_FULFILLED);
 }
 
 /**
@@ -81,12 +81,12 @@ bool Node::get_promise(unsigned int i) {
  */
 bool Node::increment_promise() {
 	for (unsigned int i = 0; i < promises.size(); i++) {
-		if (promises[i] == 1) {
-			promises[i] = 2;
+		if (promises[i] == PROMISE_UNFULFILLED) {
+			promises[i] = PROMISE_FULFILLED;
 			while (i > 0) {
 				i--;
-				if (promises[i] == 2)
-					promises[i] = 1;
+				if (promises[i] == PROMISE_FULFILLED)
+					promises[i] = PROMISE_UNFULFILLED;
 			}
 			return true;
 		}
@@ -100,7 +100,7 @@ bool Node::increment_promise() {
  */
 bool Node::promise_empty() {
 	for (unsigned int i = 0; i < promises.size();i++)
-		if (promises[i] == 1)
+		if (promises[i] == PROMISE_UNFULFILLED)
 			return false;
 	return true;
 }

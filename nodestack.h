@@ -13,10 +13,6 @@
 
 class ModelAction;
 
-typedef std::vector< const ModelAction *, MyAlloc< const ModelAction * > > readfrom_set_t;
-typedef std::vector< uint64_t, MyAlloc< uint64_t > > futurevalues_t;
-typedef std::vector< uint32_t, MyAlloc< uint32_t > > promises_t;
-
 /**
  * @brief A single node in a NodeStack
  *
@@ -77,11 +73,12 @@ private:
 
 	/** The set of ModelActions that this the action at this Node may read
 	 *  from. Only meaningful if this Node represents a 'read' action. */
-	readfrom_set_t may_read_from;
+	std::vector< const ModelAction *, MyAlloc< const ModelAction * > > may_read_from;
+
 	unsigned int read_from_index;
 
-	futurevalues_t future_values;
-	promises_t promises;
+	std::vector< uint64_t, MyAlloc< uint64_t > > future_values;
+	std::vector< uint32_t, MyAlloc< uint32_t > > promises;
 	unsigned int future_index;
 };
 

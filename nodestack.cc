@@ -52,9 +52,8 @@ void Node::print()
 /** @brief Prints info about may_read_from set */
 void Node::print_may_read_from()
 {
-	readfrom_set_t::iterator it;
-	for (it = may_read_from.begin(); it != may_read_from.end(); it++)
-		(*it)->print();
+	for (unsigned int i = 0; i < may_read_from.size(); i++)
+		may_read_from[i]->print();
 }
 
 /**

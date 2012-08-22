@@ -60,7 +60,7 @@ void Node::print_may_read_from()
  * Sets a promise to explore meeting with the given node.
  * @param i is the promise index.
  */
-void Node::set_promise(uint32_t i) {
+void Node::set_promise(unsigned int i) {
 	if (i>=promises.size())
 		promises.resize(i+1,0);
 	promises[i]=1;
@@ -71,7 +71,7 @@ void Node::set_promise(uint32_t i) {
  * @param i The promise index.
  * @return true if the promise should be satisfied by the given model action.
  */
-bool Node::get_promise(uint32_t i) {
+bool Node::get_promise(unsigned int i) {
 	return (i<promises.size())&&(promises[i]==2);
 }
 

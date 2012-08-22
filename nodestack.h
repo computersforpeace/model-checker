@@ -52,8 +52,8 @@ public:
 	bool increment_read_from();
 	bool read_from_empty();
 
-	void set_promise(uint32_t i);
-	bool get_promise(uint32_t i);
+	void set_promise(unsigned int i);
+	bool get_promise(unsigned int i);
 	bool increment_promise();
 	bool promise_empty();
 
@@ -78,7 +78,7 @@ private:
 	unsigned int read_from_index;
 
 	std::vector< uint64_t, MyAlloc< uint64_t > > future_values;
-	std::vector< uint32_t, MyAlloc< uint32_t > > promises;
+	std::vector< unsigned int, MyAlloc<unsigned int> > promises;
 	unsigned int future_index;
 };
 

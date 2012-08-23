@@ -31,6 +31,7 @@ ModelChecker::ModelChecker(struct model_params params) :
 	obj_map(new HashTable<const void *, action_list_t, uintptr_t, 4>()),
 	obj_thrd_map(new HashTable<void *, std::vector<action_list_t>, uintptr_t, 4 >()),
 	promises(new std::vector<Promise *>()),
+	lazy_sync_with_release(new HashTable<void *, std::list<ModelAction *>, uintptr_t, 4>()),
 	thrd_last_action(new std::vector<ModelAction *>(1)),
 	node_stack(new NodeStack()),
 	next_backtrack(NULL),
@@ -53,6 +54,8 @@ ModelChecker::~ModelChecker()
 	for (unsigned int i = 0; i < promises->size(); i++)
 		delete (*promises)[i];
 	delete promises;
+
+	delete lazy_sync_with_release;
 
 	delete thrd_last_action;
 	delete node_stack;
@@ -637,7 +640,10 @@ void ModelChecker::get_release_seq_heads(ModelAction *act,
 	bool complete;
 	complete = release_seq_head(rf, release_heads);
 	if (!complete) {
-		/** @todo complete lazy checking */
+		/* add act to 'lazy checking' list */
+		std::list<ModelAction *> *list;
+		list = lazy_sync_with_release->get_safe_ptr(act->get_location());
+		list->push_back(act);
 	}
 }
 

@@ -122,6 +122,16 @@ private:
 
 	HashTable<void *, std::vector<action_list_t>, uintptr_t, 4 > *obj_thrd_map;
 	std::vector<Promise *> *promises;
+
+	/**
+	 * Collection of lists of objects that might synchronize with one or
+	 * more release sequence. Release sequences might be determined lazily
+	 * as promises are fulfilled and modification orders are established.
+	 * This structure maps its lists by object location. Each ModelAction
+	 * in the lists should be an acquire operation.
+	 */
+	HashTable<void *, std::list<ModelAction *>, uintptr_t, 4> *lazy_sync_with_release;
+
 	std::vector<ModelAction *> *thrd_last_action;
 	NodeStack *node_stack;
 	ModelAction *next_backtrack;

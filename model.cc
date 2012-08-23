@@ -569,7 +569,11 @@ ClockVector * ModelChecker::get_cv(thread_id_t tid)
 	return get_parent_action(tid)->get_cv();
 }
 
-/** Resolve the given promises. */
+/**
+ * Resolve a set of Promises with a current write. The set is provided in the
+ * Node corresponding to @a write.
+ * @param write The ModelAction that is fulfilling Promises
+ */
 void ModelChecker::resolve_promises(ModelAction *write)
 {
 	for (unsigned int i = 0, promise_index = 0; promise_index < promises->size(); i++) {
@@ -585,8 +589,12 @@ void ModelChecker::resolve_promises(ModelAction *write)
 	}
 }
 
-/** Compute the set of promises that could potentially be satisfied by
- *  this action. */
+/**
+ * Compute the set of promises that could potentially be satisfied by this
+ * action. Note that the set computation actually appears in the Node, not in
+ * ModelChecker.
+ * @param curr The ModelAction that may satisfy promises
+ */
 void ModelChecker::compute_promises(ModelAction *curr)
 {
 	for (unsigned int i = 0; i < promises->size(); i++) {

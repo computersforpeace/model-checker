@@ -18,6 +18,7 @@ public:
 	~ClockVector();
 	void merge(const ClockVector *cv);
 	bool synchronized_since(const ModelAction *act) const;
+	bool has_synchronized_with(const ClockVector *cv) const;
 
 	void print() const;
 	modelclock_t getClock(thread_id_t thread);

@@ -83,6 +83,7 @@ public:
 	void read_from(const ModelAction *act);
 	void synchronize_with(const ModelAction *act);
 
+	bool has_synchronized_with(const ModelAction *act) const;
 	bool happens_before(const ModelAction *act) const;
 
 	inline bool operator <(const ModelAction& act) const {

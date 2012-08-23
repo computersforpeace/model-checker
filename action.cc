@@ -186,6 +186,11 @@ void ModelAction::synchronize_with(const ModelAction *act) {
 	cv->merge(act->cv);
 }
 
+bool ModelAction::has_synchronized_with(const ModelAction *act) const
+{
+	return cv->has_synchronized_with(act->cv);
+}
+
 /**
  * Check whether 'this' happens before act, according to the memory-model's
  * happens before relation. This is checked via the ClockVector constructs.

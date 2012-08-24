@@ -320,13 +320,15 @@ void ModelChecker::check_current_action(void)
 	/* Assign reads_from values */
 	Thread *th = get_thread(curr->get_tid());
 	uint64_t value = VALUE_NONE;
+	bool updated = false;
 	if (curr->is_read()) {
 		const ModelAction *reads_from = curr->get_node()->get_read_from();
 		if (reads_from != NULL) {
 			value = reads_from->get_value();
 			/* Assign reads_from, perform release/acquire synchronization */
 			curr->read_from(reads_from);
-			r_modification_order(curr,reads_from);
+			if (r_modification_order(curr,reads_from))
+				updated = true;
 		} else {
 			/* Read from future value */
 			value = curr->get_node()->get_future_value();
@@ -335,9 +337,14 @@ void ModelChecker::check_current_action(void)
 			promises->push_back(valuepromise);
 		}
 	} else if (curr->is_write()) {
-		w_modification_order(curr);
-		resolve_promises(curr);
+		if (w_modification_order(curr))
+			updated = true;;
+		if (resolve_promises(curr))
+			updated = true;
 	}
+
+	if (updated)
+		resolve_release_sequences(curr->get_location());
 
 	th->set_return_value(value);
 

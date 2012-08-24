@@ -132,7 +132,7 @@ thread_id_t ModelChecker::get_next_replay_thread()
 		return THREAD_ID_T_NONE;
 
 	/* Else, we are trying to replay an execution */
-	ModelAction * next = node_stack->get_next()->get_action();
+	ModelAction *next = node_stack->get_next()->get_action();
 
 	if (next == diverge) {
 		Node *nextnode = next->get_node();
@@ -277,7 +277,7 @@ void ModelChecker::check_current_action(void)
 		delete curr;
 		curr = tmp;
 	} else {
-		ModelAction * tmp = node_stack->explore_action(curr);
+		ModelAction *tmp = node_stack->explore_action(curr);
 		if (tmp) {
 			/* Discard duplicate ModelAction; use action from NodeStack */
 			/* First restore type and order in case of RMW operation */
@@ -328,7 +328,7 @@ void ModelChecker::check_current_action(void)
 			/* Read from future value */
 			value = curr->get_node()->get_future_value();
 			curr->read_from(NULL);
-			Promise * valuepromise = new Promise(curr, value);
+			Promise *valuepromise = new Promise(curr, value);
 			promises->push_back(valuepromise);
 		}
 	} else if (curr->is_write()) {
@@ -374,7 +374,7 @@ bool ModelChecker::isfinalfeasible() {
 }
 
 /** Close out a RMWR by converting previous RMWR into a RMW or READ. */
-ModelAction * ModelChecker::process_rmw(ModelAction * act) {
+ModelAction * ModelChecker::process_rmw(ModelAction *act) {
 	int tid = id_to_int(act->get_tid());
 	ModelAction *lastread = get_last_action(tid);
 	lastread->process_rmw(act);
@@ -404,7 +404,7 @@ void ModelChecker::r_modification_order(ModelAction * curr, const ModelAction *r
 			/* Include at most one act per-thread that "happens before" curr */
 			if (act->happens_before(curr)) {
 				if (act->is_read()) {
-					const ModelAction * prevreadfrom = act->get_reads_from();
+					const ModelAction *prevreadfrom = act->get_reads_from();
 					if (prevreadfrom != NULL && rf != prevreadfrom)
 						mo_graph->addEdge(prevreadfrom, rf);
 				} else if (rf != act) {
@@ -417,7 +417,8 @@ void ModelChecker::r_modification_order(ModelAction * curr, const ModelAction *r
 }
 
 /** Updates the mo_graph with the constraints imposed from the current read. */
-void ModelChecker::post_r_modification_order(ModelAction * curr, const ModelAction *rf) {
+void ModelChecker::post_r_modification_order(ModelAction *curr, const ModelAction *rf)
+{
 	std::vector<action_list_t> *thrd_lists = obj_thrd_map->get_safe_ptr(curr->get_location());
 	unsigned int i;
 	ASSERT(curr->is_read());
@@ -441,7 +442,7 @@ void ModelChecker::post_r_modification_order(ModelAction * curr, const ModelActi
 			/* Include at most one act per-thread that "happens before" curr */
 		if (lastact != NULL) {
 			if (lastact->is_read()) {
-				const ModelAction * postreadfrom = lastact->get_reads_from();
+				const ModelAction *postreadfrom = lastact->get_reads_from();
 				if (postreadfrom != NULL&&rf != postreadfrom)
 					mo_graph->addEdge(rf, postreadfrom);
 			} else if (rf != lastact) {
@@ -464,7 +465,7 @@ void ModelChecker::w_modification_order(ModelAction * curr) {
 	if (curr->is_seqcst()) {
 		/* We have to at least see the last sequentially consistent write,
 			 so we are initialized. */
-		ModelAction * last_seq_cst = get_last_seq_cst(curr->get_location());
+		ModelAction *last_seq_cst = get_last_seq_cst(curr->get_location());
 		if (last_seq_cst != NULL)
 			mo_graph->addEdge(last_seq_cst, curr);
 	}
@@ -758,7 +759,7 @@ void ModelChecker::remove_thread(Thread *t)
 int ModelChecker::switch_to_master(ModelAction *act)
 {
 	DBG();
-	Thread * old = thread_current();
+	Thread *old = thread_current();
 	set_current_action(act);
 	old->set_state(THREAD_READY);
 	return Thread::swap(old, &system_context);

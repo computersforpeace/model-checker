@@ -99,10 +99,10 @@ private:
 	ModelAction * get_parent_action(thread_id_t tid);
 	ModelAction * get_last_seq_cst(const void *location);
 	void build_reads_from_past(ModelAction *curr);
-	ModelAction * process_rmw(ModelAction * curr);
-	void post_r_modification_order(ModelAction * curr, const ModelAction *rf);
-	void r_modification_order(ModelAction * curr, const ModelAction *rf);
-	void w_modification_order(ModelAction * curr);
+	ModelAction * process_rmw(ModelAction *curr);
+	void post_r_modification_order(ModelAction *curr, const ModelAction *rf);
+	void r_modification_order(ModelAction *curr, const ModelAction *rf);
+	void w_modification_order(ModelAction *curr);
 
 	ModelAction *current_action;
 	ModelAction *diverge;
@@ -117,7 +117,7 @@ private:
 	HashTable<const void *, action_list_t, uintptr_t, 4> *obj_map;
 
 	HashTable<void *, std::vector<action_list_t>, uintptr_t, 4 > *obj_thrd_map;
-	std::vector<Promise *> * promises;
+	std::vector<Promise *> *promises;
 	std::vector<ModelAction *> *thrd_last_action;
 	NodeStack *node_stack;
 	ModelAction *next_backtrack;

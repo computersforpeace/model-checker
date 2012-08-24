@@ -103,8 +103,8 @@ private:
 	void build_reads_from_past(ModelAction *curr);
 	ModelAction * process_rmw(ModelAction *curr);
 	void post_r_modification_order(ModelAction *curr, const ModelAction *rf);
-	void r_modification_order(ModelAction *curr, const ModelAction *rf);
-	void w_modification_order(ModelAction *curr);
+	bool r_modification_order(ModelAction *curr, const ModelAction *rf);
+	bool w_modification_order(ModelAction *curr);
 	bool release_seq_head(const ModelAction *rf,
 	                std::vector<const ModelAction *> *release_heads) const;
 

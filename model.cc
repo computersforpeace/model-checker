@@ -387,10 +387,13 @@ ModelAction * ModelChecker::process_rmw(ModelAction *act) {
  * Updates the mo_graph with the constraints imposed from the current read.
  * @param curr The current action. Must be a read.
  * @param rf The action that curr reads from. Must be a write.
+ * @return True if modification order edges were added; false otherwise
  */
-void ModelChecker::r_modification_order(ModelAction * curr, const ModelAction *rf) {
+bool ModelChecker::r_modification_order(ModelAction *curr, const ModelAction *rf)
+{
 	std::vector<action_list_t> *thrd_lists = obj_thrd_map->get_safe_ptr(curr->get_location());
 	unsigned int i;
+	bool added = false;
 	ASSERT(curr->is_read());
 
 	/* Iterate over all threads */
@@ -405,15 +408,20 @@ void ModelChecker::r_modification_order(ModelAction * curr, const ModelAction *r
 			if (act->happens_before(curr)) {
 				if (act->is_read()) {
 					const ModelAction *prevreadfrom = act->get_reads_from();
-					if (prevreadfrom != NULL && rf != prevreadfrom)
+					if (prevreadfrom != NULL && rf != prevreadfrom) {
 						mo_graph->addEdge(prevreadfrom, rf);
+						added = true;
+					}
 				} else if (rf != act) {
 					mo_graph->addEdge(act, rf);
+					added = true;
 				}
 				break;
 			}
 		}
 	}
+
+	return added;
 }
 
 /** Updates the mo_graph with the constraints imposed from the current read. */
@@ -456,18 +464,23 @@ void ModelChecker::post_r_modification_order(ModelAction *curr, const ModelActio
 /**
  * Updates the mo_graph with the constraints imposed from the current write.
  * @param curr The current action. Must be a write.
+ * @return True if modification order edges were added; false otherwise
  */
-void ModelChecker::w_modification_order(ModelAction * curr) {
+bool ModelChecker::w_modification_order(ModelAction *curr)
+{
 	std::vector<action_list_t> *thrd_lists = obj_thrd_map->get_safe_ptr(curr->get_location());
 	unsigned int i;
+	bool added = false;
 	ASSERT(curr->is_write());
 
 	if (curr->is_seqcst()) {
 		/* We have to at least see the last sequentially consistent write,
 			 so we are initialized. */
 		ModelAction *last_seq_cst = get_last_seq_cst(curr->get_location());
-		if (last_seq_cst != NULL)
+		if (last_seq_cst != NULL) {
 			mo_graph->addEdge(last_seq_cst, curr);
+			added = true;
+		}
 	}
 
 	/* Iterate over all threads */
@@ -484,6 +497,7 @@ void ModelChecker::w_modification_order(ModelAction * curr) {
 					mo_graph->addEdge(act->get_reads_from(), curr);
 				else
 					mo_graph->addEdge(act, curr);
+				added = true;
 				break;
 			} else if (act->is_read() && !act->is_synchronizing(curr) &&
 			                             !act->same_thread(curr)) {
@@ -501,6 +515,8 @@ void ModelChecker::w_modification_order(ModelAction * curr) {
 			}
 		}
 	}
+
+	return added;
 }
 
 /**

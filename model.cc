@@ -696,9 +696,11 @@ ClockVector * ModelChecker::get_cv(thread_id_t tid)
  * Resolve a set of Promises with a current write. The set is provided in the
  * Node corresponding to @a write.
  * @param write The ModelAction that is fulfilling Promises
+ * @return True if promises were resolved; false otherwise
  */
-void ModelChecker::resolve_promises(ModelAction *write)
+bool ModelChecker::resolve_promises(ModelAction *write)
 {
+	bool resolved = false;
 	for (unsigned int i = 0, promise_index = 0; promise_index < promises->size(); i++) {
 		Promise *promise = (*promises)[promise_index];
 		if (write->get_node()->get_promise(i)) {
@@ -707,9 +709,11 @@ void ModelChecker::resolve_promises(ModelAction *write)
 			r_modification_order(read, write);
 			post_r_modification_order(read, write);
 			promises->erase(promises->begin() + promise_index);
+			resolved = true;
 		} else
 			promise_index++;
 	}
+	return resolved;
 }
 
 /**

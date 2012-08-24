@@ -93,7 +93,7 @@ private:
 	thread_id_t get_next_replay_thread();
 	ModelAction * get_next_backtrack();
 	void reset_to_initial_state();
-	void resolve_promises(ModelAction *curr);
+	bool resolve_promises(ModelAction *curr);
 	void compute_promises(ModelAction *curr);
 
 	void add_action_to_lists(ModelAction *act);

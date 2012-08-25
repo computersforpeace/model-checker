@@ -107,6 +107,7 @@ private:
 	bool w_modification_order(ModelAction *curr);
 	bool release_seq_head(const ModelAction *rf,
 	                std::vector<const ModelAction *> *release_heads) const;
+	bool resolve_release_sequences(void *location);
 
 	ModelAction *current_action;
 	ModelAction *diverge;

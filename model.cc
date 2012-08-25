@@ -648,6 +648,58 @@ void ModelChecker::get_release_seq_heads(ModelAction *act,
 }
 
 /**
+ * Attempt to resolve all stashed operations that might synchronize with a
+ * release sequence for a given location. This implements the "lazy" portion of
+ * determining whether or not a release sequence was contiguous, since not all
+ * modification order information is present at the time an action occurs.
+ *
+ * @param location The location/object that should be checked for release
+ * sequence resolutions
+ * @return True if any updates occurred (new synchronization, new mo_graph edges)
+ */
+bool ModelChecker::resolve_release_sequences(void *location)
+{
+	std::list<ModelAction *> *list;
+	list = lazy_sync_with_release->getptr(location);
+	if (!list)
+		return false;
+
+	bool updated = false;
+	std::list<ModelAction *>::iterator it = list->begin();
+	while (it != list->end()) {
+		ModelAction *act = *it;
+		const ModelAction *rf = act->get_reads_from();
+		std::vector<const ModelAction *> release_heads;
+		bool complete;
+		complete = release_seq_head(rf, &release_heads);
+		for (unsigned int i = 0; i < release_heads.size(); i++) {
+			if (!act->has_synchronized_with(release_heads[i])) {
+				updated = true;
+				act->synchronize_with(release_heads[i]);
+			}
+		}
+
+		if (updated) {
+			/* propagate synchronization to later actions */
+			action_list_t::reverse_iterator it = action_trace->rbegin();
+			while ((*it) != act) {
+				ModelAction *propagate = *it;
+				if (act->happens_before(propagate))
+					/** @todo new mo_graph edges along with
+					 * this synchronization? */
+					propagate->synchronize_with(act);
+			}
+		}
+		if (complete)
+			it = list->erase(it);
+		else
+			it++;
+	}
+
+	return updated;
+}
+
+/**
  * Performs various bookkeeping operations for the current ModelAction. For
  * instance, adds action to the per-object, per-thread action vector and to the
  * action trace list of all thread actions.

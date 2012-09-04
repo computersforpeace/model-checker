@@ -42,8 +42,6 @@ public:
 	/** Prints an execution summary with trace information. */
 	void print_summary();
 
-	Thread * schedule_next_thread();
-
 	void add_thread(Thread *t);
 	void remove_thread(Thread *t);
 	Thread * get_thread(thread_id_t tid) { return thread_map->get(id_to_int(tid)); }
@@ -90,7 +88,7 @@ private:
 
 	ModelAction * get_last_conflict(ModelAction *act);
 	void set_backtracking(ModelAction *act);
-	thread_id_t get_next_replay_thread();
+	Thread * get_next_replay_thread();
 	ModelAction * get_next_backtrack();
 	void reset_to_initial_state();
 	bool resolve_promises(ModelAction *curr);
@@ -111,7 +109,7 @@ private:
 
 	ModelAction *current_action;
 	ModelAction *diverge;
-	thread_id_t nextThread;
+	Thread *nextThread;
 
 	ucontext_t system_context;
 	action_list_t *action_trace;

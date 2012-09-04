@@ -25,7 +25,7 @@ ModelChecker::ModelChecker(struct model_params params) :
 	params(params),
 	current_action(NULL),
 	diverge(NULL),
-	nextThread(THREAD_ID_T_NONE),
+	nextThread(NULL),
 	action_trace(new action_list_t()),
 	thread_map(new HashTable<int, Thread *, int>()),
 	obj_map(new HashTable<const void *, action_list_t, uintptr_t, 4>()),
@@ -74,7 +74,7 @@ void ModelChecker::reset_to_initial_state()
 	current_action = NULL;
 	next_thread_id = INITIAL_THREAD_ID;
 	used_sequence_numbers = 0;
-	nextThread = 0;
+	nextThread = NULL;
 	next_backtrack = NULL;
 	failed_promise = false;
 	snapshotObject->backTrackBeforeStep(0);
@@ -99,40 +99,19 @@ modelclock_t ModelChecker::get_next_seq_num()
 }
 
 /**
- * Performs the "scheduling" for the model-checker. That is, it checks if the
- * model-checker has selected a "next thread to run" and returns it, if
- * available. This function should be called from the Scheduler routine, where
- * the Scheduler falls back to a default scheduling routine if needed.
- *
- * @return The next thread chosen by the model-checker. If the model-checker
- * makes no selection, retuns NULL.
- */
-Thread * ModelChecker::schedule_next_thread()
-{
-	Thread *t;
-	if (nextThread == THREAD_ID_T_NONE)
-		return NULL;
-	t = thread_map->get(id_to_int(nextThread));
-
-	ASSERT(t != NULL);
-
-	return t;
-}
-
-/**
  * Choose the next thread in the replay sequence.
  *
  * If the replay sequence has reached the 'diverge' point, returns a thread
  * from the backtracking set. Otherwise, simply returns the next thread in the
  * sequence that is being replayed.
  */
-thread_id_t ModelChecker::get_next_replay_thread()
+Thread * ModelChecker::get_next_replay_thread()
 {
 	thread_id_t tid;
 
 	/* Have we completed exploring the preselected path? */
 	if (diverge == NULL)
-		return THREAD_ID_T_NONE;
+		return NULL;
 
 	/* Else, we are trying to replay an execution */
 	ModelAction *next = node_stack->get_next()->get_action();
@@ -164,7 +143,8 @@ thread_id_t ModelChecker::get_next_replay_thread()
 		tid = next->get_tid();
 	}
 	DEBUG("*** ModelChecker chose next thread = %d ***\n", tid);
-	return tid;
+	ASSERT(tid != THREAD_ID_T_NONE);
+	return thread_map->get(id_to_int(tid));
 }
 
 /**
@@ -358,7 +338,7 @@ void ModelChecker::check_current_action(void)
 
 	/* Do not split atomic actions. */
 	if (curr->is_rmwr())
-		nextThread = thread_current()->get_id();
+		nextThread = thread_current();
 	else
 		nextThread = get_next_replay_thread();
 
@@ -991,7 +971,7 @@ bool ModelChecker::take_step() {
 			ASSERT(false);
 		}
 	}
-	next = scheduler->next_thread();
+	next = scheduler->next_thread(nextThread);
 
 	/* Infeasible -> don't take any more steps */
 	if (!isfeasible())

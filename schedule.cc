@@ -32,13 +32,15 @@ void Scheduler::remove_thread(Thread *t)
 }
 
 /**
- * Remove one Thread from the scheduler. This implementation performs FIFO.
+ * Remove one Thread from the scheduler. This implementation defaults to FIFO,
+ * if a thread is not already provided.
+ *
+ * @param t Thread to run, if chosen by an external entity (e.g.,
+ * ModelChecker). May be NULL to indicate no external choice.
  * @return The next Thread to run
  */
-Thread * Scheduler::next_thread()
+Thread * Scheduler::next_thread(Thread *t)
 {
-	Thread *t = model->schedule_next_thread();
-
 	if (t != NULL) {
 		current = t;
 		readyList.remove(t);

@@ -244,6 +244,18 @@ ModelAction * ModelChecker::get_next_backtrack()
 	return next;
 }
 
+/**
+ * This is the heart of the model checker routine. It performs model-checking
+ * actions corresponding to a given "current action." Among other processes, it
+ * calculates reads-from relationships, updates synchronization clock vectors,
+ * forms a memory_order constraints graph, and handles replay/backtrack
+ * execution when running permutations of previously-observed executions.
+ *
+ * @param curr The current action to process
+ * @return The next Thread that must be executed. May be NULL if ModelChecker
+ * makes no choice (e.g., according to replay execution, combining RMW actions,
+ * etc.)
+ */
 Thread * ModelChecker::check_current_action(ModelAction *curr)
 {
 	bool already_added = false;

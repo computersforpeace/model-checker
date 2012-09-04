@@ -244,15 +244,11 @@ ModelAction * ModelChecker::get_next_backtrack()
 	return next;
 }
 
-void ModelChecker::check_current_action(void)
+Thread * ModelChecker::check_current_action(ModelAction *curr)
 {
-	ModelAction *curr = this->current_action;
 	bool already_added = false;
-	this->current_action = NULL;
-	if (!curr) {
-		DEBUG("trying to push NULL action...\n");
-		return;
-	}
+
+	ASSERT(curr);
 
 	if (curr->is_rmwc() || curr->is_rmw()) {
 		ModelAction *tmp = process_rmw(curr);
@@ -332,16 +328,6 @@ void ModelChecker::check_current_action(void)
 	if (!already_added)
 		add_action_to_lists(curr);
 
-	/** @todo Is there a better interface for setting the next thread rather
-		 than this field/convoluted approach?  Perhaps like just returning
-		 it or something? */
-
-	/* Do not split atomic actions. */
-	if (curr->is_rmwr())
-		nextThread = thread_current();
-	else
-		nextThread = get_next_replay_thread();
-
 	Node *currnode = curr->get_node();
 	Node *parnode = currnode->get_parent();
 
@@ -351,6 +337,12 @@ void ModelChecker::check_current_action(void)
 			next_backtrack = curr;
 
 	set_backtracking(curr);
+
+	/* Do not split atomic actions. */
+	if (curr->is_rmwr())
+		return thread_current();
+	else
+		return get_next_replay_thread();
 }
 
 /** @returns whether the current partial trace is feasible. */
@@ -962,7 +954,10 @@ bool ModelChecker::take_step() {
 	curr = thread_current();
 	if (curr) {
 		if (curr->get_state() == THREAD_READY) {
-			check_current_action();
+			if (current_action) {
+				nextThread = check_current_action(current_action);
+				current_action = NULL;
+			}
 			scheduler->add_thread(curr);
 		} else if (curr->get_state() == THREAD_RUNNING) {
 			/* Stopped while running; i.e., completed */

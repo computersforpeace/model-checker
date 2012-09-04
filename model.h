@@ -82,7 +82,7 @@ private:
 	 * @param act The ModelAction created by the user-thread action
 	 */
 	void set_current_action(ModelAction *act) { current_action = act; }
-	void check_current_action();
+	Thread * check_current_action(ModelAction *curr);
 
 	bool take_step();
 

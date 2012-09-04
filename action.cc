@@ -265,8 +265,12 @@ void ModelAction::print(void) const
 
 	printf("(%3d) Thread: %-2d   Action: %-13s   MO: %7s  Loc: %14p  Value: %-12" PRIu64,
 			seq_number, id_to_int(tid), type_str, mo_str, location, valuetoprint);
-	if (reads_from)
-		printf(" Rf: %d", reads_from->get_seq_number());
+	if (is_read()) {
+		if (reads_from)
+			printf(" Rf: %d", reads_from->get_seq_number());
+		else
+			printf(" Rf: ?");
+	}
 	if (cv) {
 		printf("\t");
 		cv->print();

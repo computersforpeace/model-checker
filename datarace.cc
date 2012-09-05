@@ -252,5 +252,5 @@ void raceCheckRead(thread_id_t thread, void *location, ClockVector *currClock) {
 		return;
 	}
 
-	*shadow = ENCODEOP(writeThread, writeClock, threadid, ourClock);
+	*shadow = ENCODEOP(threadid, ourClock, id_to_int(writeThread), writeClock);
 }

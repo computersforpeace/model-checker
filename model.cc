@@ -953,10 +953,7 @@ void ModelChecker::remove_thread(Thread *t)
  * context). This switch is made with the intention of exploring a particular
  * model-checking action (described by a ModelAction object). Must be called
  * from a user-thread context.
- * @param act The current action that will be explored. May be NULL, although
- * there is little reason to switch to the model-checker without an action to
- * explore (note: act == NULL is sometimes used as a hack to allow a thread to
- * yield control without performing any progress; see thrd_join()).
+ * @param act The current action that will be explored. Must not be NULL.
  * @return Return status from the 'swap' call (i.e., success/fail, 0/-1)
  */
 int ModelChecker::switch_to_master(ModelAction *act)
@@ -978,10 +975,9 @@ bool ModelChecker::take_step() {
 	curr = thread_current();
 	if (curr) {
 		if (curr->get_state() == THREAD_READY) {
-			if (current_action) {
-				nextThread = check_current_action(current_action);
-				current_action = NULL;
-			}
+			ASSERT(current_action);
+			nextThread = check_current_action(current_action);
+			current_action = NULL;
 			if (!curr->is_blocked())
 				scheduler->add_thread(curr);
 		} else if (curr->get_state() == THREAD_RUNNING) {

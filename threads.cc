@@ -44,6 +44,9 @@ void thread_startup()
 
 	/* Call the actual thread function */
 	curr_thread->start_routine(curr_thread->arg);
+
+	/* Finish thread properly */
+	model->switch_to_master(new ModelAction(THREAD_FINISH, std::memory_order_seq_cst, curr_thread));
 }
 
 /**

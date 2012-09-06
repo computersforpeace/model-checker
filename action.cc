@@ -218,6 +218,9 @@ void ModelAction::print(void) const
 	case THREAD_JOIN:
 		type_str = "thread join";
 		break;
+	case THREAD_FINISH:
+		type_str = "thread finish";
+		break;
 	case ATOMIC_READ:
 		type_str = "atomic read";
 		break;

@@ -67,6 +67,9 @@ public:
 	 */
 	uint64_t get_return_value() { return last_action_val; }
 
+	/** @return True if this thread is finished executing */
+	bool is_complete() { return state == THREAD_COMPLETED; }
+
 	friend void thread_startup();
 
 	SNAPSHOTALLOC

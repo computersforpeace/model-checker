@@ -104,7 +104,7 @@ int Thread::swap(ucontext_t *ctxt, Thread *t)
 /** Terminate a thread and free its stack. */
 void Thread::complete()
 {
-	if (state != THREAD_COMPLETED) {
+	if (!is_complete()) {
 		DEBUG("completed thread %d\n", get_id());
 		state = THREAD_COMPLETED;
 		if (stack)

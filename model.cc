@@ -311,6 +311,7 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 			Thread *wake = th->pop_wait_list();
 			scheduler->wake(wake);
 		}
+		th->complete();
 	}
 
 	/* Deal with new thread */
@@ -978,11 +979,8 @@ bool ModelChecker::take_step() {
 			ASSERT(current_action);
 			nextThread = check_current_action(current_action);
 			current_action = NULL;
-			if (!curr->is_blocked())
+			if (!curr->is_blocked() && !curr->is_complete())
 				scheduler->add_thread(curr);
-		} else if (curr->get_state() == THREAD_RUNNING) {
-			/* Stopped while running; i.e., completed */
-			curr->complete();
 		} else {
 			ASSERT(false);
 		}

@@ -7,6 +7,7 @@
 
 #include <ucontext.h>
 #include <stdint.h>
+#include <vector>
 
 #include "mymemory.h"
 #include "libthreads.h"
@@ -70,6 +71,25 @@ public:
 	/** @return True if this thread is finished executing */
 	bool is_complete() { return state == THREAD_COMPLETED; }
 
+	/** @return True if no threads are waiting on this Thread */
+	bool wait_list_empty() { return wait_list.empty(); }
+
+	/**
+	 * Add a thread to the waiting list for this thread.
+	 * @param t The Thread to add
+	 */
+	void push_wait_list(Thread *t) { wait_list.push_back(t); }
+
+	/**
+	 * Remove one Thread from the waiting list
+	 * @return The Thread that was removed from the waiting list
+	 */
+	Thread * pop_wait_list() {
+		Thread *ret = wait_list.front();
+		wait_list.pop_back();
+		return ret;
+	}
+
 	friend void thread_startup();
 
 	SNAPSHOTALLOC
@@ -85,6 +105,13 @@ private:
 	thrd_t *user_thread;
 	thread_id_t id;
 	thread_state state;
+
+	/**
+	 * A list of Threads waiting on this Thread. Particularly, this list is
+	 * used for thread joins, where another Thread waits for this Thread to
+	 * complete
+	 */
+	std::vector<Thread *> wait_list;
 
 	/**
 	 * The value returned by the last action in this thread

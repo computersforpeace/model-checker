@@ -123,6 +123,7 @@ Thread::Thread(thrd_t *t, void (*func)(void *), void *a) :
 	arg(a),
 	user_thread(t),
 	state(THREAD_CREATED),
+	wait_list(),
 	last_action_val(VALUE_NONE)
 {
 	int ret;

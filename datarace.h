@@ -6,6 +6,7 @@
 #include "config.h"
 #include <stdint.h>
 #include "clockvector.h"
+#include <vector>
 
 struct ShadowTable {
 	void * array[65536];
@@ -15,13 +16,34 @@ struct ShadowBaseTable {
 	uint64_t array[65536];
 };
 
+struct DataRace {
+	/* Clock and thread associated with first action.  This won't change in
+		 response to synchronization. */
+
+	thread_id_t oldthread;
+	modelclock_t oldclock;
+	/* Record whether this is a write, so we can tell the user. */
+	bool isoldwrite;
+
+	/* Model action associated with second action.  This could change as
+		 a result of synchronization. */
+	ModelAction *newaction;
+	/* Record whether this is a write, so we can tell the user. */
+	bool isnewwrite;
+
+	/* Address of data race. */
+	void *address;
+};
+
 #define MASK16BIT 0xffff
 
 void initRaceDetector();
 void raceCheckWrite(thread_id_t thread, void *location, ClockVector *currClock);
 void raceCheckRead(thread_id_t thread, void *location, ClockVector *currClock);
+void checkDataRaces();
+void printRace(struct DataRace *race);
 
-
+extern std::vector<struct DataRace *> unrealizedraces;
 
 /** Basic encoding idea:
  *	 (void *) Either:

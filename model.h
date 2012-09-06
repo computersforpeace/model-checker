@@ -55,6 +55,7 @@ public:
 
 	int switch_to_master(ModelAction *act);
 	ClockVector * get_cv(thread_id_t tid);
+	ModelAction * get_parent_action(thread_id_t tid);
 	bool next_execution();
 	bool isfeasible();
 	bool isfinalfeasible();
@@ -96,7 +97,6 @@ private:
 
 	void add_action_to_lists(ModelAction *act);
 	ModelAction * get_last_action(thread_id_t tid);
-	ModelAction * get_parent_action(thread_id_t tid);
 	ModelAction * get_last_seq_cst(const void *location);
 	void build_reads_from_past(ModelAction *curr);
 	ModelAction * process_rmw(ModelAction *curr);

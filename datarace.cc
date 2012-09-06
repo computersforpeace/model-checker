@@ -1,9 +1,11 @@
 #include "datarace.h"
+#include "model.h"
 #include "threads.h"
 #include <stdio.h>
 #include <cstring>
 
 struct ShadowTable *root;
+std::vector<struct DataRace *> unrealizedraces;
 
 /** This function initialized the data race detector. */
 void initRaceDetector() {
@@ -71,12 +73,49 @@ static void expandRecord(uint64_t * shadow) {
 }
 
 /** This function is called when we detect a data race.*/
-static void reportDataRace() {
-	printf("The reportDataRace method should report useful things about this datarace!\n");
+static void reportDataRace(thread_id_t oldthread, modelclock_t oldclock, bool isoldwrite, ModelAction *newaction, bool isnewwrite, void *address) {
+	struct DataRace * race=(struct DataRace *)malloc(sizeof(struct DataRace));
+	race->oldthread=oldthread;
+	race->oldclock=oldclock;
+	race->isoldwrite=isoldwrite;
+	race->newaction=newaction;
+	race->isnewwrite=isnewwrite;
+	race->address=address;
+	unrealizedraces.push_back(race);
+	checkDataRaces();
+}
+
+/** This function goes through the list of unrealized data races,
+ *	removes the impossible ones, and print the realized ones. */
+
+void checkDataRaces() {
+	if (true) {
+		/* Prune the non-racing unrealized dataraces */
+		unsigned int i,newloc=0;
+		for(i=0;i<unrealizedraces.size();i++) {
+			struct DataRace * race=unrealizedraces[i];
+			if (clock_may_race(race->newaction->get_cv(), race->newaction->get_tid(), race->oldclock, race->oldthread)) {
+				unrealizedraces[newloc++]=race;
+			}
+		}
+		if (newloc!=i)
+			unrealizedraces.resize(newloc);
+		for(i=0;i<unrealizedraces.size();i++) {
+			struct DataRace * race=unrealizedraces[i];
+			printRace(race);
+		}
+	}
+}
+
+void printRace(struct DataRace * race) {
+	printf("Datarace detected\n");
+	printf("Location %p\n", race->address);
+	printf("Initial access: thread %u clock %u, iswrite %u\n",race->oldthread,race->oldclock, race->isoldwrite);
+	printf("Second access: thread %u, iswrite %u\n", race->newaction->get_tid(), race->isnewwrite);
 }
 
 /** This function does race detection for a write on an expanded record. */
-void fullRaceCheckWrite(thread_id_t thread, uint64_t * shadow, ClockVector *currClock) {
+void fullRaceCheckWrite(thread_id_t thread, void *location, uint64_t * shadow, ClockVector *currClock) {
 	struct RaceRecord * record=(struct RaceRecord *) (*shadow);
 
 	/* Check for datarace against last read. */
@@ -90,7 +129,7 @@ void fullRaceCheckWrite(thread_id_t thread, uint64_t * shadow, ClockVector *curr
 
 		if (clock_may_race(currClock, thread, readClock, readThread)) {
 			/* We have a datarace */
-			reportDataRace();
+			reportDataRace(readThread, readClock, false, model->get_parent_action(thread), true, location);
 		}
 	}
 
@@ -101,7 +140,7 @@ void fullRaceCheckWrite(thread_id_t thread, uint64_t * shadow, ClockVector *curr
 
 	if (clock_may_race(currClock, thread, writeClock, writeThread)) {
 		/* We have a datarace */
-		reportDataRace();
+		reportDataRace(writeThread, writeClock, true, model->get_parent_action(thread), true, location);
 	}
 
 	record->numReads=0;
@@ -117,7 +156,7 @@ void raceCheckWrite(thread_id_t thread, void *location, ClockVector *currClock) 
 
 	/* Do full record */
 	if (shadowval!=0&&!ISSHORTRECORD(shadowval)) {
-		fullRaceCheckWrite(thread, shadow, currClock);
+		fullRaceCheckWrite(thread, location, shadow, currClock);
 		return;
 	}
 
@@ -127,7 +166,7 @@ void raceCheckWrite(thread_id_t thread, void *location, ClockVector *currClock) 
 	/* Thread ID is too large or clock is too large. */
 	if (threadid > MAXTHREADID || ourClock > MAXWRITEVECTOR) {
 		expandRecord(shadow);
-		fullRaceCheckWrite(thread, shadow, currClock);
+		fullRaceCheckWrite(thread, location, shadow, currClock);
 		return;
 	}
 
@@ -138,7 +177,7 @@ void raceCheckWrite(thread_id_t thread, void *location, ClockVector *currClock) 
 
 	if (clock_may_race(currClock, thread, readClock, readThread)) {
 		/* We have a datarace */
-		reportDataRace();
+		reportDataRace(readThread, readClock, false, model->get_parent_action(thread), true, location);
 	}
 
 	/* Check for datarace against last write. */
@@ -148,13 +187,13 @@ void raceCheckWrite(thread_id_t thread, void *location, ClockVector *currClock) 
 
 	if (clock_may_race(currClock, thread, writeClock, writeThread)) {
 		/* We have a datarace */
-		reportDataRace();
+		reportDataRace(writeThread, writeClock, true, model->get_parent_action(thread), true, location);
 	}
 	*shadow = ENCODEOP(0, 0, threadid, ourClock);
 }
 
 /** This function does race detection on a read for an expanded record. */
-void fullRaceCheckRead(thread_id_t thread, uint64_t * shadow, ClockVector *currClock) {
+void fullRaceCheckRead(thread_id_t thread, void *location, uint64_t * shadow, ClockVector *currClock) {
 	struct RaceRecord * record=(struct RaceRecord *) (*shadow);
 
 	/* Check for datarace against last write. */
@@ -164,7 +203,7 @@ void fullRaceCheckRead(thread_id_t thread, uint64_t * shadow, ClockVector *currC
 
 	if (clock_may_race(currClock, thread, writeClock, writeThread)) {
 		/* We have a datarace */
-		reportDataRace();
+		reportDataRace(writeThread, writeClock, true, model->get_parent_action(thread), false, location);
 	}
 
 	/* Shorten vector when possible */
@@ -218,7 +257,7 @@ void raceCheckRead(thread_id_t thread, void *location, ClockVector *currClock) {
 
 	/* Do full record */
 	if (shadowval!=0&&!ISSHORTRECORD(shadowval)) {
-		fullRaceCheckRead(thread, shadow, currClock);
+		fullRaceCheckRead(thread, location, shadow, currClock);
 		return;
 	}
 
@@ -228,7 +267,7 @@ void raceCheckRead(thread_id_t thread, void *location, ClockVector *currClock) {
 	/* Thread ID is too large or clock is too large. */
 	if (threadid > MAXTHREADID || ourClock > MAXWRITEVECTOR) {
 		expandRecord(shadow);
-		fullRaceCheckRead(thread, shadow, currClock);
+		fullRaceCheckRead(thread, location, shadow, currClock);
 		return;
 	}
 
@@ -239,7 +278,7 @@ void raceCheckRead(thread_id_t thread, void *location, ClockVector *currClock) {
 
 	if (clock_may_race(currClock, thread, writeClock, writeThread)) {
 		/* We have a datarace */
-		reportDataRace();
+		reportDataRace(writeThread, writeClock, true, model->get_parent_action(thread), false, location);
 	}
 
 	modelclock_t readClock = READVECTOR(shadowval);
@@ -248,7 +287,7 @@ void raceCheckRead(thread_id_t thread, void *location, ClockVector *currClock) {
 	if (clock_may_race(currClock, thread, readClock, readThread)) {
 		/* We don't subsume this read... Have to expand record. */
 		expandRecord(shadow);
-		fullRaceCheckRead(thread, shadow, currClock);
+		fullRaceCheckRead(thread, location, shadow, currClock);
 		return;
 	}
 

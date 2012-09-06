@@ -299,6 +299,18 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 	if (curr->get_type() == THREAD_CREATE) {
 		Thread *th = (Thread *)curr->get_location();
 		th->set_creation(curr);
+	} else if (curr->get_type() == THREAD_JOIN) {
+		Thread *wait, *join;
+		wait = get_thread(curr->get_tid());
+		join = (Thread *)curr->get_location();
+		if (!join->is_complete())
+			scheduler->wait(wait, join);
+	} else if (curr->get_type() == THREAD_FINISH) {
+		Thread *th = get_thread(curr->get_tid());
+		while (!th->wait_list_empty()) {
+			Thread *wake = th->pop_wait_list();
+			scheduler->wake(wake);
+		}
 	}
 
 	/* Deal with new thread */
@@ -970,7 +982,8 @@ bool ModelChecker::take_step() {
 				nextThread = check_current_action(current_action);
 				current_action = NULL;
 			}
-			scheduler->add_thread(curr);
+			if (!curr->is_blocked())
+				scheduler->add_thread(curr);
 		} else if (curr->get_state() == THREAD_RUNNING) {
 			/* Stopped while running; i.e., completed */
 			curr->complete();

@@ -28,6 +28,11 @@ typedef enum thread_state {
 	 * context.
 	 */
 	THREAD_READY,
+	/**
+	 * Thread is waiting on another action (e.g., thread completion, lock
+	 * release, etc.)
+	 */
+	THREAD_BLOCKED,
 	/** Thread has completed its execution */
 	THREAD_COMPLETED
 } thread_state;
@@ -70,6 +75,9 @@ public:
 
 	/** @return True if this thread is finished executing */
 	bool is_complete() { return state == THREAD_COMPLETED; }
+
+	/** @return True if this thread is blocked */
+	bool is_blocked() { return state == THREAD_BLOCKED; }
 
 	/** @return True if no threads are waiting on this Thread */
 	bool wait_list_empty() { return wait_list.empty(); }

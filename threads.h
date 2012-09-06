@@ -22,11 +22,7 @@ typedef enum thread_state {
 	THREAD_CREATED,
 	/** Thread is running */
 	THREAD_RUNNING,
-	/**
-	 * Thread has yielded to the model-checker but is ready to run. Used
-	 * during an action that caused a context switch to the model-checking
-	 * context.
-	 */
+	/** Thread is not currently running but is ready to run */
 	THREAD_READY,
 	/**
 	 * Thread is waiting on another action (e.g., thread completion, lock

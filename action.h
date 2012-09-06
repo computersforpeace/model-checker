@@ -32,6 +32,7 @@ typedef enum action_type {
 	THREAD_START,         /**< First action in each thread */
 	THREAD_YIELD,         /**< A thread yield action */
 	THREAD_JOIN,          /**< A thread join action */
+	THREAD_FINISH,        /**< A thread completion action */
 	ATOMIC_READ,          /**< An atomic read action */
 	ATOMIC_WRITE,         /**< An atomic write action */
 	ATOMIC_RMWR,          /**< The read part of an atomic RMW action */

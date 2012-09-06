@@ -32,6 +32,30 @@ void Scheduler::remove_thread(Thread *t)
 }
 
 /**
+ * Force one Thread to wait on another Thread. The "join" Thread should
+ * eventually wake up the waiting Thread via Scheduler::wake.
+ * @param wait The Thread that should wait
+ * @param join The Thread on which we are waiting.
+ */
+void Scheduler::wait(Thread *wait, Thread *join)
+{
+	ASSERT(!join->is_complete());
+	remove_thread(wait);
+	join->push_wait_list(wait);
+	wait->set_state(THREAD_BLOCKED);
+}
+
+/**
+ * Wake a Thread up that was previously waiting (see Scheduler::wait)
+ * @param t The Thread to wake up
+ */
+void Scheduler::wake(Thread *t)
+{
+	add_thread(t);
+	t->set_state(THREAD_READY);
+}
+
+/**
  * Remove one Thread from the scheduler. This implementation defaults to FIFO,
  * if a thread is not already provided.
  *

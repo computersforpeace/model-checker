@@ -299,6 +299,19 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 	if (curr->get_type() == THREAD_CREATE) {
 		Thread *th = (Thread *)curr->get_location();
 		th->set_creation(curr);
+	} else if (curr->get_type() == THREAD_JOIN) {
+		Thread *wait, *join;
+		wait = get_thread(curr->get_tid());
+		join = (Thread *)curr->get_location();
+		if (!join->is_complete())
+			scheduler->wait(wait, join);
+	} else if (curr->get_type() == THREAD_FINISH) {
+		Thread *th = get_thread(curr->get_tid());
+		while (!th->wait_list_empty()) {
+			Thread *wake = th->pop_wait_list();
+			scheduler->wake(wake);
+		}
+		th->complete();
 	}
 
 	/* Deal with new thread */
@@ -941,10 +954,7 @@ void ModelChecker::remove_thread(Thread *t)
  * context). This switch is made with the intention of exploring a particular
  * model-checking action (described by a ModelAction object). Must be called
  * from a user-thread context.
- * @param act The current action that will be explored. May be NULL, although
- * there is little reason to switch to the model-checker without an action to
- * explore (note: act == NULL is sometimes used as a hack to allow a thread to
- * yield control without performing any progress; see thrd_join()).
+ * @param act The current action that will be explored. Must not be NULL.
  * @return Return status from the 'swap' call (i.e., success/fail, 0/-1)
  */
 int ModelChecker::switch_to_master(ModelAction *act)
@@ -966,14 +976,11 @@ bool ModelChecker::take_step() {
 	curr = thread_current();
 	if (curr) {
 		if (curr->get_state() == THREAD_READY) {
-			if (current_action) {
-				nextThread = check_current_action(current_action);
-				current_action = NULL;
-			}
-			scheduler->add_thread(curr);
-		} else if (curr->get_state() == THREAD_RUNNING) {
-			/* Stopped while running; i.e., completed */
-			curr->complete();
+			ASSERT(current_action);
+			nextThread = check_current_action(current_action);
+			current_action = NULL;
+			if (!curr->is_blocked() && !curr->is_complete())
+				scheduler->add_thread(curr);
 		} else {
 			ASSERT(false);
 		}

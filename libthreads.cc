@@ -23,8 +23,7 @@ int thrd_create(thrd_t *t, thrd_start_t start_routine, void *arg)
 int thrd_join(thrd_t t)
 {
 	Thread *th = model->get_thread(thrd_to_id(t));
-	while (th->get_state() != THREAD_COMPLETED)
-		model->switch_to_master(NULL);
+	model->switch_to_master(new ModelAction(THREAD_JOIN, std::memory_order_seq_cst, th, thrd_to_id(t)));
 	return 0;
 }
 

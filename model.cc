@@ -370,6 +370,9 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 	/* Do not split atomic actions. */
 	if (curr->is_rmwr())
 		return thread_current();
+	/* The THREAD_CREATE action points to the created Thread */
+	else if (curr->get_type() == THREAD_CREATE)
+		return (Thread *)curr->get_location();
 	else
 		return get_next_replay_thread();
 }

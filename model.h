@@ -53,6 +53,7 @@ public:
 	/** @return The currently executing Thread. */
 	Thread * get_current_thread() { return scheduler->get_current_thread(); }
 
+	void assert_thread();
 	int switch_to_master(ModelAction *act);
 	ClockVector * get_cv(thread_id_t tid);
 	ModelAction * get_parent_action(thread_id_t tid);
@@ -64,6 +65,7 @@ public:
 	                std::vector<const ModelAction *> *release_heads);
 
 	void finish_execution();
+	bool isfeasibleprefix();
 
 	MEMALLOC
 private:

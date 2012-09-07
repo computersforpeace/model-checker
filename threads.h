@@ -27,6 +27,7 @@ typedef enum thread_state {
 	 * context.
 	 */
 	THREAD_READY,
+	THREAD_ASSERTED,
 	/** Thread has completed its execution */
 	THREAD_COMPLETED
 } thread_state;

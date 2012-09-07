@@ -82,14 +82,18 @@ static void reportDataRace(thread_id_t oldthread, modelclock_t oldclock, bool is
 	race->isnewwrite=isnewwrite;
 	race->address=address;
 	unrealizedraces.push_back(race);
-	checkDataRaces();
+
+	/* If the race is realized, bail out now. */
+	if (checkDataRaces()) {
+		model->assert_thread();
+	}
 }
 
 /** This function goes through the list of unrealized data races,
  *	removes the impossible ones, and print the realized ones. */
 
-void checkDataRaces() {
-	if (true) {
+bool checkDataRaces() {
+	if (model->isfeasibleprefix()) {
 		/* Prune the non-racing unrealized dataraces */
 		unsigned int i,newloc=0;
 		for(i=0;i<unrealizedraces.size();i++) {
@@ -100,11 +104,17 @@ void checkDataRaces() {
 		}
 		if (newloc!=i)
 			unrealizedraces.resize(newloc);
-		for(i=0;i<unrealizedraces.size();i++) {
-			struct DataRace * race=unrealizedraces[i];
-			printRace(race);
+
+		if (unrealizedraces.size()!=0) {
+			/* We have an actual realized race. */
+			for(i=0;i<unrealizedraces.size();i++) {
+				struct DataRace * race=unrealizedraces[i];
+				printRace(race);
+			}
+			return true;
 		}
 	}
+	return false;
 }
 
 void printRace(struct DataRace * race) {

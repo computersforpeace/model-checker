@@ -40,7 +40,7 @@ struct DataRace {
 void initRaceDetector();
 void raceCheckWrite(thread_id_t thread, void *location, ClockVector *currClock);
 void raceCheckRead(thread_id_t thread, void *location, ClockVector *currClock);
-void checkDataRaces();
+bool checkDataRaces();
 void printRace(struct DataRace *race);
 
 extern std::vector<struct DataRace *> unrealizedraces;

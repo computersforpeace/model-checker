@@ -357,6 +357,12 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 		return get_next_replay_thread();
 }
 
+/** @returns whether the current partial trace must be a prefix of a
+ * feasible trace. */
+
+bool ModelChecker::isfeasibleprefix() {
+}
+
 /** @returns whether the current partial trace is feasible. */
 bool ModelChecker::isfeasible() {
 	return !mo_graph->checkForCycles() && !failed_promise;
@@ -956,6 +962,14 @@ int ModelChecker::switch_to_master(ModelAction *act)
 	return Thread::swap(old, &system_context);
 }
 
+void ModelChecker::assert_thread() {
+	DBG();
+	Thread *old = thread_current();
+	set_current_action(NULL);
+	old->set_state(THREAD_ASSERTED);
+	return Thread::swap(old, &system_context);
+}
+
 /**
  * Takes the next step in the execution, if possible.
  * @return Returns true (success) if a step was taken and false otherwise.
@@ -974,6 +988,9 @@ bool ModelChecker::take_step() {
 		} else if (curr->get_state() == THREAD_RUNNING) {
 			/* Stopped while running; i.e., completed */
 			curr->complete();
+		} else if (curr->get_state()==THREAD_ASSERTED) {
+			/* Something bad happened.  Stop taking steps. */
+			return false;
 		} else {
 			ASSERT(false);
 		}

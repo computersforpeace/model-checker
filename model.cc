@@ -604,6 +604,11 @@ bool ModelChecker::release_seq_head(const ModelAction *rf,
 		if (id_to_int(rf->get_tid()) == (int)i)
 			continue;
 		list = &(*thrd_lists)[i];
+
+		/* Can we ensure no future writes from this thread may break
+		 * the release seq? */
+		bool future_ordered = false;
+
 		for (rit = list->rbegin(); rit != list->rend(); rit++) {
 			const ModelAction *act = *rit;
 			if (!act->is_write())
@@ -611,13 +616,17 @@ bool ModelChecker::release_seq_head(const ModelAction *rf,
 			/* Reach synchronization -> this thread is complete */
 			if (act->happens_before(release))
 				break;
-			if (rf->happens_before(act))
+			if (rf->happens_before(act)) {
+				future_ordered = true;
 				continue;
+			}
 
 			/* Check modification order */
-			if (mo_graph->checkReachable(rf, act))
+			if (mo_graph->checkReachable(rf, act)) {
 				/* rf --mo--> act */
+				future_ordered = true;
 				continue;
+			}
 			if (mo_graph->checkReachable(act, release))
 				/* act --mo--> release */
 				break;
@@ -628,6 +637,8 @@ bool ModelChecker::release_seq_head(const ModelAction *rf,
 			}
 			certain = false;
 		}
+		if (!future_ordered)
+			return false; /* This thread is uncertain */
 	}
 
 	if (certain)

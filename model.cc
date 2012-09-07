@@ -39,6 +39,8 @@ ModelChecker::ModelChecker(struct model_params params) :
 	priv = (struct model_snapshot_members *)calloc(1, sizeof(*priv));
 	/* First thread created will have id INITIAL_THREAD_ID */
 	priv->next_thread_id = INITIAL_THREAD_ID;
+
+	lazy_sync_size = &priv->lazy_sync_size;
 }
 
 /** @brief Destructor */
@@ -372,9 +374,8 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 
 /** @returns whether the current partial trace must be a prefix of a
  * feasible trace. */
-
 bool ModelChecker::isfeasibleprefix() {
-	return promises->size()==0;
+	return promises->size() == 0 && *lazy_sync_size == 0;
 }
 
 /** @returns whether the current partial trace is feasible. */
@@ -665,6 +666,7 @@ void ModelChecker::get_release_seq_heads(ModelAction *act,
 		std::list<ModelAction *> *list;
 		list = lazy_sync_with_release->get_safe_ptr(act->get_location());
 		list->push_back(act);
+		(*lazy_sync_size)++;
 	}
 }
 
@@ -711,9 +713,10 @@ bool ModelChecker::resolve_release_sequences(void *location)
 					propagate->synchronize_with(act);
 			}
 		}
-		if (complete)
+		if (complete) {
 			it = list->erase(it);
-		else
+			(*lazy_sync_size)--;
+		} else
 			it++;
 	}
 

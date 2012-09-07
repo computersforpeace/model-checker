@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <algorithm>
 
 #include "model.h"
 #include "action.h"
@@ -583,9 +584,8 @@ bool ModelChecker::release_seq_head(const ModelAction *rf,
 	action_list_t::const_reverse_iterator rit;
 
 	/* Find rf in the thread list */
-	for (rit = list->rbegin(); rit != list->rend(); rit++)
-		if (*rit == rf)
-			break;
+	rit = std::find(list->rbegin(), list->rend(), rf);
+	ASSERT(rit != list->rend());
 
 	/* Find the last write/release */
 	for (; rit != list->rend(); rit++)

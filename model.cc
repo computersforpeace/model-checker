@@ -166,7 +166,7 @@ bool ModelChecker::next_execution()
 	if (isfinalfeasible() || DBG_ENABLED())
 		print_summary();
 
-	if ((diverge = model->get_next_backtrack()) == NULL)
+	if ((diverge = get_next_backtrack()) == NULL)
 		return false;
 
 	if (DBG_ENABLED()) {
@@ -174,7 +174,7 @@ bool ModelChecker::next_execution()
 		diverge->print();
 	}
 
-	model->reset_to_initial_state();
+	reset_to_initial_state();
 	return true;
 }
 
@@ -712,7 +712,7 @@ bool ModelChecker::resolve_release_sequences(void *location)
 
 	// If we resolved promises or data races, see if we have realized a data race.
 	if (checkDataRaces()) {
-		model->set_assert();
+		set_assert();
 	}
 
 	return updated;
@@ -841,7 +841,7 @@ void ModelChecker::check_promises(ClockVector *old_cv, ClockVector *merge_cv)
 				merge_cv->synchronized_since(act)) {
 			//This thread is no longer able to send values back to satisfy the promise
 			int num_synchronized_threads = promise->increment_threads();
-			if (num_synchronized_threads == model->get_num_threads()) {
+			if (num_synchronized_threads == get_num_threads()) {
 				//Promise has failed
 				failed_promise = true;
 				return;

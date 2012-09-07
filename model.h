@@ -53,7 +53,6 @@ public:
 	/** @return The currently executing Thread. */
 	Thread * get_current_thread() { return scheduler->get_current_thread(); }
 
-	void assert_thread();
 	int switch_to_master(ModelAction *act);
 	ClockVector * get_cv(thread_id_t tid);
 	ModelAction * get_parent_action(thread_id_t tid);
@@ -66,12 +65,15 @@ public:
 
 	void finish_execution();
 	bool isfeasibleprefix();
+	void set_assert() {asserted=true;}
 
 	MEMALLOC
 private:
 	/** The scheduler to use: tracks the running/ready Threads */
 	Scheduler *scheduler;
 
+	bool has_asserted() {return asserted;}
+	void reset_asserted() {asserted=false;}
 	int next_thread_id;
 	modelclock_t used_sequence_numbers;
 	int num_executions;
@@ -140,7 +142,7 @@ private:
 	/**
 	 * @brief The modification order graph
 	 *
-	 * A direceted acyclic graph recording observations of the modification
+	 * A directed acyclic graph recording observations of the modification
 	 * order on all the atomic objects in the system. This graph should
 	 * never contain any cycles, as that represents a violation of the
 	 * memory model (total ordering). This graph really consists of many
@@ -152,8 +154,8 @@ private:
 	 * <tt>b</tt>.
 	 */
 	CycleGraph *mo_graph;
-
 	bool failed_promise;
+	bool asserted;
 };
 
 extern ModelChecker *model;

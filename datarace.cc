@@ -85,7 +85,8 @@ static void reportDataRace(thread_id_t oldthread, modelclock_t oldclock, bool is
 
 	/* If the race is realized, bail out now. */
 	if (checkDataRaces()) {
-		model->assert_thread();
+		model->set_assert();
+		model->switch_to_master(NULL);
 	}
 }
 
@@ -121,7 +122,7 @@ void printRace(struct DataRace * race) {
 	printf("Datarace detected\n");
 	printf("Location %p\n", race->address);
 	printf("Initial access: thread %u clock %u, iswrite %u\n",race->oldthread,race->oldclock, race->isoldwrite);
-	printf("Second access: thread %u, iswrite %u\n", race->newaction->get_tid(), race->isnewwrite);
+	printf("Second access: thread %u clock %u, iswrite %u\n", race->newaction->get_tid(), race->newaction->get_seq_number() , race->isnewwrite);
 }
 
 /** This function does race detection for a write on an expanded record. */

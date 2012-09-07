@@ -104,11 +104,9 @@ void user_main()
 	thrd_t t1, t2;
 	atomic_init(&mylock.lock, RW_LOCK_BIAS);
 
-	printf("Thread %d: creating 2 threads\n", thrd_current());
 	thrd_create(&t1, (thrd_start_t)&a, NULL);
 	thrd_create(&t2, (thrd_start_t)&a, NULL);
 	
 	thrd_join(t1);
 	thrd_join(t2);
-	printf("Thread %d is finished\n", thrd_current());
 }

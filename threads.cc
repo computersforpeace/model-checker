@@ -44,6 +44,9 @@ void thread_startup()
 
 	/* Call the actual thread function */
 	curr_thread->start_routine(curr_thread->arg);
+
+	/* Finish thread properly */
+	model->switch_to_master(new ModelAction(THREAD_FINISH, std::memory_order_seq_cst, curr_thread));
 }
 
 /**
@@ -101,7 +104,7 @@ int Thread::swap(ucontext_t *ctxt, Thread *t)
 /** Terminate a thread and free its stack. */
 void Thread::complete()
 {
-	if (state != THREAD_COMPLETED) {
+	if (!is_complete()) {
 		DEBUG("completed thread %d\n", get_id());
 		state = THREAD_COMPLETED;
 		if (stack)
@@ -120,6 +123,7 @@ Thread::Thread(thrd_t *t, void (*func)(void *), void *a) :
 	arg(a),
 	user_thread(t),
 	state(THREAD_CREATED),
+	wait_list(),
 	last_action_val(VALUE_NONE)
 {
 	int ret;

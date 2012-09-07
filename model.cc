@@ -20,14 +20,9 @@ ModelChecker *model;
 ModelChecker::ModelChecker(struct model_params params) :
 	/* Initialize default scheduler */
 	scheduler(new Scheduler()),
-	/* First thread created will have id INITIAL_THREAD_ID */
-	next_thread_id(INITIAL_THREAD_ID),
-	used_sequence_numbers(0),
 	num_executions(0),
 	params(params),
-	current_action(NULL),
 	diverge(NULL),
-	nextThread(NULL),
 	action_trace(new action_list_t()),
 	thread_map(new HashTable<int, Thread *, int>()),
 	obj_map(new HashTable<const void *, action_list_t, uintptr_t, 4>()),
@@ -36,11 +31,14 @@ ModelChecker::ModelChecker(struct model_params params) :
 	lazy_sync_with_release(new HashTable<void *, std::list<ModelAction *>, uintptr_t, 4>()),
 	thrd_last_action(new std::vector<ModelAction *>(1)),
 	node_stack(new NodeStack()),
-	next_backtrack(NULL),
 	mo_graph(new CycleGraph()),
 	failed_promise(false),
 	asserted(false)
 {
+	/* Allocate this "size" on the snapshotting heap */
+	priv = (struct model_snapshot_members *)calloc(1, sizeof(*priv));
+	/* First thread created will have id INITIAL_THREAD_ID */
+	priv->next_thread_id = INITIAL_THREAD_ID;
 }
 
 /** @brief Destructor */
@@ -74,11 +72,6 @@ void ModelChecker::reset_to_initial_state()
 {
 	DEBUG("+++ Resetting to initial state +++\n");
 	node_stack->reset_execution();
-	current_action = NULL;
-	next_thread_id = INITIAL_THREAD_ID;
-	used_sequence_numbers = 0;
-	nextThread = NULL;
-	next_backtrack = NULL;
 	failed_promise = false;
 	reset_asserted();
 	snapshotObject->backTrackBeforeStep(0);
@@ -87,19 +80,19 @@ void ModelChecker::reset_to_initial_state()
 /** @returns a thread ID for a new Thread */
 thread_id_t ModelChecker::get_next_id()
 {
-	return next_thread_id++;
+	return priv->next_thread_id++;
 }
 
 /** @returns the number of user threads created during this execution */
 int ModelChecker::get_num_threads()
 {
-	return next_thread_id;
+	return priv->next_thread_id;
 }
 
 /** @returns a sequence number for a new ModelAction */
 modelclock_t ModelChecker::get_next_seq_num()
 {
-	return ++used_sequence_numbers;
+	return ++priv->used_sequence_numbers;
 }
 
 /**
@@ -222,8 +215,8 @@ void ModelChecker::set_backtracking(ModelAction *act)
 		return;
 
 	/* Cache the latest backtracking point */
-	if (!next_backtrack || *prev > *next_backtrack)
-		next_backtrack = prev;
+	if (!priv->next_backtrack || *prev > *priv->next_backtrack)
+		priv->next_backtrack = prev;
 
 	/* If this is a new backtracking point, mark the tree */
 	if (!node->set_backtrack(t->get_id()))
@@ -243,8 +236,8 @@ void ModelChecker::set_backtracking(ModelAction *act)
  */
 ModelAction * ModelChecker::get_next_backtrack()
 {
-	ModelAction *next = next_backtrack;
-	next_backtrack = NULL;
+	ModelAction *next = priv->next_backtrack;
+	priv->next_backtrack = NULL;
 	return next;
 }
 
@@ -362,8 +355,8 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 
 	if (!parnode->backtrack_empty() || !currnode->read_from_empty() ||
 	          !currnode->future_value_empty() || !currnode->promise_empty())
-		if (!next_backtrack || *curr > *next_backtrack)
-			next_backtrack = curr;
+		if (!priv->next_backtrack || *curr > *priv->next_backtrack)
+			priv->next_backtrack = curr;
 
 	set_backtracking(curr);
 
@@ -531,8 +524,8 @@ bool ModelChecker::w_modification_order(ModelAction *curr)
 				   that read could potentially read from our write.
 				 */
 				if (act->get_node()->add_future_value(curr->get_value()) &&
-						(!next_backtrack || *act > *next_backtrack))
-					next_backtrack = act;
+						(!priv->next_backtrack || *act > *priv->next_backtrack))
+					priv->next_backtrack = act;
 			}
 		}
 	}
@@ -748,7 +741,7 @@ void ModelChecker::add_action_to_lists(ModelAction *act)
 
 	std::vector<action_list_t> *vec = obj_thrd_map->get_safe_ptr(act->get_location());
 	if (tid >= (int)vec->size())
-		vec->resize(next_thread_id);
+		vec->resize(priv->next_thread_id);
 	(*vec)[tid].push_back(act);
 
 	if ((int)thrd_last_action->size() <= tid)
@@ -1009,16 +1002,16 @@ bool ModelChecker::take_step() {
 	curr = thread_current();
 	if (curr) {
 		if (curr->get_state() == THREAD_READY) {
-			ASSERT(current_action);
-			nextThread = check_current_action(current_action);
-			current_action = NULL;
+			ASSERT(priv->current_action);
+			priv->nextThread = check_current_action(priv->current_action);
+			priv->current_action = NULL;
 			if (!curr->is_blocked() && !curr->is_complete())
 				scheduler->add_thread(curr);
 		} else {
 			ASSERT(false);
 		}
 	}
-	next = scheduler->next_thread(nextThread);
+	next = scheduler->next_thread(priv->nextThread);
 
 	/* Infeasible -> don't take any more steps */
 	if (!isfeasible())

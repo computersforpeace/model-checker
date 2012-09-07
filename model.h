@@ -30,6 +30,17 @@ class Promise;
 struct model_params {
 };
 
+/**
+ * Structure for holding small ModelChecker members that should be snapshotted
+ */
+struct model_snapshot_members {
+	ModelAction *current_action;
+	int next_thread_id;
+	modelclock_t used_sequence_numbers;
+	Thread *nextThread;
+	ModelAction *next_backtrack;
+};
+
 /** @brief The central structure for model-checking */
 class ModelChecker {
 public:
@@ -74,8 +85,6 @@ private:
 
 	bool has_asserted() {return asserted;}
 	void reset_asserted() {asserted=false;}
-	int next_thread_id;
-	modelclock_t used_sequence_numbers;
 	int num_executions;
 
 	const model_params params;
@@ -86,7 +95,7 @@ private:
 	 * data between them.
 	 * @param act The ModelAction created by the user-thread action
 	 */
-	void set_current_action(ModelAction *act) { current_action = act; }
+	void set_current_action(ModelAction *act) { priv->current_action = act; }
 	Thread * check_current_action(ModelAction *curr);
 
 	bool take_step();
@@ -111,9 +120,7 @@ private:
 	                std::vector<const ModelAction *> *release_heads) const;
 	bool resolve_release_sequences(void *location);
 
-	ModelAction *current_action;
 	ModelAction *diverge;
-	Thread *nextThread;
 
 	ucontext_t system_context;
 	action_list_t *action_trace;
@@ -137,7 +144,10 @@ private:
 
 	std::vector<ModelAction *> *thrd_last_action;
 	NodeStack *node_stack;
-	ModelAction *next_backtrack;
+
+	/** Private data members that should be snapshotted. They are grouped
+	 * together for efficiency and maintainability. */
+	struct model_snapshot_members *priv;
 
 	/**
 	 * @brief The modification order graph

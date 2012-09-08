@@ -2,6 +2,8 @@
  *  @brief Entry point for the model checker.
  */
 
+#include <unistd.h>
+
 #include "libthreads.h"
 #include "common.h"
 #include "threads.h"
@@ -12,7 +14,32 @@
 #include "model.h"
 #include "snapshot-interface.h"
 
+static void print_usage() {
+	printf(
+"Usage: <program name> [OPTIONS]\n"
+"\n"
+"Options:\n"
+"-h                    Display this help message and exit\n"
+);
+	exit(EXIT_SUCCESS);
+}
+
 static void parse_options(struct model_params *params, int argc, char **argv) {
+	const char *shortopts = "h";
+	int opt;
+	bool error = false;
+	while (!error && (opt = getopt(argc, argv, shortopts)) != -1) {
+		switch (opt) {
+		case 'h':
+			print_usage();
+			break;
+		default: /* '?' */
+			error = true;
+			break;
+		}
+	}
+	if (error)
+		print_usage();
 }
 
 int main_argc;

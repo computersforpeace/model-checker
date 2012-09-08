@@ -566,7 +566,11 @@ bool ModelChecker::release_seq_head(const ModelAction *rf,
 	if (rf->is_release())
 		release_heads->push_back(rf);
 	if (rf->is_rmw()) {
-		if (rf->is_acquire())
+		/* We need a RMW action that is both an acquire and release to stop */
+		/** @todo Need to be smarter here...  In the linux lock
+		 * example, this will run to the beginning of the program for
+		 * every acquire. */
+		if (rf->is_acquire() && rf->is_release())
 			return true; /* complete */
 		return release_seq_head(rf->get_reads_from(), release_heads);
 	}

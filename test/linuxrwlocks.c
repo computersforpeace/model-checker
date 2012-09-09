@@ -28,32 +28,32 @@ static inline int write_can_lock(rwlock_t *lock)
 
 static inline void read_lock(rwlock_t *rw)
 {
-	int currentvalue=atomic_fetch_sub_explicit(&rw->lock, 1, memory_order_acquire);
-	while (currentvalue<0) {
+	int priorvalue=atomic_fetch_sub_explicit(&rw->lock, 1, memory_order_acquire);
+	while (priorvalue<=0) {
 		atomic_fetch_add_explicit(&rw->lock, 1, memory_order_relaxed);
 		do {
-			currentvalue=atomic_load_explicit(&rw->lock, memory_order_relaxed);
-		}	while(currentvalue<=0);
-		currentvalue=atomic_fetch_sub_explicit(&rw->lock, 1, memory_order_acquire);
+			priorvalue=atomic_load_explicit(&rw->lock, memory_order_relaxed);
+		}	while(priorvalue<=0);
+		priorvalue=atomic_fetch_sub_explicit(&rw->lock, 1, memory_order_acquire);
 	}
 }
 
 static inline void write_lock(rwlock_t *rw)
 {
-	int currentvalue=atomic_fetch_sub_explicit(&rw->lock, RW_LOCK_BIAS, memory_order_acquire);
-	while (currentvalue!=0) {
+	int priorvalue=atomic_fetch_sub_explicit(&rw->lock, RW_LOCK_BIAS, memory_order_acquire);
+	while (priorvalue!=RW_LOCK_BIAS) {
 		atomic_fetch_add_explicit(&rw->lock, RW_LOCK_BIAS, memory_order_relaxed);
 		do {
-			currentvalue=atomic_load_explicit(&rw->lock, memory_order_relaxed);
-		}	while(currentvalue!=RW_LOCK_BIAS);
-		currentvalue=atomic_fetch_sub_explicit(&rw->lock, RW_LOCK_BIAS, memory_order_acquire);
+			priorvalue=atomic_load_explicit(&rw->lock, memory_order_relaxed);
+		}	while(priorvalue!=RW_LOCK_BIAS);
+		priorvalue=atomic_fetch_sub_explicit(&rw->lock, RW_LOCK_BIAS, memory_order_acquire);
 	}
 }
 
 static inline int read_trylock(rwlock_t *rw)
 {
-	int currentvalue=atomic_fetch_sub_explicit(&rw->lock, 1, memory_order_acquire);
-	if (currentvalue>=0)
+	int priorvalue=atomic_fetch_sub_explicit(&rw->lock, 1, memory_order_acquire);
+	if (priorvalue>0)
 		return 1;
 	
 	atomic_fetch_add_explicit(&rw->lock, 1, memory_order_relaxed);
@@ -62,8 +62,8 @@ static inline int read_trylock(rwlock_t *rw)
 
 static inline int write_trylock(rwlock_t *rw)
 {
-	int currentvalue=atomic_fetch_sub_explicit(&rw->lock, RW_LOCK_BIAS, memory_order_acquire);
-	if (currentvalue>=0)
+	int priorvalue=atomic_fetch_sub_explicit(&rw->lock, RW_LOCK_BIAS, memory_order_acquire);
+	if (priorvalue==RW_LOCK_BIAS)
 		return 1;
 	
 	atomic_fetch_add_explicit(&rw->lock, RW_LOCK_BIAS, memory_order_relaxed);

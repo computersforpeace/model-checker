@@ -259,13 +259,13 @@ ModelAction * ModelChecker::get_next_backtrack()
  */
 Thread * ModelChecker::check_current_action(ModelAction *curr)
 {
-	bool already_added = false;
+	bool second_part_of_rmw = false;
 
 	ASSERT(curr);
 
 	if (curr->is_rmwc() || curr->is_rmw()) {
 		ModelAction *tmp = process_rmw(curr);
-		already_added = true;
+		second_part_of_rmw = true;
 		delete curr;
 		curr = tmp;
 	} else {
@@ -330,12 +330,12 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 				value = reads_from->get_value();
 				/* Assign reads_from, perform release/acquire synchronization */
 				curr->read_from(reads_from);
-				if (!already_added)
+				if (!second_part_of_rmw)
 					check_recency(curr,false);
 
 				bool r_status=r_modification_order(curr,reads_from);
 
-				if (!isfeasible()&&(curr->get_node()->increment_read_from()||!curr->get_node()->future_value_empty())) {
+				if (!second_part_of_rmw&&!isfeasible()&&(curr->get_node()->increment_read_from()||!curr->get_node()->future_value_empty())) {
 					mo_graph->rollbackChanges();
 					too_many_reads=false;
 					continue;
@@ -366,7 +366,7 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 	th->set_return_value(value);
 
 	/* Add action to list.  */
-	if (!already_added)
+	if (!second_part_of_rmw)
 		add_action_to_lists(curr);
 
 	Node *currnode = curr->get_node();

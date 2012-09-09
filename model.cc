@@ -324,27 +324,40 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 	uint64_t value = VALUE_NONE;
 	bool updated = false;
 	if (curr->is_read()) {
-		const ModelAction *reads_from = curr->get_node()->get_read_from();
-		if (reads_from != NULL) {
-			value = reads_from->get_value();
-			/* Assign reads_from, perform release/acquire synchronization */
-			curr->read_from(reads_from);
-			check_recency(curr, already_added);
+		while(true) {
+			const ModelAction *reads_from = curr->get_node()->get_read_from();
+			if (reads_from != NULL) {
+				value = reads_from->get_value();
+				/* Assign reads_from, perform release/acquire synchronization */
+				curr->read_from(reads_from);
+				if (!already_added)
+					check_recency(curr,false);
 
-			if (r_modification_order(curr,reads_from))
-				updated = true;
-		} else {
-			/* Read from future value */
-			value = curr->get_node()->get_future_value();
-			curr->read_from(NULL);
-			Promise *valuepromise = new Promise(curr, value);
-			promises->push_back(valuepromise);
+				bool r_status=r_modification_order(curr,reads_from);
+
+				if (!isfeasible()&&(curr->get_node()->increment_read_from()||!curr->get_node()->future_value_empty())) {
+					mo_graph->rollbackChanges();
+					too_many_reads=false;
+					continue;
+				}
+
+				mo_graph->commitChanges();
+				updated |= r_status;
+			} else {
+				/* Read from future value */
+				value = curr->get_node()->get_future_value();
+				curr->read_from(NULL);
+				Promise *valuepromise = new Promise(curr, value);
+				promises->push_back(valuepromise);
+			}
+			break;
 		}
 	} else if (curr->is_write()) {
 		if (w_modification_order(curr))
 			updated = true;
 		if (resolve_promises(curr))
 			updated = true;
+		mo_graph->commitChanges();
 	}
 
 	if (updated)

@@ -3,7 +3,8 @@
 
 /** Initializes a CycleGraph object. */
 CycleGraph::CycleGraph() :
-	hasCycles(false)
+	hasCycles(false),
+	oldCycles(false)
 {
 }
 
@@ -39,6 +40,8 @@ void CycleGraph::addEdge(const ModelAction *from, const ModelAction *to) {
 		// Check for Cycles
 		hasCycles=checkReachable(tonode, fromnode);
 	}
+
+	rollbackvector.push_back(fromnode);
 	fromnode->addEdge(tonode);
 
 	CycleNode * rmwnode=fromnode->getRMW();
@@ -51,6 +54,7 @@ void CycleGraph::addEdge(const ModelAction *from, const ModelAction *to) {
 			// Check for Cycles
 			hasCycles=checkReachable(tonode, rmwnode);
 		}
+		rollbackvector.push_back(rmwnode);
 		rmwnode->addEdge(tonode);
 	}
 }
@@ -67,6 +71,8 @@ void CycleGraph::addRMWEdge(const ModelAction *from, const ModelAction *rmw) {
 	/* Two RMW actions cannot read from the same write. */
 	if (fromnode->setRMW(rmwnode)) {
 		hasCycles=true;
+	} else {
+		rmwrollbackvector.push_back(fromnode);
 	}
 
 	/* Transfer all outgoing edges from the from node to the rmw node */
@@ -75,9 +81,10 @@ void CycleGraph::addRMWEdge(const ModelAction *from, const ModelAction *rmw) {
 	std::vector<CycleNode *> * edges=fromnode->getEdges();
 	for(unsigned int i=0;i<edges->size();i++) {
 		CycleNode * tonode=(*edges)[i];
+		rollbackvector.push_back(rmwnode);
 		rmwnode->addEdge(tonode);
 	}
-
+	rollbackvector.push_back(fromnode);
 	fromnode->addEdge(rmwnode);
 }
 
@@ -126,6 +133,28 @@ bool CycleGraph::checkReachable(CycleNode *from, CycleNode *to) {
 	return false;
 }
 
+/** Commit changes to the cyclegraph. */
+void CycleGraph::commitChanges() {
+	rollbackvector.resize(0);
+	rmwrollbackvector.resize(0);
+	oldCycles=hasCycles;
+}
+
+/** Rollback changes to the previous commit. */
+void CycleGraph::rollbackChanges() {
+	for (unsigned int i = 0; i < rollbackvector.size(); i++) {
+		rollbackvector[i]->popEdge();
+	}
+
+	for (unsigned int i = 0; i < rmwrollbackvector.size(); i++) {
+		rmwrollbackvector[i]->clearRMW();
+	}
+
+	hasCycles = oldCycles;
+	rollbackvector.resize(0);
+	rmwrollbackvector.resize(0);
+}
+
 /** @returns whether a CycleGraph contains cycles. */
 bool CycleGraph::checkForCycles() {
 	return hasCycles;
@@ -166,7 +195,8 @@ CycleNode * CycleNode::getRMW() {
  * @see CycleGraph::addRMWEdge
  */
 bool CycleNode::setRMW(CycleNode *node) {
-	CycleNode * oldhasRMW=hasRMW;
+	if (hasRMW!=NULL)
+		return true;
 	hasRMW=node;
-	return (oldhasRMW!=NULL);
+	return false;
 }

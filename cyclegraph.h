@@ -22,6 +22,8 @@ class CycleGraph {
 	void addRMWEdge(const ModelAction *from, const ModelAction *rmw);
 
 	bool checkReachable(const ModelAction *from, const ModelAction *to);
+	void commitChanges();
+	void rollbackChanges();
 
  private:
 	CycleNode * getNode(const ModelAction *);
@@ -33,6 +35,11 @@ class CycleGraph {
 
 	/** @brief A flag: true if this graph contains cycles */
 	bool hasCycles;
+
+	bool oldCycles;
+
+	std::vector<CycleNode *> rollbackvector;
+	std::vector<CycleNode *> rmwrollbackvector;
 };
 
 /** @brief A node within a CycleGraph; corresponds to one ModelAction */
@@ -43,6 +50,12 @@ class CycleNode {
 	std::vector<CycleNode *> * getEdges();
 	bool setRMW(CycleNode *);
 	CycleNode* getRMW();
+	void popEdge() {
+		edges.pop_back();
+	};
+	void clearRMW() {
+		hasRMW=NULL;
+	}
 
  private:
 	/** @brief The ModelAction that this node represents */

@@ -225,6 +225,10 @@ int Node::get_read_from_size() {
 	return may_read_from.size();
 }
 
+const ModelAction * Node::get_read_from_at(int i) {
+	return may_read_from[i];
+}
+
 /**
  * Gets the next 'may_read_from' action from this Node. Only valid for a node
  * where this->action is a 'read'.

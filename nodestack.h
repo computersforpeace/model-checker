@@ -65,6 +65,7 @@ public:
 	bool increment_read_from();
 	bool read_from_empty();
 	int get_read_from_size();
+	const ModelAction * get_read_from_at(int i);
 
 	void set_promise(unsigned int i);
 	bool get_promise(unsigned int i);

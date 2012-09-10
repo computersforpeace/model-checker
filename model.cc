@@ -416,17 +416,24 @@ ModelAction * ModelChecker::process_rmw(ModelAction *act) {
 }
 
 /**
- * Checks whether a thread has read from the same write for too many times.
- * @todo This may be more subtle than this code segment addresses at this
- * point...  Potential problems to ponder and fix:
- * (1) What if the reads_from set keeps changing such that there is no common
- * write?
- * (2) What if the problem is that the other writes would break modification
- * order.
+ * Checks whether a thread has read from the same write for too many times
+ * without seeing the effects of a later write.
+ *
+ * Basic idea:
+ * 1) there must a different write that we could read from that would satisfy the modification order,
+ * 2) we must have read from the same value in excess of maxreads times, and
+ * 3) that other write must have been in the reads_from set for maxreads times.
+ *
+ * If so, we decide that the execution is no longer feasible.
  */
 void ModelChecker::check_recency(ModelAction *curr, bool already_added) {
 	if (params.maxreads != 0) {
 		if (curr->get_node()->get_read_from_size() <= 1)
+			return;
+
+		//Must make sure that execution is currently feasible...  We could
+		//accidentally clear by rolling back
+		if (!isfeasible())
 			return;
 
 		std::vector<action_list_t> *thrd_lists = obj_thrd_map->get_safe_ptr(curr->get_location());
@@ -447,8 +454,12 @@ void ModelChecker::check_recency(ModelAction *curr, bool already_added) {
 			rit++;
 		}
 
+		action_list_t::reverse_iterator ritcopy=rit;
+		//See if we have enough reads from the same value
 		int count=0;
-		for (; rit != list->rend(); rit++) {
+		for (; count < params.maxreads; rit++,count++) {
+			if (rit==list->rend())
+				return;
 			ModelAction *act = *rit;
 			if (!act->is_read())
 				return;
@@ -456,10 +467,44 @@ void ModelChecker::check_recency(ModelAction *curr, bool already_added) {
 				return;
 			if (act->get_node()->get_read_from_size() <= 1)
 				return;
-			count++;
-			if (count >= params.maxreads) {
-				/* We've read from the same write for too many times */
+		}
+
+		for (int i=0;i<curr->get_node()->get_read_from_size();i++) {
+			//Get write
+			const ModelAction * write=curr->get_node()->get_read_from_at(i);
+			//Need a different write
+			if (write==curr->get_reads_from())
+				continue;
+
+			/* Test to see whether this is a feasible write to read from*/
+			r_modification_order(curr, write);
+			bool feasiblereadfrom=isfeasible();
+			mo_graph->rollbackChanges();
+
+			if (!feasiblereadfrom)
+				continue;
+			rit=ritcopy;
+
+			bool feasiblewrite=true;
+			//new we need to see if this write works for everyone
+
+			for (int loop=count;loop>0;loop--,rit++) {
+				ModelAction *act=*rit;
+				bool foundvalue=false;
+				for(int j=0;j<act->get_node()->get_read_from_size();j++) {
+					if (act->get_node()->get_read_from_at(i)==write) {
+						foundvalue=true;
+						break;
+					}
+				}
+				if (!foundvalue) {
+					feasiblewrite=false;
+					break;
+				}
+			}
+			if (feasiblewrite) {
 				too_many_reads = true;
+				return;
 			}
 		}
 	}

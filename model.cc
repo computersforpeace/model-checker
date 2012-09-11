@@ -246,6 +246,49 @@ ModelAction * ModelChecker::get_next_backtrack()
 }
 
 /**
+ * Processes a read or rmw model action.
+ * @param curr is the read model action to process.
+ * @param th is the thread
+ * @param second_part_of_rmw is boolean that is true is this is the second action of a rmw.
+ * @return True if processing this read updates the mo_graph.
+ */
+
+bool ModelChecker::process_read(ModelAction *curr, Thread * th, bool second_part_of_rmw) {
+	uint64_t value;
+	bool updated=false;
+	while(true) {
+		const ModelAction *reads_from = curr->get_node()->get_read_from();
+		if (reads_from != NULL) {
+			value = reads_from->get_value();
+				/* Assign reads_from, perform release/acquire synchronization */
+			curr->read_from(reads_from);
+			if (!second_part_of_rmw) {
+				check_recency(curr,false);
+			}
+
+			bool r_status=r_modification_order(curr,reads_from);
+
+			if (!second_part_of_rmw&&!isfeasible()&&(curr->get_node()->increment_read_from()||!curr->get_node()->future_value_empty())) {
+				mo_graph->rollbackChanges();
+				too_many_reads=false;
+				continue;
+			}
+
+			mo_graph->commitChanges();
+			updated |= r_status;
+		} else {
+			/* Read from future value */
+			value = curr->get_node()->get_future_value();
+			curr->read_from(NULL);
+			Promise *valuepromise = new Promise(curr, value);
+			promises->push_back(valuepromise);
+		}
+		th->set_return_value(value);
+		return updated;
+	}
+}
+
+/**
  * This is the heart of the model checker routine. It performs model-checking
  * actions corresponding to a given "current action." Among other processes, it
  * calculates reads-from relationships, updates synchronization clock vectors,
@@ -319,51 +362,24 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 	if (curr->get_type() == THREAD_START)
 		check_promises(NULL, curr->get_cv());
 
-	/* Assign reads_from values */
 	Thread *th = get_thread(curr->get_tid());
-	uint64_t value = VALUE_NONE;
+
 	bool updated = false;
 	if (curr->is_read()) {
-		while(true) {
-			const ModelAction *reads_from = curr->get_node()->get_read_from();
-			if (reads_from != NULL) {
-				value = reads_from->get_value();
-				/* Assign reads_from, perform release/acquire synchronization */
-				curr->read_from(reads_from);
-				if (!second_part_of_rmw)
-					check_recency(curr,false);
+		updated=process_read(curr, th, second_part_of_rmw);
+	}
 
-				bool r_status=r_modification_order(curr,reads_from);
+	if (curr->is_write()) {
+		bool updated_mod_order=w_modification_order(curr);
+		bool updated_promises=resolve_promises(curr);
+		updated=updated_mod_order|updated_promises;
 
-				if (!second_part_of_rmw&&!isfeasible()&&(curr->get_node()->increment_read_from()||!curr->get_node()->future_value_empty())) {
-					mo_graph->rollbackChanges();
-					too_many_reads=false;
-					continue;
-				}
-
-				mo_graph->commitChanges();
-				updated |= r_status;
-			} else {
-				/* Read from future value */
-				value = curr->get_node()->get_future_value();
-				curr->read_from(NULL);
-				Promise *valuepromise = new Promise(curr, value);
-				promises->push_back(valuepromise);
-			}
-			break;
-		}
-	} else if (curr->is_write()) {
-		if (w_modification_order(curr))
-			updated = true;
-		if (resolve_promises(curr))
-			updated = true;
 		mo_graph->commitChanges();
+		th->set_return_value(VALUE_NONE);
 	}
 
 	if (updated)
 		resolve_release_sequences(curr->get_location());
-
-	th->set_return_value(value);
 
 	/* Add action to list.  */
 	if (!second_part_of_rmw)
@@ -372,10 +388,14 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 	Node *currnode = curr->get_node();
 	Node *parnode = currnode->get_parent();
 
-	if (!parnode->backtrack_empty() || !currnode->read_from_empty() ||
-	          !currnode->future_value_empty() || !currnode->promise_empty())
-		if (!priv->next_backtrack || *curr > *priv->next_backtrack)
-			priv->next_backtrack = curr;
+	if ((!parnode->backtrack_empty() ||
+	                !currnode->read_from_empty() ||
+	                !currnode->future_value_empty() ||
+	                !currnode->promise_empty())
+	            && (!priv->next_backtrack ||
+	                *curr > *priv->next_backtrack)) {
+		priv->next_backtrack = curr;
+	}
 
 	set_backtracking(curr);
 

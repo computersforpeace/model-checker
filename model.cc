@@ -329,6 +329,8 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 			value = reads_from->get_value();
 			/* Assign reads_from, perform release/acquire synchronization */
 			curr->read_from(reads_from);
+			check_recency(curr, already_added);
+
 			if (r_modification_order(curr,reads_from))
 				updated = true;
 		} else {
@@ -398,6 +400,56 @@ ModelAction * ModelChecker::process_rmw(ModelAction *act) {
 	if (act->is_rmw())
 		mo_graph->addRMWEdge(lastread->get_reads_from(), lastread);
 	return lastread;
+}
+
+/**
+ * Checks whether a thread has read from the same write for too many times.
+ * @todo This may be more subtle than this code segment addresses at this
+ * point...  Potential problems to ponder and fix:
+ * (1) What if the reads_from set keeps changing such that there is no common
+ * write?
+ * (2) What if the problem is that the other writes would break modification
+ * order.
+ */
+void ModelChecker::check_recency(ModelAction *curr, bool already_added) {
+	if (params.maxreads != 0) {
+		if (curr->get_node()->get_read_from_size() <= 1)
+			return;
+
+		std::vector<action_list_t> *thrd_lists = obj_thrd_map->get_safe_ptr(curr->get_location());
+		int tid = id_to_int(curr->get_tid());
+
+		/* Skip checks */
+		if ((int)thrd_lists->size() <= tid)
+			return;
+
+		action_list_t *list = &(*thrd_lists)[tid];
+
+		action_list_t::reverse_iterator rit = list->rbegin();
+		/* Skip past curr */
+		if (!already_added) {
+			for (; (*rit) != curr; rit++)
+				;
+			/* go past curr now */
+			rit++;
+		}
+
+		int count=0;
+		for (; rit != list->rend(); rit++) {
+			ModelAction *act = *rit;
+			if (!act->is_read())
+				return;
+			if (act->get_reads_from() != curr->get_reads_from())
+				return;
+			if (act->get_node()->get_read_from_size() <= 1)
+				return;
+			count++;
+			if (count >= params.maxreads) {
+				/* We've read from the same write for too many times */
+				too_many_reads = true;
+			}
+		}
+	}
 }
 
 /**

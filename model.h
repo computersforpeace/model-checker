@@ -105,7 +105,7 @@ private:
 
 	ModelAction * get_last_conflict(ModelAction *act);
 	void set_backtracking(ModelAction *act);
-	Thread * get_next_replay_thread();
+	Thread * get_next_thread(ModelAction *curr);
 	ModelAction * get_next_backtrack();
 	void reset_to_initial_state();
 	bool resolve_promises(ModelAction *curr);

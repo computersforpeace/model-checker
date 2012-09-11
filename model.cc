@@ -98,15 +98,28 @@ modelclock_t ModelChecker::get_next_seq_num()
 }
 
 /**
- * Choose the next thread in the replay sequence.
+ * @brief Choose the next thread to execute.
  *
- * If the replay sequence has reached the 'diverge' point, returns a thread
- * from the backtracking set. Otherwise, simply returns the next thread in the
- * sequence that is being replayed.
+ * This function chooses the next thread that should execute. It can force the
+ * adjacency of read/write portions of a RMW action, force THREAD_CREATE to be
+ * followed by a THREAD_START, or it can enforce execution replay/backtracking.
+ * The model-checker may have no preference regarding the next thread (i.e.,
+ * when exploring a new execution ordering), in which case this will return
+ * NULL.
+ * @param curr The current ModelAction. This action might guide the choice of
+ * next thread.
+ * @return The next thread to run. If the model-checker has no preference, NULL.
  */
-Thread * ModelChecker::get_next_replay_thread()
+Thread * ModelChecker::get_next_thread(ModelAction *curr)
 {
 	thread_id_t tid;
+
+	/* Do not split atomic actions. */
+	if (curr->is_rmwr())
+		return thread_current();
+	/* The THREAD_CREATE action points to the created Thread */
+	else if (curr->get_type() == THREAD_CREATE)
+		return (Thread *)curr->get_location();
 
 	/* Have we completed exploring the preselected path? */
 	if (diverge == NULL)
@@ -362,14 +375,7 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 
 	set_backtracking(curr);
 
-	/* Do not split atomic actions. */
-	if (curr->is_rmwr())
-		return thread_current();
-	/* The THREAD_CREATE action points to the created Thread */
-	else if (curr->get_type() == THREAD_CREATE)
-		return (Thread *)curr->get_location();
-	else
-		return get_next_replay_thread();
+	return get_next_thread(curr);
 }
 
 /** @returns whether the current partial trace must be a prefix of a

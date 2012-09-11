@@ -28,6 +28,7 @@ class Promise;
  * the model checker.
  */
 struct model_params {
+	int maxreads;
 };
 
 /**

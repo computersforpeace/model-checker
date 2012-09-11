@@ -620,10 +620,16 @@ bool ModelChecker::w_modification_order(ModelAction *curr)
 
 			/* Include at most one act per-thread that "happens before" curr */
 			if (act->happens_before(curr)) {
-				if (act->is_read())
-					mo_graph->addEdge(act->get_reads_from(), curr);
-				else
+				/*
+				 * Note: if act is RMW, just add edge:
+				 *   act --mo--> curr
+				 * The following edge should be handled elsewhere:
+				 *   readfrom(act) --mo--> act
+				 */
+				if (act->is_write())
 					mo_graph->addEdge(act, curr);
+				else if (act->is_read() && act->get_reads_from() != NULL)
+					mo_graph->addEdge(act->get_reads_from(), curr);
 				added = true;
 				break;
 			} else if (act->is_read() && !act->is_synchronizing(curr) &&

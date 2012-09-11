@@ -33,6 +33,7 @@ ModelChecker::ModelChecker(struct model_params params) :
 	node_stack(new NodeStack()),
 	mo_graph(new CycleGraph()),
 	failed_promise(false),
+	too_many_reads(false),
 	asserted(false)
 {
 	/* Allocate this "size" on the snapshotting heap */
@@ -75,6 +76,7 @@ void ModelChecker::reset_to_initial_state()
 	DEBUG("+++ Resetting to initial state +++\n");
 	node_stack->reset_execution();
 	failed_promise = false;
+	too_many_reads = false;
 	reset_asserted();
 	snapshotObject->backTrackBeforeStep(0);
 }
@@ -380,7 +382,7 @@ bool ModelChecker::isfeasibleprefix() {
 
 /** @returns whether the current partial trace is feasible. */
 bool ModelChecker::isfeasible() {
-	return !mo_graph->checkForCycles() && !failed_promise;
+	return !mo_graph->checkForCycles() && !failed_promise && !too_many_reads;
 }
 
 /** Returns whether the current completed trace is feasible. */

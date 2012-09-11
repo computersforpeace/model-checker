@@ -177,6 +177,7 @@ private:
 	 */
 	CycleGraph *mo_graph;
 	bool failed_promise;
+	bool too_many_reads;
 	bool asserted;
 };
 

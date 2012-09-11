@@ -307,28 +307,37 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 		}
 	}
 
-	/* Assign 'creation' parent */
-	if (curr->get_type() == THREAD_CREATE) {
+	/* Thread specific actions */
+	switch(curr->get_type()) {
+	case THREAD_CREATE: {
 		Thread *th = (Thread *)curr->get_location();
 		th->set_creation(curr);
-	} else if (curr->get_type() == THREAD_JOIN) {
+		break;
+	}
+	case THREAD_JOIN: {
 		Thread *wait, *join;
 		wait = get_thread(curr->get_tid());
 		join = (Thread *)curr->get_location();
 		if (!join->is_complete())
 			scheduler->wait(wait, join);
-	} else if (curr->get_type() == THREAD_FINISH) {
+		break;
+	}
+	case THREAD_FINISH: {
 		Thread *th = get_thread(curr->get_tid());
 		while (!th->wait_list_empty()) {
 			Thread *wake = th->pop_wait_list();
 			scheduler->wake(wake);
 		}
 		th->complete();
+		break;
 	}
-
-	/* Deal with new thread */
-	if (curr->get_type() == THREAD_START)
+	case THREAD_START: {
 		check_promises(NULL, curr->get_cv());
+		break;
+	}
+	default:
+		break;
+	}
 
 	/* Assign reads_from values */
 	Thread *th = get_thread(curr->get_tid());

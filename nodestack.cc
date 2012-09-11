@@ -221,6 +221,10 @@ uint64_t Node::get_future_value() {
 	return future_values[future_index];
 }
 
+int Node::get_read_from_size() {
+	return may_read_from.size();
+}
+
 /**
  * Gets the next 'may_read_from' action from this Node. Only valid for a node
  * where this->action is a 'read'.

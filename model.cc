@@ -324,6 +324,7 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 		second_part_of_rmw = true;
 		delete curr;
 		curr = tmp;
+		compute_promises(curr);
 	} else {
 		ModelAction *tmp = node_stack->explore_action(curr);
 		if (tmp) {
@@ -448,8 +449,10 @@ ModelAction * ModelChecker::process_rmw(ModelAction *act) {
 	int tid = id_to_int(act->get_tid());
 	ModelAction *lastread = get_last_action(tid);
 	lastread->process_rmw(act);
-	if (act->is_rmw())
+	if (act->is_rmw() && lastread->get_reads_from()!=NULL) {
 		mo_graph->addRMWEdge(lastread->get_reads_from(), lastread);
+		mo_graph->commitChanges();
+	}
 	return lastread;
 }
 
@@ -485,7 +488,7 @@ void ModelChecker::check_recency(ModelAction *curr, bool already_added) {
 
 		action_list_t::reverse_iterator rit = list->rbegin();
 		/* Skip past curr */
-		if (!already_added) {
+		if (already_added) {
 			for (; (*rit) != curr; rit++)
 				;
 			/* go past curr now */
@@ -664,9 +667,11 @@ bool ModelChecker::w_modification_order(ModelAction *curr)
 				 * The following edge should be handled elsewhere:
 				 *   readfrom(act) --mo--> act
 				 */
-				if (act->is_write())
-					mo_graph->addEdge(act, curr);
-				else if (act->is_read() && act->get_reads_from() != NULL)
+				if (act->is_write()) {
+					//RMW shouldn't have an edge to themselves
+					if (act!=curr)
+						mo_graph->addEdge(act, curr);
+				} else if (act->is_read() && act->get_reads_from() != NULL)
 					mo_graph->addEdge(act->get_reads_from(), curr);
 				added = true;
 				break;
@@ -680,7 +685,7 @@ bool ModelChecker::w_modification_order(ModelAction *curr)
 				   =>
 				   that read could potentially read from our write.
 				 */
-				if (act->get_node()->add_future_value(curr->get_value()) &&
+				if (isfeasible() && act->get_node()->add_future_value(curr->get_value()) &&
 						(!priv->next_backtrack || *act > *priv->next_backtrack))
 					priv->next_backtrack = act;
 			}
@@ -969,6 +974,9 @@ bool ModelChecker::resolve_promises(ModelAction *write)
 		if (write->get_node()->get_promise(i)) {
 			ModelAction *read = promise->get_action();
 			read->read_from(write);
+			if (read->is_rmw()) {
+				mo_graph->addRMWEdge(write, read);
+			}
 			r_modification_order(read, write);
 			post_r_modification_order(read, write);
 			promises->erase(promises->begin() + promise_index);
@@ -1059,7 +1067,7 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 				continue;
 
 			/* Don't consider more than one seq_cst write if we are a seq_cst read. */
-			if (!act->is_seqcst() || !curr->is_seqcst() || act == last_seq_cst) {
+			if (!curr->is_seqcst()|| (!act->is_seqcst() && (last_seq_cst==NULL||!act->happens_before(last_seq_cst))) || act == last_seq_cst) {
 				DEBUG("Adding action to may_read_from:\n");
 				if (DBG_ENABLED()) {
 					act->print();

@@ -46,6 +46,17 @@ void Scheduler::wait(Thread *wait, Thread *join)
 }
 
 /**
+ * Prevent a Thread from being scheduled. The sleeping Thread should be
+ * re-awoken via Scheduler::wake.
+ * @param thread The Thread that should sleep
+ */
+void Scheduler::sleep(Thread *t)
+{
+	remove_thread(t);
+	t->set_state(THREAD_BLOCKED);
+}
+
+/**
  * Wake a Thread up that was previously waiting (see Scheduler::wait)
  * @param t The Thread to wake up
  */

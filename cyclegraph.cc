@@ -1,5 +1,6 @@
 #include "cyclegraph.h"
 #include "action.h"
+#include "common.h"
 
 /** Initializes a CycleGraph object. */
 CycleGraph::CycleGraph() :
@@ -33,6 +34,9 @@ CycleNode * CycleGraph::getNode(const ModelAction *action) {
  * @param from The edge comes from this ModelAction
  */
 void CycleGraph::addEdge(const ModelAction *from, const ModelAction *to) {
+	ASSERT(from);
+	ASSERT(to);
+
 	CycleNode *fromnode=getNode(from);
 	CycleNode *tonode=getNode(to);
 
@@ -65,6 +69,9 @@ void CycleGraph::addEdge(const ModelAction *from, const ModelAction *to) {
  *  action can read from a given write.
  */
 void CycleGraph::addRMWEdge(const ModelAction *from, const ModelAction *rmw) {
+	ASSERT(from);
+	ASSERT(rmw);
+
 	CycleNode *fromnode=getNode(from);
 	CycleNode *rmwnode=getNode(rmw);
 

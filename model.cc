@@ -216,7 +216,7 @@ void ModelChecker::set_backtracking(ModelAction *act)
 {
 	ModelAction *prev;
 	Node *node;
-	Thread *t = get_thread(act->get_tid());
+	Thread *t = get_thread(act);
 
 	prev = get_last_conflict(act);
 	if (prev == NULL)
@@ -361,14 +361,14 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 	}
 	case THREAD_JOIN: {
 		Thread *wait, *join;
-		wait = get_thread(curr->get_tid());
+		wait = get_thread(curr);
 		join = (Thread *)curr->get_location();
 		if (!join->is_complete())
 			scheduler->wait(wait, join);
 		break;
 	}
 	case THREAD_FINISH: {
-		Thread *th = get_thread(curr->get_tid());
+		Thread *th = get_thread(curr);
 		while (!th->wait_list_empty()) {
 			Thread *wake = th->pop_wait_list();
 			scheduler->wake(wake);
@@ -384,7 +384,7 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 		break;
 	}
 
-	Thread *th = get_thread(curr->get_tid());
+	Thread *th = get_thread(curr);
 
 	bool updated = false;
 	if (curr->is_read()) {

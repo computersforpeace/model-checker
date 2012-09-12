@@ -60,6 +60,7 @@ public:
 	void add_thread(Thread *t);
 	void remove_thread(Thread *t);
 	Thread * get_thread(thread_id_t tid) { return thread_map->get(id_to_int(tid)); }
+	Thread * get_thread(ModelAction *act) { return get_thread(act->get_tid()); }
 
 	thread_id_t get_next_id();
 	int get_num_threads();

@@ -22,6 +22,7 @@ class CycleGraph {
 	void addRMWEdge(const ModelAction *from, const ModelAction *rmw);
 
 	bool checkReachable(const ModelAction *from, const ModelAction *to);
+	void startChanges();
 	void commitChanges();
 	void rollbackChanges();
 

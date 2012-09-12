@@ -116,6 +116,8 @@ private:
 	bool resolve_promises(ModelAction *curr);
 	void compute_promises(ModelAction *curr);
 
+
+	void check_curr_backtracking(ModelAction * curr);
 	void add_action_to_lists(ModelAction *act);
 	ModelAction * get_last_action(thread_id_t tid);
 	ModelAction * get_last_seq_cst(const void *location);

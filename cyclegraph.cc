@@ -140,6 +140,12 @@ bool CycleGraph::checkReachable(CycleNode *from, CycleNode *to) {
 	return false;
 }
 
+void CycleGraph::startChanges() {
+	ASSERT(rollbackvector.size()==0);
+	ASSERT(rmwrollbackvector.size()==0);
+	ASSERT(oldCycles==hasCycles);
+}
+
 /** Commit changes to the cyclegraph. */
 void CycleGraph::commitChanges() {
 	rollbackvector.resize(0);

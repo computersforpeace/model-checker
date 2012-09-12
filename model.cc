@@ -272,6 +272,8 @@ bool ModelChecker::process_read(ModelAction *curr, Thread * th, bool second_part
 	while(true) {
 		const ModelAction *reads_from = curr->get_node()->get_read_from();
 		if (reads_from != NULL) {
+			mo_graph->startChanges();
+
 			value = reads_from->get_value();
 				/* Assign reads_from, perform release/acquire synchronization */
 			curr->read_from(reads_from);
@@ -412,22 +414,27 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 	if (!second_part_of_rmw)
 		add_action_to_lists(curr);
 
-	Node *currnode = curr->get_node();
-	Node *parnode = currnode->get_parent();
-
-	if ((!parnode->backtrack_empty() ||
-	                !currnode->read_from_empty() ||
-	                !currnode->future_value_empty() ||
-	                !currnode->promise_empty())
-	            && (!priv->next_backtrack ||
-	                *curr > *priv->next_backtrack)) {
-		priv->next_backtrack = curr;
-	}
-
+	check_curr_backtracking(curr);
+	
 	set_backtracking(curr);
 
 	return get_next_thread(curr);
 }
+
+void ModelChecker::check_curr_backtracking(ModelAction * curr) {
+	Node *currnode = curr->get_node();
+	Node *parnode = currnode->get_parent();
+	
+	if ((!parnode->backtrack_empty() ||
+			 !currnode->read_from_empty() ||
+			 !currnode->future_value_empty() ||
+			 !currnode->promise_empty())
+			&& (!priv->next_backtrack ||
+					*curr > *priv->next_backtrack)) {
+		priv->next_backtrack = curr;
+	}
+}
+
 
 bool ModelChecker::promises_expired() {
 	for (unsigned int promise_index = 0; promise_index < promises->size(); promise_index++) {
@@ -529,6 +536,7 @@ void ModelChecker::check_recency(ModelAction *curr, bool already_added) {
 				continue;
 
 			/* Test to see whether this is a feasible write to read from*/
+			mo_graph->startChanges();
 			r_modification_order(curr, write);
 			bool feasiblereadfrom=isfeasible();
 			mo_graph->rollbackChanges();

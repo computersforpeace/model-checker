@@ -14,30 +14,41 @@
 #include "model.h"
 #include "snapshot-interface.h"
 
+static void param_defaults(struct model_params * params) {
+	params->maxreads = 0;
+}
+
 static void print_usage() {
 	printf(
-"Usage: <program name> [OPTIONS]\n"
+"Usage: <program name> [MC_OPTIONS] -- [PROGRAM ARGUMENTS]\n"
 "\n"
 "Options:\n"
 "-h                    Display this help message and exit\n"
-);
+"-m                    Maximum times a thread can read from the same write while other writes exist\n"
+"--                    Program arguments follow.\n\n");
 	exit(EXIT_SUCCESS);
 }
 
-static void parse_options(struct model_params *params, int argc, char **argv) {
-	const char *shortopts = "h";
+static void parse_options(struct model_params *params, int *argc, char ***argv) {
+	const char *shortopts = "hm:";
 	int opt;
 	bool error = false;
-	while (!error && (opt = getopt(argc, argv, shortopts)) != -1) {
+	while (!error && (opt = getopt(*argc, *argv, shortopts)) != -1) {
 		switch (opt) {
 		case 'h':
 			print_usage();
+			break;
+		case 'm':
+			params->maxreads = atoi(optarg);
 			break;
 		default: /* '?' */
 			error = true;
 			break;
 		}
 	}
+	(*argc) -= optind;
+	(*argv) += optind;
+
 	if (error)
 		print_usage();
 }
@@ -50,7 +61,9 @@ static void real_main() {
 	thrd_t user_thread;
 	struct model_params params;
 
-	parse_options(&params, main_argc, main_argv);
+	param_defaults(&params);
+
+	parse_options(&params, &main_argc, &main_argv);
 
 	//Initialize race detector
 	initRaceDetector();

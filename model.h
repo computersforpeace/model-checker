@@ -28,6 +28,7 @@ class Promise;
  * the model checker.
  */
 struct model_params {
+	int maxreads;
 };
 
 /**
@@ -100,9 +101,11 @@ private:
 	 */
 	void set_current_action(ModelAction *act) { priv->current_action = act; }
 	Thread * check_current_action(ModelAction *curr);
+	bool process_read(ModelAction *curr, Thread * th, bool second_part_of_rmw);
 
 	bool take_step();
 
+	void check_recency(ModelAction *curr, bool already_added);
 	ModelAction * get_last_conflict(ModelAction *act);
 	void set_backtracking(ModelAction *act);
 	Thread * get_next_thread(ModelAction *curr);
@@ -176,6 +179,7 @@ private:
 	 */
 	CycleGraph *mo_graph;
 	bool failed_promise;
+	bool too_many_reads;
 	bool asserted;
 };
 

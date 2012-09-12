@@ -33,6 +33,7 @@ ModelChecker::ModelChecker(struct model_params params) :
 	node_stack(new NodeStack()),
 	mo_graph(new CycleGraph()),
 	failed_promise(false),
+	too_many_reads(false),
 	asserted(false)
 {
 	/* Allocate this "size" on the snapshotting heap */
@@ -75,6 +76,7 @@ void ModelChecker::reset_to_initial_state()
 	DEBUG("+++ Resetting to initial state +++\n");
 	node_stack->reset_execution();
 	failed_promise = false;
+	too_many_reads = false;
 	reset_asserted();
 	snapshotObject->backTrackBeforeStep(0);
 }
@@ -257,6 +259,49 @@ ModelAction * ModelChecker::get_next_backtrack()
 }
 
 /**
+ * Processes a read or rmw model action.
+ * @param curr is the read model action to process.
+ * @param th is the thread
+ * @param second_part_of_rmw is boolean that is true is this is the second action of a rmw.
+ * @return True if processing this read updates the mo_graph.
+ */
+
+bool ModelChecker::process_read(ModelAction *curr, Thread * th, bool second_part_of_rmw) {
+	uint64_t value;
+	bool updated=false;
+	while(true) {
+		const ModelAction *reads_from = curr->get_node()->get_read_from();
+		if (reads_from != NULL) {
+			value = reads_from->get_value();
+				/* Assign reads_from, perform release/acquire synchronization */
+			curr->read_from(reads_from);
+			if (!second_part_of_rmw) {
+				check_recency(curr,false);
+			}
+
+			bool r_status=r_modification_order(curr,reads_from);
+
+			if (!second_part_of_rmw&&!isfeasible()&&(curr->get_node()->increment_read_from()||!curr->get_node()->future_value_empty())) {
+				mo_graph->rollbackChanges();
+				too_many_reads=false;
+				continue;
+			}
+
+			mo_graph->commitChanges();
+			updated |= r_status;
+		} else {
+			/* Read from future value */
+			value = curr->get_node()->get_future_value();
+			curr->read_from(NULL);
+			Promise *valuepromise = new Promise(curr, value);
+			promises->push_back(valuepromise);
+		}
+		th->set_return_value(value);
+		return updated;
+	}
+}
+
+/**
  * This is the heart of the model checker routine. It performs model-checking
  * actions corresponding to a given "current action." Among other processes, it
  * calculates reads-from relationships, updates synchronization clock vectors,
@@ -270,13 +315,13 @@ ModelAction * ModelChecker::get_next_backtrack()
  */
 Thread * ModelChecker::check_current_action(ModelAction *curr)
 {
-	bool already_added = false;
+	bool second_part_of_rmw = false;
 
 	ASSERT(curr);
 
 	if (curr->is_rmwc() || curr->is_rmw()) {
 		ModelAction *tmp = process_rmw(curr);
-		already_added = true;
+		second_part_of_rmw = true;
 		delete curr;
 		curr = tmp;
 	} else {
@@ -339,48 +384,40 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 		break;
 	}
 
-	/* Assign reads_from values */
 	Thread *th = get_thread(curr->get_tid());
-	uint64_t value = VALUE_NONE;
+
 	bool updated = false;
 	if (curr->is_read()) {
-		const ModelAction *reads_from = curr->get_node()->get_read_from();
-		if (reads_from != NULL) {
-			value = reads_from->get_value();
-			/* Assign reads_from, perform release/acquire synchronization */
-			curr->read_from(reads_from);
-			if (r_modification_order(curr,reads_from))
-				updated = true;
-		} else {
-			/* Read from future value */
-			value = curr->get_node()->get_future_value();
-			curr->read_from(NULL);
-			Promise *valuepromise = new Promise(curr, value);
-			promises->push_back(valuepromise);
-		}
-	} else if (curr->is_write()) {
-		if (w_modification_order(curr))
-			updated = true;
-		if (resolve_promises(curr))
-			updated = true;
+		updated=process_read(curr, th, second_part_of_rmw);
+	}
+
+	if (curr->is_write()) {
+		bool updated_mod_order=w_modification_order(curr);
+		bool updated_promises=resolve_promises(curr);
+		updated=updated_mod_order|updated_promises;
+
+		mo_graph->commitChanges();
+		th->set_return_value(VALUE_NONE);
 	}
 
 	if (updated)
 		resolve_release_sequences(curr->get_location());
 
-	th->set_return_value(value);
-
 	/* Add action to list.  */
-	if (!already_added)
+	if (!second_part_of_rmw)
 		add_action_to_lists(curr);
 
 	Node *currnode = curr->get_node();
 	Node *parnode = currnode->get_parent();
 
-	if (!parnode->backtrack_empty() || !currnode->read_from_empty() ||
-	          !currnode->future_value_empty() || !currnode->promise_empty())
-		if (!priv->next_backtrack || *curr > *priv->next_backtrack)
-			priv->next_backtrack = curr;
+	if ((!parnode->backtrack_empty() ||
+	                !currnode->read_from_empty() ||
+	                !currnode->future_value_empty() ||
+	                !currnode->promise_empty())
+	            && (!priv->next_backtrack ||
+	                *curr > *priv->next_backtrack)) {
+		priv->next_backtrack = curr;
+	}
 
 	set_backtracking(curr);
 
@@ -395,7 +432,7 @@ bool ModelChecker::isfeasibleprefix() {
 
 /** @returns whether the current partial trace is feasible. */
 bool ModelChecker::isfeasible() {
-	return !mo_graph->checkForCycles() && !failed_promise;
+	return !mo_graph->checkForCycles() && !failed_promise && !too_many_reads;
 }
 
 /** Returns whether the current completed trace is feasible. */
@@ -411,6 +448,101 @@ ModelAction * ModelChecker::process_rmw(ModelAction *act) {
 	if (act->is_rmw())
 		mo_graph->addRMWEdge(lastread->get_reads_from(), lastread);
 	return lastread;
+}
+
+/**
+ * Checks whether a thread has read from the same write for too many times
+ * without seeing the effects of a later write.
+ *
+ * Basic idea:
+ * 1) there must a different write that we could read from that would satisfy the modification order,
+ * 2) we must have read from the same value in excess of maxreads times, and
+ * 3) that other write must have been in the reads_from set for maxreads times.
+ *
+ * If so, we decide that the execution is no longer feasible.
+ */
+void ModelChecker::check_recency(ModelAction *curr, bool already_added) {
+	if (params.maxreads != 0) {
+		if (curr->get_node()->get_read_from_size() <= 1)
+			return;
+
+		//Must make sure that execution is currently feasible...  We could
+		//accidentally clear by rolling back
+		if (!isfeasible())
+			return;
+
+		std::vector<action_list_t> *thrd_lists = obj_thrd_map->get_safe_ptr(curr->get_location());
+		int tid = id_to_int(curr->get_tid());
+
+		/* Skip checks */
+		if ((int)thrd_lists->size() <= tid)
+			return;
+
+		action_list_t *list = &(*thrd_lists)[tid];
+
+		action_list_t::reverse_iterator rit = list->rbegin();
+		/* Skip past curr */
+		if (!already_added) {
+			for (; (*rit) != curr; rit++)
+				;
+			/* go past curr now */
+			rit++;
+		}
+
+		action_list_t::reverse_iterator ritcopy=rit;
+		//See if we have enough reads from the same value
+		int count=0;
+		for (; count < params.maxreads; rit++,count++) {
+			if (rit==list->rend())
+				return;
+			ModelAction *act = *rit;
+			if (!act->is_read())
+				return;
+			if (act->get_reads_from() != curr->get_reads_from())
+				return;
+			if (act->get_node()->get_read_from_size() <= 1)
+				return;
+		}
+
+		for (int i=0;i<curr->get_node()->get_read_from_size();i++) {
+			//Get write
+			const ModelAction * write=curr->get_node()->get_read_from_at(i);
+			//Need a different write
+			if (write==curr->get_reads_from())
+				continue;
+
+			/* Test to see whether this is a feasible write to read from*/
+			r_modification_order(curr, write);
+			bool feasiblereadfrom=isfeasible();
+			mo_graph->rollbackChanges();
+
+			if (!feasiblereadfrom)
+				continue;
+			rit=ritcopy;
+
+			bool feasiblewrite=true;
+			//new we need to see if this write works for everyone
+
+			for (int loop=count;loop>0;loop--,rit++) {
+				ModelAction *act=*rit;
+				bool foundvalue=false;
+				for(int j=0;j<act->get_node()->get_read_from_size();j++) {
+					if (act->get_node()->get_read_from_at(i)==write) {
+						foundvalue=true;
+						break;
+					}
+				}
+				if (!foundvalue) {
+					feasiblewrite=false;
+					break;
+				}
+			}
+			if (feasiblewrite) {
+				too_many_reads = true;
+				return;
+			}
+		}
+	}
 }
 
 /**
@@ -523,10 +655,16 @@ bool ModelChecker::w_modification_order(ModelAction *curr)
 
 			/* Include at most one act per-thread that "happens before" curr */
 			if (act->happens_before(curr)) {
-				if (act->is_read())
-					mo_graph->addEdge(act->get_reads_from(), curr);
-				else
+				/*
+				 * Note: if act is RMW, just add edge:
+				 *   act --mo--> curr
+				 * The following edge should be handled elsewhere:
+				 *   readfrom(act) --mo--> act
+				 */
+				if (act->is_write())
 					mo_graph->addEdge(act, curr);
+				else if (act->is_read() && act->get_reads_from() != NULL)
+					mo_graph->addEdge(act->get_reads_from(), curr);
 				added = true;
 				break;
 			} else if (act->is_read() && !act->is_synchronizing(curr) &&

@@ -292,8 +292,9 @@ bool ModelChecker::process_read(ModelAction *curr, Thread * th, bool second_part
 		} else {
 			/* Read from future value */
 			value = curr->get_node()->get_future_value();
+			modelclock_t expiration = curr->get_node()->get_future_value_expiration();
 			curr->read_from(NULL);
-			Promise *valuepromise = new Promise(curr, value);
+			Promise *valuepromise = new Promise(curr, value, expiration);
 			promises->push_back(valuepromise);
 		}
 		th->set_return_value(value);
@@ -428,6 +429,16 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 	return get_next_thread(curr);
 }
 
+bool ModelChecker::promises_expired() {
+	for (unsigned int promise_index = 0; promise_index < promises->size(); promise_index++) {
+		Promise *promise = (*promises)[promise_index];
+		if (promise->get_expiration()<priv->used_sequence_numbers) {
+			return true;
+		}
+	}
+	return false;
+}
+
 /** @returns whether the current partial trace must be a prefix of a
  * feasible trace. */
 bool ModelChecker::isfeasibleprefix() {
@@ -436,7 +447,7 @@ bool ModelChecker::isfeasibleprefix() {
 
 /** @returns whether the current partial trace is feasible. */
 bool ModelChecker::isfeasible() {
-	return !mo_graph->checkForCycles() && !failed_promise && !too_many_reads;
+	return !mo_graph->checkForCycles() && !failed_promise && !too_many_reads && !promises_expired();
 }
 
 /** Returns whether the current completed trace is feasible. */
@@ -685,7 +696,7 @@ bool ModelChecker::w_modification_order(ModelAction *curr)
 				   =>
 				   that read could potentially read from our write.
 				 */
-				if (isfeasible() && act->get_node()->add_future_value(curr->get_value()) &&
+				if (isfeasible() && act->get_node()->add_future_value(curr->get_value(), curr->get_seq_number()+params.maxfuturedelay) &&
 						(!priv->next_backtrack || *act > *priv->next_backtrack))
 					priv->next_backtrack = act;
 			}

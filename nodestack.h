@@ -10,6 +10,7 @@
 #include <cstddef>
 #include "threads.h"
 #include "mymemory.h"
+#include "clockvector.h"
 
 class ModelAction;
 
@@ -25,6 +26,12 @@ typedef enum {
 	PROMISE_UNFULFILLED, /**< This promise is applicable but unfulfilled */
 	PROMISE_FULFILLED /**< This promise is applicable and fulfilled */
 } promise_t;
+
+struct future_value {
+	uint64_t value;
+	modelclock_t expiration;
+};
+
 
 /**
  * @brief A single node in a NodeStack
@@ -55,8 +62,9 @@ public:
 	 * occurred previously in the stack. */
 	Node * get_parent() const { return parent; }
 
-	bool add_future_value(uint64_t value);
+	bool add_future_value(uint64_t value, modelclock_t expiration);
 	uint64_t get_future_value();
+	modelclock_t get_future_value_expiration();
 	bool increment_future_value();
 	bool future_value_empty();
 
@@ -92,7 +100,7 @@ private:
 
 	unsigned int read_from_index;
 
-	std::vector< uint64_t, MyAlloc< uint64_t > > future_values;
+	std::vector< struct future_value, MyAlloc<struct future_value> > future_values;
 	std::vector< promise_t, MyAlloc<promise_t> > promises;
 	unsigned int future_index;
 };

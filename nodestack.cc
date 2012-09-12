@@ -63,7 +63,8 @@ void Node::print_may_read_from()
 void Node::set_promise(unsigned int i) {
 	if (i >= promises.size())
 		promises.resize(i + 1, PROMISE_IGNORE);
-	promises[i] = PROMISE_UNFULFILLED;
+	if (promises[i] == PROMISE_IGNORE)
+		promises[i] = PROMISE_UNFULFILLED;
 }
 
 /**
@@ -109,12 +110,24 @@ bool Node::promise_empty() {
  * Adds a value from a weakly ordered future write to backtrack to.
  * @param value is the value to backtrack to.
  */
-bool Node::add_future_value(uint64_t value) {
-	for (unsigned int i = 0; i < future_values.size(); i++)
-		if (future_values[i] == value)
-			return false;
+bool Node::add_future_value(uint64_t value, modelclock_t expiration) {
+	int suitableindex=-1;
+	for (unsigned int i = 0; i < future_values.size(); i++) {
+		if (future_values[i].value == value) {
+			if (future_values[i].expiration>=expiration)
+				return false;
+			if (future_index < i) {
+				suitableindex=i;
+			}
+		}
+	}
 
-	future_values.push_back(value);
+	if (suitableindex!=-1) {
+		future_values[suitableindex].expiration=expiration;
+		return true;
+	}
+	struct future_value newfv={value, expiration};
+	future_values.push_back(newfv);
 	return true;
 }
 
@@ -218,8 +231,14 @@ void Node::add_read_from(const ModelAction *act)
  */
 uint64_t Node::get_future_value() {
 	ASSERT(future_index<future_values.size());
-	return future_values[future_index];
+	return future_values[future_index].value;
 }
+
+modelclock_t Node::get_future_value_expiration() {
+	ASSERT(future_index<future_values.size());
+	return future_values[future_index].expiration;
+}
+
 
 int Node::get_read_from_size() {
 	return may_read_from.size();

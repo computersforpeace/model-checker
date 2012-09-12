@@ -29,6 +29,7 @@ class Promise;
  */
 struct model_params {
 	int maxreads;
+	int maxfuturedelay;
 };
 
 /**
@@ -91,7 +92,7 @@ private:
 	bool has_asserted() {return asserted;}
 	void reset_asserted() {asserted=false;}
 	int num_executions;
-
+	bool promises_expired();
 	const model_params params;
 
 	/**

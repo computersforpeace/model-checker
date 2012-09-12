@@ -16,27 +16,32 @@
 
 static void param_defaults(struct model_params * params) {
 	params->maxreads = 0;
+  params->maxfuturedelay = 100;
 }
 
-static void print_usage() {
+static void print_usage(struct model_params *params) {
 	printf(
 "Usage: <program name> [MC_OPTIONS] -- [PROGRAM ARGUMENTS]\n"
 "\n"
 "Options:\n"
 "-h                    Display this help message and exit\n"
-"-m                    Maximum times a thread can read from the same write while other writes exist\n"
-"--                    Program arguments follow.\n\n");
+"-m                    Maximum times a thread can read from the same write while other writes exist. Default: %d\n"
+"-s                    Maximum actions that the model checker will wait for a write from the future past the expected number of actions.  Default: %d\n"
+"--                    Program arguments follow.\n\n", params->maxreads, params->maxfuturedelay);
 	exit(EXIT_SUCCESS);
 }
 
 static void parse_options(struct model_params *params, int *argc, char ***argv) {
-	const char *shortopts = "hm:";
+	const char *shortopts = "hm:s:";
 	int opt;
 	bool error = false;
 	while (!error && (opt = getopt(*argc, *argv, shortopts)) != -1) {
 		switch (opt) {
 		case 'h':
-			print_usage();
+			print_usage(params);
+			break;
+		case 's':
+			params->maxfuturedelay = atoi(optarg);
 			break;
 		case 'm':
 			params->maxreads = atoi(optarg);
@@ -50,7 +55,7 @@ static void parse_options(struct model_params *params, int *argc, char ***argv) 
 	(*argv) += optind;
 
 	if (error)
-		print_usage();
+		print_usage(params);
 }
 
 int main_argc;

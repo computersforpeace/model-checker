@@ -79,17 +79,17 @@ public:
 	bool wait_list_empty() { return wait_list.empty(); }
 
 	/**
-	 * Add a thread to the waiting list for this thread.
-	 * @param t The Thread to add
+	 * Add a ModelAction to the waiting list for this thread.
+	 * @param t The ModelAction to add. Must be a JOIN.
 	 */
-	void push_wait_list(Thread *t) { wait_list.push_back(t); }
+	void push_wait_list(ModelAction *act) { wait_list.push_back(act); }
 
 	/**
-	 * Remove one Thread from the waiting list
-	 * @return The Thread that was removed from the waiting list
+	 * Remove one ModelAction from the waiting list
+	 * @return The ModelAction that was removed from the waiting list
 	 */
-	Thread * pop_wait_list() {
-		Thread *ret = wait_list.front();
+	ModelAction * pop_wait_list() {
+		ModelAction *ret = wait_list.front();
 		wait_list.pop_back();
 		return ret;
 	}
@@ -111,11 +111,11 @@ private:
 	thread_state state;
 
 	/**
-	 * A list of Threads waiting on this Thread. Particularly, this list is
-	 * used for thread joins, where another Thread waits for this Thread to
-	 * complete
+	 * A list of ModelActions waiting on this Thread. Particularly, this
+	 * list is used for thread joins, where another Thread waits for this
+	 * Thread to complete
 	 */
-	std::vector<Thread *> wait_list;
+	std::vector<ModelAction *> wait_list;
 
 	/**
 	 * The value returned by the last action in this thread

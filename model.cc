@@ -360,17 +360,20 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 		break;
 	}
 	case THREAD_JOIN: {
-		Thread *wait, *join;
-		wait = get_thread(curr);
-		join = (Thread *)curr->get_location();
-		if (!join->is_complete())
-			scheduler->wait(wait, join);
+		Thread *waiting, *blocking;
+		waiting = get_thread(curr);
+		blocking = (Thread *)curr->get_location();
+		if (!blocking->is_complete()) {
+			blocking->push_wait_list(curr);
+			scheduler->sleep(waiting);
+		}
 		break;
 	}
 	case THREAD_FINISH: {
 		Thread *th = get_thread(curr);
 		while (!th->wait_list_empty()) {
-			Thread *wake = th->pop_wait_list();
+			ModelAction *act = th->pop_wait_list();
+			Thread *wake = get_thread(act);
 			scheduler->wake(wake);
 		}
 		th->complete();

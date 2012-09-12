@@ -18,7 +18,6 @@ public:
 	Scheduler();
 	void add_thread(Thread *t);
 	void remove_thread(Thread *t);
-	void wait(Thread *wait, Thread *join);
 	void sleep(Thread *t);
 	void wake(Thread *t);
 	Thread * next_thread(Thread *t);

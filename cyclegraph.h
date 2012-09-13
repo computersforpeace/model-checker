@@ -9,6 +9,8 @@
 #include <vector>
 #include <inttypes.h>
 
+#include "mymemory.h"
+
 class CycleNode;
 class ModelAction;
 
@@ -27,6 +29,7 @@ class CycleGraph {
 	void commitChanges();
 	void rollbackChanges();
 
+	SNAPSHOTALLOC
  private:
 	CycleNode * getNode(const ModelAction *);
 
@@ -61,6 +64,7 @@ class CycleNode {
 		hasRMW=NULL;
 	}
 
+	SNAPSHOTALLOC
  private:
 	/** @brief The ModelAction that this node represents */
 	const ModelAction *action;

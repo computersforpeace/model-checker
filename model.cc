@@ -780,7 +780,7 @@ bool ModelChecker::thin_air_constraint_may_allow(const ModelAction * writer, con
  * false otherwise
  */
 bool ModelChecker::release_seq_head(const ModelAction *rf,
-                std::vector<const ModelAction *> *release_heads) const
+                std::vector< const ModelAction *, MyAlloc<const ModelAction *> > *release_heads) const
 {
 	if (!rf) {
 		/* read from future: need to settle this later */
@@ -886,7 +886,7 @@ bool ModelChecker::release_seq_head(const ModelAction *rf,
  * @see ModelChecker::release_seq_head
  */
 void ModelChecker::get_release_seq_heads(ModelAction *act,
-                std::vector<const ModelAction *> *release_heads)
+                std::vector< const ModelAction *, MyAlloc<const ModelAction *> > *release_heads)
 {
 	const ModelAction *rf = act->get_reads_from();
 	bool complete;
@@ -922,7 +922,7 @@ bool ModelChecker::resolve_release_sequences(void *location)
 	while (it != list->end()) {
 		ModelAction *act = *it;
 		const ModelAction *rf = act->get_reads_from();
-		std::vector<const ModelAction *> release_heads;
+		std::vector< const ModelAction *, MyAlloc<const ModelAction *> > release_heads;
 		bool complete;
 		complete = release_seq_head(rf, &release_heads);
 		for (unsigned int i = 0; i < release_heads.size(); i++) {

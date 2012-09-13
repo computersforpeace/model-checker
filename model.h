@@ -85,7 +85,7 @@ public:
 	bool isfinalfeasible();
 	void check_promises(ClockVector *old_cv, ClockVector * merge_cv);
 	void get_release_seq_heads(ModelAction *act,
-	                std::vector<const ModelAction *> *release_heads);
+	                std::vector< const ModelAction *, MyAlloc<const ModelAction *> > *release_heads);
 	void finish_execution();
 	bool isfeasibleprefix();
 	void set_assert() {asserted=true;}
@@ -133,7 +133,7 @@ private:
 	bool r_modification_order(ModelAction *curr, const ModelAction *rf);
 	bool w_modification_order(ModelAction *curr);
 	bool release_seq_head(const ModelAction *rf,
-	                std::vector<const ModelAction *> *release_heads) const;
+	                std::vector< const ModelAction *, MyAlloc<const ModelAction *> > *release_heads) const;
 	bool resolve_release_sequences(void *location);
 
 	ModelAction *diverge;

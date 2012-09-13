@@ -291,7 +291,7 @@ bool ModelChecker::process_read(ModelAction *curr, Thread * th, bool second_part
 
 			mo_graph->commitChanges();
 			updated |= r_status;
-		} else {
+		} else if (!second_part_of_rmw) {
 			/* Read from future value */
 			value = curr->get_node()->get_future_value();
 			modelclock_t expiration = curr->get_node()->get_future_value_expiration();
@@ -454,6 +454,11 @@ bool ModelChecker::isfeasibleprefix() {
 
 /** @returns whether the current partial trace is feasible. */
 bool ModelChecker::isfeasible() {
+	return !mo_graph->checkForRMWViolation() && isfeasibleotherthanRMW();
+}
+
+/** @returns whether the current partial trace is feasible. */
+bool ModelChecker::isfeasibleotherthanRMW() {
 	return !mo_graph->checkForCycles() && !failed_promise && !too_many_reads && !promises_expired();
 }
 
@@ -704,15 +709,43 @@ bool ModelChecker::w_modification_order(ModelAction *curr)
 				   =>
 				   that read could potentially read from our write.
 				 */
-				if (isfeasible() && act->get_node()->add_future_value(curr->get_value(), curr->get_seq_number()+params.maxfuturedelay) &&
-						(!priv->next_backtrack || *act > *priv->next_backtrack))
-					priv->next_backtrack = act;
+				if (thin_air_constraint_may_allow(curr, act)) {
+					if (isfeasible() ||
+							(curr->is_rmw() && act->is_rmw() && curr->get_reads_from()==act->get_reads_from() && isfeasibleotherthanRMW())) {
+						if (act->get_node()->add_future_value(curr->get_value(), curr->get_seq_number()+params.maxfuturedelay) &&
+								(!priv->next_backtrack || *act > *priv->next_backtrack))
+							priv->next_backtrack = act;
+					}
+				}
 			}
 		}
 	}
 
 	return added;
 }
+
+/** Arbitrary reads from the future are not allowed.  Section 29.3
+ * part 9 places some constraints.  This method checks one result of constraint
+ * constraint.  Others require compiler support. */
+
+bool ModelChecker::thin_air_constraint_may_allow(const ModelAction * writer, const ModelAction *reader) {
+	if (!writer->is_rmw())
+		return true;
+
+	if (!reader->is_rmw())
+		return true;
+
+	for(const ModelAction *search=writer->get_reads_from();search!=NULL;search=search->get_reads_from()) {
+		if (search==reader)
+			return false;
+		if (search->get_tid()==reader->get_tid()&&
+				search->happens_before(reader))
+			break;
+	}
+
+	return true;
+}
+
 
 /**
  * Finds the head(s) of the release sequence(s) containing a given ModelAction.
@@ -988,6 +1021,7 @@ ClockVector * ModelChecker::get_cv(thread_id_t tid)
 bool ModelChecker::resolve_promises(ModelAction *write)
 {
 	bool resolved = false;
+
 	for (unsigned int i = 0, promise_index = 0; promise_index < promises->size(); i++) {
 		Promise *promise = (*promises)[promise_index];
 		if (write->get_node()->get_promise(i)) {
@@ -1003,7 +1037,6 @@ bool ModelChecker::resolve_promises(ModelAction *write)
 		} else
 			promise_index++;
 	}
-
 	return resolved;
 }
 
@@ -1193,6 +1226,7 @@ bool ModelChecker::take_step() {
 	if (curr) {
 		if (curr->get_state() == THREAD_READY) {
 			ASSERT(priv->current_action);
+
 			priv->nextThread = check_current_action(priv->current_action);
 			priv->current_action = NULL;
 			if (!curr->is_blocked() && !curr->is_complete())

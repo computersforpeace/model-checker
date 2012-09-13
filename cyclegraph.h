@@ -19,6 +19,7 @@ class CycleGraph {
 	~CycleGraph();
 	void addEdge(const ModelAction *from, const ModelAction *to);
 	bool checkForCycles();
+	bool checkForRMWViolation();
 	void addRMWEdge(const ModelAction *from, const ModelAction *rmw);
 
 	bool checkReachable(const ModelAction *from, const ModelAction *to);
@@ -36,8 +37,10 @@ class CycleGraph {
 
 	/** @brief A flag: true if this graph contains cycles */
 	bool hasCycles;
-
 	bool oldCycles;
+
+	bool hasRMWViolation;
+	bool oldRMWViolation;
 
 	std::vector<CycleNode *> rollbackvector;
 	std::vector<CycleNode *> rmwrollbackvector;

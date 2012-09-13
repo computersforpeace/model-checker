@@ -5,7 +5,9 @@
 /** Initializes a CycleGraph object. */
 CycleGraph::CycleGraph() :
 	hasCycles(false),
-	oldCycles(false)
+	oldCycles(false),
+	hasRMWViolation(false),
+	oldRMWViolation(false)
 {
 }
 
@@ -77,7 +79,7 @@ void CycleGraph::addRMWEdge(const ModelAction *from, const ModelAction *rmw) {
 
 	/* Two RMW actions cannot read from the same write. */
 	if (fromnode->setRMW(rmwnode)) {
-		hasCycles=true;
+		hasRMWViolation=true;
 	} else {
 		rmwrollbackvector.push_back(fromnode);
 	}
@@ -144,6 +146,7 @@ void CycleGraph::startChanges() {
 	ASSERT(rollbackvector.size()==0);
 	ASSERT(rmwrollbackvector.size()==0);
 	ASSERT(oldCycles==hasCycles);
+	ASSERT(oldRMWViolation==hasRMWViolation);
 }
 
 /** Commit changes to the cyclegraph. */
@@ -151,6 +154,7 @@ void CycleGraph::commitChanges() {
 	rollbackvector.resize(0);
 	rmwrollbackvector.resize(0);
 	oldCycles=hasCycles;
+	oldRMWViolation=hasRMWViolation;
 }
 
 /** Rollback changes to the previous commit. */
@@ -164,6 +168,7 @@ void CycleGraph::rollbackChanges() {
 	}
 
 	hasCycles = oldCycles;
+	hasRMWViolation = oldRMWViolation;
 	rollbackvector.resize(0);
 	rmwrollbackvector.resize(0);
 }
@@ -171,6 +176,10 @@ void CycleGraph::rollbackChanges() {
 /** @returns whether a CycleGraph contains cycles. */
 bool CycleGraph::checkForCycles() {
 	return hasCycles;
+}
+
+bool CycleGraph::checkForRMWViolation() {
+	return hasRMWViolation;
 }
 
 /**

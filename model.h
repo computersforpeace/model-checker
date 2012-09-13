@@ -75,11 +75,11 @@ public:
 	ModelAction * get_parent_action(thread_id_t tid);
 	bool next_execution();
 	bool isfeasible();
+	bool isfeasibleotherthanRMW();
 	bool isfinalfeasible();
 	void check_promises(ClockVector *old_cv, ClockVector * merge_cv);
 	void get_release_seq_heads(ModelAction *act,
 	                std::vector<const ModelAction *> *release_heads);
-
 	void finish_execution();
 	bool isfeasibleprefix();
 	void set_assert() {asserted=true;}
@@ -88,7 +88,8 @@ public:
 private:
 	/** The scheduler to use: tracks the running/ready Threads */
 	Scheduler *scheduler;
-
+	
+	bool thin_air_constraint_may_allow(const ModelAction * writer, const ModelAction *reader);
 	bool has_asserted() {return asserted;}
 	void reset_asserted() {asserted=false;}
 	int num_executions;

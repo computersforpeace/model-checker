@@ -111,6 +111,7 @@ private:
 	void set_current_action(ModelAction *act) { priv->current_action = act; }
 	Thread * check_current_action(ModelAction *curr);
 	bool process_read(ModelAction *curr, bool second_part_of_rmw);
+	bool process_write(ModelAction *curr);
 
 	bool take_step();
 

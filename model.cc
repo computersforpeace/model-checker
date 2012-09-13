@@ -306,6 +306,31 @@ bool ModelChecker::process_read(ModelAction *curr, bool second_part_of_rmw)
 }
 
 /**
+ * Process a write ModelAction
+ * @param curr The ModelAction to process
+ * @return True if the mo_graph was updated or promises were resolved
+ */
+bool ModelChecker::process_write(ModelAction *curr)
+{
+	bool updated_mod_order = w_modification_order(curr);
+	bool updated_promises = resolve_promises(curr);
+
+	if (promises->size() == 0) {
+		for (unsigned int i = 0; i<futurevalues->size(); i++) {
+			struct PendingFutureValue pfv = (*futurevalues)[i];
+			if (pfv.act->get_node()->add_future_value(pfv.value, pfv.expiration) &&
+					(!priv->next_backtrack || *pfv.act > *priv->next_backtrack))
+				priv->next_backtrack = pfv.act;
+		}
+		futurevalues->resize(0);
+	}
+
+	mo_graph->commitChanges();
+	get_thread(curr)->set_return_value(VALUE_NONE);
+	return updated_mod_order || updated_promises;
+}
+
+/**
  * This is the heart of the model checker routine. It performs model-checking
  * actions corresponding to a given "current action." Among other processes, it
  * calculates reads-from relationships, updates synchronization clock vectors,
@@ -394,28 +419,11 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 
 	bool updated = false;
 
-	if (curr->is_read()) {
-		updated = process_read(curr, second_part_of_rmw);
-	}
+	if (curr->is_read() && process_read(curr, second_part_of_rmw))
+		updated = true;
 
-	if (curr->is_write()) {
-		bool updated_mod_order = w_modification_order(curr);
-		bool updated_promises = resolve_promises(curr);
-		updated = updated || updated_mod_order || updated_promises;
-
-		if (promises->size()==0) {
-			for (unsigned int i = 0; i<futurevalues->size(); i++) {
-				struct PendingFutureValue pfv=(*futurevalues)[i];
-				if (pfv.act->get_node()->add_future_value(pfv.value, pfv.expiration) &&
-						(!priv->next_backtrack || *pfv.act > *priv->next_backtrack))
-					priv->next_backtrack = pfv.act;
-			}
-			futurevalues->resize(0);
-		}
-
-		mo_graph->commitChanges();
-		get_thread(curr)->set_return_value(VALUE_NONE);
-	}
+	if (curr->is_write() && process_write(curr))
+		updated = true;
 
 	if (updated)
 		resolve_release_sequences(curr->get_location());

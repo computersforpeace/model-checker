@@ -17,6 +17,8 @@
 #include <sys/wait.h>
 #include <ucontext.h>
 
+#include "common.h"
+
 #define FAILURE(mesg) { printf("failed in the API: %s with errno relative message: %s\n", mesg, strerror( errno ) ); exit(EXIT_FAILURE); }
 
 #ifdef CONFIG_SSDEBUG
@@ -86,6 +88,7 @@ static void initSnapShotRecord(unsigned int numbackingpages, unsigned int numsna
 static void HandlePF( int sig, siginfo_t *si, void * unused){
 	if( si->si_code == SEGV_MAPERR ){
 		printf("Real Fault at %p\n", si->si_addr);
+		print_trace();
 		exit( EXIT_FAILURE );
 	}
 	void* addr = ReturnPageAlignedAddress(si->si_addr);

@@ -44,15 +44,21 @@ malloc.o: malloc.c
 %.o: %.cc
 	$(CXX) -fPIC -c $< $(CPPFLAGS)
 
+PHONY += clean
 clean:
 	rm -f *.o *.so
 	$(MAKE) -C $(TESTS_DIR) clean
 
+PHONY += mrclean
 mrclean: clean
 	rm -rf docs
 
-tags::
+PHONY += tags
+tags:
 	ctags -R
 
-tests:: $(LIB_SO)
+PHONY += tests
+tests: $(LIB_SO)
 	$(MAKE) -C $(TESTS_DIR)
+
+.PHONY: $(PHONY)

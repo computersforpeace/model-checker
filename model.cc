@@ -393,6 +393,7 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 	}
 
 	bool updated = false;
+
 	if (curr->is_read()) {
 		updated = process_read(curr, get_thread(curr), second_part_of_rmw);
 	}
@@ -400,7 +401,7 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 	if (curr->is_write()) {
 		bool updated_mod_order = w_modification_order(curr);
 		bool updated_promises = resolve_promises(curr);
-		updated = updated_mod_order|updated_promises;
+		updated = updated_mod_order || updated_promises;
 
 		if (promises->size()==0) {
 			for (unsigned int i = 0; i<futurevalues->size(); i++) {

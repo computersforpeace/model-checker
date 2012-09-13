@@ -89,6 +89,9 @@ private:
 	/** The scheduler to use: tracks the running/ready Threads */
 	Scheduler *scheduler;
 	
+	bool ensure_rmw_acyclic(const ModelAction * read, const ModelAction *write);
+
+
 	bool thin_air_constraint_may_allow(const ModelAction * writer, const ModelAction *reader);
 	bool has_asserted() {return asserted;}
 	void reset_asserted() {asserted=false;}
@@ -186,6 +189,7 @@ private:
 	bool failed_promise;
 	bool too_many_reads;
 	bool asserted;
+	bool rmw_cycle;
 };
 
 extern ModelChecker *model;

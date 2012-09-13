@@ -27,10 +27,7 @@ all: $(LIB_SO) $(DEPS) tests
 $(DEPS): $(program_C_SRCS) $(program_H_SRCS)
 	$(CXX) -MM $(program_C_SRCS) $(CPPFLAGS) > $(DEPS)
 
-# Only include, rebuild make.deps when it's going to be used
-ifeq ($(MAKECMDGOALS),$(DEPS))
 include $(DEPS)
-endif
 
 debug: CPPFLAGS += -DCONFIG_DEBUG
 debug: all

@@ -259,7 +259,6 @@ ModelAction * ModelChecker::get_next_backtrack()
 	return next;
 }
 
-
 /**
  * Processes a read or rmw model action.
  * @param curr is the read model action to process.
@@ -267,7 +266,6 @@ ModelAction * ModelChecker::get_next_backtrack()
  * @param second_part_of_rmw is boolean that is true is this is the second action of a rmw.
  * @return True if processing this read updates the mo_graph.
  */
-
 bool ModelChecker::process_read(ModelAction *curr, Thread * th, bool second_part_of_rmw) {
 	uint64_t value;
 	bool updated=false;
@@ -427,7 +425,7 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 		add_action_to_lists(curr);
 
 	check_curr_backtracking(curr);
-	
+
 	set_backtracking(curr);
 
 	return get_next_thread(curr);
@@ -436,7 +434,7 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 void ModelChecker::check_curr_backtracking(ModelAction * curr) {
 	Node *currnode = curr->get_node();
 	Node *parnode = currnode->get_parent();
-	
+
 	if ((!parnode->backtrack_empty() ||
 			 !currnode->read_from_empty() ||
 			 !currnode->future_value_empty() ||
@@ -446,7 +444,6 @@ void ModelChecker::check_curr_backtracking(ModelAction * curr) {
 		priv->next_backtrack = curr;
 	}
 }
-
 
 bool ModelChecker::promises_expired() {
 	for (unsigned int promise_index = 0; promise_index < promises->size(); promise_index++) {
@@ -758,7 +755,6 @@ bool ModelChecker::thin_air_constraint_may_allow(const ModelAction * writer, con
 	return true;
 }
 
-
 /**
  * Finds the head(s) of the release sequence(s) containing a given ModelAction.
  * The ModelAction under consideration is expected to be taking part in
@@ -1051,8 +1047,6 @@ bool ModelChecker::resolve_promises(ModelAction *write)
 	}
 	return resolved;
 }
-
-
 
 /**
  * Compute the set of promises that could potentially be satisfied by this

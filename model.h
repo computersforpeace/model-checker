@@ -94,7 +94,7 @@ public:
 private:
 	/** The scheduler to use: tracks the running/ready Threads */
 	Scheduler *scheduler;
-	
+
 	bool thin_air_constraint_may_allow(const ModelAction * writer, const ModelAction *reader);
 	bool has_asserted() {return asserted;}
 	void reset_asserted() {asserted=false;}
@@ -122,7 +122,6 @@ private:
 	void reset_to_initial_state();
 	bool resolve_promises(ModelAction *curr);
 	void compute_promises(ModelAction *curr);
-
 
 	void check_curr_backtracking(ModelAction * curr);
 	void add_action_to_lists(ModelAction *act);

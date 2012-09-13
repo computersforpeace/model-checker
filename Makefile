@@ -25,7 +25,7 @@ include $(DEPS)
 debug: CPPFLAGS += -DCONFIG_DEBUG
 debug: all
 
-mac: CPPFLAGS += -D_XOPEN_SOURCE -DMAC -DCONFIG_DEBUG
+mac: CPPFLAGS += -D_XOPEN_SOURCE -DMAC
 mac: LDFLAGS=-ldl
 mac: SHARED=-Wl,-undefined,dynamic_lookup -dynamiclib
 mac: all

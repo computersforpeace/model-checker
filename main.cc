@@ -16,7 +16,7 @@
 
 static void param_defaults(struct model_params * params) {
 	params->maxreads = 0;
-  params->maxfuturedelay = 100;
+	params->maxfuturedelay = 100;
 }
 
 static void print_usage(struct model_params *params) {
@@ -25,9 +25,13 @@ static void print_usage(struct model_params *params) {
 "\n"
 "Options:\n"
 "-h                    Display this help message and exit\n"
-"-m                    Maximum times a thread can read from the same write while other writes exist. Default: %d\n"
-"-s                    Maximum actions that the model checker will wait for a write from the future past the expected number of actions.  Default: %d\n"
-"--                    Program arguments follow.\n\n", params->maxreads, params->maxfuturedelay);
+"-m                    Maximum times a thread can read from the same write\n"
+"                      while other writes exist. Default: %d\n"
+"-s                    Maximum actions that the model checker will wait for\n"
+"                      a write from the future past the expected number of\n"
+"                      actions. Default: %d\n"
+"--                    Program arguments follow.\n\n",
+			params->maxreads, params->maxfuturedelay);
 	exit(EXIT_SUCCESS);
 }
 

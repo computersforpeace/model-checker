@@ -6,10 +6,17 @@ OBJECTS = libthreads.o schedule.o model.o threads.o librace.o action.o \
 	  snapshot.o malloc.o mymemory.o
 
 CPPFLAGS += -Iinclude -I.
-LDFLAGS=-ldl -lrt
-SHARED=-shared
+LDFLAGS = -ldl -lrt
+SHARED = -shared
 
-TESTS=test
+# Mac OSX options
+ifeq ($(UNAME), Darwin)
+CPPFLAGS += -D_XOPEN_SOURCE -DMAC
+LDFLAGS = -ldl
+SHARED = -Wl,-undefined,dynamic_lookup -dynamiclib
+endif
+
+TESTS_DIR = test
 
 program_H_SRCS := $(wildcard *.h) $(wildcard include/*.h)
 program_C_SRCS := $(wildcard *.c) $(wildcard *.cc)
@@ -18,17 +25,12 @@ DEPS = make.deps
 all: $(LIB_SO) $(DEPS) tests
 
 $(DEPS): $(program_C_SRCS) $(program_H_SRCS)
-	$(CXX) $(CPPFLAGS) -MM $(program_C_SRCS) > $(DEPS)
+	$(CXX) -MM $(program_C_SRCS) $(CPPFLAGS) > $(DEPS)
 
 include $(DEPS)
 
 debug: CPPFLAGS += -DCONFIG_DEBUG
 debug: all
-
-mac: CPPFLAGS += -D_XOPEN_SOURCE -DMAC
-mac: LDFLAGS=-ldl
-mac: SHARED=-Wl,-undefined,dynamic_lookup -dynamiclib
-mac: all
 
 docs: *.c *.cc *.h
 	doxygen
@@ -44,7 +46,7 @@ malloc.o: malloc.c
 
 clean:
 	rm -f *.o *.so
-	$(MAKE) -C $(TESTS) clean
+	$(MAKE) -C $(TESTS_DIR) clean
 
 mrclean: clean
 	rm -rf docs
@@ -53,4 +55,4 @@ tags::
 	ctags -R
 
 tests:: $(LIB_SO)
-	$(MAKE) -C $(TESTS)
+	$(MAKE) -C $(TESTS_DIR)

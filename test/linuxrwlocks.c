@@ -4,13 +4,11 @@
 #include "librace.h"
 #include "stdatomic.h"
 
-
 #define RW_LOCK_BIAS            0x00100000
 #define WRITE_LOCK_CMP          RW_LOCK_BIAS
 
 /** Example implementation of linux rw lock along with 2 thread test
  *  driver... */
-
 
 typedef union {
 	atomic_int lock;
@@ -55,7 +53,7 @@ static inline int read_trylock(rwlock_t *rw)
 	int priorvalue=atomic_fetch_sub_explicit(&rw->lock, 1, memory_order_acquire);
 	if (priorvalue>0)
 		return 1;
-	
+
 	atomic_fetch_add_explicit(&rw->lock, 1, memory_order_relaxed);
 	return 0;
 }
@@ -65,7 +63,7 @@ static inline int write_trylock(rwlock_t *rw)
 	int priorvalue=atomic_fetch_sub_explicit(&rw->lock, RW_LOCK_BIAS, memory_order_acquire);
 	if (priorvalue==RW_LOCK_BIAS)
 		return 1;
-	
+
 	atomic_fetch_add_explicit(&rw->lock, RW_LOCK_BIAS, memory_order_relaxed);
 	return 0;
 }
@@ -106,7 +104,7 @@ void user_main()
 
 	thrd_create(&t1, (thrd_start_t)&a, NULL);
 	thrd_create(&t2, (thrd_start_t)&a, NULL);
-	
+
 	thrd_join(t1);
 	thrd_join(t2);
 }

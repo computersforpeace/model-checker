@@ -89,10 +89,10 @@ void CycleGraph::addRMWEdge(const ModelAction *from, const ModelAction *rmw) {
 	}
 
 	/* Transfer all outgoing edges from the from node to the rmw node */
-	/* This process should not add a cycle because either: 
+	/* This process should not add a cycle because either:
 	 * (1) The rmw should not have any incoming edges yet if it is the
 	 * new node or
-	 * (2) the fromnode is the new node and therefore it should not 
+	 * (2) the fromnode is the new node and therefore it should not
 	 * have any outgoing edges.
 	 */
 	std::vector<CycleNode *> * edges=fromnode->getEdges();

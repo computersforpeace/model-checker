@@ -781,11 +781,13 @@ bool ModelChecker::thin_air_constraint_may_allow(const ModelAction * writer, con
 bool ModelChecker::release_seq_head(const ModelAction *rf,
                 std::vector<const ModelAction *> *release_heads) const
 {
-	ASSERT(rf->is_write());
 	if (!rf) {
 		/* read from future: need to settle this later */
 		return false; /* incomplete */
 	}
+
+	ASSERT(rf->is_write());
+
 	if (rf->is_release())
 		release_heads->push_back(rf);
 	if (rf->is_rmw()) {

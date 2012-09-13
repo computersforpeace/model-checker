@@ -32,6 +32,12 @@ struct model_params {
 	int maxfuturedelay;
 };
 
+struct PendingFutureValue {
+	uint64_t value;
+	modelclock_t expiration;
+	ModelAction * act;
+};
+
 /**
  * Structure for holding small ModelChecker members that should be snapshotted
  */
@@ -143,6 +149,7 @@ private:
 
 	HashTable<void *, std::vector<action_list_t>, uintptr_t, 4 > *obj_thrd_map;
 	std::vector<Promise *> *promises;
+	std::vector<struct PendingFutureValue> *futurevalues;
 
 	/**
 	 * Collection of lists of objects that might synchronize with one or

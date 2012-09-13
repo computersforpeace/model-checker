@@ -28,6 +28,7 @@ ModelChecker::ModelChecker(struct model_params params) :
 	obj_map(new HashTable<const void *, action_list_t, uintptr_t, 4>()),
 	obj_thrd_map(new HashTable<void *, std::vector<action_list_t>, uintptr_t, 4 >()),
 	promises(new std::vector<Promise *>()),
+	futurevalues(new std::vector<struct PendingFutureValue>()),
 	lazy_sync_with_release(new HashTable<void *, std::list<ModelAction *>, uintptr_t, 4>()),
 	thrd_last_action(new std::vector<ModelAction *>(1)),
 	node_stack(new NodeStack()),
@@ -404,6 +405,16 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 		bool updated_promises=resolve_promises(curr);
 		updated=updated_mod_order|updated_promises;
 
+		if (promises->size()==0) {
+			for(unsigned int i=0;i<futurevalues->size();i++) {
+				struct PendingFutureValue pfv=(*futurevalues)[i];
+				if (pfv.act->get_node()->add_future_value(pfv.value, pfv.expiration) &&
+						(!priv->next_backtrack || *pfv.act > *priv->next_backtrack))
+					priv->next_backtrack = pfv.act;
+			}
+			futurevalues->resize(0);
+		}
+
 		mo_graph->commitChanges();
 		th->set_return_value(VALUE_NONE);
 	}
@@ -714,9 +725,8 @@ bool ModelChecker::w_modification_order(ModelAction *curr)
 				if (thin_air_constraint_may_allow(curr, act)) {
 					if (isfeasible() ||
 							(curr->is_rmw() && act->is_rmw() && curr->get_reads_from()==act->get_reads_from() && isfeasibleotherthanRMW())) {
-						if (act->get_node()->add_future_value(curr->get_value(), curr->get_seq_number()+params.maxfuturedelay) &&
-								(!priv->next_backtrack || *act > *priv->next_backtrack))
-							priv->next_backtrack = act;
+						struct PendingFutureValue pfv={curr->get_value(),curr->get_seq_number()+params.maxfuturedelay,act};
+						futurevalues->push_back(pfv);
 					}
 				}
 			}

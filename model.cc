@@ -34,8 +34,7 @@ ModelChecker::ModelChecker(struct model_params params) :
 	mo_graph(new CycleGraph()),
 	failed_promise(false),
 	too_many_reads(false),
-	asserted(false),
-	rmw_cycle(false)
+	asserted(false)
 {
 	/* Allocate this "size" on the snapshotting heap */
 	priv = (struct model_snapshot_members *)calloc(1, sizeof(*priv));
@@ -78,7 +77,6 @@ void ModelChecker::reset_to_initial_state()
 	node_stack->reset_execution();
 	failed_promise = false;
 	too_many_reads = false;
-	rmw_cycle=false;
 	reset_asserted();
 	snapshotObject->backTrackBeforeStep(0);
 }
@@ -261,29 +259,6 @@ ModelAction * ModelChecker::get_next_backtrack()
 }
 
 
-/** Checks whether making the ModelAction read read_from the
-		ModelAction write will introduce a cycle in the reads_from
-		relation.
-
-@return true if making it read from will be fine, false otherwise.
-
-*/
-
-bool ModelChecker::ensure_rmw_acyclic(const ModelAction * read, const ModelAction *write) {
-	if (!read->is_rmw())
-		return true;
-	if (!write->is_rmw())
-		return true;
-	while(write!=NULL) {
-		if (write==read) {
-			rmw_cycle=true;
-			return false;
-		}
-		write=write->get_reads_from();
-	}
-	return true;
-}
-
 /**
  * Processes a read or rmw model action.
  * @param curr is the read model action to process.
@@ -301,9 +276,7 @@ bool ModelChecker::process_read(ModelAction *curr, Thread * th, bool second_part
 			mo_graph->startChanges();
 
 			value = reads_from->get_value();
-				/* Assign reads_from, perform release/acquire synchronization */
-			if (ensure_rmw_acyclic(curr, reads_from))
-				curr->read_from(reads_from);
+
 			if (!second_part_of_rmw) {
 				check_recency(curr,false);
 			}
@@ -316,6 +289,7 @@ bool ModelChecker::process_read(ModelAction *curr, Thread * th, bool second_part
 				continue;
 			}
 
+			curr->read_from(reads_from);
 			mo_graph->commitChanges();
 			updated |= r_status;
 		} else if (!second_part_of_rmw) {
@@ -487,7 +461,7 @@ bool ModelChecker::isfeasible() {
 /** @returns whether the current partial trace is feasible other than
  * multiple RMW reading from the same store. */
 bool ModelChecker::isfeasibleotherthanRMW() {
-	return !mo_graph->checkForCycles() && !failed_promise && !too_many_reads && !rmw_cycle && !promises_expired();
+	return !mo_graph->checkForCycles() && !failed_promise && !too_many_reads && !promises_expired();
 }
 
 /** Returns whether the current completed trace is feasible. */
@@ -1054,8 +1028,7 @@ bool ModelChecker::resolve_promises(ModelAction *write)
 		Promise *promise = (*promises)[promise_index];
 		if (write->get_node()->get_promise(i)) {
 			ModelAction *read = promise->get_action();
-			if (ensure_rmw_acyclic(read, write))
-				read->read_from(write);
+			read->read_from(write);
 			if (read->is_rmw()) {
 				mo_graph->addRMWEdge(write, read);
 			}

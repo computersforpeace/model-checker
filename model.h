@@ -189,7 +189,6 @@ private:
 	bool failed_promise;
 	bool too_many_reads;
 	bool asserted;
-	bool rmw_cycle;
 };
 
 extern ModelChecker *model;

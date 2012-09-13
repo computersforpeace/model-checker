@@ -85,8 +85,12 @@ void CycleGraph::addRMWEdge(const ModelAction *from, const ModelAction *rmw) {
 	}
 
 	/* Transfer all outgoing edges from the from node to the rmw node */
-	/* This process cannot add a cycle because rmw should not have any
-		 incoming edges yet.*/
+	/* This process should not add a cycle because either: 
+	 * (1) The rmw should not have any incoming edges yet if it is the
+	 * new node or
+	 * (2) the fromnode is the new node and therefore it should not 
+	 * have any outgoing edges.
+	 */
 	std::vector<CycleNode *> * edges=fromnode->getEdges();
 	for(unsigned int i=0;i<edges->size();i++) {
 		CycleNode * tonode=(*edges)[i];
@@ -94,6 +98,12 @@ void CycleGraph::addRMWEdge(const ModelAction *from, const ModelAction *rmw) {
 		rmwnode->addEdge(tonode);
 	}
 	rollbackvector.push_back(fromnode);
+
+	if (!hasCycles) {
+		// With promises we could be setting up a cycle here if we aren't
+		// careful...avoid it..
+		hasCycles=checkReachable(rmwnode, fromnode);
+	}
 	fromnode->addEdge(rmwnode);
 }
 

@@ -392,11 +392,9 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 		break;
 	}
 
-	Thread *th = get_thread(curr);
-
 	bool updated = false;
 	if (curr->is_read()) {
-		updated = process_read(curr, th, second_part_of_rmw);
+		updated = process_read(curr, get_thread(curr), second_part_of_rmw);
 	}
 
 	if (curr->is_write()) {
@@ -415,7 +413,7 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 		}
 
 		mo_graph->commitChanges();
-		th->set_return_value(VALUE_NONE);
+		get_thread(curr)->set_return_value(VALUE_NONE);
 	}
 
 	if (updated)

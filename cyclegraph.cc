@@ -55,7 +55,11 @@ void CycleGraph::addEdge(const ModelAction *from, const ModelAction *to) {
 	//If the fromnode has a rmwnode that is not the tonode, we
 	//should add an edge between its rmwnode and the tonode
 
-	if (rmwnode!=NULL&&rmwnode!=tonode) {
+	//If tonode is also a rmw, don't do this check as the execution is
+	//doomed and we'll catch the problem elsewhere, but we want to allow
+	//for the possibility of sending to's write value to rmwnode
+
+	if (rmwnode!=NULL&&!to->is_rmw()) {
 		if (!hasCycles) {
 			// Check for Cycles
 			hasCycles=checkReachable(tonode, rmwnode);
@@ -94,8 +98,10 @@ void CycleGraph::addRMWEdge(const ModelAction *from, const ModelAction *rmw) {
 	std::vector<CycleNode *> * edges=fromnode->getEdges();
 	for(unsigned int i=0;i<edges->size();i++) {
 		CycleNode * tonode=(*edges)[i];
-		rollbackvector.push_back(rmwnode);
-		rmwnode->addEdge(tonode);
+		if (tonode!=rmwnode) {
+			rollbackvector.push_back(rmwnode);
+			rmwnode->addEdge(tonode);
+		}
 	}
 	rollbackvector.push_back(fromnode);
 

@@ -277,14 +277,15 @@ bool ModelChecker::process_read(ModelAction *curr, Thread * th, bool second_part
 			mo_graph->startChanges();
 
 			value = reads_from->get_value();
+			bool r_status=false;
 
 			if (!second_part_of_rmw) {
 				check_recency(curr,false);
+				r_status=r_modification_order(curr, reads_from);
 			}
 
-			bool r_status=r_modification_order(curr,reads_from);
 
-			if (!second_part_of_rmw&&!isfeasible()&&(curr->get_node()->increment_read_from()||!curr->get_node()->future_value_empty())) {
+			if (!second_part_of_rmw&&!isfeasible()&&(curr->get_node()->increment_read_from()||curr->get_node()->increment_future_value())) {
 				mo_graph->rollbackChanges();
 				too_many_reads=false;
 				continue;
@@ -611,16 +612,19 @@ bool ModelChecker::r_modification_order(ModelAction *curr, const ModelAction *rf
 
 			/* Include at most one act per-thread that "happens before" curr */
 			if (act->happens_before(curr)) {
-				if (act->is_read()) {
+				if (act->is_write()) {
+					if (rf != act && act != curr) {
+						mo_graph->addEdge(act, rf);
+						added = true;
+					}
+				} else {
 					const ModelAction *prevreadfrom = act->get_reads_from();
 					if (prevreadfrom != NULL && rf != prevreadfrom) {
 						mo_graph->addEdge(prevreadfrom, rf);
 						added = true;
 					}
-				} else if (rf != act) {
-					mo_graph->addEdge(act, rf);
-					added = true;
-				}
+				} 
+
 				break;
 			}
 		}

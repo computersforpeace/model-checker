@@ -262,11 +262,11 @@ ModelAction * ModelChecker::get_next_backtrack()
 /**
  * Processes a read or rmw model action.
  * @param curr is the read model action to process.
- * @param th is the thread
  * @param second_part_of_rmw is boolean that is true is this is the second action of a rmw.
  * @return True if processing this read updates the mo_graph.
  */
-bool ModelChecker::process_read(ModelAction *curr, Thread * th, bool second_part_of_rmw) {
+bool ModelChecker::process_read(ModelAction *curr, bool second_part_of_rmw)
+{
 	uint64_t value;
 	bool updated = false;
 	while (true) {
@@ -300,7 +300,7 @@ bool ModelChecker::process_read(ModelAction *curr, Thread * th, bool second_part
 			Promise *valuepromise = new Promise(curr, value, expiration);
 			promises->push_back(valuepromise);
 		}
-		th->set_return_value(value);
+		get_thread(curr)->set_return_value(value);
 		return updated;
 	}
 }
@@ -395,7 +395,7 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 	bool updated = false;
 
 	if (curr->is_read()) {
-		updated = process_read(curr, get_thread(curr), second_part_of_rmw);
+		updated = process_read(curr, second_part_of_rmw);
 	}
 
 	if (curr->is_write()) {

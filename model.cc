@@ -268,24 +268,24 @@ ModelAction * ModelChecker::get_next_backtrack()
  */
 bool ModelChecker::process_read(ModelAction *curr, Thread * th, bool second_part_of_rmw) {
 	uint64_t value;
-	bool updated=false;
-	while(true) {
+	bool updated = false;
+	while (true) {
 		const ModelAction *reads_from = curr->get_node()->get_read_from();
 		if (reads_from != NULL) {
 			mo_graph->startChanges();
 
 			value = reads_from->get_value();
-			bool r_status=false;
+			bool r_status = false;
 
 			if (!second_part_of_rmw) {
 				check_recency(curr,false);
-				r_status=r_modification_order(curr, reads_from);
+				r_status = r_modification_order(curr, reads_from);
 			}
 
 
 			if (!second_part_of_rmw&&!isfeasible()&&(curr->get_node()->increment_read_from()||curr->get_node()->increment_future_value())) {
 				mo_graph->rollbackChanges();
-				too_many_reads=false;
+				too_many_reads = false;
 				continue;
 			}
 
@@ -358,7 +358,7 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 	}
 
 	/* Thread specific actions */
-	switch(curr->get_type()) {
+	switch (curr->get_type()) {
 	case THREAD_CREATE: {
 		Thread *th = (Thread *)curr->get_location();
 		th->set_creation(curr);
@@ -396,16 +396,16 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 
 	bool updated = false;
 	if (curr->is_read()) {
-		updated=process_read(curr, th, second_part_of_rmw);
+		updated = process_read(curr, th, second_part_of_rmw);
 	}
 
 	if (curr->is_write()) {
-		bool updated_mod_order=w_modification_order(curr);
-		bool updated_promises=resolve_promises(curr);
-		updated=updated_mod_order|updated_promises;
+		bool updated_mod_order = w_modification_order(curr);
+		bool updated_promises = resolve_promises(curr);
+		updated = updated_mod_order|updated_promises;
 
 		if (promises->size()==0) {
-			for(unsigned int i=0;i<futurevalues->size();i++) {
+			for (unsigned int i = 0; i<futurevalues->size(); i++) {
 				struct PendingFutureValue pfv=(*futurevalues)[i];
 				if (pfv.act->get_node()->add_future_value(pfv.value, pfv.expiration) &&
 						(!priv->next_backtrack || *pfv.act > *priv->next_backtrack))
@@ -529,9 +529,9 @@ void ModelChecker::check_recency(ModelAction *curr, bool already_added) {
 			rit++;
 		}
 
-		action_list_t::reverse_iterator ritcopy=rit;
+		action_list_t::reverse_iterator ritcopy = rit;
 		//See if we have enough reads from the same value
-		int count=0;
+		int count = 0;
 		for (; count < params.maxreads; rit++,count++) {
 			if (rit==list->rend())
 				return;
@@ -544,9 +544,9 @@ void ModelChecker::check_recency(ModelAction *curr, bool already_added) {
 				return;
 		}
 
-		for (int i=0;i<curr->get_node()->get_read_from_size();i++) {
+		for (int i = 0; i<curr->get_node()->get_read_from_size(); i++) {
 			//Get write
-			const ModelAction * write=curr->get_node()->get_read_from_at(i);
+			const ModelAction * write = curr->get_node()->get_read_from_at(i);
 			//Need a different write
 			if (write==curr->get_reads_from())
 				continue;
@@ -554,27 +554,27 @@ void ModelChecker::check_recency(ModelAction *curr, bool already_added) {
 			/* Test to see whether this is a feasible write to read from*/
 			mo_graph->startChanges();
 			r_modification_order(curr, write);
-			bool feasiblereadfrom=isfeasible();
+			bool feasiblereadfrom = isfeasible();
 			mo_graph->rollbackChanges();
 
 			if (!feasiblereadfrom)
 				continue;
-			rit=ritcopy;
+			rit = ritcopy;
 
-			bool feasiblewrite=true;
+			bool feasiblewrite = true;
 			//new we need to see if this write works for everyone
 
-			for (int loop=count;loop>0;loop--,rit++) {
+			for (int loop = count; loop>0; loop--,rit++) {
 				ModelAction *act=*rit;
-				bool foundvalue=false;
-				for(int j=0;j<act->get_node()->get_read_from_size();j++) {
+				bool foundvalue = false;
+				for (int j = 0; j<act->get_node()->get_read_from_size(); j++) {
 					if (act->get_node()->get_read_from_at(i)==write) {
-						foundvalue=true;
+						foundvalue = true;
 						break;
 					}
 				}
 				if (!foundvalue) {
-					feasiblewrite=false;
+					feasiblewrite = false;
 					break;
 				}
 			}
@@ -620,7 +620,7 @@ bool ModelChecker::r_modification_order(ModelAction *curr, const ModelAction *rf
 						mo_graph->addEdge(prevreadfrom, rf);
 						added = true;
 					}
-				} 
+				}
 
 				break;
 			}
@@ -726,7 +726,7 @@ bool ModelChecker::w_modification_order(ModelAction *curr)
 				if (thin_air_constraint_may_allow(curr, act)) {
 					if (isfeasible() ||
 							(curr->is_rmw() && act->is_rmw() && curr->get_reads_from()==act->get_reads_from() && isfeasibleotherthanRMW())) {
-						struct PendingFutureValue pfv={curr->get_value(),curr->get_seq_number()+params.maxfuturedelay,act};
+						struct PendingFutureValue pfv = {curr->get_value(),curr->get_seq_number()+params.maxfuturedelay,act};
 						futurevalues->push_back(pfv);
 					}
 				}
@@ -748,10 +748,10 @@ bool ModelChecker::thin_air_constraint_may_allow(const ModelAction * writer, con
 	if (!reader->is_rmw())
 		return true;
 
-	for(const ModelAction *search=writer->get_reads_from();search!=NULL;search=search->get_reads_from()) {
+	for (const ModelAction *search = writer->get_reads_from(); search != NULL; search = search->get_reads_from()) {
 		if (search==reader)
 			return false;
-		if (search->get_tid()==reader->get_tid()&&
+		if (search->get_tid() == reader->get_tid() &&
 				search->happens_before(reader))
 			break;
 	}

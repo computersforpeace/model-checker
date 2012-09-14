@@ -447,8 +447,24 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 		case WORK_CHECK_RELEASE_SEQ:
 			resolve_release_sequences(work.location, &work_queue);
 			break;
-		case WORK_CHECK_MO_EDGES:
-			/** @todo Perform follow-up mo_graph checks */
+		case WORK_CHECK_MO_EDGES: {
+			/** @todo Complete verification of work_queue */
+			ModelAction *act = work.action;
+			bool updated = false;
+
+			if (act->is_read()) {
+				if (r_modification_order(act, act->get_reads_from()))
+					updated = true;
+			}
+			if (act->is_write()) {
+				if (w_modification_order(act))
+					updated = true;
+			}
+
+			if (updated)
+				work_queue.push_back(CheckRelSeqWorkEntry(act->get_location()));
+			break;
+		}
 		default:
 			ASSERT(false);
 			break;

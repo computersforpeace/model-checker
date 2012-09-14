@@ -265,11 +265,11 @@ ModelAction * ModelChecker::get_next_backtrack()
 /**
  * Processes a read or rmw model action.
  * @param curr is the read model action to process.
- * @param th is the thread
  * @param second_part_of_rmw is boolean that is true is this is the second action of a rmw.
  * @return True if processing this read updates the mo_graph.
  */
-bool ModelChecker::process_read(ModelAction *curr, Thread * th, bool second_part_of_rmw) {
+bool ModelChecker::process_read(ModelAction *curr, bool second_part_of_rmw)
+{
 	uint64_t value;
 	bool updated = false;
 	while (true) {
@@ -303,9 +303,34 @@ bool ModelChecker::process_read(ModelAction *curr, Thread * th, bool second_part
 			Promise *valuepromise = new Promise(curr, value, expiration);
 			promises->push_back(valuepromise);
 		}
-		th->set_return_value(value);
+		get_thread(curr)->set_return_value(value);
 		return updated;
 	}
+}
+
+/**
+ * Process a write ModelAction
+ * @param curr The ModelAction to process
+ * @return True if the mo_graph was updated or promises were resolved
+ */
+bool ModelChecker::process_write(ModelAction *curr)
+{
+	bool updated_mod_order = w_modification_order(curr);
+	bool updated_promises = resolve_promises(curr);
+
+	if (promises->size() == 0) {
+		for (unsigned int i = 0; i<futurevalues->size(); i++) {
+			struct PendingFutureValue pfv = (*futurevalues)[i];
+			if (pfv.act->get_node()->add_future_value(pfv.value, pfv.expiration) &&
+					(!priv->next_backtrack || *pfv.act > *priv->next_backtrack))
+				priv->next_backtrack = pfv.act;
+		}
+		futurevalues->resize(0);
+	}
+
+	mo_graph->commitChanges();
+	get_thread(curr)->set_return_value(VALUE_NONE);
+	return updated_mod_order || updated_promises;
 }
 
 /**
@@ -395,33 +420,36 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 		break;
 	}
 
-	bool updated = false;
+	work_queue_t work_queue(1, CheckCurrWorkEntry(curr));
 
-	if (curr->is_read()) {
-		updated = process_read(curr, get_thread(curr), second_part_of_rmw);
-	}
+	while (!work_queue.empty()) {
+		WorkQueueEntry work = work_queue.front();
+		work_queue.pop_front();
 
-	if (curr->is_write()) {
-		bool updated_mod_order = w_modification_order(curr);
-		bool updated_promises = resolve_promises(curr);
-		updated = updated || updated_mod_order || updated_promises;
+		switch (work.type) {
+		case WORK_CHECK_CURR_ACTION: {
+			ModelAction *act = work.action;
+			bool updated = false;
+			if (act->is_read() && process_read(act, second_part_of_rmw))
+				updated = true;
 
-		if (promises->size()==0) {
-			for (unsigned int i = 0; i<futurevalues->size(); i++) {
-				struct PendingFutureValue pfv=(*futurevalues)[i];
-				if (pfv.act->get_node()->add_future_value(pfv.value, pfv.expiration) &&
-						(!priv->next_backtrack || *pfv.act > *priv->next_backtrack))
-					priv->next_backtrack = pfv.act;
-			}
-			futurevalues->resize(0);
+			if (act->is_write() && process_write(act))
+				updated = true;
+
+			if (updated)
+				work_queue.push_back(CheckRelSeqWorkEntry(act->get_location()));
+			break;
 		}
-
-		mo_graph->commitChanges();
-		get_thread(curr)->set_return_value(VALUE_NONE);
+		case WORK_CHECK_RELEASE_SEQ:
+			resolve_release_sequences(work.location, &work_queue);
+			break;
+		case WORK_CHECK_MO_EDGES:
+			/** @todo Perform follow-up mo_graph checks */
+		default:
+			ASSERT(false);
+			break;
+		}
 	}
-
-	if (updated)
-		resolve_release_sequences(curr->get_location());
 
 	/* Add action to list.  */
 	if (!second_part_of_rmw)
@@ -954,9 +982,12 @@ void ModelChecker::get_release_seq_heads(ModelAction *act,
  *
  * @param location The location/object that should be checked for release
  * sequence resolutions
- * @return True if any updates occurred (new synchronization, new mo_graph edges)
+ * @param work_queue The work queue to which to add work items as they are
+ * generated
+ * @return True if any updates occurred (new synchronization, new mo_graph
+ * edges)
  */
-bool ModelChecker::resolve_release_sequences(void *location)
+bool ModelChecker::resolve_release_sequences(void *location, work_queue_t *work_queue)
 {
 	std::list<ModelAction *> *list;
 	list = lazy_sync_with_release->getptr(location);
@@ -979,14 +1010,18 @@ bool ModelChecker::resolve_release_sequences(void *location)
 		}
 
 		if (updated) {
+			/* Re-check act for mo_graph edges */
+			work_queue->push_back(MOEdgeWorkEntry(act));
+
 			/* propagate synchronization to later actions */
 			action_list_t::reverse_iterator it = action_trace->rbegin();
 			while ((*it) != act) {
 				ModelAction *propagate = *it;
-				if (act->happens_before(propagate))
-					/** @todo new mo_graph edges along with
-					 * this synchronization? */
+				if (act->happens_before(propagate)) {
 					propagate->synchronize_with(act);
+					/* Re-check 'propagate' for mo_graph edges */
+					work_queue->push_back(MOEdgeWorkEntry(propagate));
+				}
 			}
 		}
 		if (complete) {

@@ -17,6 +17,7 @@
 #include "action.h"
 #include "clockvector.h"
 #include "hashtable.h"
+#include "workqueue.h"
 
 /* Forward declaration */
 class NodeStack;
@@ -111,7 +112,8 @@ private:
 	 */
 	void set_current_action(ModelAction *act) { priv->current_action = act; }
 	Thread * check_current_action(ModelAction *curr);
-	bool process_read(ModelAction *curr, Thread * th, bool second_part_of_rmw);
+	bool process_read(ModelAction *curr, bool second_part_of_rmw);
+	bool process_write(ModelAction *curr);
 
 	bool take_step();
 
@@ -135,7 +137,7 @@ private:
 	bool w_modification_order(ModelAction *curr);
 	bool release_seq_head(const ModelAction *rf,
 	                std::vector< const ModelAction *, MyAlloc<const ModelAction *> > *release_heads) const;
-	bool resolve_release_sequences(void *location);
+	bool resolve_release_sequences(void *location, work_queue_t *work_queue);
 
 	ModelAction *diverge;
 

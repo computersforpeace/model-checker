@@ -17,6 +17,7 @@
 #include "action.h"
 #include "clockvector.h"
 #include "hashtable.h"
+#include "workqueue.h"
 
 /* Forward declaration */
 class NodeStack;

@@ -417,16 +417,36 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 		break;
 	}
 
-	bool updated = false;
+	work_queue_t work_queue(1, CheckCurrWorkEntry(curr));
 
-	if (curr->is_read() && process_read(curr, second_part_of_rmw))
-		updated = true;
+	while (!work_queue.empty()) {
+		WorkQueueEntry work = work_queue.front();
+		work_queue.pop_front();
 
-	if (curr->is_write() && process_write(curr))
-		updated = true;
+		switch (work.type) {
+		case WORK_CHECK_CURR_ACTION: {
+			ModelAction *act = work.action;
+			bool updated = false;
+			if (act->is_read() && process_read(act, second_part_of_rmw))
+				updated = true;
 
-	if (updated)
-		resolve_release_sequences(curr->get_location());
+			if (act->is_write() && process_write(act))
+				updated = true;
+
+			if (updated)
+				work_queue.push_back(CheckRelSeqWorkEntry(act->get_location()));
+			break;
+		}
+		case WORK_CHECK_RELEASE_SEQ:
+			resolve_release_sequences(work.location);
+			break;
+		case WORK_CHECK_MO_EDGES:
+			/** @todo Perform follow-up mo_graph checks */
+		default:
+			ASSERT(false);
+			break;
+		}
+	}
 
 	/* Add action to list.  */
 	if (!second_part_of_rmw)

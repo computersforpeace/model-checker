@@ -4,6 +4,7 @@
 *.swo
 *.so
 *~
+*.dot
 
 # files in this directory
 /tags

@@ -99,6 +99,7 @@ private:
 	bool has_asserted() {return asserted;}
 	void reset_asserted() {asserted=false;}
 	int num_executions;
+	int num_feasible_executions;
 	bool promises_expired();
 	const model_params params;
 

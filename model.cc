@@ -21,6 +21,7 @@ ModelChecker::ModelChecker(struct model_params params) :
 	/* Initialize default scheduler */
 	scheduler(new Scheduler()),
 	num_executions(0),
+	num_feasible_executions(0),
 	params(params),
 	diverge(NULL),
 	action_trace(new action_list_t()),
@@ -174,6 +175,8 @@ bool ModelChecker::next_execution()
 	DBG();
 
 	num_executions++;
+	if (isfinalfeasible())
+		num_feasible_executions++;
 
 	if (isfinalfeasible() || DBG_ENABLED())
 		print_summary();
@@ -1229,6 +1232,7 @@ void ModelChecker::print_summary()
 {
 	printf("\n");
 	printf("Number of executions: %d\n", num_executions);
+	printf("Number of feasible executions: %d\n", num_feasible_executions);
 	printf("Total nodes created: %d\n", node_stack->get_total_nodes());
 
 #if SUPPORT_MOD_ORDER_DUMP

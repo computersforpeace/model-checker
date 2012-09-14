@@ -136,7 +136,7 @@ private:
 	bool w_modification_order(ModelAction *curr);
 	bool release_seq_head(const ModelAction *rf,
 	                std::vector< const ModelAction *, MyAlloc<const ModelAction *> > *release_heads) const;
-	bool resolve_release_sequences(void *location);
+	bool resolve_release_sequences(void *location, work_queue_t *work_queue);
 
 	ModelAction *diverge;
 

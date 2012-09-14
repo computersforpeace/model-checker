@@ -1184,7 +1184,12 @@ void ModelChecker::print_summary()
 	printf("Number of executions: %d\n", num_executions);
 	printf("Total nodes created: %d\n", node_stack->get_total_nodes());
 
+#if SUPPORT_MOD_ORDER_DUMP
 	scheduler->print();
+	char buffername[100];
+	sprintf(buffername, "exec%u",num_executions);
+	mo_graph->dumpGraphToFile(buffername);
+#endif
 
 	if (!isfinalfeasible())
 		printf("INFEASIBLE EXECUTION!\n");

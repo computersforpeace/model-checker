@@ -8,7 +8,7 @@
 #include "hashtable.h"
 #include <vector>
 #include <inttypes.h>
-
+#include "config.h"
 #include "mymemory.h"
 
 class CycleNode;
@@ -28,6 +28,9 @@ class CycleGraph {
 	void startChanges();
 	void commitChanges();
 	void rollbackChanges();
+#if SUPPORT_MOD_ORDER_DUMP
+	void dumpGraphToFile(const char * filename);
+#endif
 
 	SNAPSHOTALLOC
  private:
@@ -35,6 +38,9 @@ class CycleGraph {
 
 	/** @brief A table for mapping ModelActions to CycleNodes */
 	HashTable<const ModelAction *, CycleNode *, uintptr_t, 4> actionToNode;
+#if SUPPORT_MOD_ORDER_DUMP
+	std::vector<CycleNode *> nodeList;
+#endif
 
 	bool checkReachable(CycleNode *from, CycleNode *to);
 
@@ -53,10 +59,12 @@ class CycleGraph {
 class CycleNode {
  public:
 	CycleNode(const ModelAction *action);
-	void addEdge(CycleNode * node);
+	bool addEdge(CycleNode * node);
 	std::vector<CycleNode *> * getEdges();
 	bool setRMW(CycleNode *);
 	CycleNode* getRMW();
+	const ModelAction * getAction() {return action;};
+
 	void popEdge() {
 		edges.pop_back();
 	};

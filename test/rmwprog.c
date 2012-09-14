@@ -17,7 +17,6 @@ void user_main()
 	thrd_t t1, t2;
 
 	atomic_init(&x, 0);
-
 	thrd_create(&t1, (thrd_start_t)&a, NULL);
 	thrd_create(&t2, (thrd_start_t)&a, NULL);
 

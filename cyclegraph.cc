@@ -25,6 +25,9 @@ CycleNode * CycleGraph::getNode(const ModelAction *action) {
 	if (node==NULL) {
 		node=new CycleNode(action);
 		actionToNode.put(action, node);
+#if SUPPORT_MOD_ORDER_DUMP
+		nodeList.push_back(node);
+#endif
 	}
 	return node;
 }
@@ -47,8 +50,9 @@ void CycleGraph::addEdge(const ModelAction *from, const ModelAction *to) {
 		hasCycles=checkReachable(tonode, fromnode);
 	}
 
-	rollbackvector.push_back(fromnode);
-	fromnode->addEdge(tonode);
+	if (fromnode->addEdge(tonode))
+		rollbackvector.push_back(fromnode);
+
 
 	CycleNode * rmwnode=fromnode->getRMW();
 
@@ -64,8 +68,9 @@ void CycleGraph::addEdge(const ModelAction *from, const ModelAction *to) {
 			// Check for Cycles
 			hasCycles=checkReachable(tonode, rmwnode);
 		}
-		rollbackvector.push_back(rmwnode);
-		rmwnode->addEdge(tonode);
+
+		if (rmwnode->addEdge(tonode))
+			rollbackvector.push_back(rmwnode);
 	}
 }
 
@@ -99,19 +104,42 @@ void CycleGraph::addRMWEdge(const ModelAction *from, const ModelAction *rmw) {
 	for(unsigned int i=0;i<edges->size();i++) {
 		CycleNode * tonode=(*edges)[i];
 		if (tonode!=rmwnode) {
-			rollbackvector.push_back(rmwnode);
-			rmwnode->addEdge(tonode);
+			if (rmwnode->addEdge(tonode))
+				rollbackvector.push_back(rmwnode);
 		}
 	}
-	rollbackvector.push_back(fromnode);
+
 
 	if (!hasCycles) {
 		// With promises we could be setting up a cycle here if we aren't
 		// careful...avoid it..
 		hasCycles=checkReachable(rmwnode, fromnode);
 	}
-	fromnode->addEdge(rmwnode);
+	if(fromnode->addEdge(rmwnode))
+		rollbackvector.push_back(fromnode);
 }
+
+#if SUPPORT_MOD_ORDER_DUMP
+void CycleGraph::dumpGraphToFile(const char *filename) {
+	char buffer[200];
+  sprintf(buffer, "%s.dot",filename);
+  FILE *file=fopen(buffer, "w");
+  fprintf(file, "digraph %s {\n",filename);
+  for(unsigned int i=0;i<nodeList.size();i++) {
+		CycleNode *cn=nodeList[i];
+		std::vector<CycleNode *> * edges=cn->getEdges();
+		const ModelAction *action=cn->getAction();
+		fprintf(file, "N%u [label=\"%u, T%u\"];\n",action->get_seq_number(),action->get_seq_number(), action->get_tid());
+		for(unsigned int j=0;j<edges->size();j++) {
+		  CycleNode *dst=(*edges)[j];
+			const ModelAction *dstaction=dst->getAction();
+      fprintf(file, "N%u -> N%u;\n", action->get_seq_number(), dstaction->get_seq_number());
+	  }
+	}
+  fprintf(file,"}\n");
+  fclose(file);	
+}
+#endif
 
 /**
  * Checks whether one ModelAction can reach another.
@@ -136,8 +164,8 @@ bool CycleGraph::checkReachable(const ModelAction *from, const ModelAction *to) 
  * @return True, @a from can reach @a to; otherwise, false
  */
 bool CycleGraph::checkReachable(CycleNode *from, CycleNode *to) {
-	std::vector<CycleNode *> queue;
-	HashTable<CycleNode *, CycleNode *, uintptr_t, 4> discovered;
+	std::vector<CycleNode *, MyAlloc<CycleNode *> > queue;
+	HashTable<CycleNode *, CycleNode *, uintptr_t, 4, MYMALLOC, MYCALLOC, MYFREE> discovered;
 
 	queue.push_back(from);
 	discovered.put(from, from);
@@ -217,8 +245,12 @@ std::vector<CycleNode *> * CycleNode::getEdges() {
  * Adds an edge from this CycleNode to another CycleNode.
  * @param node The node to which we add a directed edge
  */
-void CycleNode::addEdge(CycleNode *node) {
+bool CycleNode::addEdge(CycleNode *node) {
+	for(unsigned int i=0;i<edges.size();i++)
+		if (edges[i]==node)
+			return false;
 	edges.push_back(node);
+	return true;
 }
 
 /** @returns the RMW CycleNode that reads from the current CycleNode */

@@ -586,7 +586,18 @@ void ModelChecker::check_recency(ModelAction *curr, bool already_added) {
 }
 
 /**
- * Updates the mo_graph with the constraints imposed from the current read.
+ * Updates the mo_graph with the constraints imposed from the current
+ * read.  
+ *
+ * Basic idea is the following: Go through each other thread and find
+ * the lastest action that happened before our read.  Two cases:
+ *
+ * (1) The action is a write => that write must either occur before
+ * the write we read from or be the write we read from.
+ *
+ * (2) The action is a read => the write that that action read from
+ * must occur before the write we read from or be the same write.
+ *
  * @param curr The current action. Must be a read.
  * @param rf The action that curr reads from. Must be a write.
  * @return True if modification order edges were added; false otherwise
@@ -629,7 +640,22 @@ bool ModelChecker::r_modification_order(ModelAction *curr, const ModelAction *rf
 	return added;
 }
 
-/** Updates the mo_graph with the constraints imposed from the current read. */
+/** This method fixes up the modification order when we resolve a
+ *  promises.  The basic problem is that actions that occur after the
+ *  read curr could not property add items to the modification order
+ *  for our read.
+ *  
+ *  So for each thread, we find the earliest item that happens after
+ *  the read curr.  This is the item we have to fix up with additional
+ *  constraints.  If that action is write, we add a MO edge between
+ *  the Action rf and that action.  If the action is a read, we add a
+ *  MO edge between the Action rf, and whatever the read accessed.
+ *
+ * @param curr is the read ModelAction that we are fixing up MO edges for.
+ * @param rf is the write ModelAction that curr reads from.
+ *
+ */
+
 void ModelChecker::post_r_modification_order(ModelAction *curr, const ModelAction *rf)
 {
 	std::vector<action_list_t> *thrd_lists = obj_thrd_map->get_safe_ptr(curr->get_location());
@@ -668,6 +694,23 @@ void ModelChecker::post_r_modification_order(ModelAction *curr, const ModelActio
 
 /**
  * Updates the mo_graph with the constraints imposed from the current write.
+ *
+ * Basic idea is the following: Go through each other thread and find
+ * the lastest action that happened before our write.  Two cases:
+ *
+ * (1) The action is a write => that write must occur before
+ * the current write
+ *
+ * (2) The action is a read => the write that that action read from
+ * must occur before the current write.
+ *
+ * This method also handles two other issues:
+ *
+ * (I) Sequential Consistency: Making sure that if the current write is
+ * seq_cst, that it occurs after the previous seq_cst write.
+ *
+ * (II) Sending the write back to non-synchronizing reads.
+ *
  * @param curr The current action. Must be a write.
  * @return True if modification order edges were added; false otherwise
  */
@@ -1043,7 +1086,11 @@ bool ModelChecker::resolve_promises(ModelAction *write)
 			if (read->is_rmw()) {
 				mo_graph->addRMWEdge(write, read);
 			}
+			//First fix up the modification order for actions that happened
+			//before the read
 			r_modification_order(read, write);
+			//Next fix up the modification order for actions that happened
+			//after the read.
 			post_r_modification_order(read, write);
 			promises->erase(promises->begin() + promise_index);
 			resolved = true;

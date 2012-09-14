@@ -52,6 +52,11 @@ bool ModelAction::is_rmwc() const
 	return type == ATOMIC_RMWC;
 }
 
+bool ModelAction::is_fence() const 
+{
+	return type == ATOMIC_FENCE;
+}
+
 bool ModelAction::is_initialization() const
 {
 	return type == ATOMIC_INIT;
@@ -229,6 +234,9 @@ void ModelAction::print(void) const
 		break;
 	case ATOMIC_RMW:
 		type_str = "atomic rmw";
+		break;
+	case ATOMIC_FENCE:
+		type_str = "fence";
 		break;
 	case ATOMIC_RMWR:
 		type_str = "atomic rmwr";

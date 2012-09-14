@@ -110,10 +110,9 @@ inline void atomic_flag::fence( memory_order __x__ ) const volatile
                 else {  model_rmwc_action((void *)__p__, __x__); *__q__ = __t__;  __r__ = false;} \
                 __r__; })
 
-//TODO
 #define _ATOMIC_FENCE_( __a__, __x__ ) \
-({ ;})
-
+	({ model_fence_action(__x__);})
+ 
 
 #define ATOMIC_CHAR_LOCK_FREE 1
 #define ATOMIC_CHAR16_T_LOCK_FREE 1

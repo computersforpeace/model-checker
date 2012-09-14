@@ -130,6 +130,9 @@ void CycleGraph::dumpGraphToFile(const char *filename) {
 		std::vector<CycleNode *> * edges=cn->getEdges();
 		const ModelAction *action=cn->getAction();
 		fprintf(file, "N%u [label=\"%u, T%u\"];\n",action->get_seq_number(),action->get_seq_number(), action->get_tid());
+		if (cn->getRMW()!=NULL) {
+			fprintf(file, "N%u -> N%u[style=dotted];\n", action->get_seq_number(), cn->getRMW()->getAction()->get_seq_number());
+		}
 		for(unsigned int j=0;j<edges->size();j++) {
 		  CycleNode *dst=(*edges)[j];
 			const ModelAction *dstaction=dst->getAction();

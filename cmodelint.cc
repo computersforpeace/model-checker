@@ -36,3 +36,8 @@ void model_rmw_action(void *obj, memory_order ord, uint64_t val) {
 void model_rmwc_action(void *obj, memory_order ord) {
 	model->switch_to_master(new ModelAction(ATOMIC_RMWC, ord, obj));
 }
+
+/** Issues a fence operation. */
+void model_fence_action(memory_order ord) {
+	model->switch_to_master(new ModelAction(ATOMIC_FENCE, ord, NULL));
+}

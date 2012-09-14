@@ -38,8 +38,9 @@ typedef enum action_type {
 	ATOMIC_RMWR,          /**< The read part of an atomic RMW action */
 	ATOMIC_RMW,           /**< The write part of an atomic RMW action */
 	ATOMIC_RMWC,          /**< Convert an atomic RMW action into a READ */
-	ATOMIC_INIT           /**< Initialization of an atomic object (e.g.,
+	ATOMIC_INIT,          /**< Initialization of an atomic object (e.g.,
 	                       *   atomic_init()) */
+	ATOMIC_FENCE
 } action_type_t;
 
 /* Forward declaration */
@@ -71,6 +72,7 @@ public:
 	bool is_rmwr() const;
 	bool is_rmwc() const;
 	bool is_rmw() const;
+  bool is_fence() const;
 	bool is_initialization() const;
 	bool is_acquire() const;
 	bool is_release() const;

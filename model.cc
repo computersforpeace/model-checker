@@ -420,6 +420,10 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 		break;
 	}
 
+	/* Add current action to lists before work_queue loop */
+	if (!second_part_of_rmw)
+		add_action_to_lists(curr);
+
 	work_queue_t work_queue(1, CheckCurrWorkEntry(curr));
 
 	while (!work_queue.empty()) {
@@ -450,10 +454,6 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 			break;
 		}
 	}
-
-	/* Add action to list.  */
-	if (!second_part_of_rmw)
-		add_action_to_lists(curr);
 
 	check_curr_backtracking(curr);
 
@@ -648,8 +648,11 @@ bool ModelChecker::r_modification_order(ModelAction *curr, const ModelAction *rf
 		for (rit = list->rbegin(); rit != list->rend(); rit++) {
 			ModelAction *act = *rit;
 
-			/* Include at most one act per-thread that "happens before" curr */
-			if (act->happens_before(curr)) {
+			/*
+			 * Include at most one act per-thread that "happens
+			 * before" curr. Don't consider reflexively.
+			 */
+			if (act->happens_before(curr) && act != curr) {
 				if (act->is_write()) {
 					if (rf != act && act != curr) {
 						mo_graph->addEdge(act, rf);
@@ -770,8 +773,12 @@ bool ModelChecker::w_modification_order(ModelAction *curr)
 		for (rit = list->rbegin(); rit != list->rend(); rit++) {
 			ModelAction *act = *rit;
 
-			/* Include at most one act per-thread that "happens before" curr */
-			if (act->happens_before(curr)) {
+			/*
+			 * Include at most one act per-thread that "happens
+			 * before" curr. Only consider reflexively if curr is
+			 * RMW.
+			 */
+			if (act->happens_before(curr) && (act != curr || curr->is_rmw())) {
 				/*
 				 * Note: if act is RMW, just add edge:
 				 *   act --mo--> curr

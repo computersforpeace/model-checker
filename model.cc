@@ -347,13 +347,12 @@ bool ModelChecker::process_write(ModelAction *curr)
  */
 Thread * ModelChecker::check_current_action(ModelAction *curr)
 {
-	bool second_part_of_rmw = false;
-
 	ASSERT(curr);
+
+	bool second_part_of_rmw = curr->is_rmwc() || curr->is_rmw();
 
 	if (curr->is_rmwc() || curr->is_rmw()) {
 		ModelAction *tmp = process_rmw(curr);
-		second_part_of_rmw = true;
 		delete curr;
 		curr = tmp;
 		compute_promises(curr);

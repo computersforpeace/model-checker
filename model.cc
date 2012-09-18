@@ -358,7 +358,7 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 		curr = tmp;
 		compute_promises(curr);
 	} else {
-		ModelAction *tmp = node_stack->explore_action(curr);
+		ModelAction *tmp = node_stack->explore_action(curr, NULL);
 		if (tmp) {
 			/* Discard duplicate ModelAction; use action from NodeStack */
 			/* First restore type and order in case of RMW operation */

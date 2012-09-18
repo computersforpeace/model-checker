@@ -17,7 +17,7 @@
  * @param nthreads The number of threads which exist at this point in the
  * execution trace.
  */
-Node::Node(ModelAction *act, Node *par, int nthreads)
+Node::Node(ModelAction *act, Node *par, int nthreads, bool *enabled)
 	: action(act),
 	parent(par),
 	num_threads(nthreads),
@@ -31,6 +31,12 @@ Node::Node(ModelAction *act, Node *par, int nthreads)
 {
 	if (act)
 		act->set_node(this);
+	enabled_array=(bool *)MYMALLOC(sizeof(bool)*num_threads);
+	if (enabled)
+		memcpy(enabled_array, enabled, sizeof(bool)*num_threads);
+	else 
+		for(int i=0;i<num_threads;i++)
+			enabled_array[i]=false;
 }
 
 /** @brief Node desctructor */
@@ -38,6 +44,7 @@ Node::~Node()
 {
 	if (action)
 		delete action;
+	MYFREE(enabled_array);
 }
 
 /** Prints debugging info for the ModelAction associated with this Node */
@@ -212,7 +219,8 @@ thread_id_t Node::get_next_backtrack()
 
 bool Node::is_enabled(Thread *t)
 {
-	return id_to_int(t->get_id()) < num_threads;
+	int thread_id=id_to_int(t->get_id());
+	return thread_id < num_threads && enabled_array[thread_id];
 }
 
 /**
@@ -324,7 +332,7 @@ void NodeStack::print()
 	printf("............................................\n");
 }
 
-ModelAction * NodeStack::explore_action(ModelAction *act)
+ModelAction * NodeStack::explore_action(ModelAction *act, bool * enabled)
 {
 	DBG();
 
@@ -339,7 +347,7 @@ ModelAction * NodeStack::explore_action(ModelAction *act)
 
 	/* Record action */
 	get_head()->explore_child(act);
-	node_list.push_back(new Node(act, get_head(), model->get_num_threads()));
+	node_list.push_back(new Node(act, get_head(), model->get_num_threads(), enabled));
 	total_nodes++;
 	iter++;
 	return NULL;

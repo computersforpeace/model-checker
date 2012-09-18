@@ -40,7 +40,10 @@ typedef enum action_type {
 	ATOMIC_RMWC,          /**< Convert an atomic RMW action into a READ */
 	ATOMIC_INIT,          /**< Initialization of an atomic object (e.g.,
 	                       *   atomic_init()) */
-	ATOMIC_FENCE
+	ATOMIC_FENCE,
+	ATOMIC_LOCK,
+	ATOMIC_TRYLOCK,
+	ATOMIC_UNLOCK
 } action_type_t;
 
 /* Forward declaration */

@@ -363,8 +363,6 @@ ModelAction * ModelChecker::initialize_curr_action(ModelAction *curr)
 		 * NodeStack
 		 */
 		curr->create_cv(get_parent_action(curr->get_tid()));
-		if (curr->is_read())
-			build_reads_from_past(curr);
 		if (curr->is_write())
 			compute_promises(curr);
 	}
@@ -389,7 +387,12 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 
 	bool second_part_of_rmw = curr->is_rmwc() || curr->is_rmw();
 
-	curr = initialize_curr_action(curr);
+	ModelAction *newcurr = initialize_curr_action(curr);
+
+	/* Build may_read_from set for newly-created actions */
+	if (curr == newcurr && curr->is_read())
+		build_reads_from_past(curr);
+	curr = newcurr;
 
 	/* Thread specific actions */
 	switch (curr->get_type()) {
@@ -1264,7 +1267,7 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 			ModelAction *act = *rit;
 
 			/* Only consider 'write' actions */
-			if (!act->is_write())
+			if (!act->is_write() || act == curr)
 				continue;
 
 			/* Don't consider more than one seq_cst write if we are a seq_cst read. */

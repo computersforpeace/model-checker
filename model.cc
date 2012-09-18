@@ -769,24 +769,33 @@ bool ModelChecker::w_modification_order(ModelAction *curr)
 		action_list_t::reverse_iterator rit;
 		for (rit = list->rbegin(); rit != list->rend(); rit++) {
 			ModelAction *act = *rit;
+			if (act == curr) {
+				/*
+				 * If RMW, we already have all relevant edges,
+				 * so just skip to next thread.
+				 * If normal write, we need to look at earlier
+				 * actions, so continue processing list.
+				 */
+				if (curr->is_rmw())
+					break;
+				else
+					continue;
+			}
 
 			/*
 			 * Include at most one act per-thread that "happens
-			 * before" curr. Only consider reflexively if curr is
-			 * RMW.
+			 * before" curr
 			 */
-			if (act->happens_before(curr) && (act != curr || curr->is_rmw())) {
+			if (act->happens_before(curr)) {
 				/*
 				 * Note: if act is RMW, just add edge:
 				 *   act --mo--> curr
 				 * The following edge should be handled elsewhere:
 				 *   readfrom(act) --mo--> act
 				 */
-				if (act->is_write()) {
-					//RMW shouldn't have an edge to themselves
-					if (act!=curr)
-						mo_graph->addEdge(act, curr);
-				} else if (act->is_read() && act->get_reads_from() != NULL)
+				if (act->is_write())
+					mo_graph->addEdge(act, curr);
+				else if (act->is_read() && act->get_reads_from() != NULL)
 					mo_graph->addEdge(act->get_reads_from(), curr);
 				added = true;
 				break;

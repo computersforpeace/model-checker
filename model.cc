@@ -652,7 +652,7 @@ bool ModelChecker::r_modification_order(ModelAction *curr, const ModelAction *rf
 			 */
 			if (act->happens_before(curr) && act != curr) {
 				if (act->is_write()) {
-					if (rf != act && act != curr) {
+					if (rf != act) {
 						mo_graph->addEdge(act, rf);
 						added = true;
 					}
@@ -663,7 +663,6 @@ bool ModelChecker::r_modification_order(ModelAction *curr, const ModelAction *rf
 						added = true;
 					}
 				}
-
 				break;
 			}
 		}

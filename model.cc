@@ -500,11 +500,24 @@ bool ModelChecker::isfeasible() {
 /** @returns whether the current partial trace is feasible other than
  * multiple RMW reading from the same store. */
 bool ModelChecker::isfeasibleotherthanRMW() {
+	if (DBG_ENABLED()) {
+		if (mo_graph->checkForCycles())
+			DEBUG("Infeasible: modification order cycles\n");
+		if (failed_promise)
+			DEBUG("Infeasible: failed promise\n");
+		if (too_many_reads)
+			DEBUG("Infeasible: too many reads\n");
+		if (promises_expired())
+			DEBUG("Infeasible: promises expired\n");
+	}
 	return !mo_graph->checkForCycles() && !failed_promise && !too_many_reads && !promises_expired();
 }
 
 /** Returns whether the current completed trace is feasible. */
 bool ModelChecker::isfinalfeasible() {
+	if (DBG_ENABLED() && promises->size() != 0)
+		DEBUG("Infeasible: unrevolved promises\n");
+
 	return isfeasible() && promises->size() == 0;
 }
 

@@ -281,7 +281,7 @@ bool ModelChecker::process_read(ModelAction *curr, bool second_part_of_rmw)
 			bool r_status = false;
 
 			if (!second_part_of_rmw) {
-				check_recency(curr,false);
+				check_recency(curr);
 				r_status = r_modification_order(curr, reads_from);
 			}
 
@@ -531,7 +531,7 @@ ModelAction * ModelChecker::process_rmw(ModelAction *act) {
  *
  * If so, we decide that the execution is no longer feasible.
  */
-void ModelChecker::check_recency(ModelAction *curr, bool already_added) {
+void ModelChecker::check_recency(ModelAction *curr) {
 	if (params.maxreads != 0) {
 		if (curr->get_node()->get_read_from_size() <= 1)
 			return;
@@ -552,12 +552,10 @@ void ModelChecker::check_recency(ModelAction *curr, bool already_added) {
 
 		action_list_t::reverse_iterator rit = list->rbegin();
 		/* Skip past curr */
-		if (already_added) {
-			for (; (*rit) != curr; rit++)
-				;
-			/* go past curr now */
-			rit++;
-		}
+		for (; (*rit) != curr; rit++)
+			;
+		/* go past curr now */
+		rit++;
 
 		action_list_t::reverse_iterator ritcopy = rit;
 		//See if we have enough reads from the same value

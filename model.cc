@@ -335,39 +335,40 @@ bool ModelChecker::process_write(ModelAction *curr)
 
 ModelAction * ModelChecker::initialize_curr_action(ModelAction *curr)
 {
+	ModelAction *newcurr;
+
 	if (curr->is_rmwc() || curr->is_rmw()) {
-		ModelAction *tmp = process_rmw(curr);
+		newcurr = process_rmw(curr);
 		delete curr;
-		curr = tmp;
-		compute_promises(curr);
-	} else {
-		ModelAction *tmp = node_stack->explore_action(curr);
-		if (tmp) {
-			/* Discard duplicate ModelAction; use action from NodeStack */
-			/* First restore type and order in case of RMW operation */
-			if (curr->is_rmwr())
-				tmp->copy_typeandorder(curr);
-
-			/* If we have diverged, we need to reset the clock vector. */
-			if (diverge == NULL)
-				tmp->create_cv(get_parent_action(tmp->get_tid()));
-
-			delete curr;
-			curr = tmp;
-		} else {
-			/*
-			 * Perform one-time actions when pushing new ModelAction onto
-			 * NodeStack
-			 */
-			curr->create_cv(get_parent_action(curr->get_tid()));
-			/* Build may_read_from set */
-			if (curr->is_read())
-				build_reads_from_past(curr);
-			if (curr->is_write())
-				compute_promises(curr);
-		}
+		compute_promises(newcurr);
+		return newcurr;
 	}
-	return curr;
+
+	newcurr = node_stack->explore_action(curr);
+	if (newcurr) {
+		/* First restore type and order in case of RMW operation */
+		if (curr->is_rmwr())
+			newcurr->copy_typeandorder(curr);
+
+		/* Discard duplicate ModelAction; use action from NodeStack */
+		delete curr;
+
+		/* If we have diverged, we need to reset the clock vector. */
+		if (diverge == NULL)
+			newcurr->create_cv(get_parent_action(newcurr->get_tid()));
+	} else {
+		newcurr = curr;
+		/*
+		 * Perform one-time actions when pushing new ModelAction onto
+		 * NodeStack
+		 */
+		curr->create_cv(get_parent_action(curr->get_tid()));
+		if (curr->is_read())
+			build_reads_from_past(curr);
+		if (curr->is_write())
+			compute_promises(curr);
+	}
+	return newcurr;
 }
 
 /**

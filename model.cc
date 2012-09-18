@@ -333,24 +333,8 @@ bool ModelChecker::process_write(ModelAction *curr)
 	return updated_mod_order || updated_promises;
 }
 
-/**
- * This is the heart of the model checker routine. It performs model-checking
- * actions corresponding to a given "current action." Among other processes, it
- * calculates reads-from relationships, updates synchronization clock vectors,
- * forms a memory_order constraints graph, and handles replay/backtrack
- * execution when running permutations of previously-observed executions.
- *
- * @param curr The current action to process
- * @return The next Thread that must be executed. May be NULL if ModelChecker
- * makes no choice (e.g., according to replay execution, combining RMW actions,
- * etc.)
- */
-Thread * ModelChecker::check_current_action(ModelAction *curr)
+ModelAction * ModelChecker::initialize_curr_action(ModelAction *curr)
 {
-	ASSERT(curr);
-
-	bool second_part_of_rmw = curr->is_rmwc() || curr->is_rmw();
-
 	if (curr->is_rmwc() || curr->is_rmw()) {
 		ModelAction *tmp = process_rmw(curr);
 		delete curr;
@@ -383,6 +367,28 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 				compute_promises(curr);
 		}
 	}
+	return curr;
+}
+
+/**
+ * This is the heart of the model checker routine. It performs model-checking
+ * actions corresponding to a given "current action." Among other processes, it
+ * calculates reads-from relationships, updates synchronization clock vectors,
+ * forms a memory_order constraints graph, and handles replay/backtrack
+ * execution when running permutations of previously-observed executions.
+ *
+ * @param curr The current action to process
+ * @return The next Thread that must be executed. May be NULL if ModelChecker
+ * makes no choice (e.g., according to replay execution, combining RMW actions,
+ * etc.)
+ */
+Thread * ModelChecker::check_current_action(ModelAction *curr)
+{
+	ASSERT(curr);
+
+	bool second_part_of_rmw = curr->is_rmwc() || curr->is_rmw();
+
+	curr = initialize_curr_action(curr);
 
 	/* Thread specific actions */
 	switch (curr->get_type()) {

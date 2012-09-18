@@ -281,7 +281,7 @@ bool ModelChecker::process_read(ModelAction *curr, bool second_part_of_rmw)
 			bool r_status = false;
 
 			if (!second_part_of_rmw) {
-				check_recency(curr,false);
+				check_recency(curr);
 				r_status = r_modification_order(curr, reads_from);
 			}
 
@@ -420,6 +420,10 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 		break;
 	}
 
+	/* Add current action to lists before work_queue loop */
+	if (!second_part_of_rmw)
+		add_action_to_lists(curr);
+
 	work_queue_t work_queue(1, CheckCurrWorkEntry(curr));
 
 	while (!work_queue.empty()) {
@@ -450,10 +454,6 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 			break;
 		}
 	}
-
-	/* Add action to list.  */
-	if (!second_part_of_rmw)
-		add_action_to_lists(curr);
 
 	check_curr_backtracking(curr);
 
@@ -544,7 +544,7 @@ ModelAction * ModelChecker::process_rmw(ModelAction *act) {
  *
  * If so, we decide that the execution is no longer feasible.
  */
-void ModelChecker::check_recency(ModelAction *curr, bool already_added) {
+void ModelChecker::check_recency(ModelAction *curr) {
 	if (params.maxreads != 0) {
 		if (curr->get_node()->get_read_from_size() <= 1)
 			return;
@@ -565,12 +565,10 @@ void ModelChecker::check_recency(ModelAction *curr, bool already_added) {
 
 		action_list_t::reverse_iterator rit = list->rbegin();
 		/* Skip past curr */
-		if (already_added) {
-			for (; (*rit) != curr; rit++)
-				;
-			/* go past curr now */
-			rit++;
-		}
+		for (; (*rit) != curr; rit++)
+			;
+		/* go past curr now */
+		rit++;
 
 		action_list_t::reverse_iterator ritcopy = rit;
 		//See if we have enough reads from the same value
@@ -661,10 +659,13 @@ bool ModelChecker::r_modification_order(ModelAction *curr, const ModelAction *rf
 		for (rit = list->rbegin(); rit != list->rend(); rit++) {
 			ModelAction *act = *rit;
 
-			/* Include at most one act per-thread that "happens before" curr */
-			if (act->happens_before(curr)) {
+			/*
+			 * Include at most one act per-thread that "happens
+			 * before" curr. Don't consider reflexively.
+			 */
+			if (act->happens_before(curr) && act != curr) {
 				if (act->is_write()) {
-					if (rf != act && act != curr) {
+					if (rf != act) {
 						mo_graph->addEdge(act, rf);
 						added = true;
 					}
@@ -675,7 +676,6 @@ bool ModelChecker::r_modification_order(ModelAction *curr, const ModelAction *rf
 						added = true;
 					}
 				}
-
 				break;
 			}
 		}
@@ -768,7 +768,7 @@ bool ModelChecker::w_modification_order(ModelAction *curr)
 	if (curr->is_seqcst()) {
 		/* We have to at least see the last sequentially consistent write,
 			 so we are initialized. */
-		ModelAction *last_seq_cst = get_last_seq_cst(curr->get_location());
+		ModelAction *last_seq_cst = get_last_seq_cst(curr);
 		if (last_seq_cst != NULL) {
 			mo_graph->addEdge(last_seq_cst, curr);
 			added = true;
@@ -782,8 +782,23 @@ bool ModelChecker::w_modification_order(ModelAction *curr)
 		action_list_t::reverse_iterator rit;
 		for (rit = list->rbegin(); rit != list->rend(); rit++) {
 			ModelAction *act = *rit;
+			if (act == curr) {
+				/*
+				 * If RMW, we already have all relevant edges,
+				 * so just skip to next thread.
+				 * If normal write, we need to look at earlier
+				 * actions, so continue processing list.
+				 */
+				if (curr->is_rmw())
+					break;
+				else
+					continue;
+			}
 
-			/* Include at most one act per-thread that "happens before" curr */
+			/*
+			 * Include at most one act per-thread that "happens
+			 * before" curr
+			 */
 			if (act->happens_before(curr)) {
 				/*
 				 * Note: if act is RMW, just add edge:
@@ -791,11 +806,9 @@ bool ModelChecker::w_modification_order(ModelAction *curr)
 				 * The following edge should be handled elsewhere:
 				 *   readfrom(act) --mo--> act
 				 */
-				if (act->is_write()) {
-					//RMW shouldn't have an edge to themselves
-					if (act!=curr)
-						mo_graph->addEdge(act, curr);
-				} else if (act->is_read() && act->get_reads_from() != NULL)
+				if (act->is_write())
+					mo_graph->addEdge(act, curr);
+				else if (act->is_read() && act->get_reads_from() != NULL)
 					mo_graph->addEdge(act->get_reads_from(), curr);
 				added = true;
 				break;
@@ -1085,18 +1098,21 @@ ModelAction * ModelChecker::get_last_action(thread_id_t tid)
 }
 
 /**
- * Gets the last memory_order_seq_cst action (in the total global sequence)
- * performed on a particular object (i.e., memory location).
- * @param location The object location to check
- * @return The last seq_cst action performed
+ * Gets the last memory_order_seq_cst write (in the total global sequence)
+ * performed on a particular object (i.e., memory location), not including the
+ * current action.
+ * @param curr The current ModelAction; also denotes the object location to
+ * check
+ * @return The last seq_cst write
  */
-ModelAction * ModelChecker::get_last_seq_cst(const void *location)
+ModelAction * ModelChecker::get_last_seq_cst(ModelAction *curr)
 {
+	void *location = curr->get_location();
 	action_list_t *list = obj_map->get_safe_ptr(location);
 	/* Find: max({i in dom(S) | seq_cst(t_i) && isWrite(t_i) && samevar(t_i, t)}) */
 	action_list_t::reverse_iterator rit;
 	for (rit = list->rbegin(); rit != list->rend(); rit++)
-		if ((*rit)->is_write() && (*rit)->is_seqcst())
+		if ((*rit)->is_write() && (*rit)->is_seqcst() && (*rit) != curr)
 			return *rit;
 	return NULL;
 }
@@ -1210,7 +1226,7 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 	bool initialized = false;
 
 	if (curr->is_seqcst()) {
-		last_seq_cst = get_last_seq_cst(curr->get_location());
+		last_seq_cst = get_last_seq_cst(curr);
 		/* We have to at least see the last sequentially consistent write,
 			 so we are initialized. */
 		if (last_seq_cst != NULL)

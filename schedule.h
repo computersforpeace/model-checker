@@ -23,11 +23,15 @@ public:
 	Thread * next_thread(Thread *t);
 	Thread * get_current_thread() const;
 	void print() const;
+	bool * get_enabled() { return is_enabled; };
 
 	SNAPSHOTALLOC
 private:
 	/** The list of available Threads that are not currently running */
-	std::list<Thread *> readyList;
+	bool * is_enabled;
+	int enabled_len;
+	int curr_thread_index;
+	void set_enabled(Thread *t, bool enabled_status);
 
 	/** The currently-running Thread */
 	Thread *current;

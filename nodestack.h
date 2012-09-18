@@ -120,7 +120,7 @@ class NodeStack {
 public:
 	NodeStack();
 	~NodeStack();
-	ModelAction * explore_action(ModelAction *act, bool * enabled);
+	ModelAction * explore_action(ModelAction *act, bool * is_enabled);
 	Node * get_head();
 	Node * get_next();
 	void reset_execution();

@@ -33,7 +33,6 @@ ModelChecker::ModelChecker(struct model_params params) :
 	lazy_sync_with_release(new HashTable<void *, std::list<ModelAction *>, uintptr_t, 4>()),
 	thrd_last_action(new std::vector<ModelAction *>(1)),
 	node_stack(new NodeStack()),
-	is_enabled(NULL),
 	mo_graph(new CycleGraph()),
 	failed_promise(false),
 	too_many_reads(false),
@@ -53,8 +52,6 @@ ModelChecker::~ModelChecker()
 	for (int i = 0; i < get_num_threads(); i++)
 		delete thread_map->get(i);
 	delete thread_map;
-	if (is_enabled)
-		free(is_enabled);
 
 	delete obj_thrd_map;
 	delete obj_map;
@@ -89,13 +86,7 @@ void ModelChecker::reset_to_initial_state()
 /** @returns a thread ID for a new Thread */
 thread_id_t ModelChecker::get_next_id()
 {
-	thread_id_t newid=priv->next_thread_id++;
-	bool * tmp=(bool *) malloc((newid+1)*sizeof(bool));
-	memcpy(tmp, is_enabled, newid*sizeof(bool));
-	tmp[newid]=true;
-	free(is_enabled);
-	is_enabled=tmp;
-	return newid;
+	return priv->next_thread_id++;
 }
 
 /** @returns the number of user threads created during this execution */
@@ -379,17 +370,17 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 		curr = tmp;
 		compute_promises(curr);
 	} else {
-		ModelAction *tmp = node_stack->explore_action(curr, NULL);
+		ModelAction *tmp = node_stack->explore_action(curr, scheduler->get_enabled());
 		if (tmp) {
 			/* Discard duplicate ModelAction; use action from NodeStack */
 			/* First restore type and order in case of RMW operation */
 			if (curr->is_rmwr())
 				tmp->copy_typeandorder(curr);
-
+			
 			/* If we have diverged, we need to reset the clock vector. */
 			if (diverge == NULL)
 				tmp->create_cv(get_parent_action(tmp->get_tid()));
-
+			
 			delete curr;
 			curr = tmp;
 		} else {
@@ -1342,25 +1333,23 @@ int ModelChecker::switch_to_master(ModelAction *act)
  * @return Returns true (success) if a step was taken and false otherwise.
  */
 bool ModelChecker::take_step() {
-	Thread *curr, *next;
-
 	if (has_asserted())
 		return false;
 
-	curr = thread_current();
+	Thread * curr = thread_current();
 	if (curr) {
 		if (curr->get_state() == THREAD_READY) {
 			ASSERT(priv->current_action);
 
 			priv->nextThread = check_current_action(priv->current_action);
 			priv->current_action = NULL;
-			if (!curr->is_blocked() && !curr->is_complete())
-				scheduler->add_thread(curr);
+			if (curr->is_blocked() || curr->is_complete())
+				scheduler->remove_thread(curr);
 		} else {
 			ASSERT(false);
 		}
 	}
-	next = scheduler->next_thread(priv->nextThread);
+	Thread * next = scheduler->next_thread(priv->nextThread);
 
 	/* Infeasible -> don't take any more steps */
 	if (!isfeasible())

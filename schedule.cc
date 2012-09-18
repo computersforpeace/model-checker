@@ -5,8 +5,24 @@
 
 /** Constructor */
 Scheduler::Scheduler() :
+	is_enabled(NULL),
+	enabled_len(0),
+	curr_thread_index(0),
 	current(NULL)
 {
+}
+
+void Scheduler::set_enabled(Thread *t, bool enabled_status) {
+	int threadid=id_to_int(t->get_id());
+	if (threadid>=enabled_len) {
+		bool * new_enabled=(bool *)malloc(sizeof(bool)*(threadid+1));
+		memcpy(new_enabled, is_enabled, enabled_len*sizeof(bool));
+		memset(&new_enabled[enabled_len], 0, (threadid+1-enabled_len)*sizeof(bool));
+		free(is_enabled);
+		is_enabled=new_enabled;
+		enabled_len=threadid+1;
+	}
+	is_enabled[threadid]=enabled_status;
 }
 
 /**
@@ -16,7 +32,7 @@ Scheduler::Scheduler() :
 void Scheduler::add_thread(Thread *t)
 {
 	DEBUG("thread %d\n", t->get_id());
-	readyList.push_back(t);
+	set_enabled(t, true);
 }
 
 /**
@@ -27,8 +43,7 @@ void Scheduler::remove_thread(Thread *t)
 {
 	if (current == t)
 		current = NULL;
-	else
-		readyList.remove(t);
+	set_enabled(t, false);
 }
 
 /**
@@ -38,7 +53,7 @@ void Scheduler::remove_thread(Thread *t)
  */
 void Scheduler::sleep(Thread *t)
 {
-	remove_thread(t);
+	set_enabled(t, false);
 	t->set_state(THREAD_BLOCKED);
 }
 
@@ -48,7 +63,7 @@ void Scheduler::sleep(Thread *t)
  */
 void Scheduler::wake(Thread *t)
 {
-	add_thread(t);
+	set_enabled(t, true);
 	t->set_state(THREAD_READY);
 }
 
@@ -62,19 +77,22 @@ void Scheduler::wake(Thread *t)
  */
 Thread * Scheduler::next_thread(Thread *t)
 {
-	if (t != NULL) {
-		current = t;
-		readyList.remove(t);
-	} else if (readyList.empty()) {
-		t = NULL;
-	} else {
-		t = readyList.front();
-		current = t;
-		readyList.pop_front();
+	if ( t == NULL ) {
+		int old_curr_thread = curr_thread_index;
+		while(true) {
+			curr_thread_index = (curr_thread_index+1) % enabled_len;
+			if (is_enabled[curr_thread_index]) {
+				t = model->get_thread(int_to_id(curr_thread_index));
+				break;
+			}
+			if (curr_thread_index == old_curr_thread) {
+				print();
+				return NULL;
+			}
+		}
 	}
-
+	current = t;
 	print();
-
 	return t;
 }
 
@@ -96,9 +114,4 @@ void Scheduler::print() const
 		DEBUG("Current thread: %d\n", current->get_id());
 	else
 		DEBUG("No current thread\n");
-	DEBUG("Num. threads in ready list: %zu\n", readyList.size());
-
-	std::list<Thread *, MyAlloc< Thread * > >::const_iterator it;
-	for (it = readyList.begin(); it != readyList.end(); it++)
-		DEBUG("In ready list: thread %d\n", (*it)->get_id());
 }

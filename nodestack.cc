@@ -332,7 +332,7 @@ void NodeStack::print()
 	printf("............................................\n");
 }
 
-ModelAction * NodeStack::explore_action(ModelAction *act, bool * enabled)
+ModelAction * NodeStack::explore_action(ModelAction *act, bool * is_enabled)
 {
 	DBG();
 
@@ -347,7 +347,7 @@ ModelAction * NodeStack::explore_action(ModelAction *act, bool * enabled)
 
 	/* Record action */
 	get_head()->explore_child(act);
-	node_list.push_back(new Node(act, get_head(), model->get_num_threads(), enabled));
+	node_list.push_back(new Node(act, get_head(), model->get_num_threads()));
 	total_nodes++;
 	iter++;
 	return NULL;

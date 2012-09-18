@@ -177,8 +177,6 @@ private:
 	 * together for efficiency and maintainability. */
 	struct model_snapshot_members *priv;
 
-	bool * is_enabled;
-
 	/**
 	 * @brief The modification order graph
 	 *

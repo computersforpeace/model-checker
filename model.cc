@@ -33,6 +33,7 @@ ModelChecker::ModelChecker(struct model_params params) :
 	lazy_sync_with_release(new HashTable<void *, std::list<ModelAction *>, uintptr_t, 4>()),
 	thrd_last_action(new std::vector<ModelAction *>(1)),
 	node_stack(new NodeStack()),
+	is_enabled(NULL),
 	mo_graph(new CycleGraph()),
 	failed_promise(false),
 	too_many_reads(false),
@@ -52,6 +53,8 @@ ModelChecker::~ModelChecker()
 	for (int i = 0; i < get_num_threads(); i++)
 		delete thread_map->get(i);
 	delete thread_map;
+	if (is_enabled)
+		free(is_enabled);
 
 	delete obj_thrd_map;
 	delete obj_map;
@@ -86,7 +89,13 @@ void ModelChecker::reset_to_initial_state()
 /** @returns a thread ID for a new Thread */
 thread_id_t ModelChecker::get_next_id()
 {
-	return priv->next_thread_id++;
+	thread_id_t newid=priv->next_thread_id++;
+	bool * tmp=(bool *) malloc((newid+1)*sizeof(bool));
+	memcpy(tmp, is_enabled, newid*sizeof(bool));
+	tmp[newid]=true;
+	free(is_enabled);
+	is_enabled=tmp;
+	return newid;
 }
 
 /** @returns the number of user threads created during this execution */
@@ -197,21 +206,33 @@ ModelAction * ModelChecker::get_last_conflict(ModelAction *act)
 {
 	action_type type = act->get_type();
 
-	switch (type) {
-		case ATOMIC_READ:
-		case ATOMIC_WRITE:
-		case ATOMIC_RMW:
-			break;
-		default:
-			return NULL;
-	}
-	/* linear search: from most recent to oldest */
-	action_list_t *list = obj_map->get_safe_ptr(act->get_location());
-	action_list_t::reverse_iterator rit;
-	for (rit = list->rbegin(); rit != list->rend(); rit++) {
-		ModelAction *prev = *rit;
-		if (act->is_synchronizing(prev))
-			return prev;
+	if (type==ATOMIC_READ||type==ATOMIC_WRITE||type==ATOMIC_RMW) {
+		/* linear search: from most recent to oldest */
+		action_list_t *list = obj_map->get_safe_ptr(act->get_location());
+		action_list_t::reverse_iterator rit;
+		for (rit = list->rbegin(); rit != list->rend(); rit++) {
+			ModelAction *prev = *rit;
+			if (act->is_synchronizing(prev))
+				return prev;
+		}
+	} else if (type==ATOMIC_LOCK||type==ATOMIC_TRYLOCK) {
+		/* linear search: from most recent to oldest */
+		action_list_t *list = obj_map->get_safe_ptr(act->get_location());
+		action_list_t::reverse_iterator rit;
+		for (rit = list->rbegin(); rit != list->rend(); rit++) {
+			ModelAction *prev = *rit;
+			if (prev->is_success_lock())
+				return prev;
+		}
+	} else if (type==ATOMIC_UNLOCK) {
+		/* linear search: from most recent to oldest */
+		action_list_t *list = obj_map->get_safe_ptr(act->get_location());
+		action_list_t::reverse_iterator rit;
+		for (rit = list->rbegin(); rit != list->rend(); rit++) {
+			ModelAction *prev = *rit;
+			if (prev->is_failed_trylock())
+				return prev;
+		}
 	}
 	return NULL;
 }

@@ -27,6 +27,14 @@ ModelAction::~ModelAction()
 		delete cv;
 }
 
+bool ModelAction::is_success_lock() const {
+	return type == ATOMIC_LOCK || (type == ATOMIC_TRYLOCK && value == VALUE_TRYSUCCESS);
+}
+
+bool ModelAction::is_failed_trylock() const {
+	return (type == ATOMIC_TRYLOCK && value == VALUE_TRYFAILED);
+}
+
 bool ModelAction::is_read() const
 {
 	return type == ATOMIC_READ || type == ATOMIC_RMWR || type == ATOMIC_RMW;

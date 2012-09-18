@@ -24,6 +24,8 @@ using std::memory_order_seq_cst;
 		hence by iteself does not indicate no value. */
 
 #define VALUE_NONE 1234567890
+#define VALUE_TRYSUCCESS 1
+#define VALUE_TRYFAILED 0
 
 /** @brief Represents an action type, identifying one of several types of
  * ModelAction */
@@ -70,6 +72,8 @@ public:
 	Node * get_node() const { return node; }
 	void set_node(Node *n) { node = n; }
 
+	bool is_success_lock() const;
+	bool is_failed_trylock() const;
 	bool is_read() const;
 	bool is_write() const;
 	bool is_rmwr() const;

@@ -44,7 +44,7 @@ struct future_value {
  */
 class Node {
 public:
-	Node(ModelAction *act = NULL, Node *par = NULL, int nthreads = 1);
+	Node(ModelAction *act = NULL, Node *par = NULL, int nthreads = 1, bool *enabled_array = NULL);
 	~Node();
 	/* return true = thread choice has already been explored */
 	bool has_been_explored(thread_id_t tid);
@@ -93,6 +93,7 @@ private:
 	std::vector< bool, MyAlloc<bool> > explored_children;
 	std::vector< bool, MyAlloc<bool> > backtrack;
 	int numBacktracks;
+	bool *enabled_array;
 
 	/** The set of ModelActions that this the action at this Node may read
 	 *  from. Only meaningful if this Node represents a 'read' action. */
@@ -119,7 +120,7 @@ class NodeStack {
 public:
 	NodeStack();
 	~NodeStack();
-	ModelAction * explore_action(ModelAction *act);
+	ModelAction * explore_action(ModelAction *act, bool * enabled);
 	Node * get_head();
 	Node * get_next();
 	void reset_execution();

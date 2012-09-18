@@ -333,6 +333,17 @@ bool ModelChecker::process_write(ModelAction *curr)
 	return updated_mod_order || updated_promises;
 }
 
+/**
+ * Initialize the current action by performing one or more of the following
+ * actions, as appropriate: merging RMWR and RMWC/RMW actions, stepping forward
+ * in the NodeStack, manipulating backtracking sets, allocating and
+ * initializing clock vectors, and computing the promises to fulfill.
+ *
+ * @param curr The current action, as passed from the user context; may be
+ * freed/invalidated after the execution of this function
+ * @return The current action, as processed by the ModelChecker. Is only the
+ * same as the parameter @a curr if this is a newly-explored action.
+ */
 ModelAction * ModelChecker::initialize_curr_action(ModelAction *curr)
 {
 	ModelAction *newcurr;

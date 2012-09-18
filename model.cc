@@ -758,7 +758,7 @@ bool ModelChecker::w_modification_order(ModelAction *curr)
 	if (curr->is_seqcst()) {
 		/* We have to at least see the last sequentially consistent write,
 			 so we are initialized. */
-		ModelAction *last_seq_cst = get_last_seq_cst(curr->get_location());
+		ModelAction *last_seq_cst = get_last_seq_cst(curr);
 		if (last_seq_cst != NULL) {
 			mo_graph->addEdge(last_seq_cst, curr);
 			added = true;
@@ -1079,18 +1079,21 @@ ModelAction * ModelChecker::get_last_action(thread_id_t tid)
 }
 
 /**
- * Gets the last memory_order_seq_cst action (in the total global sequence)
- * performed on a particular object (i.e., memory location).
- * @param location The object location to check
- * @return The last seq_cst action performed
+ * Gets the last memory_order_seq_cst write (in the total global sequence)
+ * performed on a particular object (i.e., memory location), not including the
+ * current action.
+ * @param curr The current ModelAction; also denotes the object location to
+ * check
+ * @return The last seq_cst write
  */
-ModelAction * ModelChecker::get_last_seq_cst(const void *location)
+ModelAction * ModelChecker::get_last_seq_cst(ModelAction *curr)
 {
+	void *location = curr->get_location();
 	action_list_t *list = obj_map->get_safe_ptr(location);
 	/* Find: max({i in dom(S) | seq_cst(t_i) && isWrite(t_i) && samevar(t_i, t)}) */
 	action_list_t::reverse_iterator rit;
 	for (rit = list->rbegin(); rit != list->rend(); rit++)
-		if ((*rit)->is_write() && (*rit)->is_seqcst())
+		if ((*rit)->is_write() && (*rit)->is_seqcst() && (*rit) != curr)
 			return *rit;
 	return NULL;
 }
@@ -1204,7 +1207,7 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 	bool initialized = false;
 
 	if (curr->is_seqcst()) {
-		last_seq_cst = get_last_seq_cst(curr->get_location());
+		last_seq_cst = get_last_seq_cst(curr);
 		/* We have to at least see the last sequentially consistent write,
 			 so we are initialized. */
 		if (last_seq_cst != NULL)

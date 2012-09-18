@@ -400,6 +400,10 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 
 	ModelAction *newcurr = initialize_curr_action(curr);
 
+	/* Add the action to lists before any other model-checking tasks */
+	if (!second_part_of_rmw)
+		add_action_to_lists(newcurr);
+
 	/* Build may_read_from set for newly-created actions */
 	if (curr == newcurr && curr->is_read())
 		build_reads_from_past(curr);
@@ -439,10 +443,6 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 	default:
 		break;
 	}
-
-	/* Add current action to lists before work_queue loop */
-	if (!second_part_of_rmw)
-		add_action_to_lists(curr);
 
 	work_queue_t work_queue(1, CheckCurrWorkEntry(curr));
 

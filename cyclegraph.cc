@@ -41,6 +41,7 @@ CycleNode * CycleGraph::getNode(const ModelAction *action) {
 void CycleGraph::addEdge(const ModelAction *from, const ModelAction *to) {
 	ASSERT(from);
 	ASSERT(to);
+	ASSERT(from != to);
 
 	CycleNode *fromnode=getNode(from);
 	CycleNode *tonode=getNode(to);
@@ -82,6 +83,7 @@ void CycleGraph::addEdge(const ModelAction *from, const ModelAction *to) {
 void CycleGraph::addRMWEdge(const ModelAction *from, const ModelAction *rmw) {
 	ASSERT(from);
 	ASSERT(rmw);
+	ASSERT(from != rmw);
 
 	CycleNode *fromnode=getNode(from);
 	CycleNode *rmwnode=getNode(rmw);

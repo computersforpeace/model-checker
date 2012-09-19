@@ -931,8 +931,7 @@ bool ModelChecker::thin_air_constraint_may_allow(const ModelAction * writer, con
  * @return true, if the ModelChecker is certain that release_heads is complete;
  * false otherwise
  */
-bool ModelChecker::release_seq_head(const ModelAction *rf,
-                std::vector< const ModelAction *, MyAlloc<const ModelAction *> > *release_heads) const
+bool ModelChecker::release_seq_head(const ModelAction *rf, rel_heads_list_t *release_heads) const
 {
 	if (!rf) {
 		/* read from future: need to settle this later */
@@ -1037,8 +1036,7 @@ bool ModelChecker::release_seq_head(const ModelAction *rf,
  * with the head(s) of the release sequence(s), if they exists with certainty.
  * @see ModelChecker::release_seq_head
  */
-void ModelChecker::get_release_seq_heads(ModelAction *act,
-                std::vector< const ModelAction *, MyAlloc<const ModelAction *> > *release_heads)
+void ModelChecker::get_release_seq_heads(ModelAction *act, rel_heads_list_t *release_heads)
 {
 	const ModelAction *rf = act->get_reads_from();
 	bool complete;
@@ -1077,7 +1075,7 @@ bool ModelChecker::resolve_release_sequences(void *location, work_queue_t *work_
 	while (it != list->end()) {
 		ModelAction *act = *it;
 		const ModelAction *rf = act->get_reads_from();
-		std::vector< const ModelAction *, MyAlloc<const ModelAction *> > release_heads;
+		rel_heads_list_t release_heads;
 		bool complete;
 		complete = release_seq_head(rf, &release_heads);
 		for (unsigned int i = 0; i < release_heads.size(); i++) {

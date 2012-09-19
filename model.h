@@ -24,6 +24,9 @@ class NodeStack;
 class CycleGraph;
 class Promise;
 
+/** @brief Shorthand for a list of release sequence heads */
+typedef std::vector< const ModelAction *, MyAlloc<const ModelAction *> > rel_heads_list_t;
+
 /**
  * Model checker parameter structure. Holds run-time configuration options for
  * the model checker.
@@ -85,8 +88,7 @@ public:
 	bool isfeasibleotherthanRMW();
 	bool isfinalfeasible();
 	void check_promises(ClockVector *old_cv, ClockVector * merge_cv);
-	void get_release_seq_heads(ModelAction *act,
-	                std::vector< const ModelAction *, MyAlloc<const ModelAction *> > *release_heads);
+	void get_release_seq_heads(ModelAction *act, rel_heads_list_t *release_heads);
 	void finish_execution();
 	bool isfeasibleprefix();
 	void set_assert() {asserted=true;}
@@ -136,8 +138,7 @@ private:
 	void post_r_modification_order(ModelAction *curr, const ModelAction *rf);
 	bool r_modification_order(ModelAction *curr, const ModelAction *rf);
 	bool w_modification_order(ModelAction *curr);
-	bool release_seq_head(const ModelAction *rf,
-	                std::vector< const ModelAction *, MyAlloc<const ModelAction *> > *release_heads) const;
+	bool release_seq_head(const ModelAction *rf, rel_heads_list_t *release_heads) const;
 	bool resolve_release_sequences(void *location, work_queue_t *work_queue);
 	void do_complete_join(ModelAction *join);
 

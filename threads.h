@@ -84,6 +84,8 @@ public:
 	 */
 	void push_wait_list(ModelAction *act) { wait_list.push_back(act); }
 
+	ModelAction * get_pending() { return pending; }
+	void set_pending(ModelAction *act) { pending = act; }
 	/**
 	 * Remove one ModelAction from the waiting list
 	 * @return The ModelAction that was removed from the waiting list
@@ -102,6 +104,7 @@ private:
 	Thread *parent;
 	ModelAction *creation;
 
+	ModelAction *pending;
 	void (*start_routine)(void *);
 	void *arg;
 	ucontext_t context;

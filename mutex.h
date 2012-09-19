@@ -3,6 +3,10 @@
 #include "threads.h"
 
 namespace std {
+	struct mutex_state {
+		bool islocked;
+	};
+
 	class mutex {
 	public:
 		mutex();
@@ -10,9 +14,10 @@ namespace std {
 		void lock();
 		bool try_lock();
 		void unlock();
+		struct mutex_state * get_state() {return &state;}
+		
 	private:
-		thread_id_t owner;
-		bool islocked;
+		struct mutex_state state;
 	};
 }
 #endif

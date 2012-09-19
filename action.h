@@ -72,6 +72,11 @@ public:
 	Node * get_node() const { return node; }
 	void set_node(Node *n) { node = n; }
 
+	void set_try_lock(bool obtainedlock);
+	bool is_mutex_op() const;
+	bool is_lock() const;
+	bool is_trylock() const;
+	bool is_unlock() const;
 	bool is_success_lock() const;
 	bool is_failed_trylock() const;
 	bool is_read() const;

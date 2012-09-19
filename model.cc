@@ -11,6 +11,7 @@
 #include "cyclegraph.h"
 #include "promise.h"
 #include "datarace.h"
+#include "mutex.h"
 
 #define INITIAL_THREAD_ID	0
 
@@ -27,6 +28,7 @@ ModelChecker::ModelChecker(struct model_params params) :
 	action_trace(new action_list_t()),
 	thread_map(new HashTable<int, Thread *, int>()),
 	obj_map(new HashTable<const void *, action_list_t, uintptr_t, 4>()),
+	lock_waiters_map(new HashTable<const void *, action_list_t, uintptr_t, 4>()),
 	obj_thrd_map(new HashTable<void *, std::vector<action_list_t>, uintptr_t, 4 >()),
 	promises(new std::vector<Promise *>()),
 	futurevalues(new std::vector<struct PendingFutureValue>()),
@@ -55,6 +57,7 @@ ModelChecker::~ModelChecker()
 
 	delete obj_thrd_map;
 	delete obj_map;
+	delete lock_waiters_map;
 	delete action_trace;
 
 	for (unsigned int i = 0; i < promises->size(); i++)
@@ -118,12 +121,14 @@ Thread * ModelChecker::get_next_thread(ModelAction *curr)
 {
 	thread_id_t tid;
 
-	/* Do not split atomic actions. */
-	if (curr->is_rmwr())
-		return thread_current();
-	/* The THREAD_CREATE action points to the created Thread */
-	else if (curr->get_type() == THREAD_CREATE)
-		return (Thread *)curr->get_location();
+	if (curr!=NULL) {
+		/* Do not split atomic actions. */
+		if (curr->is_rmwr())
+			return thread_current();
+		/* The THREAD_CREATE action points to the created Thread */
+		else if (curr->get_type() == THREAD_CREATE)
+			return (Thread *)curr->get_location();
+	}
 
 	/* Have we completed exploring the preselected path? */
 	if (diverge == NULL)
@@ -320,6 +325,42 @@ bool ModelChecker::process_read(ModelAction *curr, bool second_part_of_rmw)
 	}
 }
 
+void ModelChecker::process_mutex(ModelAction *curr) {
+	std::mutex * mutex=(std::mutex *) curr->get_location();
+	struct std::mutex_state * state=mutex->get_state();
+	switch(curr->get_type()) {
+	case ATOMIC_TRYLOCK: {
+		bool success=!state->islocked;
+		curr->set_try_lock(success);
+		if (!success)
+			break;
+	}
+		//otherwise fall into the lock case
+	case ATOMIC_LOCK: {
+		state->islocked=true;
+		ModelAction *unlock=get_last_unlock(curr);
+		//synchronize with the previous unlock statement
+		curr->synchronize_with(unlock);
+		break;
+	}
+	case ATOMIC_UNLOCK: {
+		//unlock the lock
+		state->islocked=false;
+		//wake up the other threads
+		action_list_t * waiters = lock_waiters_map->get_safe_ptr(curr->get_location());
+		//activate all the waiting threads
+		for(action_list_t::iterator rit = waiters->begin(); rit!=waiters->end(); rit++) {
+			add_thread(get_thread((*rit)->get_tid()));
+		}
+		waiters->clear();
+		break;
+	}
+	default:
+		ASSERT(0);
+	}
+}
+
+
 /**
  * Process a write ModelAction
  * @param curr The ModelAction to process
@@ -393,6 +434,20 @@ ModelAction * ModelChecker::initialize_curr_action(ModelAction *curr)
 	return newcurr;
 }
 
+bool ModelChecker::check_action_enabled(ModelAction *curr) {
+	if (curr->is_lock()) {
+		std::mutex * lock=(std::mutex *) curr->get_location();
+		struct std::mutex_state * state = lock->get_state();
+		if (state->islocked) {
+			//Stick the action in the appropriate waiting queue
+			lock_waiters_map->get_safe_ptr(curr->get_location())->push_back(curr);
+			return false;
+		}
+	}
+
+	return true;
+}
+
 /**
  * This is the heart of the model checker routine. It performs model-checking
  * actions corresponding to a given "current action." Among other processes, it
@@ -410,6 +465,14 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 	ASSERT(curr);
 
 	bool second_part_of_rmw = curr->is_rmwc() || curr->is_rmw();
+
+	if (!check_action_enabled(curr)) {
+		//we'll make the execution look like we chose to run this action
+		//much later...when a lock is actually available to relese
+		remove_thread(get_current_thread());
+		get_current_thread()->set_pending(curr);
+		return get_next_thread(NULL);
+	}
 
 	ModelAction *newcurr = initialize_curr_action(curr);
 
@@ -475,6 +538,9 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 
 			if (act->is_write() && process_write(act))
 				updated = true;
+
+			if (act->is_mutex_op()) 
+				process_mutex(act);
 
 			if (updated)
 				work_queue.push_back(CheckRelSeqWorkEntry(act->get_location()));
@@ -1181,6 +1247,18 @@ ModelAction * ModelChecker::get_last_seq_cst(ModelAction *curr)
 	return NULL;
 }
 
+ModelAction * ModelChecker::get_last_unlock(ModelAction *curr)
+{
+	void *location = curr->get_location();
+	action_list_t *list = obj_map->get_safe_ptr(location);
+	/* Find: max({i in dom(S) | seq_cst(t_i) && isWrite(t_i) && samevar(t_i, t)}) */
+	action_list_t::reverse_iterator rit;
+	for (rit = list->rbegin(); rit != list->rend(); rit++)
+		if ((*rit)->is_unlock())
+			return *rit;
+	return NULL;
+}
+
 ModelAction * ModelChecker::get_parent_action(thread_id_t tid)
 {
 	ModelAction *parent = get_last_action(tid);
@@ -1443,6 +1521,15 @@ bool ModelChecker::take_step() {
 	/* next == NULL -> don't take any more steps */
 	if (!next)
 		return false;
+
+	if ( next->get_pending() != NULL ) {
+		//restart a pending action
+		set_current_action(next->get_pending());
+		next->set_pending(NULL);
+		next->set_state(THREAD_READY);
+		return true;
+	}
+
 	/* Return false only if swap fails with an error */
 	return (Thread::swap(&system_context, next) == 0);
 }

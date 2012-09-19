@@ -3,10 +3,8 @@
 
 
 namespace std {
-mutex::mutex() :
-	owner(0), islocked(false)
-{
-
+mutex::mutex() {
+	state.islocked=false;
 }
 	
 void mutex::lock() {

@@ -117,6 +117,8 @@ private:
 	ModelAction * initialize_curr_action(ModelAction *curr);
 	bool process_read(ModelAction *curr, bool second_part_of_rmw);
 	bool process_write(ModelAction *curr);
+	void process_mutex(ModelAction *curr);
+	bool check_action_enabled(ModelAction *curr);
 
 	bool take_step();
 
@@ -133,6 +135,7 @@ private:
 	void add_action_to_lists(ModelAction *act);
 	ModelAction * get_last_action(thread_id_t tid);
 	ModelAction * get_last_seq_cst(ModelAction *curr);
+	ModelAction * get_last_unlock(ModelAction *curr);
 	void build_reads_from_past(ModelAction *curr);
 	ModelAction * process_rmw(ModelAction *curr);
 	void post_r_modification_order(ModelAction *curr, const ModelAction *rf);
@@ -151,6 +154,10 @@ private:
 	/** Per-object list of actions. Maps an object (i.e., memory location)
 	 * to a trace of all actions performed on the object. */
 	HashTable<const void *, action_list_t, uintptr_t, 4> *obj_map;
+
+	/** Per-object list of actions. Maps an object (i.e., memory location)
+	 * to a trace of all actions performed on the object. */
+	HashTable<const void *, action_list_t, uintptr_t, 4> *lock_waiters_map;
 
 	HashTable<void *, std::vector<action_list_t>, uintptr_t, 4 > *obj_thrd_map;
 	std::vector<Promise *> *promises;

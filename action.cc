@@ -27,6 +27,22 @@ ModelAction::~ModelAction()
 		delete cv;
 }
 
+bool ModelAction::is_mutex_op() const {
+	return type == ATOMIC_LOCK || type == ATOMIC_TRYLOCK || type == ATOMIC_UNLOCK;
+}
+
+bool ModelAction::is_lock() const {
+	return type == ATOMIC_LOCK;
+}
+
+bool ModelAction::is_unlock() const {
+	return type == ATOMIC_UNLOCK;
+}
+
+bool ModelAction::is_trylock() const {
+	return type == ATOMIC_TRYLOCK;
+}
+
 bool ModelAction::is_success_lock() const {
 	return type == ATOMIC_LOCK || (type == ATOMIC_TRYLOCK && value == VALUE_TRYSUCCESS);
 }
@@ -173,6 +189,13 @@ void ModelAction::create_cv(const ModelAction *parent)
 		cv = new ClockVector(parent->cv, this);
 	else
 		cv = new ClockVector(NULL, this);
+}
+
+void ModelAction::set_try_lock(bool obtainedlock) {
+	if (obtainedlock)
+		value=VALUE_TRYSUCCESS;
+	else
+		value=VALUE_TRYFAILED;
 }
 
 /** Update the model action's read_from action */

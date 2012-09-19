@@ -1079,10 +1079,11 @@ void ModelChecker::add_action_to_lists(ModelAction *act)
 
 ModelAction * ModelChecker::get_last_action(thread_id_t tid)
 {
-	int nthreads = get_num_threads();
-	if ((int)thrd_last_action->size() < nthreads)
-		thrd_last_action->resize(nthreads);
-	return (*thrd_last_action)[id_to_int(tid)];
+	int threadid=id_to_int(tid);
+	if (threadid<(int)thrd_last_action->size())
+		return (*thrd_last_action)[id_to_int(tid)];
+	else
+		return NULL;
 }
 
 /**

@@ -381,6 +381,8 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 			if (diverge == NULL)
 				tmp->create_cv(get_parent_action(tmp->get_tid()));
 			
+			ASSERT(curr->get_location()==tmp->get_location());
+
 			delete curr;
 			curr = tmp;
 		} else {

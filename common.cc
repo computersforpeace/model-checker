@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #include "common.h"
+#include "model.h"
 
 #define MAX_TRACE_LEN 100
 
@@ -22,4 +23,9 @@ void print_trace(void)
 		printf("\t%s\n", strings[i]);
 
 	free(strings);
+}
+
+void model_print_summary(void)
+{
+	model->print_summary();
 }

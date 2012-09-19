@@ -30,7 +30,7 @@ ModelChecker::ModelChecker(struct model_params params) :
 	obj_thrd_map(new HashTable<void *, std::vector<action_list_t>, uintptr_t, 4 >()),
 	promises(new std::vector<Promise *>()),
 	futurevalues(new std::vector<struct PendingFutureValue>()),
-	lazy_sync_with_release(new HashTable<void *, std::list<ModelAction *>, uintptr_t, 4>()),
+	lazy_sync_with_release(new HashTable<void *, action_list_t, uintptr_t, 4>()),
 	thrd_last_action(new std::vector<ModelAction *>(1)),
 	node_stack(new NodeStack()),
 	mo_graph(new CycleGraph()),
@@ -293,7 +293,7 @@ bool ModelChecker::process_read(ModelAction *curr, bool second_part_of_rmw)
 			bool r_status = false;
 
 			if (!second_part_of_rmw) {
-				check_recency(curr,false);
+				check_recency(curr);
 				r_status = r_modification_order(curr, reads_from);
 			}
 
@@ -346,6 +346,54 @@ bool ModelChecker::process_write(ModelAction *curr)
 }
 
 /**
+ * Initialize the current action by performing one or more of the following
+ * actions, as appropriate: merging RMWR and RMWC/RMW actions, stepping forward
+ * in the NodeStack, manipulating backtracking sets, allocating and
+ * initializing clock vectors, and computing the promises to fulfill.
+ *
+ * @param curr The current action, as passed from the user context; may be
+ * freed/invalidated after the execution of this function
+ * @return The current action, as processed by the ModelChecker. Is only the
+ * same as the parameter @a curr if this is a newly-explored action.
+ */
+ModelAction * ModelChecker::initialize_curr_action(ModelAction *curr)
+{
+	ModelAction *newcurr;
+
+	if (curr->is_rmwc() || curr->is_rmw()) {
+		newcurr = process_rmw(curr);
+		delete curr;
+		compute_promises(newcurr);
+		return newcurr;
+	}
+
+	newcurr = node_stack->explore_action(curr);
+	if (newcurr) {
+		/* First restore type and order in case of RMW operation */
+		if (curr->is_rmwr())
+			newcurr->copy_typeandorder(curr);
+
+		ASSERT(curr->get_location()==newcurr->get_location());
+		/* Discard duplicate ModelAction; use action from NodeStack */
+		delete curr;
+
+		/* If we have diverged, we need to reset the clock vector. */
+		if (diverge == NULL)
+			newcurr->create_cv(get_parent_action(newcurr->get_tid()));
+	} else {
+		newcurr = curr;
+		/*
+		 * Perform one-time actions when pushing new ModelAction onto
+		 * NodeStack
+		 */
+		curr->create_cv(get_parent_action(curr->get_tid()));
+		if (curr->is_write())
+			compute_promises(curr);
+	}
+	return newcurr;
+}
+
+/**
  * This is the heart of the model checker routine. It performs model-checking
  * actions corresponding to a given "current action." Among other processes, it
  * calculates reads-from relationships, updates synchronization clock vectors,
@@ -359,45 +407,20 @@ bool ModelChecker::process_write(ModelAction *curr)
  */
 Thread * ModelChecker::check_current_action(ModelAction *curr)
 {
-	bool second_part_of_rmw = false;
-
 	ASSERT(curr);
 
-	if (curr->is_rmwc() || curr->is_rmw()) {
-		ModelAction *tmp = process_rmw(curr);
-		second_part_of_rmw = true;
-		delete curr;
-		curr = tmp;
-		compute_promises(curr);
-	} else {
-		ModelAction *tmp = node_stack->explore_action(curr, scheduler->get_enabled());
-		if (tmp) {
-			/* Discard duplicate ModelAction; use action from NodeStack */
-			/* First restore type and order in case of RMW operation */
-			if (curr->is_rmwr())
-				tmp->copy_typeandorder(curr);
-			
-			/* If we have diverged, we need to reset the clock vector. */
-			if (diverge == NULL)
-				tmp->create_cv(get_parent_action(tmp->get_tid()));
-			
-			ASSERT(curr->get_location()==tmp->get_location());
+	bool second_part_of_rmw = curr->is_rmwc() || curr->is_rmw();
 
-			delete curr;
-			curr = tmp;
-		} else {
-			/*
-			 * Perform one-time actions when pushing new ModelAction onto
-			 * NodeStack
-			 */
-			curr->create_cv(get_parent_action(curr->get_tid()));
-			/* Build may_read_from set */
-			if (curr->is_read())
-				build_reads_from_past(curr);
-			if (curr->is_write())
-				compute_promises(curr);
-		}
-	}
+	ModelAction *newcurr = initialize_curr_action(curr);
+
+	/* Add the action to lists before any other model-checking tasks */
+	if (!second_part_of_rmw)
+		add_action_to_lists(newcurr);
+
+	/* Build may_read_from set for newly-created actions */
+	if (curr == newcurr && curr->is_read())
+		build_reads_from_past(curr);
+	curr = newcurr;
 
 	/* Thread specific actions */
 	switch (curr->get_type()) {
@@ -413,6 +436,8 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 		if (!blocking->is_complete()) {
 			blocking->push_wait_list(curr);
 			scheduler->sleep(waiting);
+		} else {
+			do_complete_join(curr);
 		}
 		break;
 	}
@@ -422,6 +447,7 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 			ModelAction *act = th->pop_wait_list();
 			Thread *wake = get_thread(act);
 			scheduler->wake(wake);
+			do_complete_join(act);
 		}
 		th->complete();
 		break;
@@ -457,23 +483,48 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 		case WORK_CHECK_RELEASE_SEQ:
 			resolve_release_sequences(work.location, &work_queue);
 			break;
-		case WORK_CHECK_MO_EDGES:
-			/** @todo Perform follow-up mo_graph checks */
+		case WORK_CHECK_MO_EDGES: {
+			/** @todo Complete verification of work_queue */
+			ModelAction *act = work.action;
+			bool updated = false;
+
+			if (act->is_read()) {
+				if (r_modification_order(act, act->get_reads_from()))
+					updated = true;
+			}
+			if (act->is_write()) {
+				if (w_modification_order(act))
+					updated = true;
+			}
+
+			if (updated)
+				work_queue.push_back(CheckRelSeqWorkEntry(act->get_location()));
+			break;
+		}
 		default:
 			ASSERT(false);
 			break;
 		}
 	}
 
-	/* Add action to list.  */
-	if (!second_part_of_rmw)
-		add_action_to_lists(curr);
-
 	check_curr_backtracking(curr);
 
 	set_backtracking(curr);
 
 	return get_next_thread(curr);
+}
+
+/**
+ * Complete a THREAD_JOIN operation, by synchronizing with the THREAD_FINISH
+ * operation from the Thread it is joining with. Must be called after the
+ * completion of the Thread in question.
+ * @param join The THREAD_JOIN action
+ */
+void ModelChecker::do_complete_join(ModelAction *join)
+{
+	Thread *blocking = (Thread *)join->get_location();
+	ModelAction *act = get_last_action(blocking->get_id());
+	join->synchronize_with(act);
 }
 
 void ModelChecker::check_curr_backtracking(ModelAction * curr) {
@@ -514,11 +565,24 @@ bool ModelChecker::isfeasible() {
 /** @returns whether the current partial trace is feasible other than
  * multiple RMW reading from the same store. */
 bool ModelChecker::isfeasibleotherthanRMW() {
+	if (DBG_ENABLED()) {
+		if (mo_graph->checkForCycles())
+			DEBUG("Infeasible: modification order cycles\n");
+		if (failed_promise)
+			DEBUG("Infeasible: failed promise\n");
+		if (too_many_reads)
+			DEBUG("Infeasible: too many reads\n");
+		if (promises_expired())
+			DEBUG("Infeasible: promises expired\n");
+	}
 	return !mo_graph->checkForCycles() && !failed_promise && !too_many_reads && !promises_expired();
 }
 
 /** Returns whether the current completed trace is feasible. */
 bool ModelChecker::isfinalfeasible() {
+	if (DBG_ENABLED() && promises->size() != 0)
+		DEBUG("Infeasible: unrevolved promises\n");
+
 	return isfeasible() && promises->size() == 0;
 }
 
@@ -545,7 +609,7 @@ ModelAction * ModelChecker::process_rmw(ModelAction *act) {
  *
  * If so, we decide that the execution is no longer feasible.
  */
-void ModelChecker::check_recency(ModelAction *curr, bool already_added) {
+void ModelChecker::check_recency(ModelAction *curr) {
 	if (params.maxreads != 0) {
 		if (curr->get_node()->get_read_from_size() <= 1)
 			return;
@@ -566,12 +630,10 @@ void ModelChecker::check_recency(ModelAction *curr, bool already_added) {
 
 		action_list_t::reverse_iterator rit = list->rbegin();
 		/* Skip past curr */
-		if (already_added) {
-			for (; (*rit) != curr; rit++)
-				;
-			/* go past curr now */
-			rit++;
-		}
+		for (; (*rit) != curr; rit++)
+			;
+		/* go past curr now */
+		rit++;
 
 		action_list_t::reverse_iterator ritcopy = rit;
 		//See if we have enough reads from the same value
@@ -662,10 +724,13 @@ bool ModelChecker::r_modification_order(ModelAction *curr, const ModelAction *rf
 		for (rit = list->rbegin(); rit != list->rend(); rit++) {
 			ModelAction *act = *rit;
 
-			/* Include at most one act per-thread that "happens before" curr */
-			if (act->happens_before(curr)) {
+			/*
+			 * Include at most one act per-thread that "happens
+			 * before" curr. Don't consider reflexively.
+			 */
+			if (act->happens_before(curr) && act != curr) {
 				if (act->is_write()) {
-					if (rf != act && act != curr) {
+					if (rf != act) {
 						mo_graph->addEdge(act, rf);
 						added = true;
 					}
@@ -676,7 +741,6 @@ bool ModelChecker::r_modification_order(ModelAction *curr, const ModelAction *rf
 						added = true;
 					}
 				}
-
 				break;
 			}
 		}
@@ -769,7 +833,7 @@ bool ModelChecker::w_modification_order(ModelAction *curr)
 	if (curr->is_seqcst()) {
 		/* We have to at least see the last sequentially consistent write,
 			 so we are initialized. */
-		ModelAction *last_seq_cst = get_last_seq_cst(curr->get_location());
+		ModelAction *last_seq_cst = get_last_seq_cst(curr);
 		if (last_seq_cst != NULL) {
 			mo_graph->addEdge(last_seq_cst, curr);
 			added = true;
@@ -783,8 +847,23 @@ bool ModelChecker::w_modification_order(ModelAction *curr)
 		action_list_t::reverse_iterator rit;
 		for (rit = list->rbegin(); rit != list->rend(); rit++) {
 			ModelAction *act = *rit;
+			if (act == curr) {
+				/*
+				 * If RMW, we already have all relevant edges,
+				 * so just skip to next thread.
+				 * If normal write, we need to look at earlier
+				 * actions, so continue processing list.
+				 */
+				if (curr->is_rmw())
+					break;
+				else
+					continue;
+			}
 
-			/* Include at most one act per-thread that "happens before" curr */
+			/*
+			 * Include at most one act per-thread that "happens
+			 * before" curr
+			 */
 			if (act->happens_before(curr)) {
 				/*
 				 * Note: if act is RMW, just add edge:
@@ -792,11 +871,9 @@ bool ModelChecker::w_modification_order(ModelAction *curr)
 				 * The following edge should be handled elsewhere:
 				 *   readfrom(act) --mo--> act
 				 */
-				if (act->is_write()) {
-					//RMW shouldn't have an edge to themselves
-					if (act!=curr)
-						mo_graph->addEdge(act, curr);
-				} else if (act->is_read() && act->get_reads_from() != NULL)
+				if (act->is_write())
+					mo_graph->addEdge(act, curr);
+				else if (act->is_read() && act->get_reads_from() != NULL)
 					mo_graph->addEdge(act->get_reads_from(), curr);
 				added = true;
 				break;
@@ -867,8 +944,7 @@ bool ModelChecker::thin_air_constraint_may_allow(const ModelAction * writer, con
  * @return true, if the ModelChecker is certain that release_heads is complete;
  * false otherwise
  */
-bool ModelChecker::release_seq_head(const ModelAction *rf,
-                std::vector< const ModelAction *, MyAlloc<const ModelAction *> > *release_heads) const
+bool ModelChecker::release_seq_head(const ModelAction *rf, rel_heads_list_t *release_heads) const
 {
 	if (!rf) {
 		/* read from future: need to settle this later */
@@ -973,15 +1049,14 @@ bool ModelChecker::release_seq_head(const ModelAction *rf,
  * with the head(s) of the release sequence(s), if they exists with certainty.
  * @see ModelChecker::release_seq_head
  */
-void ModelChecker::get_release_seq_heads(ModelAction *act,
-                std::vector< const ModelAction *, MyAlloc<const ModelAction *> > *release_heads)
+void ModelChecker::get_release_seq_heads(ModelAction *act, rel_heads_list_t *release_heads)
 {
 	const ModelAction *rf = act->get_reads_from();
 	bool complete;
 	complete = release_seq_head(rf, release_heads);
 	if (!complete) {
 		/* add act to 'lazy checking' list */
-		std::list<ModelAction *> *list;
+		action_list_t *list;
 		list = lazy_sync_with_release->get_safe_ptr(act->get_location());
 		list->push_back(act);
 		(*lazy_sync_size)++;
@@ -1003,17 +1078,17 @@ void ModelChecker::get_release_seq_heads(ModelAction *act,
  */
 bool ModelChecker::resolve_release_sequences(void *location, work_queue_t *work_queue)
 {
-	std::list<ModelAction *> *list;
+	action_list_t *list;
 	list = lazy_sync_with_release->getptr(location);
 	if (!list)
 		return false;
 
 	bool updated = false;
-	std::list<ModelAction *>::iterator it = list->begin();
+	action_list_t::iterator it = list->begin();
 	while (it != list->end()) {
 		ModelAction *act = *it;
 		const ModelAction *rf = act->get_reads_from();
-		std::vector< const ModelAction *, MyAlloc<const ModelAction *> > release_heads;
+		rel_heads_list_t release_heads;
 		bool complete;
 		complete = release_seq_head(rf, &release_heads);
 		for (unsigned int i = 0; i < release_heads.size(); i++) {
@@ -1087,18 +1162,21 @@ ModelAction * ModelChecker::get_last_action(thread_id_t tid)
 }
 
 /**
- * Gets the last memory_order_seq_cst action (in the total global sequence)
- * performed on a particular object (i.e., memory location).
- * @param location The object location to check
- * @return The last seq_cst action performed
+ * Gets the last memory_order_seq_cst write (in the total global sequence)
+ * performed on a particular object (i.e., memory location), not including the
+ * current action.
+ * @param curr The current ModelAction; also denotes the object location to
+ * check
+ * @return The last seq_cst write
  */
-ModelAction * ModelChecker::get_last_seq_cst(const void *location)
+ModelAction * ModelChecker::get_last_seq_cst(ModelAction *curr)
 {
+	void *location = curr->get_location();
 	action_list_t *list = obj_map->get_safe_ptr(location);
 	/* Find: max({i in dom(S) | seq_cst(t_i) && isWrite(t_i) && samevar(t_i, t)}) */
 	action_list_t::reverse_iterator rit;
 	for (rit = list->rbegin(); rit != list->rend(); rit++)
-		if ((*rit)->is_write() && (*rit)->is_seqcst())
+		if ((*rit)->is_write() && (*rit)->is_seqcst() && (*rit) != curr)
 			return *rit;
 	return NULL;
 }
@@ -1212,7 +1290,7 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 	bool initialized = false;
 
 	if (curr->is_seqcst()) {
-		last_seq_cst = get_last_seq_cst(curr->get_location());
+		last_seq_cst = get_last_seq_cst(curr);
 		/* We have to at least see the last sequentially consistent write,
 			 so we are initialized. */
 		if (last_seq_cst != NULL)
@@ -1228,7 +1306,7 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 			ModelAction *act = *rit;
 
 			/* Only consider 'write' actions */
-			if (!act->is_write())
+			if (!act->is_write() || act == curr)
 				continue;
 
 			/* Don't consider more than one seq_cst write if we are a seq_cst read. */

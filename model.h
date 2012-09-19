@@ -24,6 +24,9 @@ class NodeStack;
 class CycleGraph;
 class Promise;
 
+/** @brief Shorthand for a list of release sequence heads */
+typedef std::vector< const ModelAction *, MyAlloc<const ModelAction *> > rel_heads_list_t;
+
 /**
  * Model checker parameter structure. Holds run-time configuration options for
  * the model checker.
@@ -85,8 +88,7 @@ public:
 	bool isfeasibleotherthanRMW();
 	bool isfinalfeasible();
 	void check_promises(ClockVector *old_cv, ClockVector * merge_cv);
-	void get_release_seq_heads(ModelAction *act,
-	                std::vector< const ModelAction *, MyAlloc<const ModelAction *> > *release_heads);
+	void get_release_seq_heads(ModelAction *act, rel_heads_list_t *release_heads);
 	void finish_execution();
 	bool isfeasibleprefix();
 	void set_assert() {asserted=true;}
@@ -112,12 +114,13 @@ private:
 	 */
 	void set_current_action(ModelAction *act) { priv->current_action = act; }
 	Thread * check_current_action(ModelAction *curr);
+	ModelAction * initialize_curr_action(ModelAction *curr);
 	bool process_read(ModelAction *curr, bool second_part_of_rmw);
 	bool process_write(ModelAction *curr);
 
 	bool take_step();
 
-	void check_recency(ModelAction *curr, bool already_added);
+	void check_recency(ModelAction *curr);
 	ModelAction * get_last_conflict(ModelAction *act);
 	void set_backtracking(ModelAction *act);
 	Thread * get_next_thread(ModelAction *curr);
@@ -129,15 +132,15 @@ private:
 	void check_curr_backtracking(ModelAction * curr);
 	void add_action_to_lists(ModelAction *act);
 	ModelAction * get_last_action(thread_id_t tid);
-	ModelAction * get_last_seq_cst(const void *location);
+	ModelAction * get_last_seq_cst(ModelAction *curr);
 	void build_reads_from_past(ModelAction *curr);
 	ModelAction * process_rmw(ModelAction *curr);
 	void post_r_modification_order(ModelAction *curr, const ModelAction *rf);
 	bool r_modification_order(ModelAction *curr, const ModelAction *rf);
 	bool w_modification_order(ModelAction *curr);
-	bool release_seq_head(const ModelAction *rf,
-	                std::vector< const ModelAction *, MyAlloc<const ModelAction *> > *release_heads) const;
+	bool release_seq_head(const ModelAction *rf, rel_heads_list_t *release_heads) const;
 	bool resolve_release_sequences(void *location, work_queue_t *work_queue);
+	void do_complete_join(ModelAction *join);
 
 	ModelAction *diverge;
 
@@ -160,7 +163,7 @@ private:
 	 * This structure maps its lists by object location. Each ModelAction
 	 * in the lists should be an acquire operation.
 	 */
-	HashTable<void *, std::list<ModelAction *>, uintptr_t, 4> *lazy_sync_with_release;
+	HashTable<void *, action_list_t, uintptr_t, 4> *lazy_sync_with_release;
 
 	/**
 	 * Represents the total size of the

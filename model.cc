@@ -30,7 +30,7 @@ ModelChecker::ModelChecker(struct model_params params) :
 	obj_thrd_map(new HashTable<void *, std::vector<action_list_t>, uintptr_t, 4 >()),
 	promises(new std::vector<Promise *>()),
 	futurevalues(new std::vector<struct PendingFutureValue>()),
-	lazy_sync_with_release(new HashTable<void *, std::list<ModelAction *>, uintptr_t, 4>()),
+	lazy_sync_with_release(new HashTable<void *, action_list_t, uintptr_t, 4>()),
 	thrd_last_action(new std::vector<ModelAction *>(1)),
 	node_stack(new NodeStack()),
 	mo_graph(new CycleGraph()),
@@ -1043,7 +1043,7 @@ void ModelChecker::get_release_seq_heads(ModelAction *act, rel_heads_list_t *rel
 	complete = release_seq_head(rf, release_heads);
 	if (!complete) {
 		/* add act to 'lazy checking' list */
-		std::list<ModelAction *> *list;
+		action_list_t *list;
 		list = lazy_sync_with_release->get_safe_ptr(act->get_location());
 		list->push_back(act);
 		(*lazy_sync_size)++;
@@ -1065,13 +1065,13 @@ void ModelChecker::get_release_seq_heads(ModelAction *act, rel_heads_list_t *rel
  */
 bool ModelChecker::resolve_release_sequences(void *location, work_queue_t *work_queue)
 {
-	std::list<ModelAction *> *list;
+	action_list_t *list;
 	list = lazy_sync_with_release->getptr(location);
 	if (!list)
 		return false;
 
 	bool updated = false;
-	std::list<ModelAction *>::iterator it = list->begin();
+	action_list_t::iterator it = list->begin();
 	while (it != list->end()) {
 		ModelAction *act = *it;
 		const ModelAction *rf = act->get_reads_from();

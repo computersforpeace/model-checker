@@ -163,7 +163,7 @@ private:
 	 * This structure maps its lists by object location. Each ModelAction
 	 * in the lists should be an acquire operation.
 	 */
-	HashTable<void *, std::list<ModelAction *>, uintptr_t, 4> *lazy_sync_with_release;
+	HashTable<void *, action_list_t, uintptr_t, 4> *lazy_sync_with_release;
 
 	/**
 	 * Represents the total size of the

@@ -77,7 +77,6 @@ void Scheduler::wake(Thread *t)
  */
 Thread * Scheduler::next_thread(Thread *t)
 {
-	printf("%p\n",t);
 	if ( t == NULL ) {
 		int old_curr_thread = curr_thread_index;
 		while(true) {
@@ -94,7 +93,6 @@ Thread * Scheduler::next_thread(Thread *t)
 	} else {
 		curr_thread_index = id_to_int(t->get_id());
 	}
-	printf("index=%u enabled=%u\n", curr_thread_index, is_enabled[curr_thread_index]);
 
 	current = t;
 	print();

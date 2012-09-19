@@ -367,7 +367,7 @@ ModelAction * ModelChecker::initialize_curr_action(ModelAction *curr)
 		return newcurr;
 	}
 
-	newcurr = node_stack->explore_action(curr);
+	newcurr = node_stack->explore_action(curr, scheduler->get_enabled());
 	if (newcurr) {
 		/* First restore type and order in case of RMW operation */
 		if (curr->is_rmwr())

@@ -173,7 +173,7 @@ void ModelAction::read_from(const ModelAction *act)
 	ASSERT(cv);
 	reads_from = act;
 	if (act != NULL && this->is_acquire()) {
-		std::vector< const ModelAction *, MyAlloc<const ModelAction *> > release_heads;
+		rel_heads_list_t release_heads;
 		model->get_release_seq_heads(this, &release_heads);
 		for (unsigned int i = 0; i < release_heads.size(); i++)
 			synchronize_with(release_heads[i]);
@@ -186,7 +186,7 @@ void ModelAction::read_from(const ModelAction *act)
  * @param act The ModelAction to synchronize with
  */
 void ModelAction::synchronize_with(const ModelAction *act) {
-	ASSERT(*act < *this);
+	ASSERT(*act < *this || type == THREAD_JOIN);
 	model->check_promises(cv, act->cv);
 	cv->merge(act->cv);
 }

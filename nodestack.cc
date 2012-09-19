@@ -32,11 +32,12 @@ Node::Node(ModelAction *act, Node *par, int nthreads, bool *enabled)
 	if (act)
 		act->set_node(this);
 	enabled_array=(bool *)MYMALLOC(sizeof(bool)*num_threads);
-	if (enabled)
+	if (enabled != NULL)
 		memcpy(enabled_array, enabled, sizeof(bool)*num_threads);
-	else 
+	else {
 		for(int i=0;i<num_threads;i++)
 			enabled_array[i]=false;
+	}
 }
 
 /** @brief Node desctructor */
@@ -347,7 +348,7 @@ ModelAction * NodeStack::explore_action(ModelAction *act, bool * is_enabled)
 
 	/* Record action */
 	get_head()->explore_child(act);
-	node_list.push_back(new Node(act, get_head(), model->get_num_threads()));
+	node_list.push_back(new Node(act, get_head(), model->get_num_threads(), is_enabled));
 	total_nodes++;
 	iter++;
 	return NULL;

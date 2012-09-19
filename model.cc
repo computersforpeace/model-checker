@@ -423,6 +423,8 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 		if (!blocking->is_complete()) {
 			blocking->push_wait_list(curr);
 			scheduler->sleep(waiting);
+		} else {
+			do_complete_join(curr);
 		}
 		break;
 	}
@@ -432,6 +434,7 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 			ModelAction *act = th->pop_wait_list();
 			Thread *wake = get_thread(act);
 			scheduler->wake(wake);
+			do_complete_join(act);
 		}
 		th->complete();
 		break;
@@ -496,6 +499,19 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 	set_backtracking(curr);
 
 	return get_next_thread(curr);
+}
+
+/**
+ * Complete a THREAD_JOIN operation, by synchronizing with the THREAD_FINISH
+ * operation from the Thread it is joining with. Must be called after the
+ * completion of the Thread in question.
+ * @param join The THREAD_JOIN action
+ */
+void ModelChecker::do_complete_join(ModelAction *join)
+{
+	Thread *blocking = (Thread *)join->get_location();
+	ModelAction *act = get_last_action(blocking->get_id());
+	join->synchronize_with(act);
 }
 
 void ModelChecker::check_curr_backtracking(ModelAction * curr) {

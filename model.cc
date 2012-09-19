@@ -337,6 +337,10 @@ void ModelChecker::process_mutex(ModelAction *curr) {
 	}
 		//otherwise fall into the lock case
 	case ATOMIC_LOCK: {
+		if (curr->get_cv()->getClock(state->alloc_tid)<=state->alloc_clock) {
+			printf("Lock access before initialization\n");
+			set_assert();
+		}
 		state->islocked=true;
 		ModelAction *unlock=get_last_unlock(curr);
 		//synchronize with the previous unlock statement

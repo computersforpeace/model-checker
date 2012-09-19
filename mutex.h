@@ -1,10 +1,13 @@
 #ifndef MUTEX_H
 #define MUTEX_H
 #include "threads.h"
+#include "clockvector.h"
 
 namespace std {
 	struct mutex_state {
 		bool islocked;
+		thread_id_t alloc_tid;
+		modelclock_t alloc_clock;
 	};
 
 	class mutex {

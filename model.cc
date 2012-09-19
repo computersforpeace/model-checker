@@ -419,6 +419,7 @@ ModelAction * ModelChecker::initialize_curr_action(ModelAction *curr)
 			newcurr->copy_typeandorder(curr);
 
 		ASSERT(curr->get_location()==newcurr->get_location());
+
 		/* Discard duplicate ModelAction; use action from NodeStack */
 		delete curr;
 
@@ -479,6 +480,15 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 	}
 
 	ModelAction *newcurr = initialize_curr_action(curr);
+
+	/* Add the action to lists before any other model-checking tasks */
+	if (!second_part_of_rmw)
+		add_action_to_lists(newcurr);
+
+	/* Build may_read_from set for newly-created actions */
+	if (curr == newcurr && curr->is_read())
+		build_reads_from_past(curr);
+	curr = newcurr;
 
 	/* Add the action to lists before any other model-checking tasks */
 	if (!second_part_of_rmw)

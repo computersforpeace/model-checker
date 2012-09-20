@@ -86,19 +86,19 @@ void ModelChecker::reset_to_initial_state()
 	snapshotObject->backTrackBeforeStep(0);
 }
 
-/** @returns a thread ID for a new Thread */
+/** @return a thread ID for a new Thread */
 thread_id_t ModelChecker::get_next_id()
 {
 	return priv->next_thread_id++;
 }
 
-/** @returns the number of user threads created during this execution */
+/** @return the number of user threads created during this execution */
 int ModelChecker::get_num_threads()
 {
 	return priv->next_thread_id;
 }
 
-/** @returns a sequence number for a new ModelAction */
+/** @return a sequence number for a new ModelAction */
 modelclock_t ModelChecker::get_next_seq_num()
 {
 	return ++priv->used_sequence_numbers;
@@ -344,6 +344,21 @@ bool ModelChecker::process_read(ModelAction *curr, bool second_part_of_rmw)
 	}
 }
 
+/**
+ * Processes a lock, trylock, or unlock model action.  @param curr is
+ * the read model action to process.  
+ *
+ * The try lock operation checks whether the lock is taken.  If not,
+ * it falls to the normal lock operation case.  If so, it returns
+ * fail.
+ *
+ * The lock operation has already been checked that it is enabled, so
+ * it just grabs the lock and synchronizes with the previous unlock.
+ *
+ * The unlock operation has to re-enable all of the threads that are
+ * waiting on the lock.
+ */
+
 void ModelChecker::process_mutex(ModelAction *curr) {
 	std::mutex * mutex=(std::mutex *) curr->get_location();
 	struct std::mutex_state * state=mutex->get_state();
@@ -377,7 +392,7 @@ void ModelChecker::process_mutex(ModelAction *curr) {
 		action_list_t * waiters = lock_waiters_map->get_safe_ptr(curr->get_location());
 		//activate all the waiting threads
 		for(action_list_t::iterator rit = waiters->begin(); rit!=waiters->end(); rit++) {
-			add_thread(get_thread((*rit)->get_tid()));
+			scheduler->add_thread(get_thread((*rit)->get_tid()));
 		}
 		waiters->clear();
 		break;
@@ -462,6 +477,14 @@ ModelAction * ModelChecker::initialize_curr_action(ModelAction *curr)
 	}
 	return newcurr;
 }
+
+/**
+ * This method checks whether a model action is enabled at the given point.
+ * At this point, it checks whether a lock operation would be successful at this point.
+ * If not, it puts the thread in a waiter list.
+ * @param curr is the ModelAction to check whether it is enabled.
+ * @return a bool that indicates whether the action is enabled.
+ */
 
 bool ModelChecker::check_action_enabled(ModelAction *curr) {
 	if (curr->is_lock()) {
@@ -646,18 +669,18 @@ bool ModelChecker::promises_expired() {
 	return false;
 }
 
-/** @returns whether the current partial trace must be a prefix of a
+/** @return whether the current partial trace must be a prefix of a
  * feasible trace. */
 bool ModelChecker::isfeasibleprefix() {
 	return promises->size() == 0 && *lazy_sync_size == 0;
 }
 
-/** @returns whether the current partial trace is feasible. */
+/** @return whether the current partial trace is feasible. */
 bool ModelChecker::isfeasible() {
 	return !mo_graph->checkForRMWViolation() && isfeasibleotherthanRMW();
 }
 
-/** @returns whether the current partial trace is feasible other than
+/** @return whether the current partial trace is feasible other than
  * multiple RMW reading from the same store. */
 bool ModelChecker::isfeasibleotherthanRMW() {
 	if (DBG_ENABLED()) {
@@ -1275,6 +1298,14 @@ ModelAction * ModelChecker::get_last_seq_cst(ModelAction *curr)
 			return *rit;
 	return NULL;
 }
+
+/**
+ * Gets the last unlock operation
+ * performed on a particular mutex (i.e., memory location).
+ * @param curr The current ModelAction; also denotes the object location to
+ * check
+ * @return The last unlock operation
+ */
 
 ModelAction * ModelChecker::get_last_unlock(ModelAction *curr)
 {

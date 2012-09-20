@@ -32,7 +32,7 @@ ModelChecker::ModelChecker(struct model_params params) :
 	obj_thrd_map(new HashTable<void *, std::vector<action_list_t>, uintptr_t, 4 >()),
 	promises(new std::vector<Promise *>()),
 	futurevalues(new std::vector<struct PendingFutureValue>()),
-	lazy_sync_with_release(new HashTable<void *, action_list_t, uintptr_t, 4>()),
+	pending_acq_rel_seq(new std::vector<ModelAction *>()),
 	thrd_last_action(new std::vector<ModelAction *>(1)),
 	node_stack(new NodeStack()),
 	mo_graph(new CycleGraph()),
@@ -44,8 +44,6 @@ ModelChecker::ModelChecker(struct model_params params) :
 	priv = (struct model_snapshot_members *)calloc(1, sizeof(*priv));
 	/* First thread created will have id INITIAL_THREAD_ID */
 	priv->next_thread_id = INITIAL_THREAD_ID;
-
-	lazy_sync_size = &priv->lazy_sync_size;
 }
 
 /** @brief Destructor */
@@ -64,7 +62,7 @@ ModelChecker::~ModelChecker()
 		delete (*promises)[i];
 	delete promises;
 
-	delete lazy_sync_with_release;
+	delete pending_acq_rel_seq;
 
 	delete thrd_last_action;
 	delete node_stack;
@@ -677,7 +675,7 @@ bool ModelChecker::promises_expired() {
 /** @return whether the current partial trace must be a prefix of a
  * feasible trace. */
 bool ModelChecker::isfeasibleprefix() {
-	return promises->size() == 0 && *lazy_sync_size == 0;
+	return promises->size() == 0 && pending_acq_rel_seq->size() == 0;
 }
 
 /** @return whether the current partial trace is feasible. */
@@ -1185,10 +1183,7 @@ void ModelChecker::get_release_seq_heads(ModelAction *act, rel_heads_list_t *rel
 	complete = release_seq_head(rf, release_heads);
 	if (!complete) {
 		/* add act to 'lazy checking' list */
-		action_list_t *list;
-		list = lazy_sync_with_release->get_safe_ptr(act->get_location());
-		list->push_back(act);
-		(*lazy_sync_size)++;
+		pending_acq_rel_seq->push_back(act);
 	}
 }
 
@@ -1199,7 +1194,7 @@ void ModelChecker::get_release_seq_heads(ModelAction *act, rel_heads_list_t *rel
  * modification order information is present at the time an action occurs.
  *
  * @param location The location/object that should be checked for release
- * sequence resolutions
+ * sequence resolutions. A NULL value means to check all locations.
  * @param work_queue The work queue to which to add work items as they are
  * generated
  * @return True if any updates occurred (new synchronization, new mo_graph
@@ -1207,15 +1202,17 @@ void ModelChecker::get_release_seq_heads(ModelAction *act, rel_heads_list_t *rel
  */
 bool ModelChecker::resolve_release_sequences(void *location, work_queue_t *work_queue)
 {
-	action_list_t *list;
-	list = lazy_sync_with_release->getptr(location);
-	if (!list)
-		return false;
-
 	bool updated = false;
-	action_list_t::iterator it = list->begin();
-	while (it != list->end()) {
+	std::vector<ModelAction *>::iterator it = pending_acq_rel_seq->begin();
+	while (it != pending_acq_rel_seq->end()) {
 		ModelAction *act = *it;
+
+		/* Only resolve sequences on the given location, if provided */
+		if (location && act->get_location() != location) {
+			it++;
+			continue;
+		}
+
 		const ModelAction *rf = act->get_reads_from();
 		rel_heads_list_t release_heads;
 		bool complete;
@@ -1242,10 +1239,9 @@ bool ModelChecker::resolve_release_sequences(void *location, work_queue_t *work_
 				}
 			}
 		}
-		if (complete) {
-			it = list->erase(it);
-			(*lazy_sync_size)--;
-		} else
+		if (complete)
+			it = pending_acq_rel_seq->erase(it);
+		else
 			it++;
 	}
 

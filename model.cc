@@ -200,9 +200,10 @@ bool ModelChecker::next_execution()
 
 ModelAction * ModelChecker::get_last_conflict(ModelAction *act)
 {
-	action_type type = act->get_type();
-
-	if (type==ATOMIC_READ||type==ATOMIC_WRITE||type==ATOMIC_RMW) {
+	switch (act->get_type()) {
+	case ATOMIC_READ:
+	case ATOMIC_WRITE:
+	case ATOMIC_RMW: {
 		/* linear search: from most recent to oldest */
 		action_list_t *list = obj_map->get_safe_ptr(act->get_location());
 		action_list_t::reverse_iterator rit;
@@ -211,7 +212,10 @@ ModelAction * ModelChecker::get_last_conflict(ModelAction *act)
 			if (act->is_synchronizing(prev))
 				return prev;
 		}
-	} else if (type==ATOMIC_LOCK||type==ATOMIC_TRYLOCK) {
+		break;
+	}
+	case ATOMIC_LOCK:
+	case ATOMIC_TRYLOCK: {
 		/* linear search: from most recent to oldest */
 		action_list_t *list = obj_map->get_safe_ptr(act->get_location());
 		action_list_t::reverse_iterator rit;
@@ -220,7 +224,9 @@ ModelAction * ModelChecker::get_last_conflict(ModelAction *act)
 			if (act->is_conflicting_lock(prev))
 				return prev;
 		}
-	} else if (type==ATOMIC_UNLOCK) {
+		break;
+	}
+	case ATOMIC_UNLOCK: {
 		/* linear search: from most recent to oldest */
 		action_list_t *list = obj_map->get_safe_ptr(act->get_location());
 		action_list_t::reverse_iterator rit;
@@ -229,6 +235,10 @@ ModelAction * ModelChecker::get_last_conflict(ModelAction *act)
 			if (!act->same_thread(prev)&&prev->is_failed_trylock())
 				return prev;
 		}
+		break;
+	}
+	default:
+		break;
 	}
 	return NULL;
 }

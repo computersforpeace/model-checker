@@ -133,9 +133,9 @@ private:
 
 	void check_curr_backtracking(ModelAction * curr);
 	void add_action_to_lists(ModelAction *act);
-	ModelAction * get_last_action(thread_id_t tid);
-	ModelAction * get_last_seq_cst(ModelAction *curr);
-	ModelAction * get_last_unlock(ModelAction *curr);
+	ModelAction * get_last_action(thread_id_t tid) const;
+	ModelAction * get_last_seq_cst(ModelAction *curr) const;
+	ModelAction * get_last_unlock(ModelAction *curr) const;
 	void build_reads_from_past(ModelAction *curr);
 	ModelAction * process_rmw(ModelAction *curr);
 	void post_r_modification_order(ModelAction *curr, const ModelAction *rf);

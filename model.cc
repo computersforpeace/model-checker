@@ -1270,10 +1270,15 @@ void ModelChecker::add_action_to_lists(ModelAction *act)
 	(*thrd_last_action)[tid] = act;
 }
 
-ModelAction * ModelChecker::get_last_action(thread_id_t tid)
+/**
+ * @brief Get the last action performed by a particular Thread
+ * @param tid The thread ID of the Thread in question
+ * @return The last action in the thread
+ */
+ModelAction * ModelChecker::get_last_action(thread_id_t tid) const
 {
-	int threadid=id_to_int(tid);
-	if (threadid<(int)thrd_last_action->size())
+	int threadid = id_to_int(tid);
+	if (threadid < (int)thrd_last_action->size())
 		return (*thrd_last_action)[id_to_int(tid)];
 	else
 		return NULL;
@@ -1287,7 +1292,7 @@ ModelAction * ModelChecker::get_last_action(thread_id_t tid)
  * check
  * @return The last seq_cst write
  */
-ModelAction * ModelChecker::get_last_seq_cst(ModelAction *curr)
+ModelAction * ModelChecker::get_last_seq_cst(ModelAction *curr) const
 {
 	void *location = curr->get_location();
 	action_list_t *list = obj_map->get_safe_ptr(location);
@@ -1300,18 +1305,18 @@ ModelAction * ModelChecker::get_last_seq_cst(ModelAction *curr)
 }
 
 /**
- * Gets the last unlock operation
- * performed on a particular mutex (i.e., memory location).
+ * Gets the last unlock operation performed on a particular mutex (i.e., memory
+ * location). This function identifies the mutex according to the current
+ * action, which is presumed to perform on the same mutex.
  * @param curr The current ModelAction; also denotes the object location to
  * check
  * @return The last unlock operation
  */
-
-ModelAction * ModelChecker::get_last_unlock(ModelAction *curr)
+ModelAction * ModelChecker::get_last_unlock(ModelAction *curr) const
 {
 	void *location = curr->get_location();
 	action_list_t *list = obj_map->get_safe_ptr(location);
-	/* Find: max({i in dom(S) | seq_cst(t_i) && isWrite(t_i) && samevar(t_i, t)}) */
+	/* Find: max({i in dom(S) | isUnlock(t_i) && samevar(t_i, t)}) */
 	action_list_t::reverse_iterator rit;
 	for (rit = list->rbegin(); rit != list->rend(); rit++)
 		if ((*rit)->is_unlock())

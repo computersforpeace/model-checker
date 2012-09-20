@@ -1124,8 +1124,6 @@ bool ModelChecker::release_seq_head(const ModelAction *rf, rel_heads_list_t *rel
 
 		for (rit = list->rbegin(); rit != list->rend(); rit++) {
 			const ModelAction *act = *rit;
-			if (!act->is_write())
-				continue;
 			/* Reach synchronization -> this thread is complete */
 			if (act->happens_before(release))
 				break;
@@ -1133,6 +1131,10 @@ bool ModelChecker::release_seq_head(const ModelAction *rf, rel_heads_list_t *rel
 				future_ordered = true;
 				continue;
 			}
+
+			/* Only writes can break release sequences */
+			if (!act->is_write())
+				continue;
 
 			/* Check modification order */
 			if (mo_graph->checkReachable(rf, act)) {

@@ -224,6 +224,12 @@ bool Node::is_enabled(Thread *t)
 	return thread_id < num_threads && enabled_array[thread_id];
 }
 
+bool Node::is_enabled(thread_id_t tid)
+{
+	int thread_id=id_to_int(tid);
+	return thread_id < num_threads && enabled_array[thread_id];
+}
+
 /**
  * Add an action to the may_read_from set.
  * @param act is the action to add

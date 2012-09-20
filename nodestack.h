@@ -56,6 +56,7 @@ public:
 	bool set_backtrack(thread_id_t id);
 	thread_id_t get_next_backtrack();
 	bool is_enabled(Thread *t);
+	bool is_enabled(thread_id_t tid);
 	ModelAction * get_action() { return action; }
 
 	/** @return the parent Node to this Node; that is, the action that

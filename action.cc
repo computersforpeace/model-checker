@@ -27,6 +27,10 @@ ModelAction::~ModelAction()
 		delete cv;
 }
 
+void ModelAction::copy_from_new(ModelAction *newaction) {
+	seq_number=newaction->seq_number;
+}
+
 bool ModelAction::is_mutex_op() const {
 	return type == ATOMIC_LOCK || type == ATOMIC_TRYLOCK || type == ATOMIC_UNLOCK;
 }
@@ -180,6 +184,23 @@ bool ModelAction::is_synchronizing(const ModelAction *act) const
 	return false;
 }
 
+bool ModelAction::is_conflicting_lock(const ModelAction *act) const
+{
+	//Must be different threads to reorder
+	if (same_thread(act))
+		return false;
+	
+	//Try to reorder a lock past a successful lock
+	if (act->is_success_lock())
+		return true;
+	
+	//Try to push a successful trylock past an unlock
+	if (act->is_unlock() && is_trylock() && value == VALUE_TRYSUCCESS)
+		return true;
+
+	return false;
+}
+
 void ModelAction::create_cv(const ModelAction *parent)
 {
 	if (cv)
@@ -277,6 +298,15 @@ void ModelAction::print(void) const
 		break;
 	case ATOMIC_INIT:
 		type_str = "init atomic";
+		break;
+	case ATOMIC_LOCK:
+		type_str = "lock";
+		break;
+	case ATOMIC_UNLOCK:
+		type_str = "unlock";
+		break;
+	case ATOMIC_TRYLOCK:
+		type_str = "trylock";
 		break;
 	default:
 		type_str = "unknown type";

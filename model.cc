@@ -217,7 +217,7 @@ ModelAction * ModelChecker::get_last_conflict(ModelAction *act)
 		action_list_t::reverse_iterator rit;
 		for (rit = list->rbegin(); rit != list->rend(); rit++) {
 			ModelAction *prev = *rit;
-			if (prev->is_success_lock())
+			if (act->is_conflicting_lock(prev))
 				return prev;
 		}
 	} else if (type==ATOMIC_UNLOCK) {
@@ -226,7 +226,7 @@ ModelAction * ModelChecker::get_last_conflict(ModelAction *act)
 		action_list_t::reverse_iterator rit;
 		for (rit = list->rbegin(); rit != list->rend(); rit++) {
 			ModelAction *prev = *rit;
-			if (prev->is_failed_trylock())
+			if (!act->same_thread(prev)&&prev->is_failed_trylock())
 				return prev;
 		}
 	}
@@ -235,35 +235,44 @@ ModelAction * ModelChecker::get_last_conflict(ModelAction *act)
 
 void ModelChecker::set_backtracking(ModelAction *act)
 {
-	ModelAction *prev;
-	Node *node;
 	Thread *t = get_thread(act);
-
-	prev = get_last_conflict(act);
+	ModelAction * prev = get_last_conflict(act);
 	if (prev == NULL)
 		return;
 
-	node = prev->get_node()->get_parent();
+	Node * node = prev->get_node()->get_parent();
 
-	while (!node->is_enabled(t))
-		t = t->get_parent();
+	int low_tid, high_tid;
+	if (node->is_enabled(t)) {
+		low_tid=id_to_int(act->get_tid());
+		high_tid=low_tid+1;
+	} else {
+		low_tid=0;
+		high_tid=get_num_threads();
+	}
+	
+	for(int i=low_tid;i<high_tid;i++) {
+		thread_id_t tid=int_to_id(i);
+		if (!node->is_enabled(tid))
+			continue;
 
-	/* Check if this has been explored already */
-	if (node->has_been_explored(t->get_id()))
-		return;
-
-	/* Cache the latest backtracking point */
-	if (!priv->next_backtrack || *prev > *priv->next_backtrack)
-		priv->next_backtrack = prev;
-
-	/* If this is a new backtracking point, mark the tree */
-	if (!node->set_backtrack(t->get_id()))
-		return;
-	DEBUG("Setting backtrack: conflict = %d, instead tid = %d\n",
-			prev->get_tid(), t->get_id());
-	if (DBG_ENABLED()) {
-		prev->print();
-		act->print();
+		/* Check if this has been explored already */
+		if (node->has_been_explored(tid))
+			continue;
+		
+		/* Cache the latest backtracking point */
+		if (!priv->next_backtrack || *prev > *priv->next_backtrack)
+			priv->next_backtrack = prev;
+		
+		/* If this is a new backtracking point, mark the tree */
+		if (!node->set_backtrack(tid))
+			continue;
+		DEBUG("Setting backtrack: conflict = %d, instead tid = %d\n",
+					prev->get_tid(), t->get_id());
+		if (DBG_ENABLED()) {
+			prev->print();
+			act->print();
+		}
 	}
 }
 
@@ -423,6 +432,7 @@ ModelAction * ModelChecker::initialize_curr_action(ModelAction *curr)
 			newcurr->copy_typeandorder(curr);
 
 		ASSERT(curr->get_location()==newcurr->get_location());
+		newcurr->copy_from_new(curr);
 
 		/* Discard duplicate ModelAction; use action from NodeStack */
 		delete curr;

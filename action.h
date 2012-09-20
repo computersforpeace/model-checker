@@ -72,6 +72,7 @@ public:
 	Node * get_node() const { return node; }
 	void set_node(Node *n) { node = n; }
 
+	void copy_from_new(ModelAction *newaction);
 	void set_try_lock(bool obtainedlock);
 	bool is_mutex_op() const;
 	bool is_lock() const;
@@ -91,6 +92,7 @@ public:
 	bool is_seqcst() const;
 	bool same_var(const ModelAction *act) const;
 	bool same_thread(const ModelAction *act) const;
+	bool is_conflicting_lock(const ModelAction *act) const;
 	bool is_synchronizing(const ModelAction *act) const;
 
 	void create_cv(const ModelAction *parent = NULL);

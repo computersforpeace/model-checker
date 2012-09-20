@@ -261,26 +261,26 @@ void ModelChecker::set_backtracking(ModelAction *act)
 
 	int low_tid, high_tid;
 	if (node->is_enabled(t)) {
-		low_tid=id_to_int(act->get_tid());
-		high_tid=low_tid+1;
+		low_tid = id_to_int(act->get_tid());
+		high_tid = low_tid+1;
 	} else {
-		low_tid=0;
-		high_tid=get_num_threads();
+		low_tid = 0;
+		high_tid = get_num_threads();
 	}
-	
-	for(int i=low_tid;i<high_tid;i++) {
-		thread_id_t tid=int_to_id(i);
+
+	for(int i = low_tid; i < high_tid; i++) {
+		thread_id_t tid = int_to_id(i);
 		if (!node->is_enabled(tid))
 			continue;
 
 		/* Check if this has been explored already */
 		if (node->has_been_explored(tid))
 			continue;
-		
+
 		/* Cache the latest backtracking point */
 		if (!priv->next_backtrack || *prev > *priv->next_backtrack)
 			priv->next_backtrack = prev;
-		
+
 		/* If this is a new backtracking point, mark the tree */
 		if (!node->set_backtrack(tid))
 			continue;
@@ -353,7 +353,7 @@ bool ModelChecker::process_read(ModelAction *curr, bool second_part_of_rmw)
 
 /**
  * Processes a lock, trylock, or unlock model action.  @param curr is
- * the read model action to process.  
+ * the read model action to process.
  *
  * The try lock operation checks whether the lock is taken.  If not,
  * it falls to the normal lock operation case.  If so, it returns
@@ -365,13 +365,12 @@ bool ModelChecker::process_read(ModelAction *curr, bool second_part_of_rmw)
  * The unlock operation has to re-enable all of the threads that are
  * waiting on the lock.
  */
-
 void ModelChecker::process_mutex(ModelAction *curr) {
-	std::mutex * mutex=(std::mutex *) curr->get_location();
-	struct std::mutex_state * state=mutex->get_state();
-	switch(curr->get_type()) {
+	std::mutex *mutex = (std::mutex *)curr->get_location();
+	struct std::mutex_state *state = mutex->get_state();
+	switch (curr->get_type()) {
 	case ATOMIC_TRYLOCK: {
-		bool success=!state->islocked;
+		bool success = !state->islocked;
 		curr->set_try_lock(success);
 		if (!success) {
 			get_thread(curr)->set_return_value(0);
@@ -381,24 +380,24 @@ void ModelChecker::process_mutex(ModelAction *curr) {
 	}
 		//otherwise fall into the lock case
 	case ATOMIC_LOCK: {
-		if (curr->get_cv()->getClock(state->alloc_tid)<=state->alloc_clock) {
+		if (curr->get_cv()->getClock(state->alloc_tid) <= state->alloc_clock) {
 			printf("Lock access before initialization\n");
 			set_assert();
 		}
-		state->islocked=true;
-		ModelAction *unlock=get_last_unlock(curr);
+		state->islocked = true;
+		ModelAction *unlock = get_last_unlock(curr);
 		//synchronize with the previous unlock statement
-		if ( unlock != NULL )
+		if (unlock != NULL)
 			curr->synchronize_with(unlock);
 		break;
 	}
 	case ATOMIC_UNLOCK: {
 		//unlock the lock
-		state->islocked=false;
+		state->islocked = false;
 		//wake up the other threads
-		action_list_t * waiters = lock_waiters_map->get_safe_ptr(curr->get_location());
+		action_list_t *waiters = lock_waiters_map->get_safe_ptr(curr->get_location());
 		//activate all the waiting threads
-		for(action_list_t::iterator rit = waiters->begin(); rit!=waiters->end(); rit++) {
+		for (action_list_t::iterator rit = waiters->begin(); rit != waiters->end(); rit++) {
 			scheduler->add_thread(get_thread((*rit)->get_tid()));
 		}
 		waiters->clear();
@@ -408,7 +407,6 @@ void ModelChecker::process_mutex(ModelAction *curr) {
 		ASSERT(0);
 	}
 }
-
 
 /**
  * Process a write ModelAction
@@ -421,7 +419,7 @@ bool ModelChecker::process_write(ModelAction *curr)
 	bool updated_promises = resolve_promises(curr);
 
 	if (promises->size() == 0) {
-		for (unsigned int i = 0; i<futurevalues->size(); i++) {
+		for (unsigned int i = 0; i < futurevalues->size(); i++) {
 			struct PendingFutureValue pfv = (*futurevalues)[i];
 			if (pfv.act->get_node()->add_future_value(pfv.value, pfv.expiration) &&
 					(!priv->next_backtrack || *pfv.act > *priv->next_backtrack))
@@ -463,7 +461,7 @@ ModelAction * ModelChecker::initialize_curr_action(ModelAction *curr)
 		if (curr->is_rmwr())
 			newcurr->copy_typeandorder(curr);
 
-		ASSERT(curr->get_location()==newcurr->get_location());
+		ASSERT(curr->get_location() == newcurr->get_location());
 		newcurr->copy_from_new(curr);
 
 		/* Discard duplicate ModelAction; use action from NodeStack */
@@ -495,7 +493,7 @@ ModelAction * ModelChecker::initialize_curr_action(ModelAction *curr)
 
 bool ModelChecker::check_action_enabled(ModelAction *curr) {
 	if (curr->is_lock()) {
-		std::mutex * lock=(std::mutex *) curr->get_location();
+		std::mutex * lock = (std::mutex *)curr->get_location();
 		struct std::mutex_state * state = lock->get_state();
 		if (state->islocked) {
 			//Stick the action in the appropriate waiting queue
@@ -598,7 +596,7 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 			if (act->is_write() && process_write(act))
 				updated = true;
 
-			if (act->is_mutex_op()) 
+			if (act->is_mutex_op())
 				process_mutex(act);
 
 			if (updated)
@@ -819,7 +817,7 @@ void ModelChecker::check_recency(ModelAction *curr) {
 
 /**
  * Updates the mo_graph with the constraints imposed from the current
- * read.  
+ * read.
  *
  * Basic idea is the following: Go through each other thread and find
  * the lastest action that happened before our read.  Two cases:
@@ -878,7 +876,7 @@ bool ModelChecker::r_modification_order(ModelAction *curr, const ModelAction *rf
  *  promises.  The basic problem is that actions that occur after the
  *  read curr could not property add items to the modification order
  *  for our read.
- *  
+ *
  *  So for each thread, we find the earliest item that happens after
  *  the read curr.  This is the item we have to fix up with additional
  *  constraints.  If that action is write, we add a MO edge between
@@ -1014,7 +1012,7 @@ bool ModelChecker::w_modification_order(ModelAction *curr)
 				 */
 				if (thin_air_constraint_may_allow(curr, act)) {
 					if (isfeasible() ||
-							(curr->is_rmw() && act->is_rmw() && curr->get_reads_from()==act->get_reads_from() && isfeasibleotherthanRMW())) {
+							(curr->is_rmw() && act->is_rmw() && curr->get_reads_from() == act->get_reads_from() && isfeasibleotherthanRMW())) {
 						struct PendingFutureValue pfv = {curr->get_value(),curr->get_seq_number()+params.maxfuturedelay,act};
 						futurevalues->push_back(pfv);
 					}
@@ -1038,7 +1036,7 @@ bool ModelChecker::thin_air_constraint_may_allow(const ModelAction * writer, con
 		return true;
 
 	for (const ModelAction *search = writer->get_reads_from(); search != NULL; search = search->get_reads_from()) {
-		if (search==reader)
+		if (search == reader)
 			return false;
 		if (search->get_tid() == reader->get_tid() &&
 				search->happens_before(reader))
@@ -1466,7 +1464,7 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 				continue;
 
 			/* Don't consider more than one seq_cst write if we are a seq_cst read. */
-			if (!curr->is_seqcst()|| (!act->is_seqcst() && (last_seq_cst==NULL||!act->happens_before(last_seq_cst))) || act == last_seq_cst) {
+			if (!curr->is_seqcst() || (!act->is_seqcst() && (last_seq_cst == NULL || !act->happens_before(last_seq_cst))) || act == last_seq_cst) {
 				DEBUG("Adding action to may_read_from:\n");
 				if (DBG_ENABLED()) {
 					act->print();

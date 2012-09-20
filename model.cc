@@ -1118,6 +1118,10 @@ bool ModelChecker::release_seq_head(const ModelAction *rf, rel_heads_list_t *rel
 		 * the release seq? */
 		bool future_ordered = false;
 
+		ModelAction *last = get_last_action(int_to_id(i));
+		if (last && rf->happens_before(last))
+			future_ordered = true;
+
 		for (rit = list->rbegin(); rit != list->rend(); rit++) {
 			const ModelAction *act = *rit;
 			if (!act->is_write())

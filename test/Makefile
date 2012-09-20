@@ -2,6 +2,8 @@ include ../common.mk
 
 CPPFLAGS += -I.. -I../include
 
+# Mac OSX options
+
 SRCS = $(wildcard *.c)
 OBJS = $(patsubst %.c,%.o,$(SRCS))
 

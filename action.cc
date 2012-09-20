@@ -217,7 +217,7 @@ void ModelAction::read_from(const ModelAction *act)
  * @param act The ModelAction to synchronize with
  */
 void ModelAction::synchronize_with(const ModelAction *act) {
-	ASSERT(*act < *this || type == THREAD_JOIN);
+	ASSERT(*act < *this || type == THREAD_JOIN || type == ATOMIC_LOCK );
 	model->check_promises(cv, act->cv);
 	cv->merge(act->cv);
 }

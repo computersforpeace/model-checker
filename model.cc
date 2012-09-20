@@ -332,8 +332,11 @@ void ModelChecker::process_mutex(ModelAction *curr) {
 	case ATOMIC_TRYLOCK: {
 		bool success=!state->islocked;
 		curr->set_try_lock(success);
-		if (!success)
+		if (!success) {
+			get_thread(curr)->set_return_value(0);
 			break;
+		}
+		get_thread(curr)->set_return_value(1);
 	}
 		//otherwise fall into the lock case
 	case ATOMIC_LOCK: {
@@ -344,7 +347,8 @@ void ModelChecker::process_mutex(ModelAction *curr) {
 		state->islocked=true;
 		ModelAction *unlock=get_last_unlock(curr);
 		//synchronize with the previous unlock statement
-		curr->synchronize_with(unlock);
+		if ( unlock != NULL )
+			curr->synchronize_with(unlock);
 		break;
 	}
 	case ATOMIC_UNLOCK: {
@@ -474,8 +478,8 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 	if (!check_action_enabled(curr)) {
 		//we'll make the execution look like we chose to run this action
 		//much later...when a lock is actually available to relese
-		remove_thread(get_current_thread());
 		get_current_thread()->set_pending(curr);
+		remove_thread(get_current_thread());
 		return get_next_thread(NULL);
 	}
 

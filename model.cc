@@ -1509,7 +1509,7 @@ void ModelChecker::print_summary()
 #if SUPPORT_MOD_ORDER_DUMP
 	scheduler->print();
 	char buffername[100];
-	sprintf(buffername, "exec%u",num_executions);
+	sprintf(buffername, "exec%04u", num_executions);
 	mo_graph->dumpGraphToFile(buffername);
 #endif
 

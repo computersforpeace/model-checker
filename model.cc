@@ -494,15 +494,6 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 		build_reads_from_past(curr);
 	curr = newcurr;
 
-	/* Add the action to lists before any other model-checking tasks */
-	if (!second_part_of_rmw)
-		add_action_to_lists(newcurr);
-
-	/* Build may_read_from set for newly-created actions */
-	if (curr == newcurr && curr->is_read())
-		build_reads_from_past(curr);
-	curr = newcurr;
-
 	/* Thread specific actions */
 	switch (curr->get_type()) {
 	case THREAD_CREATE: {

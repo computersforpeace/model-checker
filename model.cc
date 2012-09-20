@@ -243,6 +243,13 @@ ModelAction * ModelChecker::get_last_conflict(ModelAction *act)
 	return NULL;
 }
 
+/** This method find backtracking points where we should try to
+ * reorder the parameter ModelAction against.
+ *
+ * @param the ModelAction to find backtracking points for.
+ */
+
+
 void ModelChecker::set_backtracking(ModelAction *act)
 {
 	Thread *t = get_thread(act);
@@ -1524,6 +1531,11 @@ void ModelChecker::add_thread(Thread *t)
 	thread_map->put(id_to_int(t->get_id()), t);
 	scheduler->add_thread(t);
 }
+
+/**
+ * Removes a thread from the scheduler. 
+ * @param the thread to remove.
+ */
 
 void ModelChecker::remove_thread(Thread *t)
 {

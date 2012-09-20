@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "nodestack.h"
 #include "action.h"
 #include "common.h"

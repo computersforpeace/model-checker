@@ -1,3 +1,6 @@
+#include <string.h>
+#include <stdlib.h>
+
 #include "threads.h"
 #include "schedule.h"
 #include "common.h"

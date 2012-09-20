@@ -11,7 +11,6 @@ SHARED = -shared
 
 # Mac OSX options
 ifeq ($(UNAME), Darwin)
-CPPFLAGS += -D_XOPEN_SOURCE -DMAC
 LDFLAGS = -ldl
 SHARED = -Wl,-undefined,dynamic_lookup -dynamiclib
 endif

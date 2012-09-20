@@ -2,11 +2,6 @@ include ../common.mk
 
 CPPFLAGS += -I.. -I../include
 
-# Mac OSX options
-ifeq ($(UNAME), Darwin)
-CPPFLAGS += -D_XOPEN_SOURCE -DMAC
-endif
-
 SRCS = $(wildcard *.c)
 CPSRCS = $(wildcard *.cc)
 OBJS = $(patsubst %.c,%.o,$(SRCS)) $(patsubst %.cc,%.o,$(CPSRCS))

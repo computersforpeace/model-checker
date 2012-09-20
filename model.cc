@@ -374,8 +374,10 @@ bool ModelChecker::process_read(ModelAction *curr, bool second_part_of_rmw)
  *
  * The unlock operation has to re-enable all of the threads that are
  * waiting on the lock.
+ *
+ * @return True if synchronization was updated; false otherwise
  */
-void ModelChecker::process_mutex(ModelAction *curr) {
+bool ModelChecker::process_mutex(ModelAction *curr) {
 	std::mutex *mutex = (std::mutex *)curr->get_location();
 	struct std::mutex_state *state = mutex->get_state();
 	switch (curr->get_type()) {
@@ -397,8 +399,10 @@ void ModelChecker::process_mutex(ModelAction *curr) {
 		state->islocked = true;
 		ModelAction *unlock = get_last_unlock(curr);
 		//synchronize with the previous unlock statement
-		if (unlock != NULL)
+		if (unlock != NULL) {
 			curr->synchronize_with(unlock);
+			return true;
+		}
 		break;
 	}
 	case ATOMIC_UNLOCK: {
@@ -416,6 +420,7 @@ void ModelChecker::process_mutex(ModelAction *curr) {
 	default:
 		ASSERT(0);
 	}
+	return false;
 }
 
 /**
@@ -618,6 +623,7 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 		case WORK_CHECK_CURR_ACTION: {
 			ModelAction *act = work.action;
 			bool update = false; /* update this location's release seq's */
+			bool update_all = false; /* update all release seq's */
 
 			process_thread_action(curr);
 
@@ -627,10 +633,12 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 			if (act->is_write() && process_write(act))
 				update = true;
 
-			if (act->is_mutex_op())
-				process_mutex(act);
+			if (act->is_mutex_op() && process_mutex(act))
+				update_all = true;
 
-			if (update)
+			if (update_all)
+				work_queue.push_back(CheckRelSeqWorkEntry(NULL));
+			else if (update)
 				work_queue.push_back(CheckRelSeqWorkEntry(act->get_location()));
 			break;
 		}

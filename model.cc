@@ -1233,7 +1233,7 @@ bool ModelChecker::resolve_release_sequences(void *location, work_queue_t *work_
 
 			/* propagate synchronization to later actions */
 			action_list_t::reverse_iterator it = action_trace->rbegin();
-			while ((*it) != act) {
+			for (; (*it) != act; it++) {
 				ModelAction *propagate = *it;
 				if (act->happens_before(propagate)) {
 					propagate->synchronize_with(act);

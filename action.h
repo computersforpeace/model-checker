@@ -24,7 +24,12 @@ using std::memory_order_seq_cst;
 		hence by iteself does not indicate no value. */
 
 #define VALUE_NONE 1234567890
+
+/** A special value to represent a successful trylock */
+
 #define VALUE_TRYSUCCESS 1
+
+/** A special value to represent a failed trylock */
 #define VALUE_TRYFAILED 0
 
 /** @brief Represents an action type, identifying one of several types of
@@ -42,10 +47,10 @@ typedef enum action_type {
 	ATOMIC_RMWC,          /**< Convert an atomic RMW action into a READ */
 	ATOMIC_INIT,          /**< Initialization of an atomic object (e.g.,
 	                       *   atomic_init()) */
-	ATOMIC_FENCE,
-	ATOMIC_LOCK,
-	ATOMIC_TRYLOCK,
-	ATOMIC_UNLOCK
+	ATOMIC_FENCE,         /**< A fence action */
+	ATOMIC_LOCK,          /**< A lock action */
+	ATOMIC_TRYLOCK,       /**< A trylock action */
+	ATOMIC_UNLOCK         /**< An unlock action */
 } action_type_t;
 
 /* Forward declaration */

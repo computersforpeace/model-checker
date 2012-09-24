@@ -34,6 +34,8 @@ typedef std::vector< const ModelAction *, MyAlloc<const ModelAction *> > rel_hea
 struct model_params {
 	int maxreads;
 	int maxfuturedelay;
+	unsigned int fairwindow;
+	unsigned int enabledcount;
 };
 
 struct PendingFutureValue {
@@ -92,6 +94,7 @@ public:
 	void finish_execution();
 	bool isfeasibleprefix();
 	void set_assert() {asserted=true;}
+	const model_params params;
 
 	MEMALLOC
 private:
@@ -104,7 +107,6 @@ private:
 	int num_executions;
 	int num_feasible_executions;
 	bool promises_expired();
-	const model_params params;
 
 	/**
 	 * Stores the ModelAction for the current thread action.  Call this

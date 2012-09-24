@@ -32,6 +32,12 @@ struct future_value {
 	modelclock_t expiration;
 };
 
+struct fairness_info {
+	unsigned int enabled_count;
+	unsigned int turns;
+	bool priority;
+};
+
 
 /**
  * @brief A single node in a NodeStack
@@ -44,21 +50,22 @@ struct future_value {
  */
 class Node {
 public:
-	Node(ModelAction *act = NULL, Node *par = NULL, int nthreads = 1, bool *enabled_array = NULL);
+	Node(ModelAction *act = NULL, Node *par = NULL, int nthreads = 1, Node *prevfairness = NULL);
 	~Node();
 	/* return true = thread choice has already been explored */
 	bool has_been_explored(thread_id_t tid);
 	/* return true = backtrack set is empty */
 	bool backtrack_empty();
 
-	void explore_child(ModelAction *act);
+	void explore_child(ModelAction *act, bool * is_enabled);
 	/* return false = thread was already in backtrack */
 	bool set_backtrack(thread_id_t id);
 	thread_id_t get_next_backtrack();
 	bool is_enabled(Thread *t);
 	bool is_enabled(thread_id_t tid);
 	ModelAction * get_action() { return action; }
-
+	bool has_priority(thread_id_t tid) {return fairness[id_to_int(tid)].priority;}
+	int get_num_threads() {return num_threads;}
 	/** @return the parent Node to this Node; that is, the action that
 	 * occurred previously in the stack. */
 	Node * get_parent() const { return parent; }
@@ -93,6 +100,7 @@ private:
 	int num_threads;
 	std::vector< bool, MyAlloc<bool> > explored_children;
 	std::vector< bool, MyAlloc<bool> > backtrack;
+	std::vector< struct fairness_info, MyAlloc< struct fairness_info> > fairness;
 	int numBacktracks;
 	bool *enabled_array;
 
@@ -107,7 +115,7 @@ private:
 	unsigned int future_index;
 };
 
-typedef std::list< Node *, MyAlloc< Node * > > node_list_t;
+typedef std::vector< Node *, MyAlloc< Node * > > node_list_t;
 
 /**
  * @brief A stack of nodes
@@ -133,7 +141,7 @@ public:
 	MEMALLOC
 private:
 	node_list_t node_list;
-	node_list_t::iterator iter;
+	unsigned int iter;
 
 	int total_nodes;
 };

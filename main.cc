@@ -17,6 +17,8 @@
 static void param_defaults(struct model_params * params) {
 	params->maxreads = 0;
 	params->maxfuturedelay = 100;
+	params->fairwindow = 0;
+	params->enabledcount = 1;
 }
 
 static void print_usage(struct model_params *params) {
@@ -30,13 +32,17 @@ static void print_usage(struct model_params *params) {
 "-s                    Maximum actions that the model checker will wait for\n"
 "                      a write from the future past the expected number of\n"
 "                      actions. Default: %d\n"
+"-f                    Specify a fairness window in which actions that are\n"
+"                      enabled sufficiently many times should receive\n"
+"                      priority for execution. Default: %d\n"
+"-e                    Enabled count. Default: %d\n"
 "--                    Program arguments follow.\n\n",
-			params->maxreads, params->maxfuturedelay);
+params->maxreads, params->maxfuturedelay, params->fairwindow, params->enabledcount);
 	exit(EXIT_SUCCESS);
 }
 
 static void parse_options(struct model_params *params, int *argc, char ***argv) {
-	const char *shortopts = "hm:s:";
+	const char *shortopts = "hm:s:f:e:";
 	int opt;
 	bool error = false;
 	while (!error && (opt = getopt(*argc, *argv, shortopts)) != -1) {
@@ -46,6 +52,12 @@ static void parse_options(struct model_params *params, int *argc, char ***argv) 
 			break;
 		case 's':
 			params->maxfuturedelay = atoi(optarg);
+			break;
+		case 'f':
+			params->fairwindow = atoi(optarg);
+			break;
+		case 'e':
+			params->enabledcount = atoi(optarg);
 			break;
 		case 'm':
 			params->maxreads = atoi(optarg);

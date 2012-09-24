@@ -20,10 +20,10 @@ ModelChecker *model;
 /** @brief Constructor */
 ModelChecker::ModelChecker(struct model_params params) :
 	/* Initialize default scheduler */
+	params(params),
 	scheduler(new Scheduler()),
 	num_executions(0),
 	num_feasible_executions(0),
-	params(params),
 	diverge(NULL),
 	action_trace(new action_list_t()),
 	thread_map(new HashTable<int, Thread *, int>()),
@@ -276,6 +276,20 @@ void ModelChecker::set_backtracking(ModelAction *act)
 		/* Check if this has been explored already */
 		if (node->has_been_explored(tid))
 			continue;
+
+		/* See if fairness allows */
+		if (model->params.fairwindow != 0 && !node->has_priority(tid)) {
+			bool unfair=false;
+			for(int t=0;t<node->get_num_threads();t++) {
+				thread_id_t tother=int_to_id(t);
+				if (node->is_enabled(tother) && node->has_priority(tother)) {
+					unfair=true;
+					break;
+				}
+			}
+			if (unfair)
+				continue;
+		}
 
 		/* Cache the latest backtracking point */
 		if (!priv->next_backtrack || *prev > *priv->next_backtrack)

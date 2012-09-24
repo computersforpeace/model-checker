@@ -73,8 +73,8 @@ void Scheduler::wake(Thread *t)
 }
 
 /**
- * Remove one Thread from the scheduler. This implementation defaults to FIFO,
- * if a thread is not already provided.
+ * Select a Thread. This implementation defaults to round-robin, if a
+ * thread is not already provided.
  *
  * @param t Thread to run, if chosen by an external entity (e.g.,
  * ModelChecker). May be NULL to indicate no external choice.

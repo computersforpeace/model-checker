@@ -19,26 +19,55 @@
  * @param nthreads The number of threads which exist at this point in the
  * execution trace.
  */
-Node::Node(ModelAction *act, Node *par, int nthreads, bool *enabled)
+Node::Node(ModelAction *act, Node *par, int nthreads, Node *prevfairness)
 	: action(act),
 	parent(par),
 	num_threads(nthreads),
 	explored_children(num_threads),
 	backtrack(num_threads),
+	fairness(num_threads),
 	numBacktracks(0),
+	enabled_array(NULL),
 	may_read_from(),
 	read_from_index(0),
 	future_values(),
 	future_index(-1)
 {
-	if (act)
+	if (act) {
 		act->set_node(this);
-	enabled_array=(bool *)MYMALLOC(sizeof(bool)*num_threads);
-	if (enabled != NULL)
-		memcpy(enabled_array, enabled, sizeof(bool)*num_threads);
-	else {
-		for(int i=0;i<num_threads;i++)
-			enabled_array[i]=false;
+		int currtid=id_to_int(act->get_tid());
+		int prevtid=(prevfairness != NULL)?id_to_int(prevfairness->action->get_tid()):0;
+		
+		if ( model->params.fairwindow != 0 ) {
+			for(int i=0;i<nthreads;i++) {
+				ASSERT(i<((int)fairness.size()));
+				struct fairness_info * fi=& fairness[i];
+				struct fairness_info * prevfi=(par!=NULL)&&(i<par->get_num_threads())?&par->fairness[i]:NULL;
+				if (prevfi) {
+					*fi=*prevfi;
+				}
+				if (parent->enabled_array[i]) {
+					fi->enabled_count++;
+				}
+				if (i==currtid) {
+					fi->turns++;
+					fi->priority = false;
+				}
+				//Do window processing
+				if (prevfairness != NULL) {
+					if (prevfairness -> parent->enabled_array[i])
+						fi->enabled_count--;
+					if (i==prevtid) {
+						fi->turns--;
+					}
+					//Need full window to start evaluating conditions
+					//If we meet the enabled count and have no turns, give us priority
+					if ((fi->enabled_count >= model->params.enabledcount) &&
+							(fi->turns == 0))
+						fi->priority = true;
+				}
+			}
+		}
 	}
 }
 
@@ -47,7 +76,8 @@ Node::~Node()
 {
 	if (action)
 		delete action;
-	MYFREE(enabled_array);
+	if (enabled_array)
+		MYFREE(enabled_array);
 }
 
 /** Prints debugging info for the ModelAction associated with this Node */
@@ -183,8 +213,17 @@ bool Node::read_from_empty() {
  * Mark the appropriate backtracking information for exploring a thread choice.
  * @param act The ModelAction to explore
  */
-void Node::explore_child(ModelAction *act)
+void Node::explore_child(ModelAction *act, bool * is_enabled)
 {
+	if ( ! enabled_array )
+		enabled_array=(bool *)MYMALLOC(sizeof(bool)*num_threads);
+	if (is_enabled != NULL)
+		memcpy(enabled_array, is_enabled, sizeof(bool)*num_threads);
+	else {
+		for(int i=0;i<num_threads;i++)
+			enabled_array[i]=false;
+	}
+
 	explore(act->get_tid());
 }
 
@@ -305,58 +344,51 @@ void Node::explore(thread_id_t tid)
 	explored_children[i] = true;
 }
 
-static void clear_node_list(node_list_t *list, node_list_t::iterator start,
-                                               node_list_t::iterator end)
-{
-	node_list_t::iterator it;
-
-	for (it = start; it != end; it++)
-		delete (*it);
-	list->erase(start, end);
-}
-
 NodeStack::NodeStack()
 	: total_nodes(0)
 {
 	node_list.push_back(new Node());
 	total_nodes++;
-	iter = node_list.begin();
+	iter = 0;
 }
 
 NodeStack::~NodeStack()
 {
-	clear_node_list(&node_list, node_list.begin(), node_list.end());
 }
 
 void NodeStack::print()
 {
-	node_list_t::iterator it;
 	printf("............................................\n");
 	printf("NodeStack printing node_list:\n");
-	for (it = node_list.begin(); it != node_list.end(); it++) {
+	for (unsigned int it = 0; it < node_list.size(); it++) {
 		if (it == this->iter)
 			printf("vvv following action is the current iterator vvv\n");
-		(*it)->print();
+		node_list[it]->print();
 	}
 	printf("............................................\n");
 }
+
+/** Note: The is_enabled set contains what actions were enabled when
+ *  act was chosen. */
 
 ModelAction * NodeStack::explore_action(ModelAction *act, bool * is_enabled)
 {
 	DBG();
 
 	ASSERT(!node_list.empty());
-	node_list_t::iterator it=iter;
-	it++;
 
-	if (it != node_list.end()) {
+	if ((iter+1) < node_list.size()) {
 		iter++;
-		return (*iter)->get_action();
+		return node_list[iter]->get_action();
 	}
 
 	/* Record action */
-	get_head()->explore_child(act);
-	node_list.push_back(new Node(act, get_head(), model->get_num_threads(), is_enabled));
+	get_head()->explore_child(act, is_enabled);
+	Node *prevfairness = NULL;
+	if ( model->params.fairwindow != 0 && iter > model->params.fairwindow ) {
+		prevfairness = node_list[iter-model->params.fairwindow];
+	}
+	node_list.push_back(new Node(act, get_head(), model->get_num_threads(), prevfairness));
 	total_nodes++;
 	iter++;
 	return NULL;
@@ -373,35 +405,32 @@ ModelAction * NodeStack::explore_action(ModelAction *act, bool * is_enabled)
 void NodeStack::pop_restofstack(int numAhead)
 {
 	/* Diverging from previous execution; clear out remainder of list */
-	node_list_t::iterator it = iter;
-	while (numAhead--)
-		it++;
-	clear_node_list(&node_list, it, node_list.end());
+	unsigned int it=iter+numAhead;
+	node_list.resize(it);
 }
 
 Node * NodeStack::get_head()
 {
 	if (node_list.empty())
 		return NULL;
-	return *iter;
+	return node_list[iter];
 }
 
 Node * NodeStack::get_next()
 {
-	node_list_t::iterator it = iter;
 	if (node_list.empty()) {
 		DEBUG("Empty\n");
 		return NULL;
 	}
-	it++;
-	if (it == node_list.end()) {
+	unsigned int it=iter+1;
+	if (it == node_list.size()) {
 		DEBUG("At end\n");
 		return NULL;
 	}
-	return *it;
+	return node_list[it];
 }
 
 void NodeStack::reset_execution()
 {
-	iter = node_list.begin();
+	iter = 0;
 }

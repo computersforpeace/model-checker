@@ -246,8 +246,6 @@ ModelAction * ModelChecker::get_last_conflict(ModelAction *act)
  *
  * @param the ModelAction to find backtracking points for.
  */
-
-
 void ModelChecker::set_backtracking(ModelAction *act)
 {
 	Thread *t = get_thread(act);
@@ -559,7 +557,6 @@ ModelAction * ModelChecker::initialize_curr_action(ModelAction *curr)
  * @param curr is the ModelAction to check whether it is enabled.
  * @return a bool that indicates whether the action is enabled.
  */
-
 bool ModelChecker::check_action_enabled(ModelAction *curr) {
 	if (curr->is_lock()) {
 		std::mutex * lock = (std::mutex *)curr->get_location();
@@ -593,8 +590,8 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 	bool second_part_of_rmw = curr->is_rmwc() || curr->is_rmw();
 
 	if (!check_action_enabled(curr)) {
-		//we'll make the execution look like we chose to run this action
-		//much later...when a lock is actually available to relese
+		/* Make the execution look like we chose to run this action
+		 * much later, when a lock is actually available to release */
 		get_current_thread()->set_pending(curr);
 		remove_thread(get_current_thread());
 		return get_next_thread(NULL);
@@ -921,7 +918,6 @@ bool ModelChecker::r_modification_order(ModelAction *curr, const ModelAction *rf
  * @param rf is the write ModelAction that curr reads from.
  *
  */
-
 void ModelChecker::post_r_modification_order(ModelAction *curr, const ModelAction *rf)
 {
 	std::vector<action_list_t> *thrd_lists = obj_thrd_map->get_safe_ptr(curr->get_location());
@@ -1061,7 +1057,6 @@ bool ModelChecker::w_modification_order(ModelAction *curr)
 /** Arbitrary reads from the future are not allowed.  Section 29.3
  * part 9 places some constraints.  This method checks one result of constraint
  * constraint.  Others require compiler support. */
-
 bool ModelChecker::thin_air_constraint_may_allow(const ModelAction * writer, const ModelAction *reader) {
 	if (!writer->is_rmw())
 		return true;
@@ -1585,7 +1580,6 @@ void ModelChecker::add_thread(Thread *t)
  * Removes a thread from the scheduler. 
  * @param the thread to remove.
  */
-
 void ModelChecker::remove_thread(Thread *t)
 {
 	scheduler->remove_thread(t);

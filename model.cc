@@ -617,20 +617,20 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 		switch (work.type) {
 		case WORK_CHECK_CURR_ACTION: {
 			ModelAction *act = work.action;
-			bool updated = false;
+			bool update = false; /* update this location's release seq's */
 
 			process_thread_action(curr);
 
 			if (act->is_read() && process_read(act, second_part_of_rmw))
-				updated = true;
+				update = true;
 
 			if (act->is_write() && process_write(act))
-				updated = true;
+				update = true;
 
 			if (act->is_mutex_op())
 				process_mutex(act);
 
-			if (updated)
+			if (update)
 				work_queue.push_back(CheckRelSeqWorkEntry(act->get_location()));
 			break;
 		}

@@ -53,9 +53,6 @@ struct model_snapshot_members {
 	modelclock_t used_sequence_numbers;
 	Thread *nextThread;
 	ModelAction *next_backtrack;
-
-	/** @see ModelChecker::lazy_sync_size */
-	unsigned int lazy_sync_size;
 };
 
 /** @brief The central structure for model-checking */
@@ -166,21 +163,12 @@ private:
 	std::vector<struct PendingFutureValue> *futurevalues;
 
 	/**
-	 * Collection of lists of objects that might synchronize with one or
-	 * more release sequence. Release sequences might be determined lazily
-	 * as promises are fulfilled and modification orders are established.
-	 * This structure maps its lists by object location. Each ModelAction
-	 * in the lists should be an acquire operation.
+	 * List of acquire actions that might synchronize with one or more
+	 * release sequence. Release sequences might be determined lazily as
+	 * promises are fulfilled and modification orders are established. Each
+	 * ModelAction in this list must be an acquire operation.
 	 */
-	HashTable<void *, action_list_t, uintptr_t, 4> *lazy_sync_with_release;
-
-	/**
-	 * Represents the total size of the
-	 * ModelChecker::lazy_sync_with_release lists. This count should be
-	 * snapshotted, so it is actually a pointer to a location within
-	 * ModelChecker::priv
-	 */
-	unsigned int *lazy_sync_size;
+	std::vector<ModelAction *> *pending_acq_rel_seq;
 
 	std::vector<ModelAction *> *thrd_last_action;
 	NodeStack *node_stack;

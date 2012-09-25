@@ -1083,17 +1083,14 @@ bool ModelChecker::thin_air_constraint_may_allow(const ModelAction * writer, con
  */
 bool ModelChecker::release_seq_head(const ModelAction *rf, rel_heads_list_t *release_heads) const
 {
-	if (!rf) {
-		/* read from future: need to settle this later */
-		return false; /* incomplete */
-	}
+	while (rf) {
+		ASSERT(rf->is_write());
 
-	ASSERT(rf->is_write());
+		if (rf->is_release())
+			release_heads->push_back(rf);
+		if (!rf->is_rmw())
+			break; /* End of RMW chain */
 
-	if (rf->is_release())
-		release_heads->push_back(rf);
-	if (rf->is_rmw()) {
-		/* We need a RMW action that is both an acquire and release to stop */
 		/** @todo Need to be smarter here...  In the linux lock
 		 * example, this will run to the beginning of the program for
 		 * every acquire. */
@@ -1101,13 +1098,17 @@ bool ModelChecker::release_seq_head(const ModelAction *rf, rel_heads_list_t *rel
 		 * thread has a release preceded by an acquire and you've seen
 		 *	 both. */
 
+		/* acq_rel RMW is a sufficient stopping condition */
 		if (rf->is_acquire() && rf->is_release())
 			return true; /* complete */
 
-		/** @todo Might it be better to make this into a loop... */
-
-		return release_seq_head(rf->get_reads_from(), release_heads);
+		rf = rf->get_reads_from();
+	};
+	if (!rf) {
+		/* read from future: need to settle this later */
+		return false; /* incomplete */
 	}
+
 	if (rf->is_release())
 		return true; /* complete */
 

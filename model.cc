@@ -626,7 +626,8 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 			bool update = false; /* update this location's release seq's */
 			bool update_all = false; /* update all release seq's */
 
-			process_thread_action(curr);
+			if (process_thread_action(curr))
+				update_all = true;
 
 			if (act->is_read() && process_read(act, second_part_of_rmw))
 				update = true;

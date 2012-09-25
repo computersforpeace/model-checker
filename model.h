@@ -117,6 +117,7 @@ private:
 	bool process_read(ModelAction *curr, bool second_part_of_rmw);
 	bool process_write(ModelAction *curr);
 	void process_mutex(ModelAction *curr);
+	bool process_thread_action(ModelAction *curr);
 	bool check_action_enabled(ModelAction *curr);
 
 	bool take_step();

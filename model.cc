@@ -446,6 +446,63 @@ bool ModelChecker::process_write(ModelAction *curr)
 }
 
 /**
+ * @brief Process the current action for thread-related activity
+ *
+ * Performs current-action processing for a THREAD_* ModelAction. Proccesses
+ * may include setting Thread status, completing THREAD_FINISH/THREAD_JOIN
+ * synchronization, etc.  This function is a no-op for non-THREAD actions
+ * (e.g., ATOMIC_{READ,WRITE,RMW,LOCK}, etc.)
+ *
+ * @param curr The current action
+ * @return True if synchronization was updated
+ */
+bool ModelChecker::process_thread_action(ModelAction *curr)
+{
+	bool synchronized = false;
+
+	switch (curr->get_type()) {
+	case THREAD_CREATE: {
+		Thread *th = (Thread *)curr->get_location();
+		th->set_creation(curr);
+		break;
+	}
+	case THREAD_JOIN: {
+		Thread *waiting, *blocking;
+		waiting = get_thread(curr);
+		blocking = (Thread *)curr->get_location();
+		if (!blocking->is_complete()) {
+			blocking->push_wait_list(curr);
+			scheduler->sleep(waiting);
+		} else {
+			do_complete_join(curr);
+			synchronized = true;
+		}
+		break;
+	}
+	case THREAD_FINISH: {
+		Thread *th = get_thread(curr);
+		while (!th->wait_list_empty()) {
+			ModelAction *act = th->pop_wait_list();
+			Thread *wake = get_thread(act);
+			scheduler->wake(wake);
+			do_complete_join(act);
+			synchronized = true;
+		}
+		th->complete();
+		break;
+	}
+	case THREAD_START: {
+		check_promises(NULL, curr->get_cv());
+		break;
+	}
+	default:
+		break;
+	}
+
+	return synchronized;
+}
+
+/**
  * Initialize the current action by performing one or more of the following
  * actions, as appropriate: merging RMWR and RMWC/RMW actions, stepping forward
  * in the NodeStack, manipulating backtracking sets, allocating and
@@ -554,44 +611,6 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 		build_reads_from_past(curr);
 	curr = newcurr;
 
-	/* Thread specific actions */
-	switch (curr->get_type()) {
-	case THREAD_CREATE: {
-		Thread *th = (Thread *)curr->get_location();
-		th->set_creation(curr);
-		break;
-	}
-	case THREAD_JOIN: {
-		Thread *waiting, *blocking;
-		waiting = get_thread(curr);
-		blocking = (Thread *)curr->get_location();
-		if (!blocking->is_complete()) {
-			blocking->push_wait_list(curr);
-			scheduler->sleep(waiting);
-		} else {
-			do_complete_join(curr);
-		}
-		break;
-	}
-	case THREAD_FINISH: {
-		Thread *th = get_thread(curr);
-		while (!th->wait_list_empty()) {
-			ModelAction *act = th->pop_wait_list();
-			Thread *wake = get_thread(act);
-			scheduler->wake(wake);
-			do_complete_join(act);
-		}
-		th->complete();
-		break;
-	}
-	case THREAD_START: {
-		check_promises(NULL, curr->get_cv());
-		break;
-	}
-	default:
-		break;
-	}
-
 	work_queue_t work_queue(1, CheckCurrWorkEntry(curr));
 
 	while (!work_queue.empty()) {
@@ -602,6 +621,9 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 		case WORK_CHECK_CURR_ACTION: {
 			ModelAction *act = work.action;
 			bool updated = false;
+
+			process_thread_action(curr);
+
 			if (act->is_read() && process_read(act, second_part_of_rmw))
 				updated = true;
 

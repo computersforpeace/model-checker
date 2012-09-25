@@ -613,6 +613,7 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 		build_reads_from_past(curr);
 	curr = newcurr;
 
+	/* Initialize work_queue with the "current action" work */
 	work_queue_t work_queue(1, CheckCurrWorkEntry(curr));
 
 	while (!work_queue.empty()) {

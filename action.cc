@@ -249,18 +249,27 @@ void ModelAction::set_try_lock(bool obtainedlock) {
 		value=VALUE_TRYFAILED;
 }
 
-/** Update the model action's read_from action */
-void ModelAction::read_from(const ModelAction *act)
+/**
+ * Update the model action's read_from action
+ * @param act The action to read from; should be a write
+ * @return True if this read established synchronization
+ */
+bool ModelAction::read_from(const ModelAction *act)
 {
 	ASSERT(cv);
 	reads_from = act;
 	if (act != NULL && this->is_acquire()) {
 		rel_heads_list_t release_heads;
 		model->get_release_seq_heads(this, &release_heads);
+		int num_heads = release_heads.size();
 		for (unsigned int i = 0; i < release_heads.size(); i++)
-			if (!synchronize_with(release_heads[i]))
+			if (!synchronize_with(release_heads[i])) {
 				model->set_bad_synchronization();
+				num_heads--;
+			}
+		return num_heads > 0;
 	}
+	return false;
 }
 
 /**

@@ -105,7 +105,7 @@ public:
 
 	void create_cv(const ModelAction *parent = NULL);
 	ClockVector * get_cv() const { return cv; }
-	void read_from(const ModelAction *act);
+	bool read_from(const ModelAction *act);
 	bool synchronize_with(const ModelAction *act);
 
 	bool has_synchronized_with(const ModelAction *act) const;

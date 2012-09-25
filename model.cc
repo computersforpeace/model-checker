@@ -1097,8 +1097,15 @@ bool ModelChecker::release_seq_head(const ModelAction *rf, rel_heads_list_t *rel
 		/** @todo Need to be smarter here...  In the linux lock
 		 * example, this will run to the beginning of the program for
 		 * every acquire. */
+		/** @todo The way to be smarter here is to keep going until 1
+		 * thread has a release preceded by an acquire and you've seen
+		 *	 both. */
+
 		if (rf->is_acquire() && rf->is_release())
 			return true; /* complete */
+
+		/** @todo Might it be better to make this into a loop... */
+
 		return release_seq_head(rf->get_reads_from(), release_heads);
 	}
 	if (rf->is_release())

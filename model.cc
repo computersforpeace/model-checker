@@ -1311,6 +1311,8 @@ bool ModelChecker::resolve_release_sequences(void *location, work_queue_t *work_
 		}
 
 		if (updated) {
+			/* Re-check all pending release sequences */
+			work_queue->push_back(CheckRelSeqWorkEntry(NULL));
 			/* Re-check act for mo_graph edges */
 			work_queue->push_back(MOEdgeWorkEntry(act));
 

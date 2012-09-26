@@ -1413,16 +1413,22 @@ bool ModelChecker::resolve_promises(ModelAction *write)
 		Promise *promise = (*promises)[promise_index];
 		if (write->get_node()->get_promise(i)) {
 			ModelAction *read = promise->get_action();
-			read->read_from(write);
 			if (read->is_rmw()) {
 				mo_graph->addRMWEdge(write, read);
 			}
+
+			/* Only read (and check for release sequences) if this
+			 * write (esp. RMW) doesn't create cycles */
+			if (!mo_graph->checkForCycles())
+				read->read_from(write);
+
 			//First fix up the modification order for actions that happened
 			//before the read
 			r_modification_order(read, write);
 			//Next fix up the modification order for actions that happened
 			//after the read.
 			post_r_modification_order(read, write);
+
 			promises->erase(promises->begin() + promise_index);
 			resolved = true;
 		} else

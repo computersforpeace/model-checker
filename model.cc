@@ -1279,9 +1279,9 @@ bool ModelChecker::resolve_release_sequences(void *location, work_queue_t *work_
 			work_queue->push_back(MOEdgeWorkEntry(act));
 
 			/* propagate synchronization to later actions */
-			action_list_t::reverse_iterator it = action_trace->rbegin();
-			for (; (*it) != act; it++) {
-				ModelAction *propagate = *it;
+			action_list_t::reverse_iterator rit = action_trace->rbegin();
+			for (; (*rit) != act; rit++) {
+				ModelAction *propagate = *rit;
 				if (act->happens_before(propagate)) {
 					propagate->synchronize_with(act);
 					/* Re-check 'propagate' for mo_graph edges */

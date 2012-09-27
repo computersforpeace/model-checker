@@ -31,6 +31,7 @@ include $(DEPS)
 debug: CPPFLAGS += -DCONFIG_DEBUG
 debug: all
 
+PHONY += docs
 docs: *.c *.cc *.h
 	doxygen
 

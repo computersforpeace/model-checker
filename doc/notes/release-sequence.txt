@@ -1,0 +1,99 @@
+-------------------------------------------------------------------------------
+ Release sequence support:
+-------------------------------------------------------------------------------
+
+*******************************
+ From the C++11 specification
+*******************************
+
+1.10.7
+
+A release sequence from a release operation A on an atomic object M is a
+maximal contiguous sub-sequence of side effects in the modification order of
+M, where the first operation is A, and every subsequent operation
+
+- is performed by the same thread that performed A, or
+- is an atomic read-modify-write operation.
+
+29.3.2
+
+An atomic operation A that performs a release operation on an atomic object M
+synchronizes with an atomic operation B that performs an acquire operation on
+M and takes its value from any side effect in the release sequence headed by
+A.
+
+*******************************
+ My Notes
+*******************************
+
+The specification allows for a single acquire to synchronize with more than
+one release operation, as its "reads from" value might be part of more than
+one release sequence.
+
+*******************************
+ Approximate Algorithm
+*******************************
+
+Check read-write chain...
+
+Given:
+current action = curr
+read from = rf
+Cases:
+* rf is NULL: return uncertain
+* rf is RMW:
+	- if rf is release:
+		add rf to release heads
+	- if rf is rel_acq:
+		return certain [note: we don't need to extend release sequence
+		further because this acquire will have synchronized already]
+	  else
+		return (recursively) "get release sequence head of rf"
+* if rf is release:
+	add rf to release heads
+	return certain
+* else, rf is relaxed write (NOT RMW)
+  - check same thread
+
+*******************************
+"check same thread"
+*******************************
+
+let release = max{act in S | samethread(act, rf) && isrelease(act) && act <= rf}
+let t = thread(rf) // == thread(release)
+for all threads t_j != t
+	if exists c in S | c !--mo--> release, rf !--mo--> c, c is write, thread(c) == t_j then
+		return certain;
+[ note: need to check "future ordered" condition ]
+add release to release heads
+return certain;
+
+*******************************
+General fixup steps:
+*******************************
+
+1. process action, find read_from
+2. add initial mo_graph edges
+3. assign read_from, calc initial "get_release_seq_heads()"
+4. perform synchronization with all release heads
+
+synchronization => check for new mo_graph edges
+                => check for resolved release sequences
+		=> check for failed promises
+mo_graph edges  => check for resolved release sequences
+
+*******************************
+Other notes
+*******************************
+
+"cannot determine" means we need to lazily check conditions in the future
+   - check when future writes satisfy "promises"
+
+Read from future? We require that all release heads are "in the past", so that
+we don't form synchronization against the ordering of the program trace. We
+ensure that some execution is explored in which they are ordered the other way,
+so we declare this execution "infeasible."
+
+=> If we *do* establish a synchronization after the fact:
+   - need to recurse through the execution trace and update clock vectors
+   - more

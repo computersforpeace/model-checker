@@ -1111,6 +1111,10 @@ bool ModelChecker::thin_air_constraint_may_allow(const ModelAction * writer, con
  */
 bool ModelChecker::release_seq_head(const ModelAction *rf, rel_heads_list_t *release_heads) const
 {
+	/* Only check for release sequences if there are no cycles */
+	if (mo_graph->checkForCycles())
+		return false;
+
 	while (rf) {
 		ASSERT(rf->is_write());
 
@@ -1419,12 +1423,7 @@ bool ModelChecker::resolve_promises(ModelAction *write)
 			if (read->is_rmw()) {
 				mo_graph->addRMWEdge(write, read);
 			}
-
-			/* Only read (and check for release sequences) if this
-			 * write (esp. RMW) doesn't create cycles */
-			if (!mo_graph->checkForCycles())
-				read->read_from(write);
-
+			read->read_from(write);
 			//First fix up the modification order for actions that happened
 			//before the read
 			r_modification_order(read, write);

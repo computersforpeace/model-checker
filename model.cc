@@ -723,6 +723,9 @@ bool ModelChecker::isfeasibleprefix() {
 
 /** @return whether the current partial trace is feasible. */
 bool ModelChecker::isfeasible() {
+	if (DBG_ENABLED() && mo_graph->checkForRMWViolation())
+		DEBUG("Infeasible: RMW violation\n");
+
 	return !mo_graph->checkForRMWViolation() && isfeasibleotherthanRMW();
 }
 

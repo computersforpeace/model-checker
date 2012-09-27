@@ -121,6 +121,8 @@ bool Node::get_promise(unsigned int i) {
  * @return true if we have a valid combination.
  */
 bool Node::increment_promise() {
+	DBG();
+
 	for (unsigned int i = 0; i < promises.size(); i++) {
 		if (promises[i] == PROMISE_UNFULFILLED) {
 			promises[i] = PROMISE_FULFILLED;
@@ -321,6 +323,8 @@ const ModelAction * Node::get_read_from() {
  * @return Returns false if we have explored all items.
  */
 bool Node::increment_read_from() {
+	DBG();
+
 	read_from_index++;
 	return (read_from_index < may_read_from.size());
 }
@@ -330,6 +334,8 @@ bool Node::increment_read_from() {
  * @return Returns false if we have explored all values.
  */
 bool Node::increment_future_value() {
+	DBG();
+
 	future_index++;
 	return (future_index < future_values.size());
 }

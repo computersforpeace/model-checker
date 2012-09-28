@@ -334,7 +334,7 @@ bool ModelChecker::process_read(ModelAction *curr, bool second_part_of_rmw)
 			bool r_status = false;
 
 			if (!second_part_of_rmw) {
-				check_recency(curr);
+				check_recency(curr, reads_from);
 				r_status = r_modification_order(curr, reads_from);
 			}
 
@@ -776,23 +776,21 @@ ModelAction * ModelChecker::process_rmw(ModelAction *act) {
  *
  * If so, we decide that the execution is no longer feasible.
  */
-void ModelChecker::check_recency(ModelAction *curr) {
+void ModelChecker::check_recency(ModelAction *curr, const ModelAction *rf) {
 	if (params.maxreads != 0) {
+
 		if (curr->get_node()->get_read_from_size() <= 1)
 			return;
-
 		//Must make sure that execution is currently feasible...  We could
 		//accidentally clear by rolling back
 		if (!isfeasible())
 			return;
-
 		std::vector<action_list_t> *thrd_lists = obj_thrd_map->get_safe_ptr(curr->get_location());
 		int tid = id_to_int(curr->get_tid());
 
 		/* Skip checks */
 		if ((int)thrd_lists->size() <= tid)
 			return;
-
 		action_list_t *list = &(*thrd_lists)[tid];
 
 		action_list_t::reverse_iterator rit = list->rbegin();
@@ -811,17 +809,18 @@ void ModelChecker::check_recency(ModelAction *curr) {
 			ModelAction *act = *rit;
 			if (!act->is_read())
 				return;
-			if (act->get_reads_from() != curr->get_reads_from())
+			
+			if (act->get_reads_from() != rf)
 				return;
 			if (act->get_node()->get_read_from_size() <= 1)
 				return;
 		}
-
 		for (int i = 0; i<curr->get_node()->get_read_from_size(); i++) {
 			//Get write
 			const ModelAction * write = curr->get_node()->get_read_from_at(i);
+
 			//Need a different write
-			if (write==curr->get_reads_from())
+			if (write==rf)
 				continue;
 
 			/* Test to see whether this is a feasible write to read from*/
@@ -1634,6 +1633,8 @@ bool ModelChecker::take_step() {
 		if (curr->get_state() == THREAD_READY) {
 			ASSERT(priv->current_action);
 
+			if (priv->current_action->get_seq_number()>600)
+				print_summary();
 			priv->nextThread = check_current_action(priv->current_action);
 			priv->current_action = NULL;
 			if (curr->is_blocked() || curr->is_complete())

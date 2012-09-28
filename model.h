@@ -122,7 +122,7 @@ private:
 
 	bool take_step();
 
-	void check_recency(ModelAction *curr);
+	void check_recency(ModelAction *curr, const ModelAction *rf);
 	ModelAction * get_last_conflict(ModelAction *act);
 	void set_backtracking(ModelAction *act);
 	Thread * get_next_thread(ModelAction *curr);

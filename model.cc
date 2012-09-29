@@ -660,6 +660,7 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 				if (w_modification_order(act))
 					updated = true;
 			}
+			mo_graph->commitChanges();
 
 			if (updated)
 				work_queue.push_back(CheckRelSeqWorkEntry(act->get_location()));

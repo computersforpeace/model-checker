@@ -236,11 +236,14 @@ void ModelAction::read_from(const ModelAction *act)
  * Synchronize the current thread with the thread corresponding to the
  * ModelAction parameter.
  * @param act The ModelAction to synchronize with
+ * @return True if this is a valid synchronization; false otherwise
  */
-void ModelAction::synchronize_with(const ModelAction *act) {
-	ASSERT(*act < *this || type == THREAD_JOIN || type == ATOMIC_LOCK );
+bool ModelAction::synchronize_with(const ModelAction *act) {
+	if (*this < *act && type != THREAD_JOIN && type != ATOMIC_LOCK)
+		return false;
 	model->check_promises(cv, act->cv);
 	cv->merge(act->cv);
+	return true;
 }
 
 bool ModelAction::has_synchronized_with(const ModelAction *act) const

@@ -1634,8 +1634,6 @@ bool ModelChecker::take_step() {
 		if (curr->get_state() == THREAD_READY) {
 			ASSERT(priv->current_action);
 
-			if (priv->current_action->get_seq_number()>600)
-				print_summary();
 			priv->nextThread = check_current_action(priv->current_action);
 			priv->current_action = NULL;
 			if (curr->is_blocked() || curr->is_complete())

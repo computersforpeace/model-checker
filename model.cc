@@ -38,7 +38,8 @@ ModelChecker::ModelChecker(struct model_params params) :
 	mo_graph(new CycleGraph()),
 	failed_promise(false),
 	too_many_reads(false),
-	asserted(false)
+	asserted(false),
+	bad_synchronization(false)
 {
 	/* Allocate this "size" on the snapshotting heap */
 	priv = (struct model_snapshot_members *)calloc(1, sizeof(*priv));
@@ -80,6 +81,7 @@ void ModelChecker::reset_to_initial_state()
 	node_stack->reset_execution();
 	failed_promise = false;
 	too_many_reads = false;
+	bad_synchronization = false;
 	reset_asserted();
 	snapshotObject->backTrackBeforeStep(0);
 }
@@ -740,10 +742,12 @@ bool ModelChecker::isfeasibleotherthanRMW() {
 			DEBUG("Infeasible: failed promise\n");
 		if (too_many_reads)
 			DEBUG("Infeasible: too many reads\n");
+		if (bad_synchronization)
+			DEBUG("Infeasible: bad synchronization ordering\n");
 		if (promises_expired())
 			DEBUG("Infeasible: promises expired\n");
 	}
-	return !mo_graph->checkForCycles() && !failed_promise && !too_many_reads && !promises_expired();
+	return !mo_graph->checkForCycles() && !failed_promise && !too_many_reads && !bad_synchronization && !promises_expired();
 }
 
 /** Returns whether the current completed trace is feasible. */

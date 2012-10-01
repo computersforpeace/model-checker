@@ -91,6 +91,11 @@ public:
 	void finish_execution();
 	bool isfeasibleprefix();
 	void set_assert() {asserted=true;}
+
+	/** @brief Alert the model-checker that an incorrectly-ordered
+	 * synchronization was made */
+	void set_bad_synchronization() { bad_synchronization = true; }
+
 	const model_params params;
 
 	MEMALLOC
@@ -196,6 +201,8 @@ private:
 	bool failed_promise;
 	bool too_many_reads;
 	bool asserted;
+	/** @brief Incorrectly-ordered synchronization was made */
+	bool bad_synchronization;
 };
 
 extern ModelChecker *model;

@@ -324,7 +324,7 @@ const ModelAction * Node::get_read_from() {
  */
 bool Node::increment_read_from() {
 	DBG();
-
+	promises.clear();
 	read_from_index++;
 	return (read_from_index < may_read_from.size());
 }
@@ -335,7 +335,7 @@ bool Node::increment_read_from() {
  */
 bool Node::increment_future_value() {
 	DBG();
-
+	promises.clear();
 	future_index++;
 	return (future_index < future_values.size());
 }

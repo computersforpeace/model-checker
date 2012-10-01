@@ -525,7 +525,9 @@ ModelAction * ModelChecker::initialize_curr_action(ModelAction *curr)
 	if (curr->is_rmwc() || curr->is_rmw()) {
 		newcurr = process_rmw(curr);
 		delete curr;
-		compute_promises(newcurr);
+
+		if (newcurr->is_rmw())
+			compute_promises(newcurr);
 		return newcurr;
 	}
 
@@ -542,8 +544,9 @@ ModelAction * ModelChecker::initialize_curr_action(ModelAction *curr)
 		delete curr;
 
 		/* If we have diverged, we need to reset the clock vector. */
-		if (diverge == NULL)
+		if (diverge == NULL) {
 			newcurr->create_cv(get_parent_action(newcurr->get_tid()));
+		}
 	} else {
 		newcurr = curr;
 		/*
@@ -1436,6 +1439,8 @@ bool ModelChecker::resolve_promises(ModelAction *write)
 			//Next fix up the modification order for actions that happened
 			//after the read.
 			post_r_modification_order(read, write);
+			//Make sure the promise's value matches the write's value
+			ASSERT(promise->get_value() == write->get_value());
 
 			promises->erase(promises->begin() + promise_index);
 			resolved = true;
@@ -1642,6 +1647,7 @@ bool ModelChecker::take_step() {
 
 			priv->nextThread = check_current_action(priv->current_action);
 			priv->current_action = NULL;
+
 			if (curr->is_blocked() || curr->is_complete())
 				scheduler->remove_thread(curr);
 		} else {

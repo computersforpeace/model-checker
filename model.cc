@@ -951,10 +951,10 @@ void ModelChecker::post_r_modification_order(ModelAction *curr, const ModelActio
 		action_list_t::reverse_iterator rit;
 		ModelAction *lastact = NULL;
 
-		/* Find last action that happens after curr */
+		/* Find last action that happens after curr that is either not curr or a rmw */
 		for (rit = list->rbegin(); rit != list->rend(); rit++) {
 			ModelAction *act = *rit;
-			if (curr->happens_before(act)) {
+			if (curr->happens_before(act) && (curr != act || curr->is_rmw())) {
 				lastact = act;
 			} else
 				break;
@@ -962,12 +962,25 @@ void ModelChecker::post_r_modification_order(ModelAction *curr, const ModelActio
 
 			/* Include at most one act per-thread that "happens before" curr */
 		if (lastact != NULL) {
-			if (lastact->is_read()) {
+			if (lastact==curr) {
+				//Case 1: The resolved read is a RMW, and we need to make sure
+				//that the write portion of the RMW mod order after rf
+
+				mo_graph->addEdge(rf, lastact);
+			} else if (lastact->is_read()) {
+				//Case 2: The resolved read is a normal read and the next
+				//operation is a read, and we need to make sure the value read
+				//is mod ordered after rf
+
 				const ModelAction *postreadfrom = lastact->get_reads_from();
 				if (postreadfrom != NULL&&rf != postreadfrom)
 					mo_graph->addEdge(rf, postreadfrom);
-			} else if (rf != lastact) {
-				mo_graph->addEdge(rf, lastact);
+			} else {
+				//Case 3: The resolved read is a normal read and the next
+				//operation is a write, and we need to make sure that the
+				//write is mod ordered after rf
+				if (lastact!=rf)
+					mo_graph->addEdge(rf, lastact);
 			}
 			break;
 		}

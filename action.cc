@@ -228,7 +228,8 @@ void ModelAction::read_from(const ModelAction *act)
 		rel_heads_list_t release_heads;
 		model->get_release_seq_heads(this, &release_heads);
 		for (unsigned int i = 0; i < release_heads.size(); i++)
-			synchronize_with(release_heads[i]);
+			if (!synchronize_with(release_heads[i]))
+				model->set_bad_synchronization();
 	}
 }
 

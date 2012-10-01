@@ -1280,8 +1280,10 @@ bool ModelChecker::resolve_release_sequences(void *location, work_queue_t *work_
 		complete = release_seq_head(rf, &release_heads);
 		for (unsigned int i = 0; i < release_heads.size(); i++) {
 			if (!act->has_synchronized_with(release_heads[i])) {
-				updated = true;
-				act->synchronize_with(release_heads[i]);
+				if (act->synchronize_with(release_heads[i]))
+					updated = true;
+				else
+					set_bad_synchronization();
 			}
 		}
 

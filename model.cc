@@ -543,10 +543,7 @@ ModelAction * ModelChecker::initialize_curr_action(ModelAction *curr)
 		/* Discard duplicate ModelAction; use action from NodeStack */
 		delete curr;
 
-		/* If we have diverged, we need to reset the clock vector. */
-		if (diverge == NULL) {
-			newcurr->create_cv(get_parent_action(newcurr->get_tid()));
-		}
+		newcurr->create_cv(get_parent_action(newcurr->get_tid()));
 	} else {
 		newcurr = curr;
 		/*

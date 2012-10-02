@@ -325,8 +325,11 @@ const ModelAction * Node::get_read_from() {
 bool Node::increment_read_from() {
 	DBG();
 	promises.clear();
-	read_from_index++;
-	return (read_from_index < may_read_from.size());
+	if (read_from_index < may_read_from.size()) {
+		read_from_index++;
+		return read_from_index < may_read_from.size();
+	}
+	return false;
 }
 
 /**
@@ -336,8 +339,11 @@ bool Node::increment_read_from() {
 bool Node::increment_future_value() {
 	DBG();
 	promises.clear();
-	future_index++;
-	return (future_index < (int)future_values.size());
+	if (future_index < ((int)future_values.size())) {
+		future_index++;
+		return (future_index < ((int)future_values.size()));
+	}
+	return false;
 }
 
 void Node::explore(thread_id_t tid)

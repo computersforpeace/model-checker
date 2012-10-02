@@ -14,7 +14,7 @@ static mspace sStaticSpace = NULL;
 #endif
 
 /** Non-snapshotting calloc for our use. */
-void *MYCALLOC(size_t count, size_t size) {
+void *model_calloc(size_t count, size_t size) {
 #if USE_MPROTECT_SNAPSHOT
 	static void *(*callocp)(size_t count, size_t size)=NULL;
 	char *error;

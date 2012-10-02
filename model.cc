@@ -188,6 +188,7 @@ bool ModelChecker::next_execution()
 	DBG();
 
 	num_executions++;
+
 	if (isfinalfeasible()) {
 		printf("Earliest divergence point since last feasible execution:\n");
 		if (earliest_diverge)
@@ -198,6 +199,9 @@ bool ModelChecker::next_execution()
 		earliest_diverge = NULL;
 		num_feasible_executions++;
 	}
+
+	DEBUG("Number of acquires waiting on pending release sequences: %lu\n",
+			pending_acq_rel_seq->size());
 
 	if (isfinalfeasible() || DBG_ENABLED())
 		print_summary();

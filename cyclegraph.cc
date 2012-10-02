@@ -170,7 +170,7 @@ bool CycleGraph::checkReachable(const ModelAction *from, const ModelAction *to) 
  */
 bool CycleGraph::checkReachable(CycleNode *from, CycleNode *to) {
 	std::vector<CycleNode *, MyAlloc<CycleNode *> > queue;
-	HashTable<CycleNode *, CycleNode *, uintptr_t, 4, model_malloc, model_calloc, MYFREE> discovered;
+	HashTable<CycleNode *, CycleNode *, uintptr_t, 4, model_malloc, model_calloc, model_free> discovered;
 
 	queue.push_back(from);
 	discovered.put(from, from);

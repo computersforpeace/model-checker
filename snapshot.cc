@@ -284,7 +284,7 @@ snapshot_id takeSnapshot( ){
  */
 void rollBack( snapshot_id theID ){
 #if USE_MPROTECT_SNAPSHOT
-	HashTable< void *, bool, uintptr_t, 4, model_malloc, model_calloc, MYFREE> duplicateMap;
+	HashTable< void *, bool, uintptr_t, 4, model_malloc, model_calloc, model_free> duplicateMap;
 	for(unsigned int region=0; region<snapshotrecord->lastRegion;region++) {
 		if( mprotect(snapshotrecord->regionsToSnapShot[region].basePtr, snapshotrecord->regionsToSnapShot[region].sizeInPages*sizeof(struct SnapShotPage), PROT_READ | PROT_WRITE ) == -1 ){
 			perror("mprotect");

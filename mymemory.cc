@@ -100,7 +100,7 @@ void system_free( void * ptr ){
 }
 
 /** Non-snapshotting free for our use. */
-void MYFREE(void *ptr) {
+void model_free(void *ptr) {
 #if USE_MPROTECT_SNAPSHOT
 	static void (*freep)(void *);
 	char *error;

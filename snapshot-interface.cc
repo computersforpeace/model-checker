@@ -124,7 +124,7 @@ int SnapshotStack::backTrackBeforeStep(int seqindex) {
 		}
 		struct stackEntry *tmp=stack;
 		stack=stack->next;
-		MYFREE(tmp);
+		model_free(tmp);
 	}
 }
 

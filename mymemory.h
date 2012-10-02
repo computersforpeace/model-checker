@@ -14,13 +14,13 @@
 		return model_malloc(size);\
 	}\
 	void operator delete(void *p, size_t size) { \
-		MYFREE( p ); \
+		model_free( p ); \
 	}\
 	void * operator new[](size_t size) { \
 		return model_malloc(size);\
 	}\
 	void operator delete[](void *p, size_t size) {\
-		MYFREE(p);\
+		model_free(p);\
 	}
 
 /** SNAPSHOTALLOC declares the allocators for a class to allocate
@@ -29,7 +29,7 @@
 
 void *model_malloc(size_t size);
 void *model_calloc(size_t count, size_t size);
-void MYFREE(void *ptr);
+void model_free(void *ptr);
 
 static inline void * snapshot_malloc(size_t size) {
 	return malloc(size);
@@ -118,7 +118,7 @@ template <class T>
 
        // deallocate storage p of deleted elements
        void deallocate (pointer p, size_type num) {
-           MYFREE((void*)p);
+           model_free((void*)p);
        }
    };
 

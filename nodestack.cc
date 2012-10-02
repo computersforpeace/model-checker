@@ -77,7 +77,7 @@ Node::~Node()
 	if (action)
 		delete action;
 	if (enabled_array)
-		MYFREE(enabled_array);
+		model_free(enabled_array);
 }
 
 /** Prints debugging info for the ModelAction associated with this Node */

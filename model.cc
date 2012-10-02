@@ -543,16 +543,19 @@ ModelAction * ModelChecker::initialize_curr_action(ModelAction *curr)
 		/* Discard duplicate ModelAction; use action from NodeStack */
 		delete curr;
 
+		/* Always compute new clock vector */
 		newcurr->create_cv(get_parent_action(newcurr->get_tid()));
 	} else {
 		newcurr = curr;
+
+		/* Always compute new clock vector */
+		newcurr->create_cv(get_parent_action(newcurr->get_tid()));
 		/*
 		 * Perform one-time actions when pushing new ModelAction onto
 		 * NodeStack
 		 */
-		curr->create_cv(get_parent_action(curr->get_tid()));
-		if (curr->is_write())
-			compute_promises(curr);
+		if (newcurr->is_write())
+			compute_promises(newcurr);
 	}
 	return newcurr;
 }

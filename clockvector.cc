@@ -18,8 +18,7 @@
 ClockVector::ClockVector(ClockVector *parent, ModelAction *act)
 {
 	num_threads = model->get_num_threads();
-	clock = (modelclock_t *)MYMALLOC(num_threads * sizeof(int));
-	memset(clock, 0, num_threads * sizeof(int));
+	clock = (modelclock_t *)snapshot_calloc(num_threads, sizeof(int));
 	if (parent)
 		std::memcpy(clock, parent->clock, parent->num_threads * sizeof(modelclock_t));
 
@@ -30,7 +29,7 @@ ClockVector::ClockVector(ClockVector *parent, ModelAction *act)
 /** @brief Destructor */
 ClockVector::~ClockVector()
 {
-	MYFREE(clock);
+	snapshot_free(clock);
 }
 
 /**
@@ -47,7 +46,7 @@ void ClockVector::merge(const ClockVector *cv)
 
 	if (cv->num_threads > num_threads) {
 		resize = true;
-		clk = (modelclock_t *)MYMALLOC(cv->num_threads * sizeof(modelclock_t));
+		clk = (modelclock_t *)snapshot_malloc(cv->num_threads * sizeof(modelclock_t));
 	}
 
 	/* Element-wise maximum */
@@ -58,7 +57,7 @@ void ClockVector::merge(const ClockVector *cv)
 		for (int i = num_threads; i < cv->num_threads; i++)
 			clk[i] = cv->clock[i];
 		num_threads = cv->num_threads;
-		MYFREE(clock);
+		snapshot_free(clock);
 	}
 	clock = clk;
 }

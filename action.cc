@@ -201,11 +201,16 @@ bool ModelAction::is_conflicting_lock(const ModelAction *act) const
 	return false;
 }
 
+/**
+ * Create a new clock vector for this action. Note that this function allows a
+ * user to clobber (and leak) a ModelAction's existing clock vector. A user
+ * should ensure that the vector has already either been rolled back
+ * (effectively "freed") or freed.
+ *
+ * @param parent A ModelAction from which to inherit a ClockVector
+ */
 void ModelAction::create_cv(const ModelAction *parent)
 {
-	if (cv)
-		delete cv;
-
 	if (parent)
 		cv = new ClockVector(parent->cv, this);
 	else

@@ -658,7 +658,8 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 			bool updated = false;
 
 			if (act->is_read()) {
-				if (r_modification_order(act, act->get_reads_from()))
+				const ModelAction *rf = act->get_reads_from();
+				if (rf != NULL && r_modification_order(act, rf))
 					updated = true;
 			}
 			if (act->is_write()) {

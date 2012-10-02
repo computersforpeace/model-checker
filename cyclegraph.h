@@ -29,6 +29,7 @@ class CycleGraph {
 	void commitChanges();
 	void rollbackChanges();
 #if SUPPORT_MOD_ORDER_DUMP
+	void dumpNodes(FILE *file);
 	void dumpGraphToFile(const char * filename);
 #endif
 

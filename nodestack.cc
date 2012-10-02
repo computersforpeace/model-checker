@@ -178,7 +178,7 @@ bool Node::add_future_value(uint64_t value, modelclock_t expiration) {
  * @return true if the future_values set is empty.
  */
 bool Node::future_value_empty() {
-	return ((future_index + 1) >= future_values.size());
+	return ((future_index + 1) >= ((int)future_values.size()));
 }
 
 /**
@@ -288,12 +288,12 @@ void Node::add_read_from(const ModelAction *act)
  * @return The first element in future_values
  */
 uint64_t Node::get_future_value() {
-	ASSERT(future_index<future_values.size());
+	ASSERT(future_index<((int)future_values.size()));
 	return future_values[future_index].value;
 }
 
 modelclock_t Node::get_future_value_expiration() {
-	ASSERT(future_index<future_values.size());
+	ASSERT(future_index<((int)future_values.size()));
 	return future_values[future_index].expiration;
 }
 
@@ -339,7 +339,7 @@ bool Node::increment_read_from() {
 bool Node::increment_future_value() {
 	DBG();
 	promises.clear();
-	if ((future_index+1) < future_values.size()) {
+	if ((future_index+1) < ((int)future_values.size())) {
 		future_index++;
 		return true;
 	}

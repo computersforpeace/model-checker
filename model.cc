@@ -1598,6 +1598,33 @@ static void print_list(action_list_t *list)
 	printf("---------------------------------------------------------------------\n");
 }
 
+#if SUPPORT_MOD_ORDER_DUMP
+void ModelChecker::dumpGraph(char *filename) {
+	char buffer[200];
+  sprintf(buffer, "%s.dot",filename);
+  FILE *file=fopen(buffer, "w");
+  fprintf(file, "digraph %s {\n",filename);
+	mo_graph->dumpNodes(file);
+	ModelAction ** thread_array=(ModelAction **)model_calloc(1, sizeof(ModelAction *)*get_num_threads());
+	
+	for (action_list_t::iterator it = action_trace->begin(); it != action_trace->end(); it++) {
+		ModelAction *action=*it;
+		if (action->is_read()) {
+			fprintf(file, "N%u [label=\"%u, T%u\"];\n", action->get_seq_number(),action->get_seq_number(), action->get_tid());
+			fprintf(file, "N%u -> N%u[label=\"rf\", color=red];\n", action->get_seq_number(), action->get_reads_from()->get_seq_number());
+		}
+		if (thread_array[action->get_tid()] != NULL) {
+			fprintf(file, "N%u -> N%u[label=\"sb\", color=blue];\n", thread_array[action->get_tid()]->get_seq_number(), action->get_seq_number());
+		}
+		
+		thread_array[action->get_tid()]=action;
+	}
+  fprintf(file,"}\n");
+	model_free(thread_array);
+  fclose(file);	
+}
+#endif
+
 void ModelChecker::print_summary()
 {
 	printf("\n");
@@ -1610,6 +1637,8 @@ void ModelChecker::print_summary()
 	char buffername[100];
 	sprintf(buffername, "exec%04u", num_executions);
 	mo_graph->dumpGraphToFile(buffername);
+	sprintf(buffername, "graph%04u", num_executions);
+  dumpGraph(buffername);
 #endif
 
 	if (!isfinalfeasible())

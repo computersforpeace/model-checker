@@ -122,11 +122,7 @@ void CycleGraph::addRMWEdge(const ModelAction *from, const ModelAction *rmw) {
 }
 
 #if SUPPORT_MOD_ORDER_DUMP
-void CycleGraph::dumpGraphToFile(const char *filename) {
-	char buffer[200];
-  sprintf(buffer, "%s.dot",filename);
-  FILE *file=fopen(buffer, "w");
-  fprintf(file, "digraph %s {\n",filename);
+void CycleGraph::dumpNodes(FILE *file) {
   for(unsigned int i=0;i<nodeList.size();i++) {
 		CycleNode *cn=nodeList[i];
 		std::vector<CycleNode *> * edges=cn->getEdges();
@@ -141,6 +137,14 @@ void CycleGraph::dumpGraphToFile(const char *filename) {
       fprintf(file, "N%u -> N%u;\n", action->get_seq_number(), dstaction->get_seq_number());
 	  }
 	}
+}
+
+void CycleGraph::dumpGraphToFile(const char *filename) {
+	char buffer[200];
+  sprintf(buffer, "%s.dot",filename);
+  FILE *file=fopen(buffer, "w");
+  fprintf(file, "digraph %s {\n",filename);
+	dumpNodes(file);
   fprintf(file,"}\n");
   fclose(file);	
 }

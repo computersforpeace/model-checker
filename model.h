@@ -18,6 +18,7 @@
 #include "clockvector.h"
 #include "hashtable.h"
 #include "workqueue.h"
+#include "config.h"
 
 /* Forward declaration */
 class NodeStack;
@@ -66,6 +67,9 @@ public:
 
 	/** Prints an execution summary with trace information. */
 	void print_summary();
+#if SUPPORT_MOD_ORDER_DUMP
+	void dumpGraph(char *filename);
+#endif
 
 	void add_thread(Thread *t);
 	void remove_thread(Thread *t);

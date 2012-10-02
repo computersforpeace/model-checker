@@ -27,9 +27,11 @@
 
 /** Snapshotting configurables */
 
-/** If USE_MPROTECT_SNAPSHOT=1, then snapshot by using mmap() and mprotect()
+/** 
+ * If USE_MPROTECT_SNAPSHOT=2, then snapshot by tuned mmap() algorithm
+ * If USE_MPROTECT_SNAPSHOT=1, then snapshot by using mmap() and mprotect()
  * If USE_MPROTECT_SNAPSHOT=0, then snapshot by using fork() */
-#define USE_MPROTECT_SNAPSHOT 0
+#define USE_MPROTECT_SNAPSHOT 2
 
 /** Size of signal stack */
 #define SIGSTACKSIZE 32768

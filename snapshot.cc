@@ -283,6 +283,15 @@ snapshot_id takeSnapshot( ){
  *  @param theID is the snapshot identifier to rollback to.
  */
 void rollBack( snapshot_id theID ){
+#if USE_MPOTECT_SNAPSHOT==2
+	if (snapshotrecord->lastSnapShot==(theID+1)) {
+		for(unsigned int page=snapshotrecord->snapShots[theID].firstBackingPage; page<snapshotrecord->lastBackingPage; page++) {
+			memcpy(snapshotrecord->backingRecords[page].basePtrOfPage, &snapshotrecord->backingStore[page], sizeof(struct SnapShotPage));
+		}
+		return;
+	}
+#endif
+
 #if USE_MPROTECT_SNAPSHOT
 	HashTable< void *, bool, uintptr_t, 4, model_malloc, model_calloc, model_free> duplicateMap;
 	for(unsigned int region=0; region<snapshotrecord->lastRegion;region++) {

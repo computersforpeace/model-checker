@@ -41,7 +41,7 @@ void *MYCALLOC(size_t count, size_t size) {
 }
 
 /** Non-snapshotting malloc for our use. */
-void *MYMALLOC(size_t size) {
+void *model_malloc(size_t size) {
 #if USE_MPROTECT_SNAPSHOT
 	static void *(*mallocp)(size_t size)=NULL;
 	char *error;

@@ -67,13 +67,13 @@ static void * ReturnPageAlignedAddress(void * addr) {
  *  structures for the mprotect based snapshot.
  */
 static void initSnapShotRecord(unsigned int numbackingpages, unsigned int numsnapshots, unsigned int nummemoryregions) {
-	snapshotrecord=( struct SnapShot * )MYMALLOC(sizeof(struct SnapShot));
-	snapshotrecord->regionsToSnapShot=( struct MemoryRegion * )MYMALLOC(sizeof(struct MemoryRegion)*nummemoryregions);
-	snapshotrecord->backingStoreBasePtr= ( struct SnapShotPage * )MYMALLOC( sizeof( struct SnapShotPage ) * (numbackingpages + 1) );
+	snapshotrecord=( struct SnapShot * )model_malloc(sizeof(struct SnapShot));
+	snapshotrecord->regionsToSnapShot=( struct MemoryRegion * )model_malloc(sizeof(struct MemoryRegion)*nummemoryregions);
+	snapshotrecord->backingStoreBasePtr= ( struct SnapShotPage * )model_malloc( sizeof( struct SnapShotPage ) * (numbackingpages + 1) );
 	//Page align the backingstorepages
 	snapshotrecord->backingStore=( struct SnapShotPage * )PageAlignAddressUpward(snapshotrecord->backingStoreBasePtr);
-	snapshotrecord->backingRecords=( struct BackingPageRecord * )MYMALLOC(sizeof(struct BackingPageRecord)*numbackingpages);
-	snapshotrecord->snapShots= ( struct SnapShotRecord * )MYMALLOC(sizeof(struct SnapShotRecord)*numsnapshots);
+	snapshotrecord->backingRecords=( struct BackingPageRecord * )model_malloc(sizeof(struct BackingPageRecord)*numbackingpages);
+	snapshotrecord->snapShots= ( struct SnapShotRecord * )model_malloc(sizeof(struct SnapShotRecord)*numsnapshots);
 	snapshotrecord->lastSnapShot=0;
 	snapshotrecord->lastBackingPage=0;
 	snapshotrecord->lastRegion=0;
@@ -139,7 +139,7 @@ void initSnapShotLibrary(unsigned int numbackingpages,
 		unsigned int numheappages, VoidFuncPtr entryPoint) {
 	/* Setup a stack for our signal handler....  */
 	stack_t ss;
-	ss.ss_sp = MYMALLOC(SIGSTACKSIZE);
+	ss.ss_sp = model_malloc(SIGSTACKSIZE);
 	ss.ss_size = SIGSTACKSIZE;
 	ss.ss_flags = 0;
 	sigaltstack(&ss, NULL);
@@ -171,7 +171,7 @@ void initSnapShotLibrary(unsigned int numbackingpages,
 	HandlePF(SIGSEGV, &si, NULL);
 	snapshotrecord->lastBackingPage--; //remove the fake page we copied
 
-	basemySpace=MYMALLOC((numheappages+1)*PAGESIZE);
+	basemySpace=model_malloc((numheappages+1)*PAGESIZE);
 	void * pagealignedbase=PageAlignAddressUpward(basemySpace);
 	mySpace = create_mspace_with_base(pagealignedbase,  numheappages*PAGESIZE, 1 );
 	addMemoryRegionToSnapShot(pagealignedbase, numheappages);
@@ -284,7 +284,7 @@ snapshot_id takeSnapshot( ){
  */
 void rollBack( snapshot_id theID ){
 #if USE_MPROTECT_SNAPSHOT
-	HashTable< void *, bool, uintptr_t, 4, MYMALLOC, MYCALLOC, MYFREE> duplicateMap;
+	HashTable< void *, bool, uintptr_t, 4, model_malloc, MYCALLOC, MYFREE> duplicateMap;
 	for(unsigned int region=0; region<snapshotrecord->lastRegion;region++) {
 		if( mprotect(snapshotrecord->regionsToSnapShot[region].basePtr, snapshotrecord->regionsToSnapShot[region].sizeInPages*sizeof(struct SnapShotPage), PROT_READ | PROT_WRITE ) == -1 ){
 			perror("mprotect");

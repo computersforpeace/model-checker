@@ -130,7 +130,7 @@ int SnapshotStack::backTrackBeforeStep(int seqindex) {
 
 /** This method takes a snapshot at the given sequence number. */
 void SnapshotStack::snapshotStep(int seqindex) {
-	struct stackEntry *tmp=(struct stackEntry *)MYMALLOC(sizeof(struct stackEntry));
+	struct stackEntry *tmp=(struct stackEntry *)model_malloc(sizeof(struct stackEntry));
 	tmp->next=stack;
 	tmp->index=seqindex;
 	tmp->snapshotid=takeSnapshot();

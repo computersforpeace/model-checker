@@ -218,7 +218,7 @@ bool Node::read_from_empty() {
 void Node::explore_child(ModelAction *act, bool * is_enabled)
 {
 	if ( ! enabled_array )
-		enabled_array=(bool *)MYMALLOC(sizeof(bool)*num_threads);
+		enabled_array=(bool *)model_malloc(sizeof(bool)*num_threads);
 	if (is_enabled != NULL)
 		memcpy(enabled_array, is_enabled, sizeof(bool)*num_threads);
 	else {

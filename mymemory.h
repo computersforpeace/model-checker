@@ -11,13 +11,13 @@
  *	memory in the non-snapshotting heap. */
 #define MEMALLOC \
 	void * operator new(size_t size) { \
-		return MYMALLOC(size);\
+		return model_malloc(size);\
 	}\
 	void operator delete(void *p, size_t size) { \
 		MYFREE( p ); \
 	}\
 	void * operator new[](size_t size) { \
-		return MYMALLOC(size);\
+		return model_malloc(size);\
 	}\
 	void operator delete[](void *p, size_t size) {\
 		MYFREE(p);\
@@ -27,7 +27,7 @@
  *	memory in the snapshotting heap. */
 #define SNAPSHOTALLOC
 
-void *MYMALLOC(size_t size);
+void *model_malloc(size_t size);
 void *MYCALLOC(size_t count, size_t size);
 void MYFREE(void *ptr);
 
@@ -100,7 +100,7 @@ template <class T>
 
        // allocate but don't initialize num elements of type T
        pointer allocate (size_type num, const void* = 0) {
-           pointer p = ( pointer )MYMALLOC( num * sizeof( T ) );
+           pointer p = ( pointer )model_malloc( num * sizeof( T ) );
            return p;
        }
 

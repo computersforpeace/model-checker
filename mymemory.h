@@ -31,6 +31,16 @@ void *MYMALLOC(size_t size);
 void *MYCALLOC(size_t count, size_t size);
 void MYFREE(void *ptr);
 
+static inline void * snapshot_malloc(size_t size) {
+	return malloc(size);
+}
+static inline void * snapshot_calloc(size_t count, size_t size) {
+	return calloc(count, size);
+}
+static inline void snapshot_free(void *ptr) {
+	free(ptr);
+}
+
 void system_free( void * ptr );
 void *system_malloc( size_t size );
 

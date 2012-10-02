@@ -112,7 +112,7 @@ private:
 
 	std::vector< struct future_value, MyAlloc<struct future_value> > future_values;
 	std::vector< promise_t, MyAlloc<promise_t> > promises;
-	unsigned int future_index;
+	int future_index;
 };
 
 typedef std::vector< Node *, MyAlloc< Node * > > node_list_t;

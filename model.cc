@@ -25,6 +25,7 @@ ModelChecker::ModelChecker(struct model_params params) :
 	num_executions(0),
 	num_feasible_executions(0),
 	diverge(NULL),
+	earliest_diverge(NULL),
 	action_trace(new action_list_t()),
 	thread_map(new HashTable<int, Thread *, int>()),
 	obj_map(new HashTable<const void *, action_list_t, uintptr_t, 4>()),
@@ -180,14 +181,22 @@ bool ModelChecker::next_execution()
 	DBG();
 
 	num_executions++;
-	if (isfinalfeasible())
+	if (isfinalfeasible()) {
+		printf("Earliest divergence point since last feasible execution:\n");
+		earliest_diverge->print();
+
+		earliest_diverge = NULL;
 		num_feasible_executions++;
+	}
 
 	if (isfinalfeasible() || DBG_ENABLED())
 		print_summary();
 
 	if ((diverge = get_next_backtrack()) == NULL)
 		return false;
+
+	if (earliest_diverge == NULL || *diverge < *earliest_diverge)
+		earliest_diverge=diverge;
 
 	if (DBG_ENABLED()) {
 		printf("Next execution will diverge at:\n");

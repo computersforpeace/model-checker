@@ -151,6 +151,7 @@ private:
 	void do_complete_join(ModelAction *join);
 
 	ModelAction *diverge;
+	ModelAction *earliest_diverge;
 
 	ucontext_t system_context;
 	action_list_t *action_trace;

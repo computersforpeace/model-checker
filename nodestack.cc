@@ -158,7 +158,7 @@ bool Node::add_future_value(uint64_t value, modelclock_t expiration) {
 		if (future_values[i].value == value) {
 			if (future_values[i].expiration>=expiration)
 				return false;
-			if (future_index < i) {
+			if (future_index < ((int) i)) {
 				suitableindex=i;
 			}
 		}
@@ -325,8 +325,11 @@ const ModelAction * Node::get_read_from() {
 bool Node::increment_read_from() {
 	DBG();
 	promises.clear();
-	read_from_index++;
-	return (read_from_index < may_read_from.size());
+	if ((read_from_index+1) < may_read_from.size()) {
+		read_from_index++;
+		return true;
+	}
+	return false;
 }
 
 /**
@@ -336,8 +339,11 @@ bool Node::increment_read_from() {
 bool Node::increment_future_value() {
 	DBG();
 	promises.clear();
-	future_index++;
-	return (future_index < future_values.size());
+	if ((future_index+1) < future_values.size()) {
+		future_index++;
+		return true;
+	}
+	return false;
 }
 
 void Node::explore(thread_id_t tid)

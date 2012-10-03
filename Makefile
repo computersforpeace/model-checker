@@ -39,7 +39,7 @@ $(LIB_SO): $(OBJECTS)
 	$(CXX) $(SHARED) -o $(LIB_SO) $(OBJECTS) $(LDFLAGS)
 
 malloc.o: malloc.c
-	$(CC) -fPIC -c malloc.c -DMSPACES -DONLY_MSPACES -DHAVE_MMAP=0 $(CPPFLAGS)
+	$(CC) -fPIC -c malloc.c -DMSPACES -DONLY_MSPACES -DHAVE_MMAP=0 $(CPPFLAGS) -Wno-unused-variable
 
 %.o: %.cc
 	$(CXX) -fPIC -c $< $(CPPFLAGS)

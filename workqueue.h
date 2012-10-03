@@ -102,6 +102,6 @@ class MOEdgeWorkEntry : public WorkQueueEntry {
 };
 
 /** @brief typedef for the work queue type */
-typedef std::list< WorkQueueEntry, MyAlloc<WorkQueueEntry> > work_queue_t;
+typedef std::list< WorkQueueEntry, ModelAlloc<WorkQueueEntry> > work_queue_t;
 
 #endif /* __WORKQUEUE_H__ */

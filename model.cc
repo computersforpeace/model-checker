@@ -426,7 +426,7 @@ bool ModelChecker::process_mutex(ModelAction *curr) {
 		action_list_t *waiters = lock_waiters_map->get_safe_ptr(curr->get_location());
 		//activate all the waiting threads
 		for (action_list_t::iterator rit = waiters->begin(); rit != waiters->end(); rit++) {
-			scheduler->add_thread(get_thread((*rit)->get_tid()));
+			scheduler->wake(get_thread(*rit));
 		}
 		waiters->clear();
 		break;
@@ -615,7 +615,7 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 		/* Make the execution look like we chose to run this action
 		 * much later, when a lock is actually available to release */
 		get_current_thread()->set_pending(curr);
-		remove_thread(get_current_thread());
+		scheduler->sleep(get_current_thread());
 		return get_next_thread(NULL);
 	}
 

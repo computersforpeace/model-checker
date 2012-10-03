@@ -8,7 +8,7 @@ UNAME = $(shell uname)
 LIB_NAME = model
 LIB_SO = lib$(LIB_NAME).so
 
-CPPFLAGS += -Wall -g -O3
+CPPFLAGS += -Wall -g -O0
 
 # Mac OSX options
 ifeq ($(UNAME), Darwin)

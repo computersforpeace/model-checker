@@ -139,7 +139,7 @@ void initSnapShotLibrary(unsigned int numbackingpages,
 		unsigned int numheappages, VoidFuncPtr entryPoint) {
 	/* Setup a stack for our signal handler....  */
 	stack_t ss;
-	ss.ss_sp = model_malloc(SIGSTACKSIZE);
+	ss.ss_sp = PageAlignAddressUpward(model_malloc(SIGSTACKSIZE+PAGESIZE-1));
 	ss.ss_size = SIGSTACKSIZE;
 	ss.ss_flags = 0;
 	sigaltstack(&ss, NULL);

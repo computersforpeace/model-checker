@@ -25,8 +25,15 @@ ModelAction::ModelAction(action_type_t type, memory_order order, void *loc, uint
 
 ModelAction::~ModelAction()
 {
-	if (cv)
-		delete cv;
+	/** We can't free the clock vector:
+	 *  The reason is as follows:
+	 *  Clock vectors are snapshotting state...  when we delete model actions
+	 *  they are at the end of the node list and have invalid old clock vectors...
+	 *  They are already free at that point...
+	 */
+	
+	/*	if (cv)
+			delete cv;*/
 }
 
 void ModelAction::copy_from_new(ModelAction *newaction)

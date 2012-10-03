@@ -119,6 +119,7 @@ void Thread::complete()
  * @param a The parameter to pass to this function.
  */
 Thread::Thread(thrd_t *t, void (*func)(void *), void *a) :
+	creation(NULL),
 	pending(NULL),
 	start_routine(func),
 	arg(a),

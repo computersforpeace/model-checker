@@ -157,9 +157,9 @@ bool DontFree( void * ptr ){
 
 /** Snapshotting malloc implementation for user programs. */
 void *malloc( size_t size ) {
-	if (mySpace)
+	if (mySpace) {
 		return mspace_malloc( mySpace, size );
-	else
+	}	else
 		return HandleEarlyAllocationRequest( size );
 }
 

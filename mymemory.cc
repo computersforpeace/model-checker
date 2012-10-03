@@ -5,6 +5,7 @@
 #include <dlfcn.h>
 #include <unistd.h>
 #include <cstring>
+#include "common.h"
 #define REQUESTS_BEFORE_ALLOC 1024
 size_t allocatedReqs[ REQUESTS_BEFORE_ALLOC ] = { 0 };
 int nextRequest = 0;

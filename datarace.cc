@@ -3,13 +3,14 @@
 #include "threads.h"
 #include <stdio.h>
 #include <cstring>
+#include "mymemory.h"
 
 struct ShadowTable *root;
 std::vector<struct DataRace *> unrealizedraces;
 
 /** This function initialized the data race detector. */
 void initRaceDetector() {
-	root=(struct ShadowTable *) calloc(sizeof(struct ShadowTable),1);
+	root = (struct ShadowTable *)snapshot_calloc(sizeof(struct ShadowTable), 1);
 }
 
 /** This function looks up the entry in the shadow table corresponding to a
@@ -19,13 +20,13 @@ static uint64_t * lookupAddressEntry(void * address) {
 #if BIT48
 	currtable=(struct ShadowTable *) currtable->array[(((uintptr_t)address)>>32)&MASK16BIT];
 	if (currtable==NULL) {
-		currtable=(struct ShadowTable *) (root->array[(((uintptr_t)address)>>32)&MASK16BIT]=calloc(sizeof(struct ShadowTable),1));
+		currtable = (struct ShadowTable *)(root->array[(((uintptr_t)address)>>32)&MASK16BIT] = snapshot_calloc(sizeof(struct ShadowTable), 1));
 	}
 #endif
 
 	struct ShadowBaseTable * basetable=(struct ShadowBaseTable *) currtable->array[(((uintptr_t)address)>>16)&MASK16BIT];
 	if (basetable==NULL) {
-		basetable=(struct ShadowBaseTable *) (currtable->array[(((uintptr_t)address)>>16)&MASK16BIT]=calloc(sizeof(struct ShadowBaseTable),1));
+		basetable = (struct ShadowBaseTable *)(currtable->array[(((uintptr_t)address)>>16)&MASK16BIT] = snapshot_calloc(sizeof(struct ShadowBaseTable), 1));
 	}
 	return &basetable->array[((uintptr_t)address)&MASK16BIT];
 }
@@ -57,14 +58,14 @@ static void expandRecord(uint64_t * shadow) {
 	modelclock_t writeClock = WRITEVECTOR(shadowval);
 	thread_id_t writeThread = int_to_id(WRTHREADID(shadowval));
 
-	struct RaceRecord * record=(struct RaceRecord *)calloc(1,sizeof(struct RaceRecord));
+	struct RaceRecord *record = (struct RaceRecord *)snapshot_calloc(1, sizeof(struct RaceRecord));
 	record->writeThread=writeThread;
 	record->writeClock=writeClock;
 
 	if (readClock!=0) {
 		record->capacity=INITCAPACITY;
-		record->thread=(thread_id_t *) malloc(sizeof(thread_id_t)*record->capacity);
-		record->readClock=(modelclock_t *) malloc(sizeof(modelclock_t)*record->capacity);
+		record->thread = (thread_id_t *)snapshot_malloc(sizeof(thread_id_t)*record->capacity);
+		record->readClock = (modelclock_t *)snapshot_malloc(sizeof(modelclock_t)*record->capacity);
 		record->numReads=1;
 		record->thread[0]=readThread;
 		record->readClock[0]=readClock;
@@ -74,7 +75,7 @@ static void expandRecord(uint64_t * shadow) {
 
 /** This function is called when we detect a data race.*/
 static void reportDataRace(thread_id_t oldthread, modelclock_t oldclock, bool isoldwrite, ModelAction *newaction, bool isnewwrite, void *address) {
-	struct DataRace * race=(struct DataRace *)malloc(sizeof(struct DataRace));
+	struct DataRace *race = (struct DataRace *)snapshot_malloc(sizeof(struct DataRace));
 	race->oldthread=oldthread;
 	race->oldclock=oldclock;
 	race->isoldwrite=isoldwrite;
@@ -243,12 +244,12 @@ void fullRaceCheckRead(thread_id_t thread, void *location, uint64_t * shadow, Cl
 
 	if (copytoindex>=record->capacity) {
 		int newCapacity=record->capacity*2;
-		thread_id_t *newthread=(thread_id_t *) malloc(sizeof(thread_id_t)*newCapacity);
-		modelclock_t * newreadClock=(modelclock_t *) malloc(sizeof(modelclock_t)*newCapacity);
+		thread_id_t *newthread = (thread_id_t *)snapshot_malloc(sizeof(thread_id_t)*newCapacity);
+		modelclock_t *newreadClock =( modelclock_t *)snapshot_malloc(sizeof(modelclock_t)*newCapacity);
 		std::memcpy(newthread, record->thread, record->capacity*sizeof(thread_id_t));
 		std::memcpy(newreadClock, record->readClock, record->capacity*sizeof(modelclock_t));
-		free(record->readClock);
-		free(record->thread);
+		snapshot_free(record->readClock);
+		snapshot_free(record->thread);
 		record->readClock=newreadClock;
 		record->thread=newthread;
 		record->capacity=newCapacity;

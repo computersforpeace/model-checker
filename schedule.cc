@@ -18,11 +18,11 @@ Scheduler::Scheduler() :
 void Scheduler::set_enabled(Thread *t, bool enabled_status) {
 	int threadid=id_to_int(t->get_id());
 	if (threadid>=enabled_len) {
-		bool * new_enabled=(bool *)malloc(sizeof(bool)*(threadid+1));
+		bool *new_enabled = (bool *)snapshot_malloc(sizeof(bool) * (threadid + 1));
 		memset(&new_enabled[enabled_len], 0, (threadid+1-enabled_len)*sizeof(bool));
 		if (is_enabled != NULL) {
 			memcpy(new_enabled, is_enabled, enabled_len*sizeof(bool));
-			free(is_enabled);
+			snapshot_free(is_enabled);
 		}
 		is_enabled=new_enabled;
 		enabled_len=threadid+1;

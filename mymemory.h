@@ -11,21 +11,33 @@
  *	memory in the non-snapshotting heap. */
 #define MEMALLOC \
 	void * operator new(size_t size) { \
-		return model_malloc(size);\
-	}\
+		return model_malloc(size); \
+	} \
 	void operator delete(void *p, size_t size) { \
-		model_free( p ); \
-	}\
+		model_free(p); \
+	} \
 	void * operator new[](size_t size) { \
-		return model_malloc(size);\
-	}\
-	void operator delete[](void *p, size_t size) {\
-		model_free(p);\
+		return model_malloc(size); \
+	} \
+	void operator delete[](void *p, size_t size) { \
+		model_free(p); \
 	}
 
 /** SNAPSHOTALLOC declares the allocators for a class to allocate
  *	memory in the snapshotting heap. */
-#define SNAPSHOTALLOC
+#define SNAPSHOTALLOC \
+	void * operator new(size_t size) { \
+		return snapshot_malloc(size); \
+	} \
+	void operator delete(void *p, size_t size) { \
+		snapshot_free(p); \
+	} \
+	void * operator new[](size_t size) { \
+		return snapshot_malloc(size); \
+	} \
+	void operator delete[](void *p, size_t size) { \
+		snapshot_free(p); \
+	}
 
 void *model_malloc(size_t size);
 void *model_calloc(size_t count, size_t size);

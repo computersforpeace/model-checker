@@ -191,7 +191,7 @@ bool ModelChecker::next_execution()
 	if (isfinalfeasible()) {
 		printf("Earliest divergence point since last feasible execution:\n");
 		if (earliest_diverge)
-			earliest_diverge->print();
+			earliest_diverge->print(false);
 		else
 			printf("(Not set)\n");
 
@@ -430,7 +430,7 @@ bool ModelChecker::process_mutex(ModelAction *curr) {
 		action_list_t *waiters = lock_waiters_map->get_safe_ptr(curr->get_location());
 		//activate all the waiting threads
 		for (action_list_t::iterator rit = waiters->begin(); rit != waiters->end(); rit++) {
-			scheduler->add_thread(get_thread((*rit)->get_tid()));
+			scheduler->wake(get_thread(*rit));
 		}
 		waiters->clear();
 		break;
@@ -488,26 +488,17 @@ bool ModelChecker::process_thread_action(ModelAction *curr)
 		break;
 	}
 	case THREAD_JOIN: {
-		Thread *waiting, *blocking;
-		waiting = get_thread(curr);
-		blocking = (Thread *)curr->get_location();
-		if (!blocking->is_complete()) {
-			blocking->push_wait_list(curr);
-			scheduler->sleep(waiting);
-		} else {
-			do_complete_join(curr);
-			synchronized = true;
-		}
+		Thread *blocking = (Thread *)curr->get_location();
+		ModelAction *act = get_last_action(blocking->get_id());
+		curr->synchronize_with(act);
+		synchronized = true;
 		break;
 	}
 	case THREAD_FINISH: {
 		Thread *th = get_thread(curr);
 		while (!th->wait_list_empty()) {
 			ModelAction *act = th->pop_wait_list();
-			Thread *wake = get_thread(act);
-			scheduler->wake(wake);
-			do_complete_join(act);
-			synchronized = true;
+			scheduler->wake(get_thread(act));
 		}
 		th->complete();
 		break;
@@ -547,6 +538,8 @@ ModelAction * ModelChecker::initialize_curr_action(ModelAction *curr)
 		return newcurr;
 	}
 
+	curr->set_seq_number(get_next_seq_num());
+
 	newcurr = node_stack->explore_action(curr, scheduler->get_enabled());
 	if (newcurr) {
 		/* First restore type and order in case of RMW operation */
@@ -577,9 +570,12 @@ ModelAction * ModelChecker::initialize_curr_action(ModelAction *curr)
 }
 
 /**
- * This method checks whether a model action is enabled at the given point.
- * At this point, it checks whether a lock operation would be successful at this point.
- * If not, it puts the thread in a waiter list.
+ * @brief Check whether a model action is enabled.
+ *
+ * Checks whether a lock or join operation would be successful (i.e., is the
+ * lock already locked, or is the joined thread already complete). If not, put
+ * the action in a waiter list.
+ *
  * @param curr is the ModelAction to check whether it is enabled.
  * @return a bool that indicates whether the action is enabled.
  */
@@ -590,6 +586,12 @@ bool ModelChecker::check_action_enabled(ModelAction *curr) {
 		if (state->islocked) {
 			//Stick the action in the appropriate waiting queue
 			lock_waiters_map->get_safe_ptr(curr->get_location())->push_back(curr);
+			return false;
+		}
+	} else if (curr->get_type() == THREAD_JOIN) {
+		Thread *blocking = (Thread *)curr->get_location();
+		if (!blocking->is_complete()) {
+			blocking->push_wait_list(curr);
 			return false;
 		}
 	}
@@ -617,9 +619,9 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 
 	if (!check_action_enabled(curr)) {
 		/* Make the execution look like we chose to run this action
-		 * much later, when a lock is actually available to release */
+		 * much later, when a lock/join can succeed */
 		get_current_thread()->set_pending(curr);
-		remove_thread(get_current_thread());
+		scheduler->sleep(get_current_thread());
 		return get_next_thread(NULL);
 	}
 
@@ -699,19 +701,6 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 	set_backtracking(curr);
 
 	return get_next_thread(curr);
-}
-
-/**
- * Complete a THREAD_JOIN operation, by synchronizing with the THREAD_FINISH
- * operation from the Thread it is joining with. Must be called after the
- * completion of the Thread in question.
- * @param join The THREAD_JOIN action
- */
-void ModelChecker::do_complete_join(ModelAction *join)
-{
-	Thread *blocking = (Thread *)join->get_location();
-	ModelAction *act = get_last_action(blocking->get_id());
-	join->synchronize_with(act);
 }
 
 void ModelChecker::check_curr_backtracking(ModelAction * curr) {

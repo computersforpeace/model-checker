@@ -78,7 +78,6 @@ public:
 
 	thread_id_t get_next_id();
 	int get_num_threads();
-	modelclock_t get_next_seq_num();
 
 	/** @return The currently executing Thread. */
 	Thread * get_current_thread() { return scheduler->get_current_thread(); }
@@ -113,6 +112,8 @@ private:
 	int num_executions;
 	int num_feasible_executions;
 	bool promises_expired();
+
+	modelclock_t get_next_seq_num();
 
 	/**
 	 * Stores the ModelAction for the current thread action.  Call this
@@ -152,7 +153,6 @@ private:
 	bool w_modification_order(ModelAction *curr);
 	bool release_seq_head(const ModelAction *rf, rel_heads_list_t *release_heads) const;
 	bool resolve_release_sequences(void *location, work_queue_t *work_queue);
-	void do_complete_join(ModelAction *join);
 
 	ModelAction *diverge;
 	ModelAction *earliest_diverge;

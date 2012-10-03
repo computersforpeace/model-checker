@@ -117,5 +117,5 @@ int main(int argc, char ** argv) {
 	main_argv = argv;
 
 	/* Let's jump in quickly and start running stuff */
-	initSnapShotLibrary(10000, 1024, 1024, 1000, &real_main);
+	initSnapShotLibrary(10000, 1024, 1024, 4000, &real_main);
 }

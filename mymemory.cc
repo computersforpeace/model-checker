@@ -158,7 +158,9 @@ bool DontFree( void * ptr ){
 /** Snapshotting malloc implementation for user programs. */
 void *malloc( size_t size ) {
 	if (mySpace) {
-		return mspace_malloc( mySpace, size );
+		void *tmp=mspace_malloc( mySpace, size );
+		ASSERT(tmp);
+		return tmp;
 	}	else
 		return HandleEarlyAllocationRequest( size );
 }
@@ -171,14 +173,18 @@ void free( void * ptr ){
 
 /** Snapshotting realloc implementation for user programs. */
 void *realloc( void *ptr, size_t size ){
-	return mspace_realloc( mySpace, ptr, size );
+	void *tmp=mspace_realloc( mySpace, ptr, size );
+	ASSERT(tmp);
+	return tmp;
 }
 
 /** Snapshotting calloc implementation for user programs. */
 void * calloc( size_t num, size_t size ){
-	if (mySpace)
-		return mspace_calloc( mySpace, num, size );
-	else {
+	if (mySpace) {
+		void *tmp=mspace_calloc( mySpace, num, size );
+		ASSERT(tmp);
+		return tmp;
+	} else {
 		void *tmp=HandleEarlyAllocationRequest( size * num );
 		std::memset( tmp, 0, size * num );
 		return tmp;

@@ -941,7 +941,11 @@ bool ModelChecker::r_modification_order(ModelAction *curr, const ModelAction *rf
 					}
 				} else {
 					const ModelAction *prevreadfrom = act->get_reads_from();
-					if (prevreadfrom != NULL && rf != prevreadfrom) {
+					//if the previous read is unresolved, keep going...
+					if (prevreadfrom == NULL)
+						continue;
+
+					if (rf != prevreadfrom) {
 						mo_graph->addEdge(prevreadfrom, rf);
 						added = true;
 					}
@@ -1066,14 +1070,22 @@ bool ModelChecker::w_modification_order(ModelAction *curr)
 			ModelAction *act = *rit;
 			if (act == curr) {
 				/*
-				 * If RMW, we already have all relevant edges,
-				 * so just skip to next thread.
-				 * If normal write, we need to look at earlier
-				 * actions, so continue processing list.
+				 * 1) If RMW and it actually read from something, then we
+				 * already have all relevant edges, so just skip to next
+				 * thread.
+				 * 
+				 * 2) If RMW and it didn't read from anything, we should
+				 * whatever edge we can get to speed up convergence.
+				 *
+				 * 3) If normal write, we need to look at earlier actions, so
+				 * continue processing list.
 				 */
-				if (curr->is_rmw())
-					break;
-				else
+				if (curr->is_rmw()) {
+					if (curr->get_reads_from()!=NULL)
+						break;
+					else 
+						continue;
+				} else
 					continue;
 			}
 
@@ -1090,8 +1102,12 @@ bool ModelChecker::w_modification_order(ModelAction *curr)
 				 */
 				if (act->is_write())
 					mo_graph->addEdge(act, curr);
-				else if (act->is_read() && act->get_reads_from() != NULL)
+				else if (act->is_read()) { 
+					//if previous read accessed a null, just keep going
+					if (act->get_reads_from() == NULL)
+						continue;
 					mo_graph->addEdge(act->get_reads_from(), curr);
+				}
 				added = true;
 				break;
 			} else if (act->is_read() && !act->is_synchronizing(curr) &&
@@ -1635,7 +1651,8 @@ void ModelChecker::dumpGraph(char *filename) {
 		ModelAction *action=*it;
 		if (action->is_read()) {
 			fprintf(file, "N%u [label=\"%u, T%u\"];\n", action->get_seq_number(),action->get_seq_number(), action->get_tid());
-			fprintf(file, "N%u -> N%u[label=\"rf\", color=red];\n", action->get_seq_number(), action->get_reads_from()->get_seq_number());
+			if (action->get_reads_from()!=NULL)
+				fprintf(file, "N%u -> N%u[label=\"rf\", color=red];\n", action->get_seq_number(), action->get_reads_from()->get_seq_number());
 		}
 		if (thread_array[action->get_tid()] != NULL) {
 			fprintf(file, "N%u -> N%u[label=\"sb\", color=blue];\n", thread_array[action->get_tid()]->get_seq_number(), action->get_seq_number());

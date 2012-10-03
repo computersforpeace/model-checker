@@ -10,7 +10,7 @@
 
 #ifdef CONFIG_DEBUG
 #define DEBUG(fmt, ...) do { printf("*** %25s(): line %-4d *** " fmt, __func__, __LINE__, ##__VA_ARGS__); } while (0)
-#define DBG() DEBUG("\n");
+#define DBG() DEBUG("\n")
 #define DBG_ENABLED() (1)
 #else
 #define DEBUG(fmt, ...)
@@ -29,7 +29,7 @@ do { \
 		assert_hook();				 \
 		exit(EXIT_FAILURE); \
 	} \
-} while (0);
+} while (0)
 
 #define error_msg(...) fprintf(stderr, "Error: " __VA_ARGS__)
 

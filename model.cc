@@ -1689,7 +1689,10 @@ void ModelChecker::remove_thread(Thread *t)
  * context). This switch is made with the intention of exploring a particular
  * model-checking action (described by a ModelAction object). Must be called
  * from a user-thread context.
- * @param act The current action that will be explored. Must not be NULL.
+ *
+ * @param act The current action that will be explored. May be NULL only if
+ * trace is exiting via an assertion (see ModelChecker::set_assert and
+ * ModelChecker::has_asserted).
  * @return Return status from the 'swap' call (i.e., success/fail, 0/-1)
  */
 int ModelChecker::switch_to_master(ModelAction *act)

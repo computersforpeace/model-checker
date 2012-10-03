@@ -31,15 +31,9 @@ void *model_malloc(size_t size);
 void *model_calloc(size_t count, size_t size);
 void model_free(void *ptr);
 
-static inline void * snapshot_malloc(size_t size) {
-	return malloc(size);
-}
-static inline void * snapshot_calloc(size_t count, size_t size) {
-	return calloc(count, size);
-}
-static inline void snapshot_free(void *ptr) {
-	free(ptr);
-}
+void * snapshot_malloc(size_t size);
+void * snapshot_calloc(size_t count, size_t size);
+void snapshot_free(void *ptr);
 
 void system_free( void * ptr );
 void *system_malloc( size_t size );

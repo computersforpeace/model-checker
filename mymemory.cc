@@ -68,6 +68,24 @@ void *model_malloc(size_t size) {
 #endif
 }
 
+/** @brief Snapshotting malloc, for use by model-checker (not user progs) */
+void * snapshot_malloc(size_t size)
+{
+	return malloc(size);
+}
+
+/** @brief Snapshotting calloc, for use by model-checker (not user progs) */
+void * snapshot_calloc(size_t count, size_t size)
+{
+	return calloc(count, size);
+}
+
+/** @brief Snapshotting free, for use by model-checker (not user progs) */
+void snapshot_free(void *ptr)
+{
+	free(ptr);
+}
+
 void *system_malloc( size_t size ){
 	static void *(*mallocp)(size_t size);
 	char *error;

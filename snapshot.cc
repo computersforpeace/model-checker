@@ -129,12 +129,12 @@ void createSharedMemory(){
 #endif
 
 
-/** The initSnapShotLibrary function initializes the Snapshot library.
+/** The initSnapshotLibrary function initializes the snapshot library.
  *  @param entryPoint the function that should run the program.
  */
 #if USE_MPROTECT_SNAPSHOT
 
-void initSnapShotLibrary(unsigned int numbackingpages,
+void initSnapshotLibrary(unsigned int numbackingpages,
 		unsigned int numsnapshots, unsigned int nummemoryregions,
 		unsigned int numheappages, VoidFuncPtr entryPoint) {
 	/* Setup a stack for our signal handler....  */
@@ -178,7 +178,7 @@ void initSnapShotLibrary(unsigned int numbackingpages,
 	entryPoint();
 }
 #else
-void initSnapShotLibrary(unsigned int numbackingpages,
+void initSnapshotLibrary(unsigned int numbackingpages,
 		unsigned int numsnapshots, unsigned int nummemoryregions,
 		unsigned int numheappages, VoidFuncPtr entryPoint) {
 	basemySpace=system_malloc((numheappages+1)*PAGESIZE);

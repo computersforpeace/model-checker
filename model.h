@@ -10,7 +10,6 @@
 #include <cstddef>
 #include <ucontext.h>
 
-#include "schedule.h"
 #include "mymemory.h"
 #include "libthreads.h"
 #include "threads.h"
@@ -24,6 +23,7 @@
 class NodeStack;
 class CycleGraph;
 class Promise;
+class Scheduler;
 
 /** @brief Shorthand for a list of release sequence heads */
 typedef std::vector< const ModelAction *, ModelAlloc<const ModelAction *> > rel_heads_list_t;

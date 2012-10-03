@@ -64,7 +64,7 @@ public:
 	bool is_enabled(Thread *t);
 	bool is_enabled(thread_id_t tid);
 	ModelAction * get_action() { return action; }
-	bool has_priority(thread_id_t tid) {return fairness[id_to_int(tid)].priority;}
+	bool has_priority(thread_id_t tid);
 	int get_num_threads() {return num_threads;}
 	/** @return the parent Node to this Node; that is, the action that
 	 * occurred previously in the stack. */

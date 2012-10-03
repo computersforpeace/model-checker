@@ -273,6 +273,11 @@ bool Node::is_enabled(thread_id_t tid)
 	return thread_id < num_threads && enabled_array[thread_id];
 }
 
+bool Node::has_priority(thread_id_t tid)
+{
+	return fairness[id_to_int(tid)].priority;
+}
+
 /**
  * Add an action to the may_read_from set.
  * @param act is the action to add

@@ -697,19 +697,6 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 	return get_next_thread(curr);
 }
 
-/**
- * Complete a THREAD_JOIN operation, by synchronizing with the THREAD_FINISH
- * operation from the Thread it is joining with. Must be called after the
- * completion of the Thread in question.
- * @param join The THREAD_JOIN action
- */
-void ModelChecker::do_complete_join(ModelAction *join)
-{
-	Thread *blocking = (Thread *)join->get_location();
-	ModelAction *act = get_last_action(blocking->get_id());
-	join->synchronize_with(act);
-}
-
 void ModelChecker::check_curr_backtracking(ModelAction * curr) {
 	Node *currnode = curr->get_node();
 	Node *parnode = currnode->get_parent();

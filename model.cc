@@ -475,11 +475,11 @@ bool ModelChecker::process_write(ModelAction *curr)
  * (e.g., ATOMIC_{READ,WRITE,RMW,LOCK}, etc.)
  *
  * @param curr The current action
- * @return True if synchronization was updated
+ * @return True if synchronization was updated or a thread completed
  */
 bool ModelChecker::process_thread_action(ModelAction *curr)
 {
-	bool synchronized = false;
+	bool updated = false;
 
 	switch (curr->get_type()) {
 	case THREAD_CREATE: {
@@ -491,7 +491,7 @@ bool ModelChecker::process_thread_action(ModelAction *curr)
 		Thread *blocking = (Thread *)curr->get_location();
 		ModelAction *act = get_last_action(blocking->get_id());
 		curr->synchronize_with(act);
-		synchronized = true;
+		updated = true; /* trigger rel-seq checks */
 		break;
 	}
 	case THREAD_FINISH: {
@@ -501,6 +501,7 @@ bool ModelChecker::process_thread_action(ModelAction *curr)
 			scheduler->wake(get_thread(act));
 		}
 		th->complete();
+		updated = true; /* trigger rel-seq checks */
 		break;
 	}
 	case THREAD_START: {
@@ -511,7 +512,7 @@ bool ModelChecker::process_thread_action(ModelAction *curr)
 		break;
 	}
 
-	return synchronized;
+	return updated;
 }
 
 /**

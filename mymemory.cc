@@ -139,11 +139,12 @@ void model_free(void *ptr) {
 }
 
 
-/** This global references the mspace for the snapshotting heap */
+/** @brief Global mspace reference for the snapshotting heap */
 mspace mySpace = NULL;
 
-/** This global references the unaligned memory address that was malloced for the snapshotting heap */
-void * basemySpace = NULL;
+/** @brief Global reference to the unaligned memory address that was malloc'd
+ * for the snapshotting heap */
+void *basemySpace = NULL;
 
 /** Bootstrap allocation.  Problem is that the dynamic linker calls
  *  require calloc to work and calloc requires the dynamic linker to
@@ -174,33 +175,36 @@ bool DontFree( void * ptr ){
 	return (ptr>=(&bootstrapmemory[0])&&ptr<(&bootstrapmemory[BOOTSTRAPBYTES]));
 }
 
-/** Snapshotting malloc implementation for user programs. */
-void *malloc( size_t size ) {
+/** @brief Snapshotting malloc implementation for user programs */
+void *malloc( size_t size )
+{
 	if (mySpace) {
 		void *tmp=mspace_malloc( mySpace, size );
 		ASSERT(tmp);
 		return tmp;
-	}	else
+	} else
 		return HandleEarlyAllocationRequest( size );
 }
 
-/** Snapshotting free implementation for user programs. */
+/** @brief Snapshotting free implementation for user programs */
 void free( void * ptr ){
-	if( DontFree( ptr ) ) return;
-	mspace_free( mySpace, ptr );
+	if (!DontFree(ptr))
+		mspace_free(mySpace, ptr);
 }
 
-/** Snapshotting realloc implementation for user programs. */
-void *realloc( void *ptr, size_t size ){
-	void *tmp=mspace_realloc( mySpace, ptr, size );
+/** @brief Snapshotting realloc implementation for user programs */
+void *realloc( void *ptr, size_t size )
+{
+	void *tmp = mspace_realloc(mySpace, ptr, size);
 	ASSERT(tmp);
 	return tmp;
 }
 
-/** Snapshotting calloc implementation for user programs. */
-void * calloc( size_t num, size_t size ){
+/** @brief Snapshotting calloc implementation for user programs */
+void * calloc( size_t num, size_t size )
+{
 	if (mySpace) {
-		void *tmp=mspace_calloc( mySpace, num, size );
+		void *tmp = mspace_calloc(mySpace, num, size);
 		ASSERT(tmp);
 		return tmp;
 	} else {
@@ -210,22 +214,26 @@ void * calloc( size_t num, size_t size ){
 	}
 }
 
-/** Snapshotting new operator for user programs. */
-void * operator new(size_t size) throw(std::bad_alloc) {
+/** @brief Snapshotting new operator for user programs */
+void * operator new(size_t size) throw(std::bad_alloc)
+{
 	return malloc(size);
 }
 
-/** Snapshotting delete operator for user programs. */
-void operator delete(void *p) throw() {
+/** @brief Snapshotting delete operator for user programs */
+void operator delete(void *p) throw()
+{
 	free(p);
 }
 
-/** Snapshotting new[] operator for user programs. */
-void * operator new[](size_t size) throw(std::bad_alloc) {
+/** @brief Snapshotting new[] operator for user programs */
+void * operator new[](size_t size) throw(std::bad_alloc)
+{
 	return malloc(size);
 }
 
-/** Snapshotting delete[] operator for user programs. */
-void operator delete[](void *p, size_t size) {
+/** @brief Snapshotting delete[] operator for user programs */
+void operator delete[](void *p, size_t size)
+{
 	free(p);
 }

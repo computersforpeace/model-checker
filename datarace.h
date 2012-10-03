@@ -5,8 +5,12 @@
 #ifndef DATARACE_H
 #include "config.h"
 #include <stdint.h>
-#include "clockvector.h"
 #include <vector>
+#include "modeltypes.h"
+
+/* Forward declaration */
+class ClockVector;
+class ModelAction;
 
 struct ShadowTable {
 	void * array[65536];

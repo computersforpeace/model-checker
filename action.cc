@@ -7,6 +7,7 @@
 #include "action.h"
 #include "clockvector.h"
 #include "common.h"
+#include "threads.h"
 
 #define ACTION_INITIAL_CLOCK 0
 

@@ -5,10 +5,9 @@
 #ifndef __CLOCKVECTOR_H__
 #define __CLOCKVECTOR_H__
 
-#include "threads.h"
 #include "mymemory.h"
+#include "modeltypes.h"
 
-typedef unsigned int modelclock_t;
 /* Forward declaration */
 class ModelAction;
 

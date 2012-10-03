@@ -7,11 +7,13 @@
 
 #include <list>
 #include <cstddef>
+#include <inttypes.h>
 
-#include "threads.h"
 #include "mymemory.h"
-#include "clockvector.h"
 #include "memoryorder.h"
+#include "modeltypes.h"
+
+class ClockVector;
 
 using std::memory_order;
 using std::memory_order_relaxed;

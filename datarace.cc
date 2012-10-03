@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <cstring>
 #include "mymemory.h"
+#include "clockvector.h"
 
 struct ShadowTable *root;
 std::vector<struct DataRace *> unrealizedraces;

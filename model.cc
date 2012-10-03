@@ -12,6 +12,7 @@
 #include "promise.h"
 #include "datarace.h"
 #include "mutex.h"
+#include "threads.h"
 
 #define INITIAL_THREAD_ID	0
 

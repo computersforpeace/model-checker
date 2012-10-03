@@ -8,11 +8,13 @@
 #include <list>
 #include <vector>
 #include <cstddef>
-#include "threads.h"
+#include <inttypes.h>
+
 #include "mymemory.h"
-#include "clockvector.h"
+#include "modeltypes.h"
 
 class ModelAction;
+class Thread;
 
 /**
  * A flag used for the promise counting/combination problem within a node,

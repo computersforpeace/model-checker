@@ -1,6 +1,7 @@
 #include "impatomic.h"
 #include "common.h"
 #include "model.h"
+#include "threads.h"
 
 namespace std {
 

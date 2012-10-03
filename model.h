@@ -11,19 +11,18 @@
 #include <ucontext.h>
 
 #include "mymemory.h"
-#include "libthreads.h"
-#include "threads.h"
 #include "action.h"
-#include "clockvector.h"
 #include "hashtable.h"
 #include "workqueue.h"
 #include "config.h"
+#include "modeltypes.h"
 
 /* Forward declaration */
 class NodeStack;
 class CycleGraph;
 class Promise;
 class Scheduler;
+class Thread;
 
 /** @brief Shorthand for a list of release sequence heads */
 typedef std::vector< const ModelAction *, ModelAlloc<const ModelAction *> > rel_heads_list_t;

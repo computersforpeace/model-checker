@@ -5,6 +5,7 @@
 #include "common.h"
 #include "datarace.h"
 #include "model.h"
+#include "threads.h"
 
 void store_8(void *addr, uint8_t val)
 {

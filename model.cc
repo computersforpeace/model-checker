@@ -1713,7 +1713,7 @@ void ModelChecker::remove_thread(Thread *t)
  * @param tid The Thread's ID
  * @return A Thread reference
  */
-Thread * ModelChecker::get_thread(thread_id_t tid)
+Thread * ModelChecker::get_thread(thread_id_t tid) const
 {
 	return thread_map->get(id_to_int(tid));
 }
@@ -1723,7 +1723,7 @@ Thread * ModelChecker::get_thread(thread_id_t tid)
  * @param act The ModelAction
  * @return A Thread reference
  */
-Thread * ModelChecker::get_thread(ModelAction *act)
+Thread * ModelChecker::get_thread(ModelAction *act) const
 {
 	return get_thread(act->get_tid());
 }

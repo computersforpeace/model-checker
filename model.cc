@@ -1691,6 +1691,26 @@ void ModelChecker::remove_thread(Thread *t)
 }
 
 /**
+ * @brief Get a Thread reference by its ID
+ * @param tid The Thread's ID
+ * @return A Thread reference
+ */
+Thread * ModelChecker::get_thread(thread_id_t tid)
+{
+	return thread_map->get(id_to_int(tid));
+}
+
+/**
+ * @brief Get a reference to the Thread in which a ModelAction was executed
+ * @param act The ModelAction
+ * @return A Thread reference
+ */
+Thread * ModelChecker::get_thread(ModelAction *act)
+{
+	return get_thread(act->get_tid());
+}
+
+/**
  * Switch from a user-context to the "master thread" context (a.k.a. system
  * context). This switch is made with the intention of exploring a particular
  * model-checking action (described by a ModelAction object). Must be called

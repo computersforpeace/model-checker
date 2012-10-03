@@ -98,24 +98,24 @@ private:
 	ModelAction *action;
 	Node *parent;
 	int num_threads;
-	std::vector< bool, MyAlloc<bool> > explored_children;
-	std::vector< bool, MyAlloc<bool> > backtrack;
-	std::vector< struct fairness_info, MyAlloc< struct fairness_info> > fairness;
+	std::vector< bool, ModelAlloc<bool> > explored_children;
+	std::vector< bool, ModelAlloc<bool> > backtrack;
+	std::vector< struct fairness_info, ModelAlloc< struct fairness_info> > fairness;
 	int numBacktracks;
 	bool *enabled_array;
 
 	/** The set of ModelActions that this the action at this Node may read
 	 *  from. Only meaningful if this Node represents a 'read' action. */
-	std::vector< const ModelAction *, MyAlloc< const ModelAction * > > may_read_from;
+	std::vector< const ModelAction *, ModelAlloc< const ModelAction * > > may_read_from;
 
 	unsigned int read_from_index;
 
-	std::vector< struct future_value, MyAlloc<struct future_value> > future_values;
-	std::vector< promise_t, MyAlloc<promise_t> > promises;
+	std::vector< struct future_value, ModelAlloc<struct future_value> > future_values;
+	std::vector< promise_t, ModelAlloc<promise_t> > promises;
 	int future_index;
 };
 
-typedef std::vector< Node *, MyAlloc< Node * > > node_list_t;
+typedef std::vector< Node *, ModelAlloc< Node * > > node_list_t;
 
 /**
  * @brief A stack of nodes

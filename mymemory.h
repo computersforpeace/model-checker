@@ -61,7 +61,7 @@ void *system_malloc( size_t size );
  * warranty, and with no claim as to its suitability for any purpose.
  */
 template <class T>
-   class MyAlloc {
+   class ModelAlloc {
      public:
        // type definitions
        typedef T        value_type;
@@ -75,7 +75,7 @@ template <class T>
        // rebind allocator to type U
        template <class U>
        struct rebind {
-           typedef MyAlloc<U> other;
+           typedef ModelAlloc<U> other;
        };
 
        // return address of values
@@ -89,14 +89,14 @@ template <class T>
        /* constructors and destructor
         * - nothing to do because the allocator has no state
         */
-       MyAlloc() throw() {
+       ModelAlloc() throw() {
        }
-       MyAlloc(const MyAlloc&) throw() {
+       ModelAlloc(const ModelAlloc&) throw() {
        }
        template <class U>
-         MyAlloc (const MyAlloc<U>&) throw() {
+         ModelAlloc (const ModelAlloc<U>&) throw() {
        }
-       ~MyAlloc() throw() {
+       ~ModelAlloc() throw() {
        }
 
        // return maximum number of elements that can be allocated
@@ -130,15 +130,15 @@ template <class T>
 
 /** Return that all specializations of this allocator are interchangeable. */
  template <class T1, class T2>
- bool operator== (const MyAlloc<T1>&,
-                  const MyAlloc<T2>&) throw() {
+ bool operator== (const ModelAlloc<T1>&,
+                  const ModelAlloc<T2>&) throw() {
      return true;
  }
 
 /** Return that all specializations of this allocator are interchangeable. */
  template <class T1, class T2>
- bool operator!= (const MyAlloc<T1>&,
-                  const MyAlloc<T2>&) throw() {
+ bool operator!= (const ModelAlloc<T1>&,
+                  const ModelAlloc<T2>&) throw() {
      return false;
  }
 

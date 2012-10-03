@@ -1246,7 +1246,7 @@ bool ModelChecker::release_seq_head(const ModelAction *rf, rel_heads_list_t *rel
 
 		ModelAction *last = get_last_action(int_to_id(i));
 		if (last && (rf->happens_before(last) ||
-				last->get_type() == THREAD_FINISH))
+				get_thread(int_to_id(i))->is_complete()))
 			future_ordered = true;
 
 		for (rit = list->rbegin(); rit != list->rend(); rit++) {

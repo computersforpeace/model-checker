@@ -27,31 +27,38 @@ ModelAction::~ModelAction()
 		delete cv;
 }
 
-void ModelAction::copy_from_new(ModelAction *newaction) {
-	seq_number=newaction->seq_number;
+void ModelAction::copy_from_new(ModelAction *newaction)
+{
+	seq_number = newaction->seq_number;
 }
 
-bool ModelAction::is_mutex_op() const {
+bool ModelAction::is_mutex_op() const
+{
 	return type == ATOMIC_LOCK || type == ATOMIC_TRYLOCK || type == ATOMIC_UNLOCK;
 }
 
-bool ModelAction::is_lock() const {
+bool ModelAction::is_lock() const
+{
 	return type == ATOMIC_LOCK;
 }
 
-bool ModelAction::is_unlock() const {
+bool ModelAction::is_unlock() const
+{
 	return type == ATOMIC_UNLOCK;
 }
 
-bool ModelAction::is_trylock() const {
+bool ModelAction::is_trylock() const
+{
 	return type == ATOMIC_TRYLOCK;
 }
 
-bool ModelAction::is_success_lock() const {
+bool ModelAction::is_success_lock() const
+{
 	return type == ATOMIC_LOCK || (type == ATOMIC_TRYLOCK && value == VALUE_TRYSUCCESS);
 }
 
-bool ModelAction::is_failed_trylock() const {
+bool ModelAction::is_failed_trylock() const
+{
 	return (type == ATOMIC_TRYLOCK && value == VALUE_TRYFAILED);
 }
 
@@ -130,8 +137,8 @@ bool ModelAction::same_thread(const ModelAction *act) const
 }
 
 void ModelAction::copy_typeandorder(ModelAction * act) {
-	this->type=act->type;
-	this->order=act->order;
+	this->type = act->type;
+	this->order = act->order;
 }
 
 /** This method changes an existing read part of an RMW action into either:

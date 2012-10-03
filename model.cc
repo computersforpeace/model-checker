@@ -534,6 +534,8 @@ ModelAction * ModelChecker::initialize_curr_action(ModelAction *curr)
 		return newcurr;
 	}
 
+	curr->set_seq_number(get_next_seq_num());
+
 	newcurr = node_stack->explore_action(curr, scheduler->get_enabled());
 	if (newcurr) {
 		/* First restore type and order in case of RMW operation */

@@ -8,17 +8,19 @@
 #include "clockvector.h"
 #include "common.h"
 
+#define ACTION_INITIAL_CLOCK 0
+
 ModelAction::ModelAction(action_type_t type, memory_order order, void *loc, uint64_t value) :
 	type(type),
 	order(order),
 	location(loc),
 	value(value),
 	reads_from(NULL),
+	seq_number(ACTION_INITIAL_CLOCK),
 	cv(NULL)
 {
 	Thread *t = thread_current();
 	this->tid = t->get_id();
-	this->seq_number = model->get_next_seq_num();
 }
 
 ModelAction::~ModelAction()
@@ -30,6 +32,12 @@ ModelAction::~ModelAction()
 void ModelAction::copy_from_new(ModelAction *newaction)
 {
 	seq_number = newaction->seq_number;
+}
+
+void ModelAction::set_seq_number(modelclock_t num)
+{
+	ASSERT(seq_number == ACTION_INITIAL_CLOCK);
+	seq_number = num;
 }
 
 bool ModelAction::is_mutex_op() const

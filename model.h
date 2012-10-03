@@ -78,7 +78,6 @@ public:
 
 	thread_id_t get_next_id();
 	int get_num_threads();
-	modelclock_t get_next_seq_num();
 
 	/** @return The currently executing Thread. */
 	Thread * get_current_thread() { return scheduler->get_current_thread(); }
@@ -113,6 +112,8 @@ private:
 	int num_executions;
 	int num_feasible_executions;
 	bool promises_expired();
+
+	modelclock_t get_next_seq_num();
 
 	/**
 	 * Stores the ModelAction for the current thread action.  Call this

@@ -139,6 +139,9 @@ Thread * ModelChecker::get_next_thread(ModelAction *curr)
 	ModelAction *next = node_stack->get_next()->get_action();
 
 	if (next == diverge) {
+		if (earliest_diverge == NULL || *diverge < *earliest_diverge)
+			earliest_diverge=diverge;
+
 		Node *nextnode = next->get_node();
 		/* Reached divergence point */
 		if (nextnode->increment_promise()) {
@@ -158,8 +161,12 @@ Thread * ModelChecker::get_next_thread(ModelAction *curr)
 			Node *node = nextnode->get_parent();
 			tid = node->get_next_backtrack();
 			node_stack->pop_restofstack(1);
+			if (diverge==earliest_diverge) {
+				earliest_diverge=node->get_action();
+			}
 		}
 		DEBUG("*** Divergence point ***\n");
+
 		diverge = NULL;
 	} else {
 		tid = next->get_tid();
@@ -197,9 +204,6 @@ bool ModelChecker::next_execution()
 
 	if ((diverge = get_next_backtrack()) == NULL)
 		return false;
-
-	if (earliest_diverge == NULL || *diverge < *earliest_diverge)
-		earliest_diverge=diverge;
 
 	if (DBG_ENABLED()) {
 		printf("Next execution will diverge at:\n");

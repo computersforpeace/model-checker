@@ -293,13 +293,8 @@ bool ModelAction::happens_before(const ModelAction *act) const
 	return act->cv->synchronized_since(this);
 }
 
-/**
- * Print nicely-formatted info about this ModelAction
- *
- * @param print_cv True if we want to print clock vector data. Might be false,
- * for instance, in situations where the clock vector might be invalid
- */
-void ModelAction::print(bool print_cv) const
+/** @brief Print nicely-formatted info about this ModelAction */
+void ModelAction::print() const
 {
 	const char *type_str, *mo_str;
 	switch (this->type) {
@@ -383,7 +378,7 @@ void ModelAction::print(bool print_cv) const
 		else
 			printf(" Rf: ?");
 	}
-	if (cv && print_cv) {
+	if (cv) {
 		printf("\t");
 		cv->print();
 	} else

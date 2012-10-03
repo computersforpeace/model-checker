@@ -199,7 +199,7 @@ bool ModelChecker::next_execution()
 	if (isfinalfeasible()) {
 		printf("Earliest divergence point since last feasible execution:\n");
 		if (earliest_diverge)
-			earliest_diverge->print(false);
+			earliest_diverge->print();
 		else
 			printf("(Not set)\n");
 

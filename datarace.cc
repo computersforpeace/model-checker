@@ -123,8 +123,8 @@ bool checkDataRaces() {
 void printRace(struct DataRace * race) {
 	printf("Datarace detected\n");
 	printf("Location %p\n", race->address);
-	printf("Initial access: thread %u clock %u, iswrite %u\n",race->oldthread,race->oldclock, race->isoldwrite);
-	printf("Second access: thread %u clock %u, iswrite %u\n", race->newaction->get_tid(), race->newaction->get_seq_number() , race->isnewwrite);
+	printf("Initial access: thread %u clock %u, iswrite %u\n", id_to_int(race->oldthread), race->oldclock, race->isoldwrite);
+	printf("Second access: thread %u clock %u, iswrite %u\n", id_to_int(race->newaction->get_tid()), race->newaction->get_seq_number(), race->isnewwrite);
 }
 
 /** This function does race detection for a write on an expanded record. */

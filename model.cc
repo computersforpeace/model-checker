@@ -178,7 +178,7 @@ Thread * ModelChecker::get_next_thread(ModelAction *curr)
 	} else {
 		tid = next->get_tid();
 	}
-	DEBUG("*** ModelChecker chose next thread = %d ***\n", tid);
+	DEBUG("*** ModelChecker chose next thread = %d ***\n", id_to_int(tid));
 	ASSERT(tid != THREAD_ID_T_NONE);
 	return thread_map->get(id_to_int(tid));
 }
@@ -324,7 +324,8 @@ void ModelChecker::set_backtracking(ModelAction *act)
 		if (!node->set_backtrack(tid))
 			continue;
 		DEBUG("Setting backtrack: conflict = %d, instead tid = %d\n",
-					prev->get_tid(), t->get_id());
+					id_to_int(prev->get_tid()),
+					id_to_int(t->get_id()));
 		if (DBG_ENABLED()) {
 			prev->print();
 			act->print();
@@ -794,8 +795,7 @@ bool ModelChecker::isfinalfeasible() {
 
 /** Close out a RMWR by converting previous RMWR into a RMW or READ. */
 ModelAction * ModelChecker::process_rmw(ModelAction *act) {
-	int tid = id_to_int(act->get_tid());
-	ModelAction *lastread = get_last_action(tid);
+	ModelAction *lastread = get_last_action(act->get_tid());
 	lastread->process_rmw(act);
 	if (act->is_rmw() && lastread->get_reads_from()!=NULL) {
 		mo_graph->addRMWEdge(lastread->get_reads_from(), lastread);
@@ -1776,7 +1776,8 @@ bool ModelChecker::take_step() {
 	if (!isfeasible())
 		return false;
 
-	DEBUG("(%d, %d)\n", curr ? curr->get_id() : -1, next ? next->get_id() : -1);
+	DEBUG("(%d, %d)\n", curr ? id_to_int(curr->get_id()) : -1,
+			next ? id_to_int(next->get_id()) : -1);
 
 	/* next == NULL -> don't take any more steps */
 	if (!next)

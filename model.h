@@ -78,9 +78,7 @@ public:
 
 	thread_id_t get_next_id();
 	int get_num_threads();
-
-	/** @return The currently executing Thread. */
-	Thread * get_current_thread() { return scheduler->get_current_thread(); }
+	Thread * get_current_thread();
 
 	int switch_to_master(ModelAction *act);
 	ClockVector * get_cv(thread_id_t tid);

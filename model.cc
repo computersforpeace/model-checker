@@ -99,6 +99,12 @@ int ModelChecker::get_num_threads()
 	return priv->next_thread_id;
 }
 
+/** @return The currently executing Thread. */
+Thread * ModelChecker::get_current_thread()
+{
+	return scheduler->get_current_thread();
+}
+
 /** @return a sequence number for a new ModelAction */
 modelclock_t ModelChecker::get_next_seq_num()
 {

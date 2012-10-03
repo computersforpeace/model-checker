@@ -1176,7 +1176,7 @@ bool ModelChecker::thin_air_constraint_may_allow(const ModelAction * writer, con
  * @return true, if the ModelChecker is certain that release_heads is complete;
  * false otherwise
  */
-bool ModelChecker::release_seq_head(const ModelAction *rf, rel_heads_list_t *release_heads) const
+bool ModelChecker::release_seq_heads(const ModelAction *rf, rel_heads_list_t *release_heads) const
 {
 	/* Only check for release sequences if there are no cycles */
 	if (mo_graph->checkForCycles())
@@ -1298,13 +1298,13 @@ bool ModelChecker::release_seq_head(const ModelAction *rf, rel_heads_list_t *rel
  * @param act The 'acquire' action that may read from a release sequence
  * @param release_heads A pass-by-reference return parameter. Will be filled
  * with the head(s) of the release sequence(s), if they exists with certainty.
- * @see ModelChecker::release_seq_head
+ * @see ModelChecker::release_seq_heads
  */
 void ModelChecker::get_release_seq_heads(ModelAction *act, rel_heads_list_t *release_heads)
 {
 	const ModelAction *rf = act->get_reads_from();
 	bool complete;
-	complete = release_seq_head(rf, release_heads);
+	complete = release_seq_heads(rf, release_heads);
 	if (!complete) {
 		/* add act to 'lazy checking' list */
 		pending_acq_rel_seq->push_back(act);
@@ -1340,7 +1340,7 @@ bool ModelChecker::resolve_release_sequences(void *location, work_queue_t *work_
 		const ModelAction *rf = act->get_reads_from();
 		rel_heads_list_t release_heads;
 		bool complete;
-		complete = release_seq_head(rf, &release_heads);
+		complete = release_seq_heads(rf, &release_heads);
 		for (unsigned int i = 0; i < release_heads.size(); i++) {
 			if (!act->has_synchronized_with(release_heads[i])) {
 				if (act->synchronize_with(release_heads[i]))

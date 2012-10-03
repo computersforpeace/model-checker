@@ -1756,7 +1756,7 @@ bool ModelChecker::take_step() {
 	if (has_asserted())
 		return false;
 
-	Thread * curr = thread_current();
+	Thread *curr = thread_current();
 	if (curr) {
 		if (curr->get_state() == THREAD_READY) {
 			ASSERT(priv->current_action);
@@ -1770,22 +1770,22 @@ bool ModelChecker::take_step() {
 			ASSERT(false);
 		}
 	}
-	Thread * next = scheduler->next_thread(priv->nextThread);
+	Thread *next = scheduler->next_thread(priv->nextThread);
 
 	/* Infeasible -> don't take any more steps */
 	if (!isfeasible())
 		return false;
 
-	if (next)
-		next->set_state(THREAD_RUNNING);
 	DEBUG("(%d, %d)\n", curr ? curr->get_id() : -1, next ? next->get_id() : -1);
 
 	/* next == NULL -> don't take any more steps */
 	if (!next)
 		return false;
 
-	if ( next->get_pending() != NULL ) {
-		//restart a pending action
+	next->set_state(THREAD_RUNNING);
+
+	if (next->get_pending() != NULL) {
+		/* restart a pending action */
 		set_current_action(next->get_pending());
 		next->set_pending(NULL);
 		next->set_state(THREAD_READY);

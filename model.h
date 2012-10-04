@@ -55,6 +55,19 @@ struct model_snapshot_members {
 	ModelAction *next_backtrack;
 };
 
+/** @brief Records information regarding a single pending release sequence */
+struct release_seq {
+	/** @brief The acquire operation */
+	ModelAction *acquire;
+	/** @brief The head of the RMW chain from which 'acquire' reads; may be
+	 *  equal to 'release' */
+	const ModelAction *rf;
+	/** @brief The head of the potential longest release sequence chain */
+	const ModelAction *release;
+	/** @brief The write(s) that may break the release sequence */
+	std::vector<const ModelAction *> writes;
+};
+
 /** @brief The central structure for model-checking */
 class ModelChecker {
 public:

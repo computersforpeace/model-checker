@@ -81,6 +81,14 @@ public:
 	 */
 	void push_wait_list(ModelAction *act) { wait_list.push_back(act); }
 
+	unsigned int num_wait_list() {
+		return wait_list.size();
+	}
+
+	ModelAction * get_waiter(unsigned int i) {
+		return wait_list[i];
+	}
+
 	ModelAction * get_pending() { return pending; }
 	void set_pending(ModelAction *act) { pending = act; }
 	/**

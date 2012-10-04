@@ -1,6 +1,8 @@
 #include "cyclegraph.h"
 #include "action.h"
 #include "common.h"
+#include "promise.h"
+#include "model.h"
 
 /** Initializes a CycleGraph object. */
 CycleGraph::CycleGraph() :
@@ -183,6 +185,33 @@ bool CycleGraph::checkReachable(CycleNode *from, CycleNode *to) {
 		queue.pop_back();
 		if (node==to)
 			return true;
+
+		for(unsigned int i=0;i<node->getEdges()->size();i++) {
+			CycleNode *next=(*node->getEdges())[i];
+			if (!discovered.contains(next)) {
+				discovered.put(next,next);
+				queue.push_back(next);
+			}
+		}
+	}
+	return false;
+}
+
+bool CycleGraph::checkPromise(const ModelAction *fromact, Promise *promise) {
+	std::vector<CycleNode *, ModelAlloc<CycleNode *> > queue;
+	HashTable<CycleNode *, CycleNode *, uintptr_t, 4, model_malloc, model_calloc, model_free> discovered(64);
+	CycleNode *from = actionToNode.get(fromact);
+
+
+	queue.push_back(from);
+	discovered.put(from, from);
+	while(!queue.empty()) {
+		CycleNode * node=queue.back();
+		queue.pop_back();
+
+		if (promise->increment_threads(node->getAction()->get_tid())) {
+			return true;
+		}
 
 		for(unsigned int i=0;i<node->getEdges()->size();i++) {
 			CycleNode *next=(*node->getEdges())[i];

@@ -11,6 +11,7 @@
 #include "config.h"
 #include "mymemory.h"
 
+class Promise;
 class CycleNode;
 class ModelAction;
 
@@ -23,7 +24,7 @@ class CycleGraph {
 	bool checkForCycles();
 	bool checkForRMWViolation();
 	void addRMWEdge(const ModelAction *from, const ModelAction *rmw);
-
+	bool checkPromise(const ModelAction *from, Promise *p);
 	bool checkReachable(const ModelAction *from, const ModelAction *to);
 	void startChanges();
 	void commitChanges();

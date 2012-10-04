@@ -52,7 +52,7 @@ ModelChecker::ModelChecker(struct model_params params) :
 /** @brief Destructor */
 ModelChecker::~ModelChecker()
 {
-	for (int i = 0; i < get_num_threads(); i++)
+	for (unsigned int i = 0; i < get_num_threads(); i++)
 		delete thread_map->get(i);
 	delete thread_map;
 
@@ -95,7 +95,7 @@ thread_id_t ModelChecker::get_next_id()
 }
 
 /** @return the number of user threads created during this execution */
-int ModelChecker::get_num_threads()
+unsigned int ModelChecker::get_num_threads()
 {
 	return priv->next_thread_id;
 }
@@ -377,6 +377,8 @@ bool ModelChecker::process_read(ModelAction *curr, bool second_part_of_rmw)
 
 			curr->read_from(reads_from);
 			mo_graph->commitChanges();
+			mo_check_promises(curr->get_tid(), reads_from);
+
 			updated |= r_status;
 		} else if (!second_part_of_rmw) {
 			/* Read from future value */
@@ -474,6 +476,8 @@ bool ModelChecker::process_write(ModelAction *curr)
 	}
 
 	mo_graph->commitChanges();
+	mo_check_promises(curr->get_tid(), curr);
+
 	get_thread(curr)->set_return_value(VALUE_NONE);
 	return updated_mod_order || updated_promises;
 }
@@ -526,7 +530,7 @@ bool ModelChecker::process_thread_action(ModelAction *curr)
 		break;
 	}
 	case THREAD_START: {
-		check_promises(NULL, curr->get_cv());
+		check_promises(curr->get_tid(), NULL, curr->get_cv());
 		break;
 	}
 	default:
@@ -1503,6 +1507,7 @@ bool ModelChecker::resolve_promises(ModelAction *write)
 			post_r_modification_order(read, write);
 			//Make sure the promise's value matches the write's value
 			ASSERT(promise->get_value() == write->get_value());
+			mo_check_promises(read->get_tid(), write);
 
 			delete(promise);
 			promises->erase(promises->begin() + promise_index);
@@ -1535,17 +1540,49 @@ void ModelChecker::compute_promises(ModelAction *curr)
 }
 
 /** Checks promises in response to change in ClockVector Threads. */
-void ModelChecker::check_promises(ClockVector *old_cv, ClockVector *merge_cv)
+void ModelChecker::check_promises(thread_id_t tid, ClockVector *old_cv, ClockVector *merge_cv)
 {
 	for (unsigned int i = 0; i < promises->size(); i++) {
 		Promise *promise = (*promises)[i];
 		const ModelAction *act = promise->get_action();
 		if ((old_cv == NULL || !old_cv->synchronized_since(act)) &&
 				merge_cv->synchronized_since(act)) {
-			//This thread is no longer able to send values back to satisfy the promise
-			int num_synchronized_threads = promise->increment_threads();
-			if (num_synchronized_threads == get_num_threads()) {
+			if (promise->increment_threads(tid)) {
 				//Promise has failed
+				failed_promise = true;
+				return;
+			}
+		}
+	}
+}
+
+/** Checks promises in response to change in ClockVector Threads. */
+void ModelChecker::mo_check_promises(thread_id_t tid, const ModelAction *write) {
+	void * location = write->get_location();
+	for (unsigned int i = 0; i < promises->size(); i++) {
+		Promise *promise = (*promises)[i];
+		const ModelAction *act = promise->get_action();
+		
+		//Is this promise on the same location?
+		if ( act->get_location() != location )
+			continue;
+
+		if ( act->get_tid()==tid) {
+			if (promise->get_write() == NULL ) {
+				promise->set_write(write);
+			}
+			if (mo_graph->checkPromise(write, promise)) {
+				failed_promise = true;
+				return;
+			}
+		}
+		
+		//Don't do any lookups twice for the same thread
+		if (promise->has_sync_thread(tid))
+			continue;
+		
+		if (mo_graph->checkReachable(promise->get_write(), write)) {
+			if (promise->increment_threads(tid)) {
 				failed_promise = true;
 				return;
 			}

@@ -49,7 +49,7 @@ struct PendingFutureValue {
  */
 struct model_snapshot_members {
 	ModelAction *current_action;
-	int next_thread_id;
+	unsigned int next_thread_id;
 	modelclock_t used_sequence_numbers;
 	Thread *nextThread;
 	ModelAction *next_backtrack;
@@ -76,7 +76,7 @@ public:
 	Thread * get_thread(ModelAction *act) const;
 
 	thread_id_t get_next_id();
-	int get_num_threads();
+	unsigned int get_num_threads();
 	Thread * get_current_thread();
 
 	int switch_to_master(ModelAction *act);
@@ -86,7 +86,8 @@ public:
 	bool isfeasible();
 	bool isfeasibleotherthanRMW();
 	bool isfinalfeasible();
-	void check_promises(ClockVector *old_cv, ClockVector * merge_cv);
+	void mo_check_promises(thread_id_t tid, const ModelAction *write);
+	void check_promises(thread_id_t tid, ClockVector *old_cv, ClockVector * merge_cv);
 	void get_release_seq_heads(ModelAction *act, rel_heads_list_t *release_heads);
 	void finish_execution();
 	bool isfeasibleprefix();
@@ -97,6 +98,7 @@ public:
 	void set_bad_synchronization() { bad_synchronization = true; }
 
 	const model_params params;
+	Scheduler * get_scheduler() { return scheduler;}
 
 	MEMALLOC
 private:

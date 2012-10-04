@@ -281,7 +281,7 @@ bool ModelAction::read_from(const ModelAction *act)
 bool ModelAction::synchronize_with(const ModelAction *act) {
 	if (*this < *act && type != THREAD_JOIN && type != ATOMIC_LOCK)
 		return false;
-	model->check_promises(cv, act->cv);
+	model->check_promises(act->get_tid(), cv, act->cv);
 	cv->merge(act->cv);
 	return true;
 }

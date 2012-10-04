@@ -1490,6 +1490,7 @@ ClockVector * ModelChecker::get_cv(thread_id_t tid)
 bool ModelChecker::resolve_promises(ModelAction *write)
 {
 	bool resolved = false;
+  std::vector<thread_id_t> threads_to_check;
 
 	for (unsigned int i = 0, promise_index = 0; promise_index < promises->size(); i++) {
 		Promise *promise = (*promises)[promise_index];
@@ -1507,14 +1508,18 @@ bool ModelChecker::resolve_promises(ModelAction *write)
 			post_r_modification_order(read, write);
 			//Make sure the promise's value matches the write's value
 			ASSERT(promise->get_value() == write->get_value());
-			mo_check_promises(read->get_tid(), write);
-
 			delete(promise);
+			
 			promises->erase(promises->begin() + promise_index);
+			threads_to_check.push_back(read->get_tid());
+
 			resolved = true;
 		} else
 			promise_index++;
 	}
+	for(unsigned int i=0;i<threads_to_check.size();i++)
+		mo_check_promises(threads_to_check[i], write);
+
 	return resolved;
 }
 

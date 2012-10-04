@@ -12,6 +12,7 @@
 #include "promise.h"
 #include "datarace.h"
 #include "mutex.h"
+#include "threads.h"
 
 #define INITIAL_THREAD_ID	0
 
@@ -99,6 +100,12 @@ int ModelChecker::get_num_threads()
 	return priv->next_thread_id;
 }
 
+/** @return The currently executing Thread. */
+Thread * ModelChecker::get_current_thread()
+{
+	return scheduler->get_current_thread();
+}
+
 /** @return a sequence number for a new ModelAction */
 modelclock_t ModelChecker::get_next_seq_num()
 {
@@ -171,7 +178,7 @@ Thread * ModelChecker::get_next_thread(ModelAction *curr)
 	} else {
 		tid = next->get_tid();
 	}
-	DEBUG("*** ModelChecker chose next thread = %d ***\n", tid);
+	DEBUG("*** ModelChecker chose next thread = %d ***\n", id_to_int(tid));
 	ASSERT(tid != THREAD_ID_T_NONE);
 	return thread_map->get(id_to_int(tid));
 }
@@ -192,7 +199,7 @@ bool ModelChecker::next_execution()
 	if (isfinalfeasible()) {
 		printf("Earliest divergence point since last feasible execution:\n");
 		if (earliest_diverge)
-			earliest_diverge->print(false);
+			earliest_diverge->print();
 		else
 			printf("(Not set)\n");
 
@@ -317,7 +324,8 @@ void ModelChecker::set_backtracking(ModelAction *act)
 		if (!node->set_backtrack(tid))
 			continue;
 		DEBUG("Setting backtrack: conflict = %d, instead tid = %d\n",
-					prev->get_tid(), t->get_id());
+					id_to_int(prev->get_tid()),
+					id_to_int(t->get_id()));
 		if (DBG_ENABLED()) {
 			prev->print();
 			act->print();
@@ -787,8 +795,7 @@ bool ModelChecker::isfinalfeasible() {
 
 /** Close out a RMWR by converting previous RMWR into a RMW or READ. */
 ModelAction * ModelChecker::process_rmw(ModelAction *act) {
-	int tid = id_to_int(act->get_tid());
-	ModelAction *lastread = get_last_action(tid);
+	ModelAction *lastread = get_last_action(act->get_tid());
 	lastread->process_rmw(act);
 	if (act->is_rmw() && lastread->get_reads_from()!=NULL) {
 		mo_graph->addRMWEdge(lastread->get_reads_from(), lastread);
@@ -1169,7 +1176,7 @@ bool ModelChecker::thin_air_constraint_may_allow(const ModelAction * writer, con
  * @return true, if the ModelChecker is certain that release_heads is complete;
  * false otherwise
  */
-bool ModelChecker::release_seq_head(const ModelAction *rf, rel_heads_list_t *release_heads) const
+bool ModelChecker::release_seq_heads(const ModelAction *rf, rel_heads_list_t *release_heads) const
 {
 	/* Only check for release sequences if there are no cycles */
 	if (mo_graph->checkForCycles())
@@ -1239,7 +1246,7 @@ bool ModelChecker::release_seq_head(const ModelAction *rf, rel_heads_list_t *rel
 
 		ModelAction *last = get_last_action(int_to_id(i));
 		if (last && (rf->happens_before(last) ||
-				last->get_type() == THREAD_FINISH))
+				get_thread(int_to_id(i))->is_complete()))
 			future_ordered = true;
 
 		for (rit = list->rbegin(); rit != list->rend(); rit++) {
@@ -1291,13 +1298,13 @@ bool ModelChecker::release_seq_head(const ModelAction *rf, rel_heads_list_t *rel
  * @param act The 'acquire' action that may read from a release sequence
  * @param release_heads A pass-by-reference return parameter. Will be filled
  * with the head(s) of the release sequence(s), if they exists with certainty.
- * @see ModelChecker::release_seq_head
+ * @see ModelChecker::release_seq_heads
  */
 void ModelChecker::get_release_seq_heads(ModelAction *act, rel_heads_list_t *release_heads)
 {
 	const ModelAction *rf = act->get_reads_from();
 	bool complete;
-	complete = release_seq_head(rf, release_heads);
+	complete = release_seq_heads(rf, release_heads);
 	if (!complete) {
 		/* add act to 'lazy checking' list */
 		pending_acq_rel_seq->push_back(act);
@@ -1333,7 +1340,7 @@ bool ModelChecker::resolve_release_sequences(void *location, work_queue_t *work_
 		const ModelAction *rf = act->get_reads_from();
 		rel_heads_list_t release_heads;
 		bool complete;
-		complete = release_seq_head(rf, &release_heads);
+		complete = release_seq_heads(rf, &release_heads);
 		for (unsigned int i = 0; i < release_heads.size(); i++) {
 			if (!act->has_synchronized_with(release_heads[i])) {
 				if (act->synchronize_with(release_heads[i]))
@@ -1702,11 +1709,34 @@ void ModelChecker::remove_thread(Thread *t)
 }
 
 /**
+ * @brief Get a Thread reference by its ID
+ * @param tid The Thread's ID
+ * @return A Thread reference
+ */
+Thread * ModelChecker::get_thread(thread_id_t tid) const
+{
+	return thread_map->get(id_to_int(tid));
+}
+
+/**
+ * @brief Get a reference to the Thread in which a ModelAction was executed
+ * @param act The ModelAction
+ * @return A Thread reference
+ */
+Thread * ModelChecker::get_thread(ModelAction *act) const
+{
+	return get_thread(act->get_tid());
+}
+
+/**
  * Switch from a user-context to the "master thread" context (a.k.a. system
  * context). This switch is made with the intention of exploring a particular
  * model-checking action (described by a ModelAction object). Must be called
  * from a user-thread context.
- * @param act The current action that will be explored. Must not be NULL.
+ *
+ * @param act The current action that will be explored. May be NULL only if
+ * trace is exiting via an assertion (see ModelChecker::set_assert and
+ * ModelChecker::has_asserted).
  * @return Return status from the 'swap' call (i.e., success/fail, 0/-1)
  */
 int ModelChecker::switch_to_master(ModelAction *act)
@@ -1726,7 +1756,7 @@ bool ModelChecker::take_step() {
 	if (has_asserted())
 		return false;
 
-	Thread * curr = thread_current();
+	Thread *curr = thread_current();
 	if (curr) {
 		if (curr->get_state() == THREAD_READY) {
 			ASSERT(priv->current_action);
@@ -1740,22 +1770,23 @@ bool ModelChecker::take_step() {
 			ASSERT(false);
 		}
 	}
-	Thread * next = scheduler->next_thread(priv->nextThread);
+	Thread *next = scheduler->next_thread(priv->nextThread);
 
 	/* Infeasible -> don't take any more steps */
 	if (!isfeasible())
 		return false;
 
-	if (next)
-		next->set_state(THREAD_RUNNING);
-	DEBUG("(%d, %d)\n", curr ? curr->get_id() : -1, next ? next->get_id() : -1);
+	DEBUG("(%d, %d)\n", curr ? id_to_int(curr->get_id()) : -1,
+			next ? id_to_int(next->get_id()) : -1);
 
 	/* next == NULL -> don't take any more steps */
 	if (!next)
 		return false;
 
-	if ( next->get_pending() != NULL ) {
-		//restart a pending action
+	next->set_state(THREAD_RUNNING);
+
+	if (next->get_pending() != NULL) {
+		/* restart a pending action */
 		set_current_action(next->get_pending());
 		next->set_pending(NULL);
 		next->set_state(THREAD_READY);

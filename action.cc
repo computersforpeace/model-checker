@@ -7,6 +7,7 @@
 #include "action.h"
 #include "clockvector.h"
 #include "common.h"
+#include "threads.h"
 
 #define ACTION_INITIAL_CLOCK 0
 
@@ -248,18 +249,27 @@ void ModelAction::set_try_lock(bool obtainedlock) {
 		value=VALUE_TRYFAILED;
 }
 
-/** Update the model action's read_from action */
-void ModelAction::read_from(const ModelAction *act)
+/**
+ * Update the model action's read_from action
+ * @param act The action to read from; should be a write
+ * @return True if this read established synchronization
+ */
+bool ModelAction::read_from(const ModelAction *act)
 {
 	ASSERT(cv);
 	reads_from = act;
 	if (act != NULL && this->is_acquire()) {
 		rel_heads_list_t release_heads;
 		model->get_release_seq_heads(this, &release_heads);
+		int num_heads = release_heads.size();
 		for (unsigned int i = 0; i < release_heads.size(); i++)
-			if (!synchronize_with(release_heads[i]))
+			if (!synchronize_with(release_heads[i])) {
 				model->set_bad_synchronization();
+				num_heads--;
+			}
+		return num_heads > 0;
 	}
+	return false;
 }
 
 /**
@@ -292,13 +302,8 @@ bool ModelAction::happens_before(const ModelAction *act) const
 	return act->cv->synchronized_since(this);
 }
 
-/**
- * Print nicely-formatted info about this ModelAction
- *
- * @param print_cv True if we want to print clock vector data. Might be false,
- * for instance, in situations where the clock vector might be invalid
- */
-void ModelAction::print(bool print_cv) const
+/** @brief Print nicely-formatted info about this ModelAction */
+void ModelAction::print() const
 {
 	const char *type_str, *mo_str;
 	switch (this->type) {
@@ -382,7 +387,7 @@ void ModelAction::print(bool print_cv) const
 		else
 			printf(" Rf: ?");
 	}
-	if (cv && print_cv) {
+	if (cv) {
 		printf("\t");
 		cv->print();
 	} else

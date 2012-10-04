@@ -1,5 +1,6 @@
 #include "model.h"
 #include "cmodelint.h"
+#include "threads.h"
 
 /** Performs a read action.*/
 uint64_t model_read_action(void * obj, memory_order ord) {

@@ -105,7 +105,7 @@ int Thread::swap(ucontext_t *ctxt, Thread *t)
 void Thread::complete()
 {
 	if (!is_complete()) {
-		DEBUG("completed thread %d\n", get_id());
+		DEBUG("completed thread %d\n", id_to_int(get_id()));
 		state = THREAD_COMPLETED;
 		if (stack)
 			stack_free(stack);

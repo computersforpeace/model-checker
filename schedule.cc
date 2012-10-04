@@ -36,7 +36,7 @@ void Scheduler::set_enabled(Thread *t, bool enabled_status) {
  */
 void Scheduler::add_thread(Thread *t)
 {
-	DEBUG("thread %d\n", t->get_id());
+	DEBUG("thread %d\n", id_to_int(t->get_id()));
 	set_enabled(t, true);
 }
 
@@ -119,7 +119,7 @@ Thread * Scheduler::get_current_thread() const
 void Scheduler::print() const
 {
 	if (current)
-		DEBUG("Current thread: %d\n", current->get_id());
+		DEBUG("Current thread: %d\n", id_to_int(current->get_id()));
 	else
 		DEBUG("No current thread\n");
 }

@@ -1,7 +1,7 @@
 #ifndef MUTEX_H
 #define MUTEX_H
-#include "threads.h"
-#include "clockvector.h"
+
+#include "modeltypes.h"
 
 namespace std {
 	struct mutex_state {

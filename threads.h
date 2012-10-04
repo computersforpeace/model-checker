@@ -11,10 +11,7 @@
 
 #include "mymemory.h"
 #include "libthreads.h"
-
-typedef int thread_id_t;
-
-#define THREAD_ID_T_NONE	-1
+#include "modeltypes.h"
 
 /** @brief Represents the state of a user Thread */
 typedef enum thread_state {

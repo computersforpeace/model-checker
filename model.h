@@ -10,20 +10,19 @@
 #include <cstddef>
 #include <ucontext.h>
 
-#include "schedule.h"
 #include "mymemory.h"
-#include "libthreads.h"
-#include "threads.h"
 #include "action.h"
-#include "clockvector.h"
 #include "hashtable.h"
 #include "workqueue.h"
 #include "config.h"
+#include "modeltypes.h"
 
 /* Forward declaration */
 class NodeStack;
 class CycleGraph;
 class Promise;
+class Scheduler;
+class Thread;
 
 /** @brief Shorthand for a list of release sequence heads */
 typedef std::vector< const ModelAction *, ModelAlloc<const ModelAction *> > rel_heads_list_t;
@@ -73,14 +72,12 @@ public:
 
 	void add_thread(Thread *t);
 	void remove_thread(Thread *t);
-	Thread * get_thread(thread_id_t tid) { return thread_map->get(id_to_int(tid)); }
-	Thread * get_thread(ModelAction *act) { return get_thread(act->get_tid()); }
+	Thread * get_thread(thread_id_t tid) const;
+	Thread * get_thread(ModelAction *act) const;
 
 	thread_id_t get_next_id();
 	int get_num_threads();
-
-	/** @return The currently executing Thread. */
-	Thread * get_current_thread() { return scheduler->get_current_thread(); }
+	Thread * get_current_thread();
 
 	int switch_to_master(ModelAction *act);
 	ClockVector * get_cv(thread_id_t tid);
@@ -151,7 +148,7 @@ private:
 	void post_r_modification_order(ModelAction *curr, const ModelAction *rf);
 	bool r_modification_order(ModelAction *curr, const ModelAction *rf);
 	bool w_modification_order(ModelAction *curr);
-	bool release_seq_head(const ModelAction *rf, rel_heads_list_t *release_heads) const;
+	bool release_seq_heads(const ModelAction *rf, rel_heads_list_t *release_heads) const;
 	bool resolve_release_sequences(void *location, work_queue_t *work_queue);
 	void do_complete_join(ModelAction *join);
 

@@ -372,6 +372,8 @@ NodeStack::NodeStack() :
 
 NodeStack::~NodeStack()
 {
+	for (unsigned int i = 0; i < node_list.size(); i++)
+		delete node_list[i];
 }
 
 void NodeStack::print()

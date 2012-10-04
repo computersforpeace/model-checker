@@ -34,7 +34,7 @@ ModelChecker::ModelChecker(struct model_params params) :
 	obj_thrd_map(new HashTable<void *, std::vector<action_list_t>, uintptr_t, 4 >()),
 	promises(new std::vector<Promise *>()),
 	futurevalues(new std::vector<struct PendingFutureValue>()),
-	pending_acq_rel_seq(new std::vector<ModelAction *>()),
+	pending_rel_seqs(new std::vector<struct release_seq *>()),
 	thrd_last_action(new std::vector<ModelAction *>(1)),
 	node_stack(new NodeStack()),
 	mo_graph(new CycleGraph()),
@@ -65,7 +65,7 @@ ModelChecker::~ModelChecker()
 		delete (*promises)[i];
 	delete promises;
 
-	delete pending_acq_rel_seq;
+	delete pending_rel_seqs;
 
 	delete thrd_last_action;
 	delete node_stack;
@@ -208,7 +208,7 @@ bool ModelChecker::next_execution()
 	}
 
 	DEBUG("Number of acquires waiting on pending release sequences: %lu\n",
-			pending_acq_rel_seq->size());
+			pending_rel_seqs->size());
 
 	if (isfinalfeasible() || DBG_ENABLED())
 		print_summary();
@@ -760,7 +760,7 @@ bool ModelChecker::promises_expired() {
 /** @return whether the current partial trace must be a prefix of a
  * feasible trace. */
 bool ModelChecker::isfeasibleprefix() {
-	return promises->size() == 0 && pending_acq_rel_seq->size() == 0;
+	return promises->size() == 0 && pending_rel_seqs->size() == 0;
 }
 
 /** @return whether the current partial trace is feasible. */
@@ -1307,10 +1307,14 @@ bool ModelChecker::release_seq_heads(const ModelAction *rf, rel_heads_list_t *re
 void ModelChecker::get_release_seq_heads(ModelAction *act, rel_heads_list_t *release_heads)
 {
 	const ModelAction *rf = act->get_reads_from();
+	struct release_seq *sequence = (struct release_seq *)snapshot_calloc(1, sizeof(struct release_seq));
+	sequence->acquire = act;
 
 	if (!release_seq_heads(rf, release_heads)) {
 		/* add act to 'lazy checking' list */
-		pending_acq_rel_seq->push_back(act);
+		pending_rel_seqs->push_back(sequence);
+	} else {
+		snapshot_free(sequence);
 	}
 }
 
@@ -1330,9 +1334,10 @@ void ModelChecker::get_release_seq_heads(ModelAction *act, rel_heads_list_t *rel
 bool ModelChecker::resolve_release_sequences(void *location, work_queue_t *work_queue)
 {
 	bool updated = false;
-	std::vector<ModelAction *>::iterator it = pending_acq_rel_seq->begin();
-	while (it != pending_acq_rel_seq->end()) {
-		ModelAction *act = *it;
+	std::vector<struct release_seq *>::iterator it = pending_rel_seqs->begin();
+	while (it != pending_rel_seqs->end()) {
+		struct release_seq *pending = *it;
+		ModelAction *act = pending->acquire;
 
 		/* Only resolve sequences on the given location, if provided */
 		if (location && act->get_location() != location) {
@@ -1370,10 +1375,12 @@ bool ModelChecker::resolve_release_sequences(void *location, work_queue_t *work_
 				}
 			}
 		}
-		if (complete)
-			it = pending_acq_rel_seq->erase(it);
-		else
+		if (complete) {
+			it = pending_rel_seqs->erase(it);
+			snapshot_free(pending);
+		} else {
 			it++;
+		}
 	}
 
 	// If we resolved promises or data races, see if we have realized a data race.

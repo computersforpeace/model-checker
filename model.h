@@ -187,12 +187,12 @@ private:
 	std::vector<struct PendingFutureValue> *futurevalues;
 
 	/**
-	 * List of acquire actions that might synchronize with one or more
-	 * release sequence. Release sequences might be determined lazily as
-	 * promises are fulfilled and modification orders are established. Each
-	 * ModelAction in this list must be an acquire operation.
+	 * List of pending release sequences. Release sequences might be
+	 * determined lazily as promises are fulfilled and modification orders
+	 * are established. Each entry in the list may only be partially
+	 * filled, depending on its pending status.
 	 */
-	std::vector<ModelAction *> *pending_acq_rel_seq;
+	std::vector<struct release_seq *> *pending_rel_seqs;
 
 	std::vector<ModelAction *> *thrd_last_action;
 	NodeStack *node_stack;

@@ -163,7 +163,7 @@ private:
 	void post_r_modification_order(ModelAction *curr, const ModelAction *rf);
 	bool r_modification_order(ModelAction *curr, const ModelAction *rf);
 	bool w_modification_order(ModelAction *curr);
-	bool release_seq_heads(const ModelAction *rf, rel_heads_list_t *release_heads) const;
+	bool release_seq_heads(const ModelAction *rf, rel_heads_list_t *release_heads, struct release_seq *pending) const;
 	bool resolve_release_sequences(void *location, work_queue_t *work_queue);
 	void do_complete_join(ModelAction *join);
 

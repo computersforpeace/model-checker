@@ -362,12 +362,12 @@ void Node::explore(thread_id_t tid)
 	explored_children[i] = true;
 }
 
-NodeStack::NodeStack()
-	: total_nodes(0)
+NodeStack::NodeStack() :
+	node_list(1, new Node()),
+	iter(0),
+	total_nodes(0)
 {
-	node_list.push_back(new Node());
 	total_nodes++;
-	iter = 0;
 }
 
 NodeStack::~NodeStack()

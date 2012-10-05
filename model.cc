@@ -236,7 +236,7 @@ ModelAction * ModelChecker::get_last_conflict(ModelAction *act)
 		action_list_t::reverse_iterator rit;
 		for (rit = list->rbegin(); rit != list->rend(); rit++) {
 			ModelAction *prev = *rit;
-			if (act->is_synchronizing(prev))
+			if (prev->could_synchronize_with(act))
 				return prev;
 		}
 		break;
@@ -1114,7 +1114,7 @@ bool ModelChecker::w_modification_order(ModelAction *curr)
 				}
 				added = true;
 				break;
-			} else if (act->is_read() && !act->is_synchronizing(curr) &&
+			} else if (act->is_read() && !act->could_synchronize_with(curr) &&
 			                             !act->same_thread(curr)) {
 				/* We have an action that:
 				   (1) did not happen before us
@@ -1562,7 +1562,7 @@ void ModelChecker::compute_promises(ModelAction *curr)
 		const ModelAction *act = promise->get_action();
 		if (!act->happens_before(curr) &&
 				act->is_read() &&
-				!act->is_synchronizing(curr) &&
+				!act->could_synchronize_with(curr) &&
 				!act->same_thread(curr) &&
 				promise->get_value() == curr->get_value()) {
 			curr->get_node()->set_promise(i);

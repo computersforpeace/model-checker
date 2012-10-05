@@ -101,7 +101,7 @@ public:
 	bool same_var(const ModelAction *act) const;
 	bool same_thread(const ModelAction *act) const;
 	bool is_conflicting_lock(const ModelAction *act) const;
-	bool is_synchronizing(const ModelAction *act) const;
+	bool could_synchronize_with(const ModelAction *act) const;
 
 	void create_cv(const ModelAction *parent = NULL);
 	ClockVector * get_cv() const { return cv; }

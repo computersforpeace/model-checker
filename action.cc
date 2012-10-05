@@ -184,7 +184,7 @@ void ModelAction::process_rmw(ModelAction * act) {
  *  @param act is the action to consider exploring a reordering.
  *  @return tells whether we have to explore a reordering.
  */
-bool ModelAction::is_synchronizing(const ModelAction *act) const
+bool ModelAction::could_synchronize_with(const ModelAction *act) const
 {
 	//Same thread can't be reordered
 	if (same_thread(act))
@@ -196,13 +196,11 @@ bool ModelAction::is_synchronizing(const ModelAction *act) const
 
 	// Explore interleavings of seqcst writes to guarantee total order
 	// of seq_cst operations that don't commute
-	if (is_write() && is_seqcst() && act->is_write() && act->is_seqcst())
+	if ((is_write() || act->is_write()) && is_seqcst() && act->is_seqcst())
 		return true;
 
 	// Explore synchronizing read/write pairs
 	if (is_read() && is_acquire() && act->is_write() && act->is_release())
-		return true;
-	if (is_write() && is_release() && act->is_read() && act->is_acquire())
 		return true;
 
 	// Otherwise handle by reads_from relation

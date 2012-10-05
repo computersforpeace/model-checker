@@ -140,6 +140,7 @@ private:
 	bool process_write(ModelAction *curr);
 	bool process_mutex(ModelAction *curr);
 	bool process_thread_action(ModelAction *curr);
+	void process_relseq_fixup(ModelAction *curr, work_queue_t *work_queue);
 	bool check_action_enabled(ModelAction *curr);
 
 	bool take_step();

@@ -545,6 +545,62 @@ bool ModelChecker::process_thread_action(ModelAction *curr)
 }
 
 /**
+ * @brief Process the current action for release sequence fixup activity
+ *
+ * Performs model-checker release sequence fixups for the current action,
+ * forcing a single pending release sequence to break (with a given, potential
+ * "loose" write) or to complete (i.e., synchronize). If a pending release
+ * sequence forms a complete release sequence, then we must perform the fixup
+ * synchronization, mo_graph additions, etc.
+ *
+ * @param curr The current action; must be a release sequence fixup action
+ * @param work_queue The work queue to which to add work items as they are
+ * generated
+ */
+void ModelChecker::process_relseq_fixup(ModelAction *curr, work_queue_t *work_queue)
+{
+	const ModelAction *write = curr->get_node()->get_relseq_break();
+	struct release_seq *sequence = pending_rel_seqs->back();
+	pending_rel_seqs->pop_back();
+	ASSERT(sequence);
+	ModelAction *acquire = sequence->acquire;
+	const ModelAction *rf = sequence->rf;
+	const ModelAction *release = sequence->release;
+	ASSERT(acquire);
+	ASSERT(release);
+	ASSERT(rf);
+	ASSERT(release->same_thread(rf));
+
+	if (write == NULL) {
+		/* Must synchronize */
+		if (!acquire->synchronize_with(release)) {
+			set_bad_synchronization();
+			return;
+		}
+		/* Re-check all pending release sequences */
+		work_queue->push_back(CheckRelSeqWorkEntry(NULL));
+		/* Re-check act for mo_graph edges */
+		work_queue->push_back(MOEdgeWorkEntry(acquire));
+
+		/* propagate synchronization to later actions */
+		action_list_t::reverse_iterator rit = action_trace->rbegin();
+		for (; (*rit) != acquire; rit++) {
+			ModelAction *propagate = *rit;
+			if (acquire->happens_before(propagate)) {
+				propagate->synchronize_with(acquire);
+				/* Re-check 'propagate' for mo_graph edges */
+				work_queue->push_back(MOEdgeWorkEntry(propagate));
+			}
+		}
+	} else {
+		/* Break release sequence with new edges:
+		 *   release --mo--> write --mo--> rf */
+		mo_graph->addEdge(release, write);
+		mo_graph->addEdge(write, rf);
+	}
+}
+
+/**
  * Initialize the current action by performing one or more of the following
  * actions, as appropriate: merging RMWR and RMWC/RMW actions, stepping forward
  * in the NodeStack, manipulating backtracking sets, allocating and
@@ -683,6 +739,9 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 
 			if (act->is_mutex_op() && process_mutex(act))
 				update_all = true;
+
+			if (act->is_relseq_fixup())
+				process_relseq_fixup(curr, &work_queue);
 
 			if (update_all)
 				work_queue.push_back(CheckRelSeqWorkEntry(NULL));

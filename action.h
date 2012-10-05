@@ -37,6 +37,8 @@ using std::memory_order_seq_cst;
 /** @brief Represents an action type, identifying one of several types of
  * ModelAction */
 typedef enum action_type {
+	MODEL_FIXUP_RELSEQ,   /**< Special ModelAction: finalize a release
+	                       *   sequence */
 	THREAD_CREATE,        /**< A thread creation action */
 	THREAD_START,         /**< First action in each thread */
 	THREAD_YIELD,         /**< A thread yield action */
@@ -82,6 +84,7 @@ public:
 	void copy_from_new(ModelAction *newaction);
 	void set_seq_number(modelclock_t num);
 	void set_try_lock(bool obtainedlock);
+	bool is_relseq_fixup() const;
 	bool is_mutex_op() const;
 	bool is_lock() const;
 	bool is_trylock() const;

@@ -50,6 +50,11 @@ void ModelAction::set_seq_number(modelclock_t num)
 	seq_number = num;
 }
 
+bool ModelAction::is_relseq_fixup() const
+{
+	return type == MODEL_FIXUP_RELSEQ;
+}
+
 bool ModelAction::is_mutex_op() const
 {
 	return type == ATOMIC_LOCK || type == ATOMIC_TRYLOCK || type == ATOMIC_UNLOCK;
@@ -305,6 +310,9 @@ void ModelAction::print() const
 {
 	const char *type_str, *mo_str;
 	switch (this->type) {
+	case MODEL_FIXUP_RELSEQ:
+		type_str = "relseq fixup";
+		break;
 	case THREAD_CREATE:
 		type_str = "thread create";
 		break;

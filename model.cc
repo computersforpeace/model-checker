@@ -34,7 +34,7 @@ ModelChecker::ModelChecker(struct model_params params) :
 	obj_thrd_map(new HashTable<void *, std::vector<action_list_t>, uintptr_t, 4 >()),
 	promises(new std::vector<Promise *>()),
 	futurevalues(new std::vector<struct PendingFutureValue>()),
-	pending_acq_rel_seq(new std::vector<ModelAction *>()),
+	pending_rel_seqs(new std::vector<struct release_seq *>()),
 	thrd_last_action(new std::vector<ModelAction *>(1)),
 	node_stack(new NodeStack()),
 	mo_graph(new CycleGraph()),
@@ -65,7 +65,7 @@ ModelChecker::~ModelChecker()
 		delete (*promises)[i];
 	delete promises;
 
-	delete pending_acq_rel_seq;
+	delete pending_rel_seqs;
 
 	delete thrd_last_action;
 	delete node_stack;
@@ -208,7 +208,7 @@ bool ModelChecker::next_execution()
 	}
 
 	DEBUG("Number of acquires waiting on pending release sequences: %lu\n",
-			pending_acq_rel_seq->size());
+			pending_rel_seqs->size());
 
 	if (isfinalfeasible() || DBG_ENABLED())
 		print_summary();
@@ -760,7 +760,7 @@ bool ModelChecker::promises_expired() {
 /** @return whether the current partial trace must be a prefix of a
  * feasible trace. */
 bool ModelChecker::isfeasibleprefix() {
-	return promises->size() == 0 && pending_acq_rel_seq->size() == 0;
+	return promises->size() == 0 && pending_rel_seqs->size() == 0;
 }
 
 /** @return whether the current partial trace is feasible. */
@@ -1174,13 +1174,19 @@ bool ModelChecker::thin_air_constraint_may_allow(const ModelAction * writer, con
  * @todo Finish lazy updating, when promises are fulfilled in the future
  * @param rf The action that might be part of a release sequence. Must be a
  * write.
- * @param release_heads A pass-by-reference style return parameter.  After
+ * @param release_heads A pass-by-reference style return parameter. After
  * execution of this function, release_heads will contain the heads of all the
- * relevant release sequences, if any exists
+ * relevant release sequences, if any exists with certainty
+ * @param pending A pass-by-reference style return parameter which is only used
+ * when returning false (i.e., uncertain). Returns most information regarding
+ * an uncertain release sequence, including any write operations that might
+ * break the sequence.
  * @return true, if the ModelChecker is certain that release_heads is complete;
  * false otherwise
  */
-bool ModelChecker::release_seq_heads(const ModelAction *rf, rel_heads_list_t *release_heads) const
+bool ModelChecker::release_seq_heads(const ModelAction *rf,
+		rel_heads_list_t *release_heads,
+		struct release_seq *pending) const
 {
 	/* Only check for release sequences if there are no cycles */
 	if (mo_graph->checkForCycles())
@@ -1209,6 +1215,7 @@ bool ModelChecker::release_seq_heads(const ModelAction *rf, rel_heads_list_t *re
 	};
 	if (!rf) {
 		/* read from future: need to settle this later */
+		pending->rf = NULL;
 		return false; /* incomplete */
 	}
 
@@ -1237,6 +1244,8 @@ bool ModelChecker::release_seq_heads(const ModelAction *rf, rel_heads_list_t *re
 	ModelAction *release = *rit;
 
 	ASSERT(rf->same_thread(release));
+
+	pending->writes.clear();
 
 	bool certain = true;
 	for (unsigned int i = 0; i < thrd_lists->size(); i++) {
@@ -1281,14 +1290,21 @@ bool ModelChecker::release_seq_heads(const ModelAction *rf, rel_heads_list_t *re
 				/* release --mo-> act --mo--> rf */
 				return true; /* complete */
 			}
+			/* act may break release sequence */
+			pending->writes.push_back(act);
 			certain = false;
 		}
 		if (!future_ordered)
-			return false; /* This thread is uncertain */
+			certain = false; /* This thread is uncertain */
 	}
 
-	if (certain)
+	if (certain) {
 		release_heads->push_back(release);
+		pending->writes.clear();
+	} else {
+		pending->release = release;
+		pending->rf = rf;
+	}
 	return certain;
 }
 
@@ -1307,10 +1323,14 @@ bool ModelChecker::release_seq_heads(const ModelAction *rf, rel_heads_list_t *re
 void ModelChecker::get_release_seq_heads(ModelAction *act, rel_heads_list_t *release_heads)
 {
 	const ModelAction *rf = act->get_reads_from();
+	struct release_seq *sequence = (struct release_seq *)snapshot_calloc(1, sizeof(struct release_seq));
+	sequence->acquire = act;
 
-	if (!release_seq_heads(rf, release_heads)) {
+	if (!release_seq_heads(rf, release_heads, sequence)) {
 		/* add act to 'lazy checking' list */
-		pending_acq_rel_seq->push_back(act);
+		pending_rel_seqs->push_back(sequence);
+	} else {
+		snapshot_free(sequence);
 	}
 }
 
@@ -1330,9 +1350,10 @@ void ModelChecker::get_release_seq_heads(ModelAction *act, rel_heads_list_t *rel
 bool ModelChecker::resolve_release_sequences(void *location, work_queue_t *work_queue)
 {
 	bool updated = false;
-	std::vector<ModelAction *>::iterator it = pending_acq_rel_seq->begin();
-	while (it != pending_acq_rel_seq->end()) {
-		ModelAction *act = *it;
+	std::vector<struct release_seq *>::iterator it = pending_rel_seqs->begin();
+	while (it != pending_rel_seqs->end()) {
+		struct release_seq *pending = *it;
+		ModelAction *act = pending->acquire;
 
 		/* Only resolve sequences on the given location, if provided */
 		if (location && act->get_location() != location) {
@@ -1343,7 +1364,7 @@ bool ModelChecker::resolve_release_sequences(void *location, work_queue_t *work_
 		const ModelAction *rf = act->get_reads_from();
 		rel_heads_list_t release_heads;
 		bool complete;
-		complete = release_seq_heads(rf, &release_heads);
+		complete = release_seq_heads(rf, &release_heads, pending);
 		for (unsigned int i = 0; i < release_heads.size(); i++) {
 			if (!act->has_synchronized_with(release_heads[i])) {
 				if (act->synchronize_with(release_heads[i]))
@@ -1370,10 +1391,12 @@ bool ModelChecker::resolve_release_sequences(void *location, work_queue_t *work_
 				}
 			}
 		}
-		if (complete)
-			it = pending_acq_rel_seq->erase(it);
-		else
+		if (complete) {
+			it = pending_rel_seqs->erase(it);
+			snapshot_free(pending);
+		} else {
 			it++;
+		}
 	}
 
 	// If we resolved promises or data races, see if we have realized a data race.

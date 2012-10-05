@@ -55,6 +55,19 @@ struct model_snapshot_members {
 	ModelAction *next_backtrack;
 };
 
+/** @brief Records information regarding a single pending release sequence */
+struct release_seq {
+	/** @brief The acquire operation */
+	ModelAction *acquire;
+	/** @brief The head of the RMW chain from which 'acquire' reads; may be
+	 *  equal to 'release' */
+	const ModelAction *rf;
+	/** @brief The head of the potential longest release sequence chain */
+	const ModelAction *release;
+	/** @brief The write(s) that may break the release sequence */
+	std::vector<const ModelAction *> writes;
+};
+
 /** @brief The central structure for model-checking */
 class ModelChecker {
 public:
@@ -150,7 +163,7 @@ private:
 	void post_r_modification_order(ModelAction *curr, const ModelAction *rf);
 	bool r_modification_order(ModelAction *curr, const ModelAction *rf);
 	bool w_modification_order(ModelAction *curr);
-	bool release_seq_heads(const ModelAction *rf, rel_heads_list_t *release_heads) const;
+	bool release_seq_heads(const ModelAction *rf, rel_heads_list_t *release_heads, struct release_seq *pending) const;
 	bool resolve_release_sequences(void *location, work_queue_t *work_queue);
 	void do_complete_join(ModelAction *join);
 
@@ -174,12 +187,12 @@ private:
 	std::vector<struct PendingFutureValue> *futurevalues;
 
 	/**
-	 * List of acquire actions that might synchronize with one or more
-	 * release sequence. Release sequences might be determined lazily as
-	 * promises are fulfilled and modification orders are established. Each
-	 * ModelAction in this list must be an acquire operation.
+	 * List of pending release sequences. Release sequences might be
+	 * determined lazily as promises are fulfilled and modification orders
+	 * are established. Each entry in the list may only be partially
+	 * filled, depending on its pending status.
 	 */
-	std::vector<ModelAction *> *pending_acq_rel_seq;
+	std::vector<struct release_seq *> *pending_rel_seqs;
 
 	std::vector<ModelAction *> *thrd_last_action;
 	NodeStack *node_stack;

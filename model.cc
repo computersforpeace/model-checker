@@ -1516,6 +1516,10 @@ bool ModelChecker::resolve_promises(ModelAction *write)
 		} else
 			promise_index++;
 	}
+
+	//Check whether reading these writes has made threads unable to
+	//resolve promises
+
 	for(unsigned int i=0;i<threads_to_check.size();i++)
 		mo_check_promises(threads_to_check[i], write);
 
@@ -1560,7 +1564,33 @@ void ModelChecker::check_promises(thread_id_t tid, ClockVector *old_cv, ClockVec
 	}
 }
 
-/** Checks promises in response to change in ClockVector Threads. */
+/** Checks promises in response to addition to modification order for threads.
+ * Definitions:
+ * pthread is the thread that performed the read that created the promise
+ * 
+ * pread is the read that created the promise
+ *
+ * pwrite is either the first write to same location as pread by
+ * pthread that is sequenced after pread or the value read by the
+ * first read to the same lcoation as pread by pthread that is
+ * sequenced after pread..
+ *
+ *	1. If tid=pthread, then we check what other threads are reachable
+ * through the mode order starting with pwrite.  Those threads cannot
+ * perform a write that will resolve the promise due to modification
+ * order constraints.
+ *
+ * 2. If the tid is not pthread, we check whether pwrite can reach the
+ * action write through the modification order.  If so, that thread
+ * cannot perform a future write that will resolve the promise due to
+ * modificatin order constraints.
+ *
+ *	@parem tid The thread that either read from the model action
+ *	write, or actually did the model action write.
+ *
+ *	@parem write The ModelAction representing the relevant write.
+ */
+
 void ModelChecker::mo_check_promises(thread_id_t tid, const ModelAction *write) {
 	void * location = write->get_location();
 	for (unsigned int i = 0; i < promises->size(); i++) {
@@ -1571,7 +1601,10 @@ void ModelChecker::mo_check_promises(thread_id_t tid, const ModelAction *write) 
 		if ( act->get_location() != location )
 			continue;
 
-		if ( act->get_tid()==tid) {
+		//same thread as the promise
+		if ( act->get_tid()==tid ) {
+
+			//do we have a pwrite for the promise, if not, set it
 			if (promise->get_write() == NULL ) {
 				promise->set_write(write);
 			}

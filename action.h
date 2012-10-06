@@ -14,6 +14,7 @@
 #include "modeltypes.h"
 
 class ClockVector;
+class Thread;
 
 using std::memory_order;
 using std::memory_order_relaxed;
@@ -66,7 +67,7 @@ class ClockVector;
  */
 class ModelAction {
 public:
-	ModelAction(action_type_t type, memory_order order, void *loc, uint64_t value = VALUE_NONE);
+	ModelAction(action_type_t type, memory_order order, void *loc, uint64_t value = VALUE_NONE, Thread *thread = NULL);
 	~ModelAction();
 	void print() const;
 

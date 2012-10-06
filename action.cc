@@ -11,7 +11,20 @@
 
 #define ACTION_INITIAL_CLOCK 0
 
-ModelAction::ModelAction(action_type_t type, memory_order order, void *loc, uint64_t value) :
+/**
+ * @brief Construct a new ModelAction
+ *
+ * @param type The type of action
+ * @param order The memory order of this action. A "don't care" for non-ATOMIC
+ * actions (e.g., THREAD_* or MODEL_* actions).
+ * @param loc The location that this action acts upon
+ * @param value (optional) A value associated with the action (e.g., the value
+ * read or written). Defaults to a given macro constant, for debugging purposes.
+ * @param thread (optional) The Thread in which this action occurred. If NULL
+ * (default), then a Thread is assigned according to the scheduler.
+ */
+ModelAction::ModelAction(action_type_t type, memory_order order, void *loc,
+		uint64_t value, Thread *thread) :
 	type(type),
 	order(order),
 	location(loc),
@@ -20,7 +33,7 @@ ModelAction::ModelAction(action_type_t type, memory_order order, void *loc, uint
 	seq_number(ACTION_INITIAL_CLOCK),
 	cv(NULL)
 {
-	Thread *t = thread_current();
+	Thread *t = thread ? thread : thread_current();
 	this->tid = t->get_id();
 }
 

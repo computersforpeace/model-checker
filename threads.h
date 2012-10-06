@@ -101,6 +101,8 @@ public:
 		return ret;
 	}
 
+	bool is_model_thread() { return model_thread; }
+
 	friend void thread_startup();
 
 	SNAPSHOTALLOC
@@ -131,6 +133,9 @@ private:
 	 * @see Thread::get_return_value()
 	 */
 	uint64_t last_action_val;
+
+	/** @brief Is this Thread a special model-checker thread? */
+	const bool model_thread;
 };
 
 Thread * thread_current();

@@ -4,12 +4,17 @@
 
 #include "common.h"
 #include "model.h"
+#include "stacktrace.h"
 
 #define MAX_TRACE_LEN 100
 
+#define CONFIG_STACKTRACE
 /** Print a backtrace of the current program state. */
 void print_trace(void)
 {
+#ifdef CONFIG_STACKTRACE
+	print_stacktrace(stdout);
+#else
 	void *array[MAX_TRACE_LEN];
 	char **strings;
 	int size, i;
@@ -23,6 +28,7 @@ void print_trace(void)
 		printf("\t%s\n", strings[i]);
 
 	free(strings);
+#endif /* CONFIG_STACKTRACE */
 }
 
 void model_print_summary(void)

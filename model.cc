@@ -1971,6 +1971,18 @@ bool ModelChecker::take_step() {
 	DEBUG("(%d, %d)\n", curr ? id_to_int(curr->get_id()) : -1,
 			next ? id_to_int(next->get_id()) : -1);
 
+	/* When no more threads, or when execution replay chooses the
+	 * 'model_thread': launch end-of-execution release sequence fixups */
+	if (!pending_rel_seqs->empty() && (!next || next->is_model_thread())) {
+		printf("*** WARNING: release sequence fixup action (%zu pending release seuqences) ***\n",
+				pending_rel_seqs->size());
+		ModelAction *fixup = new ModelAction(MODEL_FIXUP_RELSEQ,
+				std::memory_order_seq_cst, NULL, VALUE_NONE,
+				model_thread);
+		set_current_action(fixup);
+		return true;
+	}
+
 	/* next == NULL -> don't take any more steps */
 	if (!next)
 		return false;

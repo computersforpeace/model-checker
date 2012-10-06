@@ -35,6 +35,7 @@ class ModelAction;
 /** @brief A Thread is created for each user-space thread */
 class Thread {
 public:
+	Thread(thread_id_t tid);
 	Thread(thrd_t *t, void (*func)(void *), void *a);
 	~Thread();
 	void complete();

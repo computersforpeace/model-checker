@@ -47,7 +47,7 @@ Node::Node(ModelAction *act, Node *par, int nthreads, Node *prevfairness)
 				if (prevfi) {
 					*fi=*prevfi;
 				}
-				if (parent->enabled_array[i]) {
+				if (parent->enabled_array[i]==THREAD_ENABLED) {
 					fi->enabled_count++;
 				}
 				if (i==currtid) {
@@ -56,7 +56,7 @@ Node::Node(ModelAction *act, Node *par, int nthreads, Node *prevfairness)
 				}
 				//Do window processing
 				if (prevfairness != NULL) {
-					if (prevfairness -> parent->enabled_array[i])
+					if (prevfairness -> parent->enabled_array[i] == THREAD_ENABLED)
 						fi->enabled_count--;
 					if (i==prevtid) {
 						fi->turns--;
@@ -216,15 +216,15 @@ bool Node::read_from_empty() {
  * Mark the appropriate backtracking information for exploring a thread choice.
  * @param act The ModelAction to explore
  */
-void Node::explore_child(ModelAction *act, bool * is_enabled)
+void Node::explore_child(ModelAction *act, enabled_type_t * is_enabled)
 {
 	if ( ! enabled_array )
-		enabled_array=(bool *)model_malloc(sizeof(bool)*num_threads);
+		enabled_array=(enabled_type_t *)model_malloc(sizeof(enabled_type_t)*num_threads);
 	if (is_enabled != NULL)
-		memcpy(enabled_array, is_enabled, sizeof(bool)*num_threads);
+		memcpy(enabled_array, is_enabled, sizeof(enabled_type_t)*num_threads);
 	else {
 		for(int i=0;i<num_threads;i++)
-			enabled_array[i]=false;
+			enabled_array[i]=THREAD_DISABLED;
 	}
 
 	explore(act->get_tid());
@@ -265,13 +265,13 @@ thread_id_t Node::get_next_backtrack()
 bool Node::is_enabled(Thread *t)
 {
 	int thread_id=id_to_int(t->get_id());
-	return thread_id < num_threads && enabled_array[thread_id];
+	return thread_id < num_threads && (enabled_array[thread_id] == THREAD_ENABLED);
 }
 
 bool Node::is_enabled(thread_id_t tid)
 {
 	int thread_id=id_to_int(tid);
-	return thread_id < num_threads && enabled_array[thread_id];
+	return thread_id < num_threads && (enabled_array[thread_id] == THREAD_ENABLED);
 }
 
 bool Node::has_priority(thread_id_t tid)
@@ -391,7 +391,7 @@ void NodeStack::print()
 /** Note: The is_enabled set contains what actions were enabled when
  *  act was chosen. */
 
-ModelAction * NodeStack::explore_action(ModelAction *act, bool * is_enabled)
+ModelAction * NodeStack::explore_action(ModelAction *act, enabled_type_t * is_enabled)
 {
 	DBG();
 

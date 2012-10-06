@@ -11,10 +11,10 @@ bool Promise::increment_threads(thread_id_t tid) {
 		return false;
 	
 	synced_thread[id]=true;
-	bool * enabled=model->get_scheduler()->get_enabled();
+	enabled_type_t * enabled=model->get_scheduler()->get_enabled();
 
 	for(unsigned int i=0;i<model->get_num_threads();i++) {
-		if (!synced_thread[id] && enabled[id])
+		if (!synced_thread[id] && (enabled[id] == THREAD_ENABLED))
 			return false;
 	}
 	return true;

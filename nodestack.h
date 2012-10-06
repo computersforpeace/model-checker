@@ -12,6 +12,7 @@
 
 #include "mymemory.h"
 #include "modeltypes.h"
+#include "schedule.h"
 
 class ModelAction;
 class Thread;
@@ -59,7 +60,7 @@ public:
 	/* return true = backtrack set is empty */
 	bool backtrack_empty();
 
-	void explore_child(ModelAction *act, bool * is_enabled);
+	void explore_child(ModelAction *act, enabled_type_t * is_enabled);
 	/* return false = thread was already in backtrack */
 	bool set_backtrack(thread_id_t id);
 	thread_id_t get_next_backtrack();
@@ -104,7 +105,7 @@ private:
 	std::vector< bool, ModelAlloc<bool> > backtrack;
 	std::vector< struct fairness_info, ModelAlloc< struct fairness_info> > fairness;
 	int numBacktracks;
-	bool *enabled_array;
+	enabled_type_t *enabled_array;
 
 	/** The set of ModelActions that this the action at this Node may read
 	 *  from. Only meaningful if this Node represents a 'read' action. */
@@ -131,7 +132,7 @@ class NodeStack {
 public:
 	NodeStack();
 	~NodeStack();
-	ModelAction * explore_action(ModelAction *act, bool * is_enabled);
+	ModelAction * explore_action(ModelAction *act, enabled_type_t * is_enabled);
 	Node * get_head();
 	Node * get_next();
 	void reset_execution();

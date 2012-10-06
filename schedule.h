@@ -11,6 +11,12 @@
 /* Forward declaration */
 class Thread;
 
+typedef enum enabled_type {
+	THREAD_DISABLED,
+	THREAD_ENABLED,
+	THREAD_SLEEP_SET
+} enabled_type_t;
+
 /** @brief The Scheduler class performs the mechanics of Thread execution
  * scheduling. */
 class Scheduler {
@@ -23,15 +29,15 @@ public:
 	Thread * next_thread(Thread *t);
 	Thread * get_current_thread() const;
 	void print() const;
-	bool * get_enabled() { return is_enabled; };
+	enabled_type_t * get_enabled() { return is_enabled; };
 
 	SNAPSHOTALLOC
 private:
 	/** The list of available Threads that are not currently running */
-	bool * is_enabled;
+	enabled_type_t * is_enabled;
 	int enabled_len;
 	int curr_thread_index;
-	void set_enabled(Thread *t, bool enabled_status);
+	void set_enabled(Thread *t, enabled_type_t enabled_status);
 
 	/** The currently-running Thread */
 	Thread *current;

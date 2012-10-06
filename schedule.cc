@@ -15,13 +15,13 @@ Scheduler::Scheduler() :
 {
 }
 
-void Scheduler::set_enabled(Thread *t, bool enabled_status) {
+void Scheduler::set_enabled(Thread *t, enabled_type_t enabled_status) {
 	int threadid=id_to_int(t->get_id());
 	if (threadid>=enabled_len) {
-		bool *new_enabled = (bool *)snapshot_malloc(sizeof(bool) * (threadid + 1));
-		memset(&new_enabled[enabled_len], 0, (threadid+1-enabled_len)*sizeof(bool));
+		enabled_type_t *new_enabled = (enabled_type_t *)snapshot_malloc(sizeof(enabled_type_t) * (threadid + 1));
+		memset(&new_enabled[enabled_len], 0, (threadid+1-enabled_len)*sizeof(enabled_type_t));
 		if (is_enabled != NULL) {
-			memcpy(new_enabled, is_enabled, enabled_len*sizeof(bool));
+			memcpy(new_enabled, is_enabled, enabled_len*sizeof(enabled_type_t));
 			snapshot_free(is_enabled);
 		}
 		is_enabled=new_enabled;
@@ -37,7 +37,7 @@ void Scheduler::set_enabled(Thread *t, bool enabled_status) {
 void Scheduler::add_thread(Thread *t)
 {
 	DEBUG("thread %d\n", id_to_int(t->get_id()));
-	set_enabled(t, true);
+	set_enabled(t, THREAD_ENABLED);
 }
 
 /**
@@ -48,7 +48,7 @@ void Scheduler::remove_thread(Thread *t)
 {
 	if (current == t)
 		current = NULL;
-	set_enabled(t, false);
+	set_enabled(t, THREAD_DISABLED);
 }
 
 /**
@@ -58,7 +58,7 @@ void Scheduler::remove_thread(Thread *t)
  */
 void Scheduler::sleep(Thread *t)
 {
-	set_enabled(t, false);
+	set_enabled(t, THREAD_DISABLED);
 	t->set_state(THREAD_BLOCKED);
 }
 
@@ -68,7 +68,7 @@ void Scheduler::sleep(Thread *t)
  */
 void Scheduler::wake(Thread *t)
 {
-	set_enabled(t, true);
+	set_enabled(t, THREAD_DISABLED);
 	t->set_state(THREAD_READY);
 }
 

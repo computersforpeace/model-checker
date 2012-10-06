@@ -47,6 +47,10 @@ ModelChecker::ModelChecker(struct model_params params) :
 	priv = (struct model_snapshot_members *)calloc(1, sizeof(*priv));
 	/* First thread created will have id INITIAL_THREAD_ID */
 	priv->next_thread_id = INITIAL_THREAD_ID;
+
+	/* Initialize a model-checker thread, for special ModelActions */
+	model_thread = new Thread(get_next_id());
+	thread_map->put(id_to_int(model_thread->get_id()), model_thread);
 }
 
 /** @brief Destructor */
@@ -1944,7 +1948,7 @@ bool ModelChecker::take_step() {
 	if (has_asserted())
 		return false;
 
-	Thread *curr = thread_current();
+	Thread *curr = priv->current_action ? get_thread(priv->current_action) : NULL;
 	if (curr) {
 		if (curr->get_state() == THREAD_READY) {
 			ASSERT(priv->current_action);

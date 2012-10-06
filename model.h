@@ -203,6 +203,10 @@ private:
 	 * together for efficiency and maintainability. */
 	struct model_snapshot_members *priv;
 
+	/** A special model-checker Thread; used for associating with
+	 *  model-checker-related ModelAcitons */
+	Thread *model_thread;
+
 	/**
 	 * @brief The modification order graph
 	 *

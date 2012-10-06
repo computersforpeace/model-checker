@@ -43,11 +43,14 @@ CycleNode * CycleGraph::getNode(const ModelAction *action) {
 void CycleGraph::addEdge(const ModelAction *from, const ModelAction *to) {
 	ASSERT(from);
 	ASSERT(to);
-	ASSERT(from != to);
 
 	CycleNode *fromnode=getNode(from);
 	CycleNode *tonode=getNode(to);
 
+	if (!hasCycles) {
+		// Reflexive edges are cycles
+		hasCycles = (from == to);
+	}
 	if (!hasCycles) {
 		// Check for Cycles
 		hasCycles=checkReachable(tonode, fromnode);
@@ -85,7 +88,6 @@ void CycleGraph::addEdge(const ModelAction *from, const ModelAction *to) {
 void CycleGraph::addRMWEdge(const ModelAction *from, const ModelAction *rmw) {
 	ASSERT(from);
 	ASSERT(rmw);
-	ASSERT(from != rmw);
 
 	CycleNode *fromnode=getNode(from);
 	CycleNode *rmwnode=getNode(rmw);
@@ -114,6 +116,10 @@ void CycleGraph::addRMWEdge(const ModelAction *from, const ModelAction *rmw) {
 	}
 
 
+	if (!hasCycles) {
+		// Reflexive edges are cycles
+		hasCycles = (from == rmw);
+	}
 	if (!hasCycles) {
 		// With promises we could be setting up a cycle here if we aren't
 		// careful...avoid it..

@@ -125,13 +125,13 @@ void CycleGraph::addRMWEdge(const ModelAction *from, const ModelAction *rmw) {
 		// careful...avoid it..
 		hasCycles=checkReachable(rmwnode, fromnode);
 	}
-	if(fromnode->addEdge(rmwnode))
+	if (fromnode->addEdge(rmwnode))
 		rollbackvector.push_back(fromnode);
 }
 
 #if SUPPORT_MOD_ORDER_DUMP
 void CycleGraph::dumpNodes(FILE *file) {
-  for(unsigned int i=0;i<nodeList.size();i++) {
+	for (unsigned int i=0;i<nodeList.size();i++) {
 		CycleNode *cn=nodeList[i];
 		std::vector<CycleNode *> * edges=cn->getEdges();
 		const ModelAction *action=cn->getAction();
@@ -139,22 +139,22 @@ void CycleGraph::dumpNodes(FILE *file) {
 		if (cn->getRMW()!=NULL) {
 			fprintf(file, "N%u -> N%u[style=dotted];\n", action->get_seq_number(), cn->getRMW()->getAction()->get_seq_number());
 		}
-		for(unsigned int j=0;j<edges->size();j++) {
-		  CycleNode *dst=(*edges)[j];
+		for (unsigned int j=0;j<edges->size();j++) {
+			CycleNode *dst=(*edges)[j];
 			const ModelAction *dstaction=dst->getAction();
-      fprintf(file, "N%u -> N%u;\n", action->get_seq_number(), dstaction->get_seq_number());
-	  }
+			fprintf(file, "N%u -> N%u;\n", action->get_seq_number(), dstaction->get_seq_number());
+		}
 	}
 }
 
 void CycleGraph::dumpGraphToFile(const char *filename) {
 	char buffer[200];
-  sprintf(buffer, "%s.dot",filename);
-  FILE *file=fopen(buffer, "w");
-  fprintf(file, "digraph %s {\n",filename);
+	sprintf(buffer, "%s.dot",filename);
+	FILE *file=fopen(buffer, "w");
+	fprintf(file, "digraph %s {\n",filename);
 	dumpNodes(file);
-  fprintf(file,"}\n");
-  fclose(file);	
+	fprintf(file,"}\n");
+	fclose(file);	
 }
 #endif
 

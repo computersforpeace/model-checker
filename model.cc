@@ -1334,6 +1334,8 @@ bool ModelChecker::release_seq_heads(const ModelAction *rf,
 				th->is_complete())
 			future_ordered = true;
 
+		ASSERT(!th->is_model_thread() || future_ordered);
+
 		for (rit = list->rbegin(); rit != list->rend(); rit++) {
 			const ModelAction *act = *rit;
 			/* Reach synchronization -> this thread is complete */

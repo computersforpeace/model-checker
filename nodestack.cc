@@ -32,7 +32,9 @@ Node::Node(ModelAction *act, Node *par, int nthreads, Node *prevfairness)
 	may_read_from(),
 	read_from_index(0),
 	future_values(),
-	future_index(-1)
+	future_index(-1),
+	relseq_break_writes(),
+	relseq_break_index(0)
 {
 	if (act) {
 		act->set_node(this);
@@ -350,6 +352,58 @@ bool Node::increment_future_value() {
 		return (future_index < ((int)future_values.size()));
 	}
 	return false;
+}
+
+/**
+ * Add a write ModelAction to the set of writes that may break the release
+ * sequence. This is used during replay exploration of pending release
+ * sequences. This Node must correspond to a release sequence fixup action.
+ *
+ * @param write The write that may break the release sequence. NULL means we
+ * allow the release sequence to synchronize.
+ */
+void Node::add_relseq_break(const ModelAction *write)
+{
+	relseq_break_writes.push_back(write);
+}
+
+/**
+ * Get the write that may break the current pending release sequence,
+ * according to the replay / divergence pattern.
+ *
+ * @return A write that may break the release sequence. If NULL, that means
+ * the release sequence should not be broken.
+ */
+const ModelAction * Node::get_relseq_break()
+{
+	if (relseq_break_index < (int)relseq_break_writes.size())
+		return relseq_break_writes[relseq_break_index];
+	else
+		return NULL;
+}
+
+/**
+ * Increments the index into the relseq_break_writes set to explore the next
+ * item.
+ * @return Returns false if we have explored all values.
+ */
+bool Node::increment_relseq_break()
+{
+	DBG();
+	promises.clear();
+	if (relseq_break_index < ((int)relseq_break_writes.size())) {
+		relseq_break_index++;
+		return (relseq_break_index < ((int)relseq_break_writes.size()));
+	}
+	return false;
+}
+
+/**
+ * @return True if all writes that may break the release sequence have been
+ * explored
+ */
+bool Node::relseq_break_empty() {
+	return ((relseq_break_index + 1) >= ((int)relseq_break_writes.size()));
 }
 
 void Node::explore(thread_id_t tid)

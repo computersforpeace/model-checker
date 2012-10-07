@@ -91,6 +91,11 @@ public:
 	bool increment_promise();
 	bool promise_empty();
 
+	void add_relseq_break(const ModelAction *write);
+	const ModelAction * get_relseq_break();
+	bool increment_relseq_break();
+	bool relseq_break_empty();
+
 	void print();
 	void print_may_read_from();
 
@@ -116,6 +121,9 @@ private:
 	std::vector< struct future_value, ModelAlloc<struct future_value> > future_values;
 	std::vector< promise_t, ModelAlloc<promise_t> > promises;
 	int future_index;
+
+	std::vector< const ModelAction *, ModelAlloc<const ModelAction *> > relseq_break_writes;
+	int relseq_break_index;
 };
 
 typedef std::vector< Node *, ModelAlloc< Node * > > node_list_t;

@@ -163,6 +163,10 @@ Thread * ModelChecker::get_next_thread(ModelAction *curr)
 			/* The next node will try to read from a different future value. */
 			tid = next->get_tid();
 			node_stack->pop_restofstack(2);
+		} else if (nextnode->increment_relseq_break()) {
+			/* The next node will try to resolve a release sequence differently */
+			tid = next->get_tid();
+			node_stack->pop_restofstack(2);
 		} else {
 			/* Make a different thread execute for next step */
 			Node *node = nextnode->get_parent();
@@ -591,6 +595,8 @@ ModelAction * ModelChecker::initialize_curr_action(ModelAction *curr)
 		 */
 		if (newcurr->is_write())
 			compute_promises(newcurr);
+		else if (newcurr->is_relseq_fixup())
+			compute_relseq_breakwrites(newcurr);
 	}
 	return newcurr;
 }
@@ -740,7 +746,8 @@ void ModelChecker::check_curr_backtracking(ModelAction * curr) {
 	if ((!parnode->backtrack_empty() ||
 			 !currnode->read_from_empty() ||
 			 !currnode->future_value_empty() ||
-			 !currnode->promise_empty())
+			 !currnode->promise_empty() ||
+			 !currnode->relseq_break_empty())
 			&& (!priv->next_backtrack ||
 					*curr > *priv->next_backtrack)) {
 		priv->next_backtrack = curr;
@@ -1650,6 +1657,29 @@ void ModelChecker::mo_check_promises(thread_id_t tid, const ModelAction *write) 
 			}
 		}
 	}
+}
+
+/**
+ * Compute the set of writes that may break the current pending release
+ * sequence. This information is extracted from previou release sequence
+ * calculations.
+ *
+ * @param curr The current ModelAction. Must be a release sequence fixup
+ * action.
+ */
+void ModelChecker::compute_relseq_breakwrites(ModelAction *curr)
+{
+	if (pending_rel_seqs->empty())
+		return;
+
+	struct release_seq *pending = pending_rel_seqs->back();
+	for (unsigned int i = 0; i < pending->writes.size(); i++) {
+		const ModelAction *write = pending->writes[i];
+		curr->get_node()->add_relseq_break(write);
+	}
+
+	/* NULL means don't break the sequence; just synchronize */
+	curr->get_node()->add_relseq_break(NULL);
 }
 
 /**

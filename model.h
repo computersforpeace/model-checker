@@ -152,6 +152,7 @@ private:
 	void reset_to_initial_state();
 	bool resolve_promises(ModelAction *curr);
 	void compute_promises(ModelAction *curr);
+	void compute_relseq_breakwrites(ModelAction *curr);
 
 	void check_curr_backtracking(ModelAction * curr);
 	void add_action_to_lists(ModelAction *act);

@@ -8,7 +8,7 @@
 
 /** Constructor */
 Scheduler::Scheduler() :
-	is_enabled(NULL),
+	enabled(NULL),
 	enabled_len(0),
 	curr_thread_index(0),
 	current(NULL)
@@ -20,14 +20,25 @@ void Scheduler::set_enabled(Thread *t, enabled_type_t enabled_status) {
 	if (threadid>=enabled_len) {
 		enabled_type_t *new_enabled = (enabled_type_t *)snapshot_malloc(sizeof(enabled_type_t) * (threadid + 1));
 		memset(&new_enabled[enabled_len], 0, (threadid+1-enabled_len)*sizeof(enabled_type_t));
-		if (is_enabled != NULL) {
-			memcpy(new_enabled, is_enabled, enabled_len*sizeof(enabled_type_t));
-			snapshot_free(is_enabled);
+		if (enabled != NULL) {
+			memcpy(new_enabled, enabled, enabled_len*sizeof(enabled_type_t));
+			snapshot_free(enabled);
 		}
-		is_enabled=new_enabled;
+		enabled=new_enabled;
 		enabled_len=threadid+1;
 	}
-	is_enabled[threadid]=enabled_status;
+	enabled[threadid]=enabled_status;
+}
+
+/**
+ * @brief Check if a Thread is currently enabled
+ * @param t The Thread to check
+ * @return True if the Thread is currently enabled
+ */
+bool Scheduler::is_enabled(Thread *t) const
+{
+	int id = id_to_int(t->get_id());
+	return (id >= enabled_len) ? false : (enabled[id] == THREAD_ENABLED);
 }
 
 /**
@@ -86,7 +97,7 @@ Thread * Scheduler::next_thread(Thread *t)
 		int old_curr_thread = curr_thread_index;
 		while(true) {
 			curr_thread_index = (curr_thread_index+1) % enabled_len;
-			if (is_enabled[curr_thread_index]) {
+			if (enabled[curr_thread_index]) {
 				t = model->get_thread(int_to_id(curr_thread_index));
 				break;
 			}

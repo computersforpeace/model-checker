@@ -29,12 +29,13 @@ public:
 	Thread * next_thread(Thread *t);
 	Thread * get_current_thread() const;
 	void print() const;
-	enabled_type_t * get_enabled() { return is_enabled; };
+	enabled_type_t * get_enabled() { return enabled; };
+	bool is_enabled(Thread *t) const;
 
 	SNAPSHOTALLOC
 private:
 	/** The list of available Threads that are not currently running */
-	enabled_type_t * is_enabled;
+	enabled_type_t *enabled;
 	int enabled_len;
 	int curr_thread_index;
 	void set_enabled(Thread *t, enabled_type_t enabled_status);

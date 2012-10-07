@@ -1258,8 +1258,10 @@ bool ModelChecker::release_seq_heads(const ModelAction *rf,
 		bool future_ordered = false;
 
 		ModelAction *last = get_last_action(int_to_id(i));
-		if (last && (rf->happens_before(last) ||
-				get_thread(int_to_id(i))->is_complete()))
+		Thread *th = get_thread(int_to_id(i));
+		if ((last && rf->happens_before(last)) ||
+				!scheduler->is_enabled(th) ||
+				th->is_complete())
 			future_ordered = true;
 
 		for (rit = list->rbegin(); rit != list->rend(); rit++) {

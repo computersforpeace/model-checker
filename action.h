@@ -125,6 +125,9 @@ public:
 	void process_rmw(ModelAction * act);
 	void copy_typeandorder(ModelAction * act);
 
+	void set_sleep_flag() { sleep_flag=true; }
+	bool get_sleep_flag() { return sleep_flag; }
+
 	MEMALLOC
 private:
 
@@ -155,6 +158,8 @@ private:
 	/** The clock vector stored with this action; only needed if this
 	 * action is a store release? */
 	ClockVector *cv;
+
+	bool sleep_flag;
 };
 
 typedef std::list< ModelAction *, SnapshotAlloc<ModelAction *> > action_list_t;

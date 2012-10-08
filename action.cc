@@ -33,7 +33,8 @@ ModelAction::ModelAction(action_type_t type, memory_order order, void *loc,
 	reads_from(NULL),
 	node(NULL),
 	seq_number(ACTION_INITIAL_CLOCK),
-	cv(NULL)
+	cv(NULL),
+	sleep_flag(false)
 {
 	Thread *t = thread ? thread : thread_current();
 	this->tid = t->get_id();

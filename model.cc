@@ -179,7 +179,6 @@ Thread * ModelChecker::get_next_thread(ModelAction *curr)
 			scheduler->add_sleep(thread_map->get(id_to_int(next->get_tid())));
 			tid = prevnode->get_next_backtrack();
 			/* Make sure the backtracked thread isn't sleeping. */
-			scheduler->remove_sleep(thread_map->get(id_to_int(tid)));
 			node_stack->pop_restofstack(1);
 			if (diverge==earliest_diverge) {
 				earliest_diverge=prevnode->get_action();
@@ -213,6 +212,7 @@ void ModelChecker::execute_sleep_set() {
 			thr->set_state(THREAD_RUNNING);
 			scheduler->next_thread(thr);
 			Thread::swap(&system_context, thr);
+			priv->current_action->set_sleep_flag();
 			thr->set_pending(priv->current_action);
 		}
 	}
@@ -346,7 +346,8 @@ void ModelChecker::set_backtracking(ModelAction *act)
 	for(int i = low_tid; i < high_tid; i++) {
 		thread_id_t tid = int_to_id(i);
 
-		if (!node->is_enabled(tid))
+		/* Don't backtrack into a point where the thread is disabled or sleeping. */
+		if (node->get_enabled_array()[i]!=THREAD_ENABLED)
 			continue;
 	
 		/* Check if this has been explored already */
@@ -1846,7 +1847,12 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 					act->print();
 					curr->print();
 				}
-				curr->get_node()->add_read_from(act);
+
+				if (curr->get_sleep_flag()) {
+					if (sleep_can_read_from(curr, act))
+						curr->get_node()->add_read_from(act);
+				} else
+					curr->get_node()->add_read_from(act);
 			}
 
 			/* Include at most one act per-thread that "happens before" curr */
@@ -1871,6 +1877,20 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 	}
 
 	ASSERT(initialized);
+}
+
+bool ModelChecker::sleep_can_read_from(ModelAction * curr, const ModelAction *write) {
+	while(true) {
+		Node *prevnode=write->get_node()->get_parent();
+		bool thread_sleep=prevnode->get_enabled_array()[id_to_int(curr->get_tid())]==THREAD_SLEEP_SET;
+		if (write->is_release()&&thread_sleep)
+			return true;
+		if (!write->is_rmw())
+			return false;
+		if (write->get_reads_from()==NULL)
+			return true;
+		write=write->get_reads_from();
+	}
 }
 
 static void print_list(action_list_t *list)

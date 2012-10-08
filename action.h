@@ -14,6 +14,7 @@
 #include "modeltypes.h"
 
 class ClockVector;
+class Thread;
 
 using std::memory_order;
 using std::memory_order_relaxed;
@@ -37,6 +38,8 @@ using std::memory_order_seq_cst;
 /** @brief Represents an action type, identifying one of several types of
  * ModelAction */
 typedef enum action_type {
+	MODEL_FIXUP_RELSEQ,   /**< Special ModelAction: finalize a release
+	                       *   sequence */
 	THREAD_CREATE,        /**< A thread creation action */
 	THREAD_START,         /**< First action in each thread */
 	THREAD_YIELD,         /**< A thread yield action */
@@ -64,7 +67,7 @@ class ClockVector;
  */
 class ModelAction {
 public:
-	ModelAction(action_type_t type, memory_order order, void *loc, uint64_t value = VALUE_NONE);
+	ModelAction(action_type_t type, memory_order order, void *loc, uint64_t value = VALUE_NONE, Thread *thread = NULL);
 	~ModelAction();
 	void print() const;
 
@@ -82,6 +85,7 @@ public:
 	void copy_from_new(ModelAction *newaction);
 	void set_seq_number(modelclock_t num);
 	void set_try_lock(bool obtainedlock);
+	bool is_relseq_fixup() const;
 	bool is_mutex_op() const;
 	bool is_lock() const;
 	bool is_trylock() const;

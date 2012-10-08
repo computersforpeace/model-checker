@@ -47,6 +47,10 @@ ModelChecker::ModelChecker(struct model_params params) :
 	priv = (struct model_snapshot_members *)calloc(1, sizeof(*priv));
 	/* First thread created will have id INITIAL_THREAD_ID */
 	priv->next_thread_id = INITIAL_THREAD_ID;
+
+	/* Initialize a model-checker thread, for special ModelActions */
+	model_thread = new Thread(get_next_id());
+	thread_map->put(id_to_int(model_thread->get_id()), model_thread);
 }
 
 /** @brief Destructor */
@@ -166,6 +170,10 @@ Thread * ModelChecker::get_next_thread(ModelAction *curr)
 			/* The next node will try to read from a different future value. */
 			tid = next->get_tid();
 			node_stack->pop_restofstack(2);
+		} else if (nextnode->increment_relseq_break()) {
+			/* The next node will try to resolve a release sequence differently */
+			tid = next->get_tid();
+			node_stack->pop_restofstack(2);
 		} else {
 			/* Make a different thread execute for next step */
 			scheduler->add_sleep(thread_map->get(id_to_int(next->get_tid())));
@@ -249,7 +257,7 @@ bool ModelChecker::next_execution()
 		num_feasible_executions++;
 	}
 
-	DEBUG("Number of acquires waiting on pending release sequences: %lu\n",
+	DEBUG("Number of acquires waiting on pending release sequences: %zu\n",
 			pending_rel_seqs->size());
 
 	if (isfinalfeasible() || DBG_ENABLED())
@@ -583,6 +591,76 @@ bool ModelChecker::process_thread_action(ModelAction *curr)
 }
 
 /**
+ * @brief Process the current action for release sequence fixup activity
+ *
+ * Performs model-checker release sequence fixups for the current action,
+ * forcing a single pending release sequence to break (with a given, potential
+ * "loose" write) or to complete (i.e., synchronize). If a pending release
+ * sequence forms a complete release sequence, then we must perform the fixup
+ * synchronization, mo_graph additions, etc.
+ *
+ * @param curr The current action; must be a release sequence fixup action
+ * @param work_queue The work queue to which to add work items as they are
+ * generated
+ */
+void ModelChecker::process_relseq_fixup(ModelAction *curr, work_queue_t *work_queue)
+{
+	const ModelAction *write = curr->get_node()->get_relseq_break();
+	struct release_seq *sequence = pending_rel_seqs->back();
+	pending_rel_seqs->pop_back();
+	ASSERT(sequence);
+	ModelAction *acquire = sequence->acquire;
+	const ModelAction *rf = sequence->rf;
+	const ModelAction *release = sequence->release;
+	ASSERT(acquire);
+	ASSERT(release);
+	ASSERT(rf);
+	ASSERT(release->same_thread(rf));
+
+	if (write == NULL) {
+		/**
+		 * @todo Forcing a synchronization requires that we set
+		 * modification order constraints. For instance, we can't allow
+		 * a fixup sequence in which two separate read-acquire
+		 * operations read from the same sequence, where the first one
+		 * synchronizes and the other doesn't. Essentially, we can't
+		 * allow any writes to insert themselves between 'release' and
+		 * 'rf'
+		 */
+
+		/* Must synchronize */
+		if (!acquire->synchronize_with(release)) {
+			set_bad_synchronization();
+			return;
+		}
+		/* Re-check all pending release sequences */
+		work_queue->push_back(CheckRelSeqWorkEntry(NULL));
+		/* Re-check act for mo_graph edges */
+		work_queue->push_back(MOEdgeWorkEntry(acquire));
+
+		/* propagate synchronization to later actions */
+		action_list_t::reverse_iterator rit = action_trace->rbegin();
+		for (; (*rit) != acquire; rit++) {
+			ModelAction *propagate = *rit;
+			if (acquire->happens_before(propagate)) {
+				propagate->synchronize_with(acquire);
+				/* Re-check 'propagate' for mo_graph edges */
+				work_queue->push_back(MOEdgeWorkEntry(propagate));
+			}
+		}
+	} else {
+		/* Break release sequence with new edges:
+		 *   release --mo--> write --mo--> rf */
+		mo_graph->addEdge(release, write);
+		mo_graph->addEdge(write, rf);
+	}
+
+	/* See if we have realized a data race */
+	if (checkDataRaces())
+		set_assert();
+}
+
+/**
  * Initialize the current action by performing one or more of the following
  * actions, as appropriate: merging RMWR and RMWC/RMW actions, stepping forward
  * in the NodeStack, manipulating backtracking sets, allocating and
@@ -633,6 +711,8 @@ ModelAction * ModelChecker::initialize_curr_action(ModelAction *curr)
 		 */
 		if (newcurr->is_write())
 			compute_promises(newcurr);
+		else if (newcurr->is_relseq_fixup())
+			compute_relseq_breakwrites(newcurr);
 	}
 	return newcurr;
 }
@@ -721,6 +801,9 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 			if (act->is_mutex_op() && process_mutex(act))
 				update_all = true;
 
+			if (act->is_relseq_fixup())
+				process_relseq_fixup(curr, &work_queue);
+
 			if (update_all)
 				work_queue.push_back(CheckRelSeqWorkEntry(NULL));
 			else if (update)
@@ -781,7 +864,8 @@ void ModelChecker::check_curr_backtracking(ModelAction * curr) {
 	if ((!parnode->backtrack_empty() ||
 			 !currnode->read_from_empty() ||
 			 !currnode->future_value_empty() ||
-			 !currnode->promise_empty())
+			 !currnode->promise_empty() ||
+			 !currnode->relseq_break_empty())
 			&& (!priv->next_backtrack ||
 					*curr > *priv->next_backtrack)) {
 		priv->next_backtrack = curr;
@@ -1299,9 +1383,13 @@ bool ModelChecker::release_seq_heads(const ModelAction *rf,
 		bool future_ordered = false;
 
 		ModelAction *last = get_last_action(int_to_id(i));
-		if (last && (rf->happens_before(last) ||
-				get_thread(int_to_id(i))->is_complete()))
+		Thread *th = get_thread(int_to_id(i));
+		if ((last && rf->happens_before(last)) ||
+				!scheduler->is_enabled(th) ||
+				th->is_complete())
 			future_ordered = true;
+
+		ASSERT(!th->is_model_thread() || future_ordered);
 
 		for (rit = list->rbegin(); rit != list->rend(); rit++) {
 			const ModelAction *act = *rit;
@@ -1692,6 +1780,29 @@ void ModelChecker::mo_check_promises(thread_id_t tid, const ModelAction *write) 
 }
 
 /**
+ * Compute the set of writes that may break the current pending release
+ * sequence. This information is extracted from previou release sequence
+ * calculations.
+ *
+ * @param curr The current ModelAction. Must be a release sequence fixup
+ * action.
+ */
+void ModelChecker::compute_relseq_breakwrites(ModelAction *curr)
+{
+	if (pending_rel_seqs->empty())
+		return;
+
+	struct release_seq *pending = pending_rel_seqs->back();
+	for (unsigned int i = 0; i < pending->writes.size(); i++) {
+		const ModelAction *write = pending->writes[i];
+		curr->get_node()->add_relseq_break(write);
+	}
+
+	/* NULL means don't break the sequence; just synchronize */
+	curr->get_node()->add_relseq_break(NULL);
+}
+
+/**
  * Build up an initial set of all past writes that this 'read' action may read
  * from. This set is determined by the clock vector's "happens before"
  * relationship.
@@ -1894,7 +2005,7 @@ bool ModelChecker::take_step() {
 	if (has_asserted())
 		return false;
 
-	Thread *curr = thread_current();
+	Thread *curr = priv->current_action ? get_thread(priv->current_action) : NULL;
 	if (curr) {
 		if (curr->get_state() == THREAD_READY) {
 			ASSERT(priv->current_action);
@@ -1916,6 +2027,26 @@ bool ModelChecker::take_step() {
 
 	DEBUG("(%d, %d)\n", curr ? id_to_int(curr->get_id()) : -1,
 			next ? id_to_int(next->get_id()) : -1);
+
+	/*
+	 * Launch end-of-execution release sequence fixups only when there are:
+	 *
+	 * (1) no more user threads to run (or when execution replay chooses
+	 *     the 'model_thread')
+	 * (2) pending release sequences
+	 * (3) pending assertions (i.e., data races)
+	 * (4) no pending promises
+	 */
+	if (!pending_rel_seqs->empty() && (!next || next->is_model_thread()) &&
+			isfinalfeasible() && !unrealizedraces.empty()) {
+		printf("*** WARNING: release sequence fixup action (%zu pending release seuqences) ***\n",
+				pending_rel_seqs->size());
+		ModelAction *fixup = new ModelAction(MODEL_FIXUP_RELSEQ,
+				std::memory_order_seq_cst, NULL, VALUE_NONE,
+				model_thread);
+		set_current_action(fixup);
+		return true;
+	}
 
 	/* next == NULL -> don't take any more steps */
 	if (!next)

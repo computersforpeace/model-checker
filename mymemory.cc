@@ -88,24 +88,6 @@ void snapshot_free(void *ptr)
 	free(ptr);
 }
 
-void *system_malloc(size_t size)
-{
-	static void *(*mallocp)(size_t size);
-	char *error;
-	void *ptr;
-
-	/* get address of libc malloc */
-	if (!mallocp) {
-		mallocp = (void * (*)(size_t))dlsym(RTLD_NEXT, "malloc");
-		if ((error = dlerror()) != NULL) {
-			fputs(error, stderr);
-			exit(EXIT_FAILURE);
-		}
-	}
-	ptr = mallocp(size);
-	return ptr;
-}
-
 /** Non-snapshotting free for our use. */
 void model_free(void *ptr)
 {

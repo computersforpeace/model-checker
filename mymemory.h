@@ -49,8 +49,6 @@ void * snapshot_malloc(size_t size);
 void * snapshot_calloc(size_t count, size_t size);
 void snapshot_free(void *ptr);
 
-void *system_malloc(size_t size );
-
 /** @brief Provides a non-snapshotting allocator for use in STL classes.
  *
  * The code was adapted from a code example from the book The C++

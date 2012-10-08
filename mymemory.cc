@@ -154,7 +154,7 @@ void * HandleEarlyAllocationRequest(size_t sz)
 }
 
 /** Check whether this is bootstrapped memory that we should not free */
-bool DontFree(void *ptr)
+static bool DontFree(void *ptr)
 {
 	return (ptr >= (&bootstrapmemory[0]) && ptr < (&bootstrapmemory[BOOTSTRAPBYTES]));
 }

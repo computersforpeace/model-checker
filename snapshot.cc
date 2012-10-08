@@ -45,7 +45,8 @@ struct SnapShot * snapshotrecord = NULL;
 static ucontext_t savedSnapshotContext;
 static ucontext_t savedUserSnapshotContext;
 static snapshot_id snapshotid = 0;
-#endif
+
+#else /* USE_MPROTECT_SNAPSHOT */
 
 /** PageAlignedAdressUpdate return a page aligned address for the
  * address being added as a side effect the numBytes are also changed.
@@ -53,8 +54,6 @@ static snapshot_id snapshotid = 0;
 static void * PageAlignAddressUpward(void * addr) {
 	return (void *)((((uintptr_t)addr)+PAGESIZE-1)&~(PAGESIZE-1));
 }
-
-#if USE_MPROTECT_SNAPSHOT
 
 /** ReturnPageAlignedAddress returns a page aligned address for the
  * address being added as a side effect the numBytes are also changed.
@@ -109,7 +108,7 @@ static void HandlePF( int sig, siginfo_t *si, void * unused){
 		// Handle error by quitting?
 	}
 }
-#endif //nothing to handle for non snapshotting case.
+#endif /* USE_MPROTECT_SNAPSHOT */
 
 #if !USE_MPROTECT_SNAPSHOT
 void createSharedMemory(){

@@ -576,6 +576,16 @@ void ModelChecker::process_relseq_fixup(ModelAction *curr, work_queue_t *work_qu
 	ASSERT(release->same_thread(rf));
 
 	if (write == NULL) {
+		/**
+		 * @todo Forcing a synchronization requires that we set
+		 * modification order constraints. For instance, we can't allow
+		 * a fixup sequence in which two separate read-acquire
+		 * operations read from the same sequence, where the first one
+		 * synchronizes and the other doesn't. Essentially, we can't
+		 * allow any writes to insert themselves between 'release' and
+		 * 'rf'
+		 */
+
 		/* Must synchronize */
 		if (!acquire->synchronize_with(release)) {
 			set_bad_synchronization();

@@ -173,7 +173,7 @@ void initSnapshotLibrary(unsigned int numbackingpages,
 
 	void *basemySpace = model_malloc((numheappages+1)*PAGESIZE);
 	void * pagealignedbase=PageAlignAddressUpward(basemySpace);
-	mySpace = create_mspace_with_base(pagealignedbase,  numheappages*PAGESIZE, 1 );
+	snapshot_space = create_mspace_with_base(pagealignedbase, numheappages*PAGESIZE, 1 );
 	addMemoryRegionToSnapShot(pagealignedbase, numheappages);
 	entryPoint();
 }
@@ -183,7 +183,7 @@ void initSnapshotLibrary(unsigned int numbackingpages,
 		unsigned int numheappages, VoidFuncPtr entryPoint) {
 	void *basemySpace = system_malloc((numheappages+1)*PAGESIZE);
 	void * pagealignedbase=PageAlignAddressUpward(basemySpace);
-	mySpace = create_mspace_with_base(pagealignedbase,  numheappages*PAGESIZE, 1 );
+	snapshot_space = create_mspace_with_base(pagealignedbase, numheappages * PAGESIZE, 1);
 	if (!snapshotrecord)
 		createSharedMemory();
 

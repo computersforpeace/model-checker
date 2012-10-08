@@ -1984,9 +1984,10 @@ bool ModelChecker::take_step() {
 	 *     the 'model_thread')
 	 * (2) pending release sequences
 	 * (3) pending assertions (i.e., data races)
+	 * (4) no pending promises
 	 */
 	if (!pending_rel_seqs->empty() && (!next || next->is_model_thread()) &&
-			!unrealizedraces.empty()) {
+			isfinalfeasible() && !unrealizedraces.empty()) {
 		printf("*** WARNING: release sequence fixup action (%zu pending release seuqences) ***\n",
 				pending_rel_seqs->size());
 		ModelAction *fixup = new ModelAction(MODEL_FIXUP_RELSEQ,

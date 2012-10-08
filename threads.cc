@@ -2,6 +2,8 @@
  *  @brief Thread functions.
  */
 
+#include <string.h>
+
 #include "libthreads.h"
 #include "common.h"
 #include "threads.h"
@@ -113,6 +115,31 @@ void Thread::complete()
 }
 
 /**
+ * @brief Construct a new model-checker Thread
+ *
+ * A model-checker Thread is used for accounting purposes only. It will never
+ * have its own stack, and it should never be inserted into the Scheduler.
+ *
+ * @param tid The thread ID to assign
+ */
+Thread::Thread(thread_id_t tid) :
+	parent(NULL),
+	creation(NULL),
+	pending(NULL),
+	start_routine(NULL),
+	arg(NULL),
+	stack(NULL),
+	user_thread(NULL),
+	id(tid),
+	state(THREAD_READY), /* Thread is always ready? */
+	wait_list(),
+	last_action_val(0),
+	model_thread(true)
+{
+	memset(&context, 0, sizeof(context));
+}
+
+/**
  * Construct a new thread.
  * @param t The thread identifier of the newly created thread.
  * @param func The function that the thread will call.
@@ -126,7 +153,8 @@ Thread::Thread(thrd_t *t, void (*func)(void *), void *a) :
 	user_thread(t),
 	state(THREAD_CREATED),
 	wait_list(),
-	last_action_val(VALUE_NONE)
+	last_action_val(VALUE_NONE),
+	model_thread(false)
 {
 	int ret;
 

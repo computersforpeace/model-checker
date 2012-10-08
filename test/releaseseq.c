@@ -11,9 +11,11 @@
 #include "stdatomic.h"
 
 atomic_int x;
+int var = 0;
 
 static void a(void *obj)
 {
+	store_32(&var, 1);
 	atomic_store_explicit(&x, 1, memory_order_release);
 	atomic_store_explicit(&x, 42, memory_order_relaxed);
 }
@@ -22,6 +24,7 @@ static void b(void *obj)
 {
 	int r = atomic_load_explicit(&x, memory_order_acquire);
 	printf("r = %u\n", r);
+	printf("load %d\n", load_32(&var));
 }
 
 static void c(void *obj)

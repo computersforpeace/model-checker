@@ -140,6 +140,7 @@ private:
 	bool process_write(ModelAction *curr);
 	bool process_mutex(ModelAction *curr);
 	bool process_thread_action(ModelAction *curr);
+	void process_relseq_fixup(ModelAction *curr, work_queue_t *work_queue);
 	bool check_action_enabled(ModelAction *curr);
 
 	bool take_step();
@@ -152,6 +153,7 @@ private:
 	void reset_to_initial_state();
 	bool resolve_promises(ModelAction *curr);
 	void compute_promises(ModelAction *curr);
+	void compute_relseq_breakwrites(ModelAction *curr);
 
 	void check_curr_backtracking(ModelAction * curr);
 	void add_action_to_lists(ModelAction *act);
@@ -200,6 +202,10 @@ private:
 	/** Private data members that should be snapshotted. They are grouped
 	 * together for efficiency and maintainability. */
 	struct model_snapshot_members *priv;
+
+	/** A special model-checker Thread; used for associating with
+	 *  model-checker-related ModelAcitons */
+	Thread *model_thread;
 
 	/**
 	 * @brief The modification order graph

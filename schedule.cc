@@ -48,6 +48,7 @@ bool Scheduler::is_enabled(Thread *t) const
 void Scheduler::add_thread(Thread *t)
 {
 	DEBUG("thread %d\n", id_to_int(t->get_id()));
+	ASSERT(!t->is_model_thread());
 	set_enabled(t, THREAD_ENABLED);
 }
 
@@ -79,6 +80,7 @@ void Scheduler::sleep(Thread *t)
  */
 void Scheduler::wake(Thread *t)
 {
+	ASSERT(!t->is_model_thread());
 	set_enabled(t, THREAD_DISABLED);
 	t->set_state(THREAD_READY);
 }
@@ -106,6 +108,9 @@ Thread * Scheduler::next_thread(Thread *t)
 				return NULL;
 			}
 		}
+	} else if (t->is_model_thread()) {
+		/* model-checker threads never run */
+		t = NULL;
 	} else {
 		curr_thread_index = id_to_int(t->get_id());
 	}
@@ -120,6 +125,7 @@ Thread * Scheduler::next_thread(Thread *t)
  */
 Thread * Scheduler::get_current_thread() const
 {
+	ASSERT(!current || !current->is_model_thread());
 	return current;
 }
 

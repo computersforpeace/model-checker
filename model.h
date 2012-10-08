@@ -186,8 +186,8 @@ private:
 	HashTable<const void *, action_list_t, uintptr_t, 4> *lock_waiters_map;
 
 	HashTable<void *, std::vector<action_list_t>, uintptr_t, 4 > *obj_thrd_map;
-	std::vector<Promise *> *promises;
-	std::vector<struct PendingFutureValue> *futurevalues;
+	std::vector< Promise *, SnapshotAlloc<Promise *> > *promises;
+	std::vector< struct PendingFutureValue, SnapshotAlloc<struct PendingFutureValue> > *futurevalues;
 
 	/**
 	 * List of pending release sequences. Release sequences might be
@@ -195,9 +195,9 @@ private:
 	 * are established. Each entry in the list may only be partially
 	 * filled, depending on its pending status.
 	 */
-	std::vector<struct release_seq *> *pending_rel_seqs;
+	std::vector< struct release_seq *, SnapshotAlloc<struct release_seq *> > *pending_rel_seqs;
 
-	std::vector<ModelAction *> *thrd_last_action;
+	std::vector< ModelAction *, SnapshotAlloc<ModelAction *> > *thrd_last_action;
 	NodeStack *node_stack;
 
 	/** Private data members that should be snapshotted. They are grouped

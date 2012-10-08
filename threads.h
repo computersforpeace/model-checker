@@ -126,7 +126,7 @@ private:
 	 * list is used for thread joins, where another Thread waits for this
 	 * Thread to complete
 	 */
-	std::vector<ModelAction *> wait_list;
+	std::vector< ModelAction *, SnapshotAlloc<ModelAction *> > wait_list;
 
 	/**
 	 * The value returned by the last action in this thread

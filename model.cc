@@ -32,10 +32,10 @@ ModelChecker::ModelChecker(struct model_params params) :
 	obj_map(new HashTable<const void *, action_list_t, uintptr_t, 4>()),
 	lock_waiters_map(new HashTable<const void *, action_list_t, uintptr_t, 4>()),
 	obj_thrd_map(new HashTable<void *, std::vector<action_list_t>, uintptr_t, 4 >()),
-	promises(new std::vector<Promise *>()),
-	futurevalues(new std::vector<struct PendingFutureValue>()),
-	pending_rel_seqs(new std::vector<struct release_seq *>()),
-	thrd_last_action(new std::vector<ModelAction *>(1)),
+	promises(new std::vector< Promise *, SnapshotAlloc<Promise *> >()),
+	futurevalues(new std::vector< struct PendingFutureValue, SnapshotAlloc<struct PendingFutureValue> >()),
+	pending_rel_seqs(new std::vector< struct release_seq *, SnapshotAlloc<struct release_seq *> >()),
+	thrd_last_action(new std::vector< ModelAction *, SnapshotAlloc<ModelAction *> >(1)),
 	node_stack(new NodeStack()),
 	mo_graph(new CycleGraph()),
 	failed_promise(false),
@@ -1478,7 +1478,7 @@ void ModelChecker::get_release_seq_heads(ModelAction *act, rel_heads_list_t *rel
 bool ModelChecker::resolve_release_sequences(void *location, work_queue_t *work_queue)
 {
 	bool updated = false;
-	std::vector<struct release_seq *>::iterator it = pending_rel_seqs->begin();
+	std::vector< struct release_seq *, SnapshotAlloc<struct release_seq *> >::iterator it = pending_rel_seqs->begin();
 	while (it != pending_rel_seqs->end()) {
 		struct release_seq *pending = *it;
 		ModelAction *act = pending->acquire;

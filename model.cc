@@ -1640,7 +1640,7 @@ ClockVector * ModelChecker::get_cv(thread_id_t tid)
 bool ModelChecker::resolve_promises(ModelAction *write)
 {
 	bool resolved = false;
-  std::vector<thread_id_t> threads_to_check;
+	std::vector< thread_id_t, ModelAlloc<thread_id_t> > threads_to_check;
 
 	for (unsigned int i = 0, promise_index = 0; promise_index < promises->size(); i++) {
 		Promise *promise = (*promises)[promise_index];

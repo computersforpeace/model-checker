@@ -602,6 +602,10 @@ void ModelChecker::process_relseq_fixup(ModelAction *curr, work_queue_t *work_qu
 		mo_graph->addEdge(release, write);
 		mo_graph->addEdge(write, rf);
 	}
+
+	/* See if we have realized a data race */
+	if (checkDataRaces())
+		set_assert();
 }
 
 /**
@@ -1973,9 +1977,16 @@ bool ModelChecker::take_step() {
 	DEBUG("(%d, %d)\n", curr ? id_to_int(curr->get_id()) : -1,
 			next ? id_to_int(next->get_id()) : -1);
 
-	/* When no more threads, or when execution replay chooses the
-	 * 'model_thread': launch end-of-execution release sequence fixups */
-	if (!pending_rel_seqs->empty() && (!next || next->is_model_thread())) {
+	/*
+	 * Launch end-of-execution release sequence fixups only when there are:
+	 *
+	 * (1) no more user threads to run (or when execution replay chooses
+	 *     the 'model_thread')
+	 * (2) pending release sequences
+	 * (3) pending assertions (i.e., data races)
+	 */
+	if (!pending_rel_seqs->empty() && (!next || next->is_model_thread()) &&
+			!unrealizedraces.empty()) {
 		printf("*** WARNING: release sequence fixup action (%zu pending release seuqences) ***\n",
 				pending_rel_seqs->size());
 		ModelAction *fixup = new ModelAction(MODEL_FIXUP_RELSEQ,

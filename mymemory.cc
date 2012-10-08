@@ -127,9 +127,6 @@ void model_free(void *ptr)
 #endif
 }
 
-/** @brief Global mspace reference for the snapshotting heap */
-mspace snapshot_space = NULL;
-
 /** Bootstrap allocation.  Problem is that the dynamic linker calls
  *  require calloc to work and calloc requires the dynamic linker to
  *	work.  */
@@ -152,6 +149,11 @@ void * HandleEarlyAllocationRequest(size_t sz)
 	offset += sz;
 	return pointer;
 }
+
+#if USE_MPROTECT_SNAPSHOT
+
+/** @brief Global mspace reference for the snapshotting heap */
+mspace snapshot_space = NULL;
 
 /** Check whether this is bootstrapped memory that we should not free */
 static bool DontFree(void *ptr)
@@ -222,3 +224,4 @@ void operator delete[](void *p, size_t size)
 {
 	free(p);
 }
+#endif /* USE_MPROTECT_SNAPSHOT */

@@ -30,6 +30,13 @@
 /* extern declaration definition */
 struct SnapShot * snapshotrecord = NULL;
 
+/** PageAlignedAdressUpdate return a page aligned address for the
+ * address being added as a side effect the numBytes are also changed.
+ */
+static void * PageAlignAddressUpward(void * addr) {
+	return (void *)((((uintptr_t)addr)+PAGESIZE-1)&~(PAGESIZE-1));
+}
+
 #if !USE_MPROTECT_SNAPSHOT
 /** @statics
 *   These variables are necessary because the stack is shared region and
@@ -47,13 +54,6 @@ static ucontext_t savedUserSnapshotContext;
 static snapshot_id snapshotid = 0;
 
 #else /* USE_MPROTECT_SNAPSHOT */
-
-/** PageAlignedAdressUpdate return a page aligned address for the
- * address being added as a side effect the numBytes are also changed.
- */
-static void * PageAlignAddressUpward(void * addr) {
-	return (void *)((((uintptr_t)addr)+PAGESIZE-1)&~(PAGESIZE-1));
-}
 
 /** ReturnPageAlignedAddress returns a page aligned address for the
  * address being added as a side effect the numBytes are also changed.
@@ -174,6 +174,12 @@ void initSnapshotLibrary(unsigned int numbackingpages,
 	void * pagealignedbase=PageAlignAddressUpward(basemySpace);
 	user_snapshot_space = create_mspace_with_base(pagealignedbase, numheappages * PAGESIZE, 1);
 	addMemoryRegionToSnapShot(pagealignedbase, numheappages);
+
+	void *base_model_snapshot_space = model_malloc((numheappages + 1) * PAGESIZE);
+	pagealignedbase = PageAlignAddressUpward(base_model_snapshot_space);
+	model_snapshot_space = create_mspace_with_base(pagealignedbase, numheappages * PAGESIZE, 1);
+	addMemoryRegionToSnapShot(pagealignedbase, numheappages);
+
 	entryPoint();
 }
 #else
@@ -182,6 +188,10 @@ void initSnapshotLibrary(unsigned int numbackingpages,
 		unsigned int numheappages, VoidFuncPtr entryPoint) {
 	if (!snapshotrecord)
 		createSharedMemory();
+
+	void *base_model_snapshot_space = malloc((numheappages + 1) * PAGESIZE);
+	void *pagealignedbase = PageAlignAddressUpward(base_model_snapshot_space);
+	model_snapshot_space = create_mspace_with_base(pagealignedbase, numheappages * PAGESIZE, 1);
 
 	//step 2 setup the stack context.
 	ucontext_t newContext;

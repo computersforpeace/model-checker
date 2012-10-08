@@ -156,6 +156,8 @@ extern mspace create_mspace(size_t capacity, int locked);
 extern mspace user_snapshot_space;
 #endif
 
+extern mspace model_snapshot_space;
+
 #ifdef __cplusplus
 };  /* end of extern "C" */
 #endif

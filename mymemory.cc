@@ -132,6 +132,9 @@ void * HandleEarlyAllocationRequest(size_t sz)
 	return pointer;
 }
 
+/** @brief Global mspace reference for the model-checker's snapshotting heap */
+mspace model_snapshot_space = NULL;
+
 #if USE_MPROTECT_SNAPSHOT
 
 /** @brief Global mspace reference for the user's snapshotting heap

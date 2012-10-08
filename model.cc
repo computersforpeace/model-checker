@@ -1296,7 +1296,6 @@ bool ModelChecker::thin_air_constraint_may_allow(const ModelAction * writer, con
  * "returns" two pieces of data: a pass-by-reference vector of @a release_heads
  * and a boolean representing certainty.
  *
- * @todo Finish lazy updating, when promises are fulfilled in the future
  * @param rf The action that might be part of a release sequence. Must be a
  * write.
  * @param release_heads A pass-by-reference style return parameter. After

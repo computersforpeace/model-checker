@@ -171,7 +171,7 @@ void initSnapshotLibrary(unsigned int numbackingpages,
 	HandlePF(SIGSEGV, &si, NULL);
 	snapshotrecord->lastBackingPage--; //remove the fake page we copied
 
-	basemySpace=model_malloc((numheappages+1)*PAGESIZE);
+	void *basemySpace = model_malloc((numheappages+1)*PAGESIZE);
 	void * pagealignedbase=PageAlignAddressUpward(basemySpace);
 	mySpace = create_mspace_with_base(pagealignedbase,  numheappages*PAGESIZE, 1 );
 	addMemoryRegionToSnapShot(pagealignedbase, numheappages);
@@ -181,7 +181,7 @@ void initSnapshotLibrary(unsigned int numbackingpages,
 void initSnapshotLibrary(unsigned int numbackingpages,
 		unsigned int numsnapshots, unsigned int nummemoryregions,
 		unsigned int numheappages, VoidFuncPtr entryPoint) {
-	basemySpace=system_malloc((numheappages+1)*PAGESIZE);
+	void *basemySpace = system_malloc((numheappages+1)*PAGESIZE);
 	void * pagealignedbase=PageAlignAddressUpward(basemySpace);
 	mySpace = create_mspace_with_base(pagealignedbase,  numheappages*PAGESIZE, 1 );
 	if (!snapshotrecord)

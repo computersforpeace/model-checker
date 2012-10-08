@@ -153,7 +153,6 @@ extern void* mspace_calloc(mspace msp, size_t n_elements, size_t elem_size);
 extern mspace create_mspace_with_base(void* base, size_t capacity, int locked);
 extern mspace create_mspace(size_t capacity, int locked);
 extern mspace mySpace;
-extern void * basemySpace;
 #ifdef __cplusplus
 };  /* end of extern "C" */
 #endif

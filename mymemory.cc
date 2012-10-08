@@ -142,10 +142,6 @@ void model_free(void *ptr) {
 /** @brief Global mspace reference for the snapshotting heap */
 mspace mySpace = NULL;
 
-/** @brief Global reference to the unaligned memory address that was malloc'd
- * for the snapshotting heap */
-void *basemySpace = NULL;
-
 /** Bootstrap allocation.  Problem is that the dynamic linker calls
  *  require calloc to work and calloc requires the dynamic linker to
  *	work.  */

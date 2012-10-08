@@ -124,7 +124,8 @@ private:
 	int num_executions;
 	int num_feasible_executions;
 	bool promises_expired();
-
+	void execute_sleep_set();
+	void wake_up_sleeping_actions(ModelAction * curr);
 	modelclock_t get_next_seq_num();
 
 	/**

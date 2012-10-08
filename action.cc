@@ -8,6 +8,7 @@
 #include "clockvector.h"
 #include "common.h"
 #include "threads.h"
+#include "nodestack.h"
 
 #define ACTION_INITIAL_CLOCK 0
 
@@ -17,6 +18,7 @@ ModelAction::ModelAction(action_type_t type, memory_order order, void *loc, uint
 	location(loc),
 	value(value),
 	reads_from(NULL),
+	node(NULL),
 	seq_number(ACTION_INITIAL_CLOCK),
 	cv(NULL)
 {

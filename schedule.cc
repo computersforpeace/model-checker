@@ -5,6 +5,7 @@
 #include "schedule.h"
 #include "common.h"
 #include "model.h"
+#include "nodestack.h"
 
 /** Constructor */
 Scheduler::Scheduler() :
@@ -28,6 +29,39 @@ void Scheduler::set_enabled(Thread *t, enabled_type_t enabled_status) {
 		enabled_len=threadid+1;
 	}
 	is_enabled[threadid]=enabled_status;
+}
+
+enabled_type_t Scheduler::get_enabled(Thread *t) {
+	return is_enabled[id_to_int(t->get_id())];
+}
+
+void Scheduler::update_sleep_set(Node *n) {
+	enabled_type_t *enabled_array=n->get_enabled_array();
+	for(int i=0;i<enabled_len;i++) {
+		if (enabled_array[i]==THREAD_SLEEP_SET) {
+			is_enabled[i]=THREAD_SLEEP_SET;
+		}
+	}
+}
+
+/**
+ * Add a Thread to the sleep set.
+ * @param t The Thread to add
+ */
+void Scheduler::add_sleep(Thread *t)
+{
+	DEBUG("thread %d\n", id_to_int(t->get_id()));
+	set_enabled(t, THREAD_SLEEP_SET);
+}
+
+/**
+ * Remove a Thread from the sleep set.
+ * @param t The Thread to remove
+ */
+void Scheduler::remove_sleep(Thread *t)
+{
+	DEBUG("thread %d\n", id_to_int(t->get_id()));
+	set_enabled(t, THREAD_ENABLED);
 }
 
 /**
@@ -86,7 +120,7 @@ Thread * Scheduler::next_thread(Thread *t)
 		int old_curr_thread = curr_thread_index;
 		while(true) {
 			curr_thread_index = (curr_thread_index+1) % enabled_len;
-			if (is_enabled[curr_thread_index]) {
+			if (is_enabled[curr_thread_index]==THREAD_ENABLED) {
 				t = model->get_thread(int_to_id(curr_thread_index));
 				break;
 			}

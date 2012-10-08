@@ -150,6 +150,9 @@ Thread * ModelChecker::get_next_thread(ModelAction *curr)
 			earliest_diverge=diverge;
 
 		Node *nextnode = next->get_node();
+		Node *prevnode = nextnode->get_parent();
+		scheduler->update_sleep_set(prevnode);
+
 		/* Reached divergence point */
 		if (nextnode->increment_promise()) {
 			/* The next node will try to satisfy a different set of promises. */
@@ -165,13 +168,18 @@ Thread * ModelChecker::get_next_thread(ModelAction *curr)
 			node_stack->pop_restofstack(2);
 		} else {
 			/* Make a different thread execute for next step */
-			Node *node = nextnode->get_parent();
-			tid = node->get_next_backtrack();
+			scheduler->add_sleep(thread_map->get(id_to_int(next->get_tid())));
+			tid = prevnode->get_next_backtrack();
+			/* Make sure the backtracked thread isn't sleeping. */
+			scheduler->remove_sleep(thread_map->get(id_to_int(tid)));
 			node_stack->pop_restofstack(1);
 			if (diverge==earliest_diverge) {
-				earliest_diverge=node->get_action();
+				earliest_diverge=prevnode->get_action();
 			}
 		}
+		/* The correct sleep set is in the parent node. */
+		execute_sleep_set();
+
 		DEBUG("*** Divergence point ***\n");
 
 		diverge = NULL;
@@ -181,6 +189,40 @@ Thread * ModelChecker::get_next_thread(ModelAction *curr)
 	DEBUG("*** ModelChecker chose next thread = %d ***\n", id_to_int(tid));
 	ASSERT(tid != THREAD_ID_T_NONE);
 	return thread_map->get(id_to_int(tid));
+}
+
+/** 
+ * We need to know what the next actions of all threads in the sleep
+ * set will be.  This method computes them and stores the actions at
+ * the corresponding thread object's pending action.
+ */
+
+void ModelChecker::execute_sleep_set() {
+	for(unsigned int i=0;i<get_num_threads();i++) {
+		thread_id_t tid=int_to_id(i);
+		Thread *thr=get_thread(tid);
+		if ( scheduler->get_enabled(thr) == THREAD_SLEEP_SET ) {
+			thr->set_state(THREAD_RUNNING);
+			scheduler->next_thread(thr);
+			Thread::swap(&system_context, thr);
+			thr->set_pending(priv->current_action);
+		}
+	}
+	priv->current_action = NULL;
+}
+
+void ModelChecker::wake_up_sleeping_actions(ModelAction * curr) {
+	for(unsigned int i=0;i<get_num_threads();i++) {
+		thread_id_t tid=int_to_id(i);
+		Thread *thr=get_thread(tid);
+		if ( scheduler->get_enabled(thr) == THREAD_SLEEP_SET ) {
+			ModelAction *pending_act=thr->get_pending();
+			if (pending_act->could_synchronize_with(curr)) {
+				//Remove this thread from sleep set
+				scheduler->remove_sleep(thr);
+			}
+		}
+	}	
 }
 
 /**
@@ -270,7 +312,7 @@ ModelAction * ModelChecker::get_last_conflict(ModelAction *act)
 	return NULL;
 }
 
-/** This method find backtracking points where we should try to
+/** This method finds backtracking points where we should try to
  * reorder the parameter ModelAction against.
  *
  * @param the ModelAction to find backtracking points for.
@@ -295,9 +337,10 @@ void ModelChecker::set_backtracking(ModelAction *act)
 
 	for(int i = low_tid; i < high_tid; i++) {
 		thread_id_t tid = int_to_id(i);
+
 		if (!node->is_enabled(tid))
 			continue;
-
+	
 		/* Check if this has been explored already */
 		if (node->has_been_explored(tid))
 			continue;
@@ -315,7 +358,6 @@ void ModelChecker::set_backtracking(ModelAction *act)
 			if (unfair)
 				continue;
 		}
-
 		/* Cache the latest backtracking point */
 		if (!priv->next_backtrack || *prev > *priv->next_backtrack)
 			priv->next_backtrack = prev;
@@ -631,7 +673,6 @@ bool ModelChecker::check_action_enabled(ModelAction *curr) {
 Thread * ModelChecker::check_current_action(ModelAction *curr)
 {
 	ASSERT(curr);
-
 	bool second_part_of_rmw = curr->is_rmwc() || curr->is_rmw();
 
 	if (!check_action_enabled(curr)) {
@@ -642,7 +683,10 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 		return get_next_thread(NULL);
 	}
 
+	wake_up_sleeping_actions(curr);
+
 	ModelAction *newcurr = initialize_curr_action(curr);
+
 
 	/* Add the action to lists before any other model-checking tasks */
 	if (!second_part_of_rmw)
@@ -655,7 +699,6 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 
 	/* Initialize work_queue with the "current action" work */
 	work_queue_t work_queue(1, CheckCurrWorkEntry(curr));
-
 	while (!work_queue.empty()) {
 		WorkQueueEntry work = work_queue.front();
 		work_queue.pop_front();
@@ -714,9 +757,7 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 	}
 
 	check_curr_backtracking(curr);
-
 	set_backtracking(curr);
-
 	return get_next_thread(curr);
 }
 

@@ -90,6 +90,7 @@ public:
 	bool get_promise(unsigned int i);
 	bool increment_promise();
 	bool promise_empty();
+	enabled_type_t *get_enabled_array() {return enabled_array;}
 
 	void print();
 	void print_may_read_from();

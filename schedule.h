@@ -10,6 +10,7 @@
 
 /* Forward declaration */
 class Thread;
+class Node;
 
 typedef enum enabled_type {
 	THREAD_DISABLED,
@@ -30,7 +31,10 @@ public:
 	Thread * get_current_thread() const;
 	void print() const;
 	enabled_type_t * get_enabled() { return is_enabled; };
-
+	void remove_sleep(Thread *t);
+	void add_sleep(Thread *t);
+	enabled_type_t get_enabled(Thread *t);
+	void update_sleep_set(Node *n);
 	SNAPSHOTALLOC
 private:
 	/** The list of available Threads that are not currently running */

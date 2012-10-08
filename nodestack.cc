@@ -265,13 +265,13 @@ thread_id_t Node::get_next_backtrack()
 bool Node::is_enabled(Thread *t)
 {
 	int thread_id=id_to_int(t->get_id());
-	return thread_id < num_threads && (enabled_array[thread_id] == THREAD_ENABLED);
+	return thread_id < num_threads && (enabled_array[thread_id] != THREAD_DISABLED);
 }
 
 bool Node::is_enabled(thread_id_t tid)
 {
 	int thread_id=id_to_int(tid);
-	return thread_id < num_threads && (enabled_array[thread_id] == THREAD_ENABLED);
+	return thread_id < num_threads && (enabled_array[thread_id] != THREAD_DISABLED);
 }
 
 bool Node::has_priority(thread_id_t tid)

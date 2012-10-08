@@ -103,21 +103,6 @@ void *system_malloc( size_t size ){
 	return ptr;
 }
 
-void system_free( void * ptr ){
-	static void (*freep)(void *);
-	char *error;
-
-	/* get address of libc free */
-	if (!freep) {
-		freep = ( void  ( * )( void * ) )dlsym(RTLD_NEXT, "free");
-		if ((error = dlerror()) != NULL) {
-			fputs(error, stderr);
-			exit(EXIT_FAILURE);
-		}
-	}
-	freep(ptr);
-}
-
 /** Non-snapshotting free for our use. */
 void model_free(void *ptr) {
 #if USE_MPROTECT_SNAPSHOT

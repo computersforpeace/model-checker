@@ -149,9 +149,7 @@ mspace model_snapshot_space = NULL;
 
 #if USE_MPROTECT_SNAPSHOT
 
-/** @brief Global mspace reference for the user's snapshotting heap
- *  @todo use this ONLY for user's allocations, not for internal snapshotting
- *  state */
+/** @brief Global mspace reference for the user's snapshotting heap */
 mspace user_snapshot_space = NULL;
 
 /** Check whether this is bootstrapped memory that we should not free */

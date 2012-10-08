@@ -153,8 +153,7 @@ extern mspace create_mspace_with_base(void* base, size_t capacity, int locked);
 extern mspace create_mspace(size_t capacity, int locked);
 
 #if USE_MPROTECT_SNAPSHOT
-/** @brief mspace for the snapshotting heap */
-extern mspace snapshot_space;
+extern mspace user_snapshot_space;
 #endif
 
 #ifdef __cplusplus

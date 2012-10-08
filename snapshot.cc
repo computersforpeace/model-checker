@@ -172,7 +172,7 @@ void initSnapshotLibrary(unsigned int numbackingpages,
 
 	void *basemySpace = model_malloc((numheappages+1)*PAGESIZE);
 	void * pagealignedbase=PageAlignAddressUpward(basemySpace);
-	snapshot_space = create_mspace_with_base(pagealignedbase, numheappages*PAGESIZE, 1 );
+	user_snapshot_space = create_mspace_with_base(pagealignedbase, numheappages * PAGESIZE, 1);
 	addMemoryRegionToSnapShot(pagealignedbase, numheappages);
 	entryPoint();
 }

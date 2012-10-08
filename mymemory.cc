@@ -134,8 +134,10 @@ void * HandleEarlyAllocationRequest(size_t sz)
 
 #if USE_MPROTECT_SNAPSHOT
 
-/** @brief Global mspace reference for the snapshotting heap */
-mspace snapshot_space = NULL;
+/** @brief Global mspace reference for the user's snapshotting heap
+ *  @todo use this ONLY for user's allocations, not for internal snapshotting
+ *  state */
+mspace user_snapshot_space = NULL;
 
 /** Check whether this is bootstrapped memory that we should not free */
 static bool DontFree(void *ptr)
@@ -146,8 +148,8 @@ static bool DontFree(void *ptr)
 /** @brief Snapshotting malloc implementation for user programs */
 void *malloc(size_t size)
 {
-	if (snapshot_space) {
-		void *tmp = mspace_malloc(snapshot_space, size);
+	if (user_snapshot_space) {
+		void *tmp = mspace_malloc(user_snapshot_space, size);
 		ASSERT(tmp);
 		return tmp;
 	} else
@@ -158,13 +160,13 @@ void *malloc(size_t size)
 void free(void * ptr)
 {
 	if (!DontFree(ptr))
-		mspace_free(snapshot_space, ptr);
+		mspace_free(user_snapshot_space, ptr);
 }
 
 /** @brief Snapshotting realloc implementation for user programs */
 void *realloc(void *ptr, size_t size)
 {
-	void *tmp = mspace_realloc(snapshot_space, ptr, size);
+	void *tmp = mspace_realloc(user_snapshot_space, ptr, size);
 	ASSERT(tmp);
 	return tmp;
 }
@@ -172,8 +174,8 @@ void *realloc(void *ptr, size_t size)
 /** @brief Snapshotting calloc implementation for user programs */
 void * calloc(size_t num, size_t size)
 {
-	if (snapshot_space) {
-		void *tmp = mspace_calloc(snapshot_space, num, size);
+	if (user_snapshot_space) {
+		void *tmp = mspace_calloc(user_snapshot_space, num, size);
 		ASSERT(tmp);
 		return tmp;
 	} else {

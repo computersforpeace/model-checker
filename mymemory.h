@@ -47,7 +47,7 @@ void * snapshot_malloc(size_t size);
 void * snapshot_calloc(size_t count, size_t size);
 void snapshot_free(void *ptr);
 
-void *system_malloc( size_t size );
+void *system_malloc(size_t size );
 
 /** @brief Provides a non-snapshotting allocator for use in STL classes.
  *
@@ -129,7 +129,7 @@ class ModelAlloc {
 
 /** Return that all specializations of this allocator are interchangeable. */
 template <class T1, class T2>
-bool operator== (const ModelAlloc<T1>&,
+bool operator ==(const ModelAlloc<T1>&,
 		const ModelAlloc<T2>&) throw() {
 	return true;
 }

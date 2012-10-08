@@ -237,19 +237,19 @@ bool operator!= (const SnapshotAlloc<T1>&,
 #ifdef __cplusplus
 extern "C" {
 #endif
-typedef void * mspace;
-extern void* mspace_malloc(mspace msp, size_t bytes);
-extern void mspace_free(mspace msp, void* mem);
-extern void* mspace_realloc(mspace msp, void* mem, size_t newsize);
-extern void* mspace_calloc(mspace msp, size_t n_elements, size_t elem_size);
-extern mspace create_mspace_with_base(void* base, size_t capacity, int locked);
-extern mspace create_mspace(size_t capacity, int locked);
+	typedef void * mspace;
+	extern void * mspace_malloc(mspace msp, size_t bytes);
+	extern void mspace_free(mspace msp, void* mem);
+	extern void * mspace_realloc(mspace msp, void* mem, size_t newsize);
+	extern void * mspace_calloc(mspace msp, size_t n_elements, size_t elem_size);
+	extern mspace create_mspace_with_base(void* base, size_t capacity, int locked);
+	extern mspace create_mspace(size_t capacity, int locked);
 
 #if USE_MPROTECT_SNAPSHOT
-extern mspace user_snapshot_space;
+	extern mspace user_snapshot_space;
 #endif
 
-extern mspace model_snapshot_space;
+	extern mspace model_snapshot_space;
 
 #ifdef __cplusplus
 };  /* end of extern "C" */

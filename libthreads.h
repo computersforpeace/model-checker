@@ -18,7 +18,7 @@ extern "C" {
 	int thrd_yield(void);
 	thrd_t thrd_current(void);
 
-	void user_main(void);
+	int user_main(int, char**);
 
 #ifdef __cplusplus
 }

@@ -12,7 +12,7 @@ static void a(void *obj)
 	atomic_fetch_add_explicit(&x, 1, memory_order_relaxed);
 }
 
-void user_main()
+int user_main(int argc, char **argv)
 {
 	thrd_t t1, t2;
 
@@ -22,4 +22,6 @@ void user_main()
 
 	thrd_join(t1);
 	thrd_join(t2);
+
+	return 0;
 }

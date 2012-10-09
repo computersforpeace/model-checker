@@ -21,7 +21,7 @@ static void b(void *obj)
 	printf("r2=%u\n",r2);
 }
 
-void user_main()
+int user_main(int argc, char **argv)
 {
 	thrd_t t1, t2;
 
@@ -35,4 +35,6 @@ void user_main()
 	thrd_join(t1);
 	thrd_join(t2);
 	printf("Thread %d is finished\n", thrd_current());
+
+	return 0;
 }

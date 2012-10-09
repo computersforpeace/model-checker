@@ -37,7 +37,7 @@ static void c(void *obj)
 	atomic_store_explicit(&x, 2, memory_order_relaxed);
 }
 
-void user_main()
+int user_main(int argc, char **argv)
 {
 	thrd_t t1, t2, t3, t4;
 
@@ -54,4 +54,6 @@ void user_main()
 	thrd_join(t3);
 	thrd_join(t4);
 	printf("Thread %d is finished\n", thrd_current());
+
+	return 0;
 }

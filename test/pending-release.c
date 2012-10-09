@@ -46,7 +46,7 @@ static void c(void *obj)
 	atomic_store_explicit(&x, 22, memory_order_relaxed);
 }
 
-void user_main()
+int user_main(int argc, char **argv)
 {
 	thrd_t t1, t2, t5;
 	int i = 4;
@@ -60,4 +60,6 @@ void user_main()
 	thrd_join(t1);
 	thrd_join(t2);
 	thrd_join(t5);
+
+	return 0;
 }

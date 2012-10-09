@@ -97,7 +97,7 @@ static void a(void *obj)
 	}
 }
 
-void user_main()
+int user_main(int argc, char **argv)
 {
 	thrd_t t1, t2;
 	atomic_init(&mylock.lock, RW_LOCK_BIAS);
@@ -107,4 +107,6 @@ void user_main()
 
 	thrd_join(t1);
 	thrd_join(t2);
+
+	return 0;
 }

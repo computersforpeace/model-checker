@@ -1312,9 +1312,8 @@ bool ModelChecker::mo_may_allow(const ModelAction * writer, const ModelAction *r
 
 	if (first_write_after_read==NULL)
 		return true;
-	return true;
 
-	//return !mo_graph->checkReachable(first_write_after_read, writer);
+	return !mo_graph->checkReachable(first_write_after_read, writer);
 }
 
 

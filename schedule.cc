@@ -115,7 +115,7 @@ void Scheduler::sleep(Thread *t)
 void Scheduler::wake(Thread *t)
 {
 	ASSERT(!t->is_model_thread());
-	set_enabled(t, THREAD_DISABLED);
+	set_enabled(t, THREAD_ENABLED);
 	t->set_state(THREAD_READY);
 }
 

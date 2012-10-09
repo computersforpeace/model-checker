@@ -120,11 +120,15 @@ bool checkDataRaces() {
 	return false;
 }
 
-void printRace(struct DataRace * race) {
-	printf("Datarace detected\n");
-	printf("Location %p\n", race->address);
-	printf("Initial access: thread %u clock %u, iswrite %u\n", id_to_int(race->oldthread), race->oldclock, race->isoldwrite);
-	printf("Second access: thread %u clock %u, iswrite %u\n", id_to_int(race->newaction->get_tid()), race->newaction->get_seq_number(), race->isnewwrite);
+void printRace(struct DataRace *race)
+{
+	printf("Datarace detected @ address %p:\n", race->address);
+	printf("    Access 1: %5s in thread %2d @ clock %3u\n",
+			race->isoldwrite ? "write" : "read",
+			id_to_int(race->oldthread), race->oldclock);
+	printf("    Access 2: %5s in thread %2d @ clock %3u\n",
+			race->isnewwrite ? "write" : "read",
+			id_to_int(race->newaction->get_tid()), race->newaction->get_seq_number());
 }
 
 /** This function does race detection for a write on an expanded record. */

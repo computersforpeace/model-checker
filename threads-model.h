@@ -1,9 +1,9 @@
-/** @file threads.h
+/** @file threads-model.h
  *  @brief Model Checker Thread class.
  */
 
-#ifndef __THREADS_H__
-#define __THREADS_H__
+#ifndef __THREADS_MODEL_H__
+#define __THREADS_MODEL_H__
 
 #include <ucontext.h>
 #include <stdint.h>
@@ -161,4 +161,4 @@ static inline int id_to_int(thread_id_t id)
 	return id;
 }
 
-#endif /* __THREADS_H__ */
+#endif /* __THREADS_MODEL_H__ */

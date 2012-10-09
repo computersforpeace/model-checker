@@ -1,6 +1,6 @@
 #include "datarace.h"
 #include "model.h"
-#include "threads.h"
+#include "threads-model.h"
 #include <stdio.h>
 #include <cstring>
 #include "mymemory.h"

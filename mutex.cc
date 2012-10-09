@@ -1,6 +1,6 @@
 #include "mutex.h"
 #include "model.h"
-#include "threads.h"
+#include "threads-model.h"
 #include "clockvector.h"
 
 namespace std {

@@ -8,7 +8,7 @@
 #define __PROMISE_H__
 
 #include <inttypes.h>
-#include "threads.h"
+#include "threads-model.h"
 
 #include "model.h"
 

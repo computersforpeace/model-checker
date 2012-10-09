@@ -1,7 +1,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "threads.h"
+#include "threads-model.h"
 #include "schedule.h"
 #include "common.h"
 #include "model.h"

@@ -6,7 +6,7 @@
 
 #include "libthreads.h"
 #include "common.h"
-#include "threads.h"
+#include "threads-model.h"
 
 /* global "model" object */
 #include "model.h"

@@ -4,7 +4,7 @@
 #include "action.h"
 #include "common.h"
 #include "model.h"
-#include "threads.h"
+#include "threads-model.h"
 
 /**
  * @brief Node constructor

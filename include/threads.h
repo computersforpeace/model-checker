@@ -1,9 +1,9 @@
-/** @file libthreads.h
- *  @brief Basic Thread Library Functionality.
+/** @file threads.h
+ *  @brief C11 Thread Library Functionality
  */
 
-#ifndef __LIBTHREADS_H__
-#define __LIBTHREADS_H__
+#ifndef __THREADS_H__
+#define __THREADS_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -24,4 +24,4 @@ extern "C" {
 }
 #endif
 
-#endif /* __LIBTHREADS_H__ */
+#endif /* __THREADS_H__ */

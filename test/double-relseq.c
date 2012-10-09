@@ -11,7 +11,7 @@
 
 #include <stdio.h>
 
-#include "libthreads.h"
+#include <threads.h>
 #include "librace.h"
 #include "stdatomic.h"
 

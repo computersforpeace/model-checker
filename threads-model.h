@@ -10,7 +10,7 @@
 #include <vector>
 
 #include "mymemory.h"
-#include "libthreads.h"
+#include <threads.h>
 #include "modeltypes.h"
 
 /** @brief Represents the state of a user Thread */

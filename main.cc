@@ -77,8 +77,8 @@ static void parse_options(struct model_params *params, int *argc, char ***argv) 
 int main_argc;
 char **main_argv;
 
-/** The real_main function contains the main model checking loop. */
-static void real_main() {
+/** The model_main function contains the main model checking loop. */
+static void model_main() {
 	thrd_t user_thread;
 	struct model_params params;
 
@@ -110,12 +110,12 @@ static void real_main() {
 
 /**
  * Main function.  Just initializes snapshotting library and the
- * snapshotting library calls the real_main function.
+ * snapshotting library calls the model_main function.
  */
 int main(int argc, char ** argv) {
 	main_argc = argc;
 	main_argv = argv;
 
 	/* Let's jump in quickly and start running stuff */
-	initSnapshotLibrary(10000, 1024, 1024, 4000, &real_main);
+	initSnapshotLibrary(10000, 1024, 1024, 4000, &model_main);
 }

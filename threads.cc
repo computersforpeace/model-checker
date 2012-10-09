@@ -178,3 +178,13 @@ thread_id_t Thread::get_id() const
 {
 	return id;
 }
+
+/**
+ * Set a thread's THREAD_* state (@see thread_state)
+ * @param s The state to enter
+ */
+void Thread::set_state(thread_state s)
+{
+	ASSERT(s == THREAD_COMPLETED || state != THREAD_COMPLETED);
+	state = s;
+}

@@ -44,7 +44,7 @@ public:
 	static int swap(Thread *t, ucontext_t *ctxt);
 
 	thread_state get_state() const { return state; }
-	void set_state(thread_state s) { state = s; }
+	void set_state(thread_state s);
 	thread_id_t get_id() const;
 	thrd_t get_thrd_t() const { return *user_thread; }
 	Thread * get_parent() const { return parent; }

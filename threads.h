@@ -106,7 +106,12 @@ public:
 
 	friend void thread_startup();
 
-	SNAPSHOTALLOC
+	/**
+	 * Intentionally NOT allocated with MODELALLOC or SNAPSHOTALLOC.
+	 * Threads should be allocated on the user's normal (snapshotting) heap
+	 * to allow their allocation/deallocation to follow the same pattern as
+	 * the rest of the backtracked/replayed program.
+	 */
 private:
 	int create_context();
 	Thread *parent;

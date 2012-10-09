@@ -1779,6 +1779,11 @@ void ModelChecker::mo_check_promises(thread_id_t tid, const ModelAction *write) 
 			//do we have a pwrite for the promise, if not, set it
 			if (promise->get_write() == NULL ) {
 				promise->set_write(write);
+				//The pwrite cannot happen before the promise
+				if (write->happens_before(act) && (write != act)) {
+					failed_promise = true;
+					return;
+				}
 			}
 			if (mo_graph->checkPromise(write, promise)) {
 				failed_promise = true;

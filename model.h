@@ -39,8 +39,7 @@ struct model_params {
 };
 
 struct PendingFutureValue {
-	uint64_t value;
-	modelclock_t expiration;
+	ModelAction *writer;
 	ModelAction * act;
 };
 
@@ -120,6 +119,7 @@ private:
 
 	bool sleep_can_read_from(ModelAction * curr, const ModelAction *write);
 	bool thin_air_constraint_may_allow(const ModelAction * writer, const ModelAction *reader);
+	bool mo_may_allow(const ModelAction * writer, const ModelAction *reader);
 	bool has_asserted() {return asserted;}
 	void reset_asserted() {asserted=false;}
 	int num_executions;

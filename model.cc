@@ -519,7 +519,9 @@ bool ModelChecker::process_write(ModelAction *curr)
 	if (promises->size() == 0) {
 		for (unsigned int i = 0; i < futurevalues->size(); i++) {
 			struct PendingFutureValue pfv = (*futurevalues)[i];
-			if (pfv.act->get_node()->add_future_value(pfv.value, pfv.expiration) &&
+			//Do more ambitious checks now that mo is more complete
+			if (mo_may_allow(pfv.writer, pfv.act)&&
+					pfv.act->get_node()->add_future_value(pfv.writer->get_value(), pfv.writer->get_seq_number()+params.maxfuturedelay) &&
 					(!priv->next_backtrack || *pfv.act > *priv->next_backtrack))
 				priv->next_backtrack = pfv.act;
 		}
@@ -1248,12 +1250,16 @@ bool ModelChecker::w_modification_order(ModelAction *curr)
 				   (3) cannot synchronize with us
 				   (4) is in a different thread
 				   =>
-				   that read could potentially read from our write.
+				   that read could potentially read from our write.  Note that
+				   these checks are overly conservative at this point, we'll
+				   do more checks before actually removing the
+				   pendingfuturevalue.
+
 				 */
 				if (thin_air_constraint_may_allow(curr, act)) {
 					if (isfeasible() ||
 							(curr->is_rmw() && act->is_rmw() && curr->get_reads_from() == act->get_reads_from() && isfeasibleotherthanRMW())) {
-						struct PendingFutureValue pfv = {curr->get_value(),curr->get_seq_number()+params.maxfuturedelay,act};
+						struct PendingFutureValue pfv = {curr,act};
 						futurevalues->push_back(pfv);
 					}
 				}
@@ -1284,6 +1290,34 @@ bool ModelChecker::thin_air_constraint_may_allow(const ModelAction * writer, con
 
 	return true;
 }
+
+/** Arbitrary reads from the future are not allowed.  Section 29.3
+ * part 9 places some constraints.  This method checks one result of constraint
+ * constraint.  Others require compiler support. */
+bool ModelChecker::mo_may_allow(const ModelAction * writer, const ModelAction *reader) {
+	std::vector<action_list_t> *thrd_lists = obj_thrd_map->get_safe_ptr(reader->get_location());
+
+	//Get write that follows reader action
+	action_list_t *list = &(*thrd_lists)[id_to_int(reader->get_tid())];
+	action_list_t::reverse_iterator rit;
+	ModelAction *first_write_after_read=NULL;
+
+	for (rit = list->rbegin(); rit != list->rend(); rit++) {
+		ModelAction *act = *rit;
+		if (act==reader)
+			break;
+		if (act->is_write())
+			first_write_after_read=act;
+	}
+
+	if (first_write_after_read==NULL)
+		return true;
+	return true;
+
+	//return !mo_graph->checkReachable(first_write_after_read, writer);
+}
+
+
 
 /**
  * Finds the head(s) of the release sequence(s) containing a given ModelAction.
@@ -1885,8 +1919,9 @@ bool ModelChecker::sleep_can_read_from(ModelAction * curr, const ModelAction *wr
 		bool thread_sleep=prevnode->get_enabled_array()[id_to_int(curr->get_tid())]==THREAD_SLEEP_SET;
 		if (write->is_release()&&thread_sleep)
 			return true;
-		if (!write->is_rmw())
+		if (!write->is_rmw()) {
 			return false;
+		}
 		if (write->get_reads_from()==NULL)
 			return true;
 		write=write->get_reads_from();
@@ -1899,10 +1934,13 @@ static void print_list(action_list_t *list)
 
 	printf("---------------------------------------------------------------------\n");
 	printf("Trace:\n");
-
+	unsigned int hash=0;
+	
 	for (it = list->begin(); it != list->end(); it++) {
 		(*it)->print();
+		hash=hash^(hash<<3)^((*it)->hash());
 	}
+	printf("HASH %u\n", hash);
 	printf("---------------------------------------------------------------------\n");
 }
 

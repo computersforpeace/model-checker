@@ -415,3 +415,18 @@ void ModelAction::print() const
 	} else
 		printf("\n");
 }
+
+/** @brief Print nicely-formatted info about this ModelAction */
+unsigned int ModelAction::hash() const
+{
+	unsigned int hash=(unsigned int) this->type;
+	hash^=((unsigned int)this->order)<<3;
+	hash^=seq_number<<5;
+	hash^=tid<<6;
+
+	if (is_read()) {
+		if (reads_from)
+			hash^=reads_from->get_seq_number();
+	}
+	return hash;
+}

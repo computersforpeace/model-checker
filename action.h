@@ -127,6 +127,7 @@ public:
 
 	void set_sleep_flag() { sleep_flag=true; }
 	bool get_sleep_flag() { return sleep_flag; }
+	unsigned int hash() const;
 
 	MEMALLOC
 private:

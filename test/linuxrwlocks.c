@@ -1,8 +1,8 @@
 #include <stdio.h>
-
 #include <threads.h>
+#include <stdatomic.h>
+
 #include "librace.h"
-#include "stdatomic.h"
 
 #define RW_LOCK_BIAS            0x00100000
 #define WRITE_LOCK_CMP          RW_LOCK_BIAS

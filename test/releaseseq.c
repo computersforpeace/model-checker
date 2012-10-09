@@ -5,10 +5,10 @@
  */
 
 #include <stdio.h>
-
 #include <threads.h>
+#include <stdatomic.h>
+
 #include "librace.h"
-#include "stdatomic.h"
 
 atomic_int x;
 int var = 0;

@@ -767,10 +767,9 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 		return get_next_thread(NULL);
 	}
 
-	wake_up_sleeping_actions(curr);
-
 	ModelAction *newcurr = initialize_curr_action(curr);
 
+	wake_up_sleeping_actions(curr);
 
 	/* Add the action to lists before any other model-checking tasks */
 	if (!second_part_of_rmw)

@@ -49,7 +49,7 @@ Node::Node(ModelAction *act, Node *par, int nthreads, Node *prevfairness)
 				if (prevfi) {
 					*fi=*prevfi;
 				}
-				if (parent->enabled_array[i]==THREAD_ENABLED) {
+				if (parent->is_enabled(i)) {
 					fi->enabled_count++;
 				}
 				if (i==currtid) {
@@ -58,7 +58,7 @@ Node::Node(ModelAction *act, Node *par, int nthreads, Node *prevfairness)
 				}
 				//Do window processing
 				if (prevfairness != NULL) {
-					if (prevfairness -> parent->enabled_array[i] == THREAD_ENABLED)
+					if (prevfairness -> parent->is_enabled(i))
 						fi->enabled_count--;
 					if (i==prevtid) {
 						fi->turns--;

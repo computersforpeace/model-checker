@@ -116,6 +116,10 @@ modelclock_t ModelChecker::get_next_seq_num()
 	return ++priv->used_sequence_numbers;
 }
 
+Node * ModelChecker::get_curr_node() {
+	return node_stack->get_head();
+}
+
 /**
  * @brief Choose the next thread to execute.
  *

@@ -131,10 +131,24 @@ Thread * Scheduler::next_thread(Thread *t)
 {
 	if ( t == NULL ) {
 		int old_curr_thread = curr_thread_index;
+		bool have_enabled_thread_with_priority=false;
+		Node *n=model->get_curr_node();
+
+		for(int i=0;i<enabled_len;i++) {
+			thread_id_t tid=int_to_id(i);
+			if (n->has_priority(tid)) {
+				//Have a thread with priority
+				if (enabled[i]!=THREAD_DISABLED)
+					have_enabled_thread_with_priority=true;
+			}
+		}
+
 		while(true) {
 			curr_thread_index = (curr_thread_index+1) % enabled_len;
-			if (enabled[curr_thread_index]==THREAD_ENABLED) {
-				t = model->get_thread(int_to_id(curr_thread_index));
+			thread_id_t curr_tid=int_to_id(curr_thread_index);
+			if (enabled[curr_thread_index]==THREAD_ENABLED&&
+					(!have_enabled_thread_with_priority||n->has_priority(curr_tid))) {
+				t = model->get_thread(int_to_id(curr_tid));
 				break;
 			}
 			if (curr_thread_index == old_curr_thread) {

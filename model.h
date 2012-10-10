@@ -112,6 +112,7 @@ public:
 
 	const model_params params;
 	Scheduler * get_scheduler() { return scheduler;}
+	Node * get_curr_node();
 
 	MEMALLOC
 private:

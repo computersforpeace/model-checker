@@ -36,6 +36,9 @@ ModelAction::ModelAction(action_type_t type, memory_order order, void *loc,
 	cv(NULL),
 	sleep_flag(false)
 {
+	/* References to NULL atomic variables can end up here */
+	ASSERT(loc || type == MODEL_FIXUP_RELSEQ);
+
 	Thread *t = thread ? thread : thread_current();
 	this->tid = t->get_id();
 }

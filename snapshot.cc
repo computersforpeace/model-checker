@@ -88,6 +88,8 @@ static void HandlePF( int sig, siginfo_t *si, void * unused){
 	if( si->si_code == SEGV_MAPERR ){
 		printf("Real Fault at %p\n", si->si_addr);
 		print_trace();
+		printf("For debugging, place breakpoint at: %s:%d\n",
+				__FILE__, __LINE__);
 		exit( EXIT_FAILURE );
 	}
 	void* addr = ReturnPageAlignedAddress(si->si_addr);

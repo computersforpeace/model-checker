@@ -94,6 +94,7 @@ public:
 	bool is_failed_trylock() const;
 	bool is_read() const;
 	bool is_write() const;
+	bool could_be_write() const;
 	bool is_rmwr() const;
 	bool is_rmwc() const;
 	bool is_rmw() const;

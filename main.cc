@@ -19,6 +19,7 @@ static void param_defaults(struct model_params * params) {
 	params->maxfuturedelay = 100;
 	params->fairwindow = 0;
 	params->enabledcount = 1;
+	params->bound = 0;
 }
 
 static void print_usage(struct model_params *params) {
@@ -36,13 +37,14 @@ static void print_usage(struct model_params *params) {
 "                      enabled sufficiently many times should receive\n"
 "                      priority for execution. Default: %d\n"
 "-e                    Enabled count. Default: %d\n"
+"-b                    Upper length bound. Default: %d\n"
 "--                    Program arguments follow.\n\n",
-params->maxreads, params->maxfuturedelay, params->fairwindow, params->enabledcount);
+params->maxreads, params->maxfuturedelay, params->fairwindow, params->enabledcount, params->bound);
 	exit(EXIT_SUCCESS);
 }
 
 static void parse_options(struct model_params *params, int *argc, char ***argv) {
-	const char *shortopts = "hm:s:f:e:";
+	const char *shortopts = "hm:s:f:e:b:";
 	int opt;
 	bool error = false;
 	while (!error && (opt = getopt(*argc, *argv, shortopts)) != -1) {
@@ -58,6 +60,9 @@ static void parse_options(struct model_params *params, int *argc, char ***argv) 
 			break;
 		case 'e':
 			params->enabledcount = atoi(optarg);
+			break;
+		case 'b':
+			params->bound = atoi(optarg);
 			break;
 		case 'm':
 			params->maxreads = atoi(optarg);

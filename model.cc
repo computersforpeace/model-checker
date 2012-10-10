@@ -260,7 +260,8 @@ bool ModelChecker::next_execution()
 	DEBUG("Number of acquires waiting on pending release sequences: %zu\n",
 			pending_rel_seqs->size());
 
-	if (isfinalfeasible() || DBG_ENABLED())
+
+	if (isfinalfeasible() || (params.bound != 0 && priv->used_sequence_numbers > params.bound ) || DBG_ENABLED() )
 		print_summary();
 
 	if ((diverge = get_next_backtrack()) == NULL)
@@ -1873,7 +1874,7 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 					curr->print();
 				}
 
-				if (curr->get_sleep_flag()) {
+				if (curr->get_sleep_flag() && ! curr->is_seqcst()) {
 					if (sleep_can_read_from(curr, act))
 						curr->get_node()->add_read_from(act);
 				} else
@@ -2072,6 +2073,12 @@ bool ModelChecker::take_step() {
 	/* Infeasible -> don't take any more steps */
 	if (!isfeasible())
 		return false;
+
+	if (params.bound != 0) {
+		if (priv->used_sequence_numbers > params.bound) {
+			return false;
+		}
+	}
 
 	DEBUG("(%d, %d)\n", curr ? id_to_int(curr->get_id()) : -1,
 			next ? id_to_int(next->get_id()) : -1);

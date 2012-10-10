@@ -111,6 +111,11 @@ bool ModelAction::is_write() const
 	return type == ATOMIC_WRITE || type == ATOMIC_RMW || type == ATOMIC_INIT;
 }
 
+bool ModelAction::could_be_write() const
+{
+	return is_write() || is_rmwr();
+}
+
 bool ModelAction::is_rmwr() const
 {
 	return type == ATOMIC_RMWR;
@@ -217,11 +222,11 @@ bool ModelAction::could_synchronize_with(const ModelAction *act) const
 
 	// Explore interleavings of seqcst writes to guarantee total order
 	// of seq_cst operations that don't commute
-	if ((is_write() || act->is_write()) && is_seqcst() && act->is_seqcst())
+	if ((could_be_write() || act->could_be_write()) && is_seqcst() && act->is_seqcst())
 		return true;
 
 	// Explore synchronizing read/write pairs
-	if (is_read() && is_acquire() && act->is_write() && act->is_release())
+	if (is_read() && is_acquire() && act->could_be_write() && act->is_release())
 		return true;
 
 	// Otherwise handle by reads_from relation

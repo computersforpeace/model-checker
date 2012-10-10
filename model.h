@@ -36,6 +36,7 @@ struct model_params {
 	int maxfuturedelay;
 	unsigned int fairwindow;
 	unsigned int enabledcount;
+	unsigned int bound;
 };
 
 struct PendingFutureValue {

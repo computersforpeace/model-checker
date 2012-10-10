@@ -1,3 +1,6 @@
+#ifndef __CXX_ATOMIC__
+#define __CXX_ATOMIC__
 
 #include "impatomic.h"
 
+#endif /* __CXX_ATOMIC__ */

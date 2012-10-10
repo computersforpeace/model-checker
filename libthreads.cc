@@ -27,10 +27,10 @@ int thrd_join(thrd_t t)
 	return 0;
 }
 
-int thrd_yield(void)
+/** A no-op, for now */
+void thrd_yield(void)
 {
-	/* seq_cst is just a 'don't care' parameter */
-	return model->switch_to_master(new ModelAction(THREAD_YIELD, std::memory_order_seq_cst, NULL, VALUE_NONE));
+	//model->switch_to_master(new ModelAction(THREAD_YIELD, std::memory_order_seq_cst, thread_current(), VALUE_NONE));
 }
 
 thrd_t thrd_current(void)

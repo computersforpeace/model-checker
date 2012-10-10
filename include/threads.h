@@ -15,7 +15,7 @@ extern "C" {
 
 	int thrd_create(thrd_t *t, thrd_start_t start_routine, void *arg);
 	int thrd_join(thrd_t);
-	int thrd_yield(void);
+	void thrd_yield(void);
 	thrd_t thrd_current(void);
 
 	int user_main(int, char**);

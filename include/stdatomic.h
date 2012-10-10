@@ -1,3 +1,5 @@
+#ifndef __STDATOMIC_H__
+#define __STDATOMIC_H__
 
 #include "impatomic.h"
 
@@ -59,3 +61,4 @@ using std::memory_order_seq_cst;
 
 #endif
 
+#endif /* __STDATOMIC_H__ */

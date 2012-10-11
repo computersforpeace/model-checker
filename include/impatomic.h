@@ -1,3 +1,6 @@
+#ifndef __IMPATOMIC_H__
+#define __IMPATOMIC_H__
+
 #include "memoryorder.h"
 #include "cmodelint.h"
 
@@ -3985,3 +3988,4 @@ T* atomic<T*>::fetch_sub( ptrdiff_t __v__, memory_order __x__ ) volatile
 } // namespace std
 #endif
 
+#endif /* __IMPATOMIC_H__ */

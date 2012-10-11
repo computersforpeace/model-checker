@@ -1,3 +1,11 @@
+/**
+ * @file impatomic.h
+ * @brief Common header for C11/C++11 atomics
+ *
+ * Note that some features are unavailable, as they require support from a true
+ * C11/C++11 compiler.
+ */
+
 #ifndef __IMPATOMIC_H__
 #define __IMPATOMIC_H__
 

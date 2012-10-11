@@ -55,7 +55,10 @@ typedef enum action_type {
 	ATOMIC_FENCE,         /**< A fence action */
 	ATOMIC_LOCK,          /**< A lock action */
 	ATOMIC_TRYLOCK,       /**< A trylock action */
-	ATOMIC_UNLOCK         /**< An unlock action */
+	ATOMIC_UNLOCK,        /**< An unlock action */
+	ATOMIC_NOTIFY_ONE,    /**< A notify_one action */
+	ATOMIC_NOTIFY_ALL,    /**< A notify all action */
+	ATOMIC_WAIT           /**< A wait action */
 } action_type_t;
 
 /* Forward declaration */

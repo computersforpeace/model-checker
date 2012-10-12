@@ -148,7 +148,7 @@ Thread * Scheduler::next_thread(Thread *t)
 			thread_id_t curr_tid=int_to_id(curr_thread_index);
 			if (enabled[curr_thread_index]==THREAD_ENABLED&&
 					(!have_enabled_thread_with_priority||n->has_priority(curr_tid))) {
-				t = model->get_thread(int_to_id(curr_tid));
+				t = model->get_thread(curr_tid);
 				break;
 			}
 			if (curr_thread_index == old_curr_thread) {

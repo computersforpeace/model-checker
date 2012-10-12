@@ -492,7 +492,7 @@ unsigned int ModelAction::hash() const
 	unsigned int hash=(unsigned int) this->type;
 	hash^=((unsigned int)this->order)<<3;
 	hash^=seq_number<<5;
-	hash^=tid<<6;
+	hash ^= id_to_int(tid) << 6;
 
 	if (is_read()) {
 		if (reads_from)

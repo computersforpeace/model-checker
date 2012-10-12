@@ -31,6 +31,7 @@ ModelChecker::ModelChecker(struct model_params params) :
 	thread_map(new HashTable<int, Thread *, int>()),
 	obj_map(new HashTable<const void *, action_list_t, uintptr_t, 4>()),
 	lock_waiters_map(new HashTable<const void *, action_list_t, uintptr_t, 4>()),
+	condvar_waiters_map(new HashTable<const void *, action_list_t, uintptr_t, 4>()),
 	obj_thrd_map(new HashTable<void *, std::vector<action_list_t>, uintptr_t, 4 >()),
 	promises(new std::vector< Promise *, SnapshotAlloc<Promise *> >()),
 	futurevalues(new std::vector< struct PendingFutureValue, SnapshotAlloc<struct PendingFutureValue> >()),
@@ -63,6 +64,7 @@ ModelChecker::~ModelChecker()
 	delete obj_thrd_map;
 	delete obj_map;
 	delete lock_waiters_map;
+	delete condvar_waiters_map;
 	delete action_trace;
 
 	for (unsigned int i = 0; i < promises->size(); i++)
@@ -162,7 +164,11 @@ Thread * ModelChecker::get_next_thread(ModelAction *curr)
 		scheduler->update_sleep_set(prevnode);
 
 		/* Reached divergence point */
-		if (nextnode->increment_promise()) {
+		if (nextnode->increment_misc()) {
+			/* The next node will try to satisfy a different misc_index values. */
+			tid = next->get_tid();
+			node_stack->pop_restofstack(2);
+		} else if (nextnode->increment_promise()) {
 			/* The next node will try to satisfy a different set of promises. */
 			tid = next->get_tid();
 			node_stack->pop_restofstack(2);
@@ -315,6 +321,32 @@ ModelAction * ModelChecker::get_last_conflict(ModelAction *act)
 		for (rit = list->rbegin(); rit != list->rend(); rit++) {
 			ModelAction *prev = *rit;
 			if (!act->same_thread(prev)&&prev->is_failed_trylock())
+				return prev;
+		}
+		break;
+	}
+	case ATOMIC_WAIT: {
+		/* linear search: from most recent to oldest */
+		action_list_t *list = obj_map->get_safe_ptr(act->get_location());
+		action_list_t::reverse_iterator rit;
+		for (rit = list->rbegin(); rit != list->rend(); rit++) {
+			ModelAction *prev = *rit;
+			if (!act->same_thread(prev)&&prev->is_failed_trylock())
+				return prev;
+			if (!act->same_thread(prev)&&prev->is_notify())
+				return prev;
+		}
+		break;
+	}
+
+	case ATOMIC_NOTIFY_ALL:
+	case ATOMIC_NOTIFY_ONE: {
+		/* linear search: from most recent to oldest */
+		action_list_t *list = obj_map->get_safe_ptr(act->get_location());
+		action_list_t::reverse_iterator rit;
+		for (rit = list->rbegin(); rit != list->rend(); rit++) {
+			ModelAction *prev = *rit;
+			if (!act->same_thread(prev)&&prev->is_wait())
 				return prev;
 		}
 		break;
@@ -505,6 +537,43 @@ bool ModelChecker::process_mutex(ModelAction *curr) {
 		waiters->clear();
 		break;
 	}
+	case ATOMIC_WAIT: {
+		//unlock the lock
+		state->islocked = false;
+		//wake up the other threads
+		action_list_t *waiters = lock_waiters_map->get_safe_ptr((void *) curr->get_value());
+		//activate all the waiting threads
+		for (action_list_t::iterator rit = waiters->begin(); rit != waiters->end(); rit++) {
+			scheduler->wake(get_thread(*rit));
+		}
+		waiters->clear();
+		//check whether we should go to sleep or not...simulate spurious failures
+		if (curr->get_node()->get_misc()==0) {
+			condvar_waiters_map->get_safe_ptr(curr->get_location())->push_back(curr);
+			//disable us
+			scheduler->sleep(get_current_thread());
+		}
+		break;
+	}
+	case ATOMIC_NOTIFY_ALL: {
+		action_list_t *waiters = condvar_waiters_map->get_safe_ptr(curr->get_location());
+		//activate all the waiting threads
+		for (action_list_t::iterator rit = waiters->begin(); rit != waiters->end(); rit++) {
+			scheduler->wake(get_thread(*rit));
+		}
+		waiters->clear();
+		break;
+	}
+	case ATOMIC_NOTIFY_ONE: {
+		action_list_t *waiters = condvar_waiters_map->get_safe_ptr(curr->get_location());
+		int wakeupthread=curr->get_node()->get_misc();
+		action_list_t::iterator it = waiters->begin();
+		advance(it, wakeupthread);
+		scheduler->wake(get_thread(*it));
+		waiters->erase(it);
+		break;
+	}
+
 	default:
 		ASSERT(0);
 	}
@@ -712,6 +781,11 @@ ModelAction * ModelChecker::initialize_curr_action(ModelAction *curr)
 			compute_promises(newcurr);
 		else if (newcurr->is_relseq_fixup())
 			compute_relseq_breakwrites(newcurr);
+		else if (newcurr->is_wait())
+			newcurr->get_node()->set_misc_max(2);
+		else if (newcurr->is_notify_one()) {
+			newcurr->get_node()->set_misc_max(condvar_waiters_map->get_safe_ptr(newcurr->get_location())->size());
+		}
 	}
 	return newcurr;
 }
@@ -856,6 +930,7 @@ void ModelChecker::check_curr_backtracking(ModelAction * curr) {
 	Node *parnode = currnode->get_parent();
 
 	if ((!parnode->backtrack_empty() ||
+			 !currnode->misc_empty() ||
 			 !currnode->read_from_empty() ||
 			 !currnode->future_value_empty() ||
 			 !currnode->promise_empty() ||

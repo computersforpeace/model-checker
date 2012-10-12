@@ -76,12 +76,24 @@ bool ModelAction::is_relseq_fixup() const
 
 bool ModelAction::is_mutex_op() const
 {
-	return type == ATOMIC_LOCK || type == ATOMIC_TRYLOCK || type == ATOMIC_UNLOCK;
+	return type == ATOMIC_LOCK || type == ATOMIC_TRYLOCK || type == ATOMIC_UNLOCK || type == ATOMIC_WAIT || type == ATOMIC_NOTIFY_ONE || type == ATOMIC_NOTIFY_ALL;
 }
 
 bool ModelAction::is_lock() const
 {
 	return type == ATOMIC_LOCK;
+}
+
+bool ModelAction::is_wait() const {
+	return type == ATOMIC_WAIT;
+}
+
+bool ModelAction::is_notify() const {
+	return type==ATOMIC_NOTIFY_ONE || type==ATOMIC_NOTIFY_ALL;
+}
+
+bool ModelAction::is_notify_one() const {
+	return type==ATOMIC_NOTIFY_ONE;
 }
 
 bool ModelAction::is_unlock() const
@@ -248,6 +260,10 @@ bool ModelAction::is_conflicting_lock(const ModelAction *act) const
 	
 	//Try to push a successful trylock past an unlock
 	if (act->is_unlock() && is_trylock() && value == VALUE_TRYSUCCESS)
+		return true;
+
+	//Try to push a successful trylock past a wait
+	if (act->is_wait() && is_trylock() && value == VALUE_TRYSUCCESS)
 		return true;
 
 	return false;

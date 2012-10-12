@@ -92,6 +92,11 @@ public:
 	bool promise_empty();
 	enabled_type_t *get_enabled_array() {return enabled_array;}
 
+	void set_misc_max(int i);
+	int get_misc();
+	bool increment_misc();
+	bool misc_empty();
+
 	void add_relseq_break(const ModelAction *write);
 	const ModelAction * get_relseq_break();
 	bool increment_relseq_break();
@@ -125,6 +130,9 @@ private:
 
 	std::vector< const ModelAction *, ModelAlloc<const ModelAction *> > relseq_break_writes;
 	int relseq_break_index;
+
+	int misc_index;
+	int misc_max;
 };
 
 typedef std::vector< Node *, ModelAlloc< Node * > > node_list_t;

@@ -34,7 +34,9 @@ Node::Node(ModelAction *act, Node *par, int nthreads, Node *prevfairness)
 	future_values(),
 	future_index(-1),
 	relseq_break_writes(),
-	relseq_break_index(0)
+	relseq_break_index(0),
+	misc_index(0),
+	misc_max(0)
 {
 	if (act) {
 		act->set_node(this);
@@ -150,6 +152,24 @@ bool Node::promise_empty() {
 			return false;
 	return true;
 }
+
+
+void Node::set_misc_max(int i) {
+	misc_max=i;
+}
+
+int Node::get_misc() {
+	return misc_index;
+}
+
+bool Node::increment_misc() {
+	return (misc_index<misc_max)&&((++misc_index)<misc_max);
+}
+
+bool Node::misc_empty() {
+	return (misc_index+1)>=misc_max;
+}
+
 
 /**
  * Adds a value from a weakly ordered future write to backtrack to.

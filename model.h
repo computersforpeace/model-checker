@@ -187,6 +187,10 @@ private:
 	 * to a trace of all actions performed on the object. */
 	HashTable<const void *, action_list_t, uintptr_t, 4> *lock_waiters_map;
 
+	/** Per-object list of actions. Maps an object (i.e., memory location)
+	 * to a trace of all actions performed on the object. */
+	HashTable<const void *, action_list_t, uintptr_t, 4> *condvar_waiters_map;
+
 	HashTable<void *, std::vector<action_list_t>, uintptr_t, 4 > *obj_thrd_map;
 	std::vector< Promise *, SnapshotAlloc<Promise *> > *promises;
 	std::vector< struct PendingFutureValue, SnapshotAlloc<struct PendingFutureValue> > *futurevalues;

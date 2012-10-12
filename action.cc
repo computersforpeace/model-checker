@@ -187,6 +187,19 @@ bool ModelAction::is_seqcst() const
 
 bool ModelAction::same_var(const ModelAction *act) const
 {
+	if ( act->is_wait() || is_wait() ) {
+		if ( act->is_wait() && is_wait() ) {
+			if ( ((void *)value) == ((void *)act->value) )
+				return true;
+		} else if ( is_wait() ) {
+			if ( ((void *)value) == act->location )
+				return true;
+		} else if ( act->is_wait() ) {
+			if ( location == ((void *)act->value) )
+				return true;
+		}
+	}
+
 	return location == act->location;
 }
 
@@ -242,6 +255,27 @@ bool ModelAction::could_synchronize_with(const ModelAction *act) const
 
 	// Explore synchronizing read/write pairs
 	if (is_read() && is_acquire() && act->could_be_write() && act->is_release())
+		return true;
+
+	//lock just released...we can grab lock
+	if ((is_lock() ||is_trylock()) && (act->is_unlock()||act->is_wait()))
+		return true;
+
+	//lock just acquired...we can fail to grab lock
+	if (is_trylock() && act->is_success_lock())
+		return true;
+
+	//other thread stalling on lock...we can release lock
+	if (is_unlock() && (act->is_trylock()||act->is_lock()))
+		return true;
+
+	if (is_trylock() && (act->is_unlock()||act->is_wait()))
+		return true;
+
+	if ( is_notify() && act->is_wait() )
+		return true;
+
+	if ( is_wait() && act->is_notify() )
 		return true;
 
 	// Otherwise handle by reads_from relation
@@ -397,6 +431,15 @@ void ModelAction::print() const
 		break;
 	case ATOMIC_TRYLOCK:
 		type_str = "trylock";
+		break;
+	case ATOMIC_WAIT:
+		type_str = "wait";
+		break;
+	case ATOMIC_NOTIFY_ONE:
+		type_str = "notify one";
+		break;
+	case ATOMIC_NOTIFY_ALL:
+		type_str = "notify all";
 		break;
 	default:
 		type_str = "unknown type";

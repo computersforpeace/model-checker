@@ -498,8 +498,17 @@ bool ModelChecker::process_read(ModelAction *curr, bool second_part_of_rmw)
  * @return True if synchronization was updated; false otherwise
  */
 bool ModelChecker::process_mutex(ModelAction *curr) {
-	std::mutex *mutex = (std::mutex *)curr->get_location();
-	struct std::mutex_state *state = mutex->get_state();
+	std::mutex *mutex=NULL;
+	struct std::mutex_state *state=NULL;
+
+	if (curr->is_trylock() || curr->is_lock() || curr->is_unlock()) {
+		mutex = (std::mutex *)curr->get_location();
+		state = mutex->get_state();
+	} else if(curr->is_wait()) {
+		mutex = (std::mutex *)curr->get_value();
+		state = mutex->get_state();
+	}
+
 	switch (curr->get_type()) {
 	case ATOMIC_TRYLOCK: {
 		bool success = !state->islocked;
@@ -1657,6 +1666,20 @@ void ModelChecker::add_action_to_lists(ModelAction *act)
 	if ((int)thrd_last_action->size() <= tid)
 		thrd_last_action->resize(get_num_threads());
 	(*thrd_last_action)[tid] = act;
+
+	if (act->is_wait()) {
+		void *mutex_loc=(void *) act->get_value();
+		obj_map->get_safe_ptr(mutex_loc)->push_back(act);
+	
+		std::vector<action_list_t> *vec = obj_thrd_map->get_safe_ptr(mutex_loc);
+		if (tid >= (int)vec->size())
+			vec->resize(priv->next_thread_id);
+		(*vec)[tid].push_back(act);
+
+		if ((int)thrd_last_action->size() <= tid)
+			thrd_last_action->resize(get_num_threads());
+		(*thrd_last_action)[tid] = act;
+	}
 }
 
 /**
@@ -1708,7 +1731,7 @@ ModelAction * ModelChecker::get_last_unlock(ModelAction *curr) const
 	/* Find: max({i in dom(S) | isUnlock(t_i) && samevar(t_i, t)}) */
 	action_list_t::reverse_iterator rit;
 	for (rit = list->rbegin(); rit != list->rend(); rit++)
-		if ((*rit)->is_unlock())
+		if ((*rit)->is_unlock() || (*rit)->is_wait())
 			return *rit;
 	return NULL;
 }

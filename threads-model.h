@@ -151,11 +151,21 @@ static inline thread_id_t thrd_to_id(thrd_t t)
 	return t;
 }
 
+/**
+ * @brief Map a zero-based integer index to a unique thread ID
+ *
+ * This is the inverse of id_to_int
+ */
 static inline thread_id_t int_to_id(int i)
 {
 	return i;
 }
 
+/**
+ * @brief Map a unique thread ID to a zero-based integer index
+ *
+ * This is the inverse of int_to_id
+ */
 static inline int id_to_int(thread_id_t id)
 {
 	return id;

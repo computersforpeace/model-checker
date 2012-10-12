@@ -1,3 +1,14 @@
+/**
+ * @file impatomic.h
+ * @brief Common header for C11/C++11 atomics
+ *
+ * Note that some features are unavailable, as they require support from a true
+ * C11/C++11 compiler.
+ */
+
+#ifndef __IMPATOMIC_H__
+#define __IMPATOMIC_H__
+
 #include "memoryorder.h"
 #include "cmodelint.h"
 
@@ -3985,3 +3996,4 @@ T* atomic<T*>::fetch_sub( ptrdiff_t __v__, memory_order __x__ ) volatile
 } // namespace std
 #endif
 
+#endif /* __IMPATOMIC_H__ */

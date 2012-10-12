@@ -1,3 +1,7 @@
+/**
+ * @file cstdatomic
+ * @brief C11 atomic interface header
+ */
 
 #include "impatomic.h"
 

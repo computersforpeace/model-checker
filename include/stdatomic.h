@@ -1,3 +1,8 @@
+/**
+ * @file stdatomic.h
+ * @brief C11 atomic interface header
+ */
+
 #ifndef __STDATOMIC_H__
 #define __STDATOMIC_H__
 
@@ -59,6 +64,6 @@ using std::memory_order_release;
 using std::memory_order_acq_rel;
 using std::memory_order_seq_cst;
 
-#endif
+#endif /* __cplusplus */
 
 #endif /* __STDATOMIC_H__ */

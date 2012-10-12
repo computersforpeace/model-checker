@@ -1,3 +1,8 @@
+/**
+ * @file memoryorder.h
+ * @brief C11/C++11 atomic memory order listings
+ */
+
 #ifndef MEMORYORDER_H
 #define MEMORYORDER_H
 #ifdef __cplusplus

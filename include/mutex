@@ -1,5 +1,10 @@
-#ifndef MUTEX_H
-#define MUTEX_H
+/**
+ * @file mutex
+ * @brief C++11 mutex interface header
+ */
+
+#ifndef __CXX_MUTEX__
+#define __CXX_MUTEX__
 
 #include "modeltypes.h"
 
@@ -23,4 +28,4 @@ namespace std {
 		struct mutex_state state;
 	};
 }
-#endif
+#endif /* __CXX_MUTEX__ */

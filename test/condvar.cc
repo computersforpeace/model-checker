@@ -4,7 +4,7 @@
 #include "librace.h"
 #include "stdatomic.h"
 #include <mutex>
-#include "conditionvariable.h"
+#include <condition_variable>
 
 std::mutex * m;
 std::condition_variable *v;

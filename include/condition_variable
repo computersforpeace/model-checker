@@ -1,5 +1,5 @@
-#ifndef CONDITIONVARIABLE_H
-#define CONDITIONVARIABLE_H
+#ifndef __CXX_CONDITION_VARIABLE__
+#define __CXX_CONDITION_VARIABLE__
 
 namespace std {
 	class mutex;
@@ -20,4 +20,5 @@ namespace std {
 		struct condition_variable_state state;
 	};
 }
-#endif
+
+#endif /* __CXX_CONDITION_VARIABLE__ */

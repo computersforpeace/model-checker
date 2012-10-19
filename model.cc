@@ -1509,8 +1509,8 @@ bool ModelChecker::release_seq_heads(const ModelAction *rf,
 				continue;
 			}
 
-			/* Only writes can break release sequences */
-			if (!act->is_write())
+			/* Only non-RMW writes can break release sequences */
+			if (!act->is_write() || act->is_rmw())
 				continue;
 
 			/* Check modification order */

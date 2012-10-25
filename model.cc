@@ -1815,6 +1815,7 @@ void ModelChecker::compute_promises(ModelAction *curr)
 				act->is_read() &&
 				!act->could_synchronize_with(curr) &&
 				!act->same_thread(curr) &&
+				act->get_location() == curr->get_location() &&
 				promise->get_value() == curr->get_value()) {
 			curr->get_node()->set_promise(i);
 		}

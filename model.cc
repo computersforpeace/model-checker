@@ -1994,6 +1994,7 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 	if (!initialized) {
 		/** @todo Need a more informative way of reporting errors. */
 		printf("ERROR: may read from uninitialized atomic\n");
+		set_assert();
 	}
 
 	if (DBG_ENABLED() || !initialized) {
@@ -2003,8 +2004,6 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 		curr->get_node()->print_may_read_from();
 		printf("End printing may_read_from\n");
 	}
-
-	ASSERT(initialized);
 }
 
 bool ModelChecker::sleep_can_read_from(ModelAction * curr, const ModelAction *write) {

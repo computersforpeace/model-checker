@@ -28,7 +28,7 @@ static void a(void *obj)
 static void b(void *obj)
 {
 	int r = atomic_load_explicit(&x, memory_order_acquire);
-	printf("r = %u\n", r);
+	printf("r = %d\n", r);
 	printf("load %d\n", load_32(&var));
 }
 

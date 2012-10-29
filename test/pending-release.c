@@ -24,7 +24,7 @@ static void a(void *obj)
 static void b2(void *obj)
 {
 	int r = atomic_load_explicit(&x, memory_order_acquire);
-	printf("r = %u\n", r);
+	printf("r = %d\n", r);
 	store_32(&var, 3);
 }
 
@@ -33,7 +33,7 @@ static void b1(void *obj)
 	thrd_t t3, t4;
 	int i = 7;
 	int r = atomic_load_explicit(&x, memory_order_acquire);
-	printf("r = %u\n", r);
+	printf("r = %d\n", r);
 	store_32(&var, 2);
 	thrd_create(&t3, (thrd_start_t)&a, &i);
 	thrd_create(&t4, (thrd_start_t)&b2, NULL);

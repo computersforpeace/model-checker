@@ -11,14 +11,14 @@ static void a(void *obj)
 {
 	int r1=atomic_load_explicit(&y, memory_order_relaxed);
 	atomic_store_explicit(&x, r1, memory_order_relaxed);
-	printf("r1=%u\n",r1);
+	printf("r1=%d\n",r1);
 }
 
 static void b(void *obj)
 {
 	int r2=atomic_load_explicit(&x, memory_order_relaxed);
 	atomic_store_explicit(&y, 42, memory_order_relaxed);
-	printf("r2=%u\n",r2);
+	printf("r2=%d\n",r2);
 }
 
 int user_main(int argc, char **argv)

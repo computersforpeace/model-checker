@@ -1366,32 +1366,40 @@ bool ModelChecker::thin_air_constraint_may_allow(const ModelAction * writer, con
 	return true;
 }
 
-/** Arbitrary reads from the future are not allowed.  Section 29.3
- * part 9 places some constraints.  This method checks one result of constraint
- * constraint.  Others require compiler support. */
-bool ModelChecker::mo_may_allow(const ModelAction * writer, const ModelAction *reader) {
+/**
+ * Arbitrary reads from the future are not allowed. Section 29.3 part 9 places
+ * some constraints. This method checks one the following constraint (others
+ * require compiler support):
+ *
+ *   If X --hb-> Y --mo-> Z, then X should not read from Z.
+ */
+bool ModelChecker::mo_may_allow(const ModelAction *writer, const ModelAction *reader)
+{
 	std::vector<action_list_t> *thrd_lists = obj_thrd_map->get_safe_ptr(reader->get_location());
+	unsigned int i;
 
-	//Get write that follows reader action
-	action_list_t *list = &(*thrd_lists)[id_to_int(reader->get_tid())];
-	action_list_t::reverse_iterator rit;
-	ModelAction *first_write_after_read=NULL;
+	/* Iterate over all threads */
+	for (i = 0; i < thrd_lists->size(); i++) {
+		ModelAction *write_after_read = NULL;
 
-	for (rit = list->rbegin(); rit != list->rend(); rit++) {
-		ModelAction *act = *rit;
-		if (act==reader)
-			break;
-		if (act->is_write())
-			first_write_after_read=act;
+		/* Iterate over actions in thread, starting from most recent */
+		action_list_t *list = &(*thrd_lists)[i];
+		action_list_t::reverse_iterator rit;
+		for (rit = list->rbegin(); rit != list->rend(); rit++) {
+			ModelAction *act = *rit;
+
+			if (!reader->happens_before(act))
+				break;
+			else if (act->is_write())
+				write_after_read = act;
+		}
+
+		if (write_after_read && mo_graph->checkReachable(write_after_read, writer))
+			return false;
 	}
 
-	if (first_write_after_read==NULL)
-		return true;
-
-	return !mo_graph->checkReachable(first_write_after_read, writer);
+	return true;
 }
-
-
 
 /**
  * Finds the head(s) of the release sequence(s) containing a given ModelAction.

@@ -441,7 +441,7 @@ ModelAction * ModelChecker::get_next_backtrack()
  */
 bool ModelChecker::process_read(ModelAction *curr, bool second_part_of_rmw)
 {
-	uint64_t value;
+	uint64_t value = VALUE_NONE;
 	bool updated = false;
 	while (true) {
 		const ModelAction *reads_from = curr->get_node()->get_read_from();

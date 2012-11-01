@@ -316,12 +316,12 @@ void Node::add_read_from(const ModelAction *act)
  * @return The first element in future_values
  */
 uint64_t Node::get_future_value() {
-	ASSERT(future_index<((int)future_values.size()));
+	ASSERT(future_index >= 0 && future_index<((int)future_values.size()));
 	return future_values[future_index].value;
 }
 
 modelclock_t Node::get_future_value_expiration() {
-	ASSERT(future_index<((int)future_values.size()));
+	ASSERT(future_index >= 0 && future_index<((int)future_values.size()));
 	return future_values[future_index].expiration;
 }
 

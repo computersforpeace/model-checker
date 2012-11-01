@@ -235,7 +235,7 @@ void ModelChecker::wake_up_sleeping_actions(ModelAction * curr) {
 		Thread *thr=get_thread(tid);
 		if ( scheduler->get_enabled(thr) == THREAD_SLEEP_SET ) {
 			ModelAction *pending_act=thr->get_pending();
-			if (pending_act->could_synchronize_with(curr)) {
+			if ((!curr->is_rmwr())&&pending_act->could_synchronize_with(curr)) {
 				//Remove this thread from sleep set
 				scheduler->remove_sleep(thr);
 			}

@@ -40,27 +40,15 @@ ClockVector::~ClockVector()
  */
 void ClockVector::merge(const ClockVector *cv)
 {
-	modelclock_t *clk = clock;
-	bool resize = false;
-
 	ASSERT(cv != NULL);
 
-	if (cv->num_threads > num_threads) {
-		resize = true;
-		clk = (modelclock_t *)snapshot_malloc(cv->num_threads * sizeof(modelclock_t));
-	}
+	if (cv->num_threads > num_threads)
+		clock = (modelclock_t *)snapshot_realloc(clock, cv->num_threads * sizeof(modelclock_t));
 
 	/* Element-wise maximum */
-	for (int i = 0; i < num_threads; i++)
-		clk[i] = std::max(clock[i], cv->clock[i]);
-
-	if (resize) {
-		for (int i = num_threads; i < cv->num_threads; i++)
-			clk[i] = cv->clock[i];
-		num_threads = cv->num_threads;
-		snapshot_free(clock);
-	}
-	clock = clk;
+	for (int i = 0; i < cv->num_threads; i++)
+		if (cv->clock[i] > clock[i])
+			clock[i] = cv->clock[i];
 }
 
 /**

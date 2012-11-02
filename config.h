@@ -9,6 +9,10 @@
 /*		#ifndef CONFIG_DEBUG
 		#define CONFIG_DEBUG
 		#endif
+
+		#ifndef CONFIG_ASSERT
+		#define CONFIG_ASSERT
+		#endif
 */
 
 /** Turn on support for dumping cyclegraphs as dot files at each

@@ -72,8 +72,10 @@ static void parse_options(struct model_params *params, int *argc, char ***argv) 
 			break;
 		}
 	}
-	(*argc) -= optind;
-	(*argv) += optind;
+	(*argv)[optind - 1] = (*argv)[0];
+	(*argc) -= (optind - 1);
+	(*argv) += (optind - 1);
+	optind = 1;
 
 	if (error)
 		print_usage(params);

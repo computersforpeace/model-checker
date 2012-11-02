@@ -744,41 +744,46 @@ void ModelChecker::process_relseq_fixup(ModelAction *curr, work_queue_t *work_qu
  * initializing clock vectors, and computing the promises to fulfill.
  *
  * @param curr The current action, as passed from the user context; may be
- * freed/invalidated after the execution of this function
- * @return The current action, as processed by the ModelChecker. Is only the
- * same as the parameter @a curr if this is a newly-explored action.
+ * freed/invalidated after the execution of this function, with a different
+ * action "returned" its place (pass-by-reference)
+ * @return True if curr is a newly-explored action; false otherwise
  */
-ModelAction * ModelChecker::initialize_curr_action(ModelAction *curr)
+bool ModelChecker::initialize_curr_action(ModelAction **curr)
 {
 	ModelAction *newcurr;
 
-	if (curr->is_rmwc() || curr->is_rmw()) {
-		newcurr = process_rmw(curr);
-		delete curr;
+	if ((*curr)->is_rmwc() || (*curr)->is_rmw()) {
+		newcurr = process_rmw(*curr);
+		delete *curr;
 
 		if (newcurr->is_rmw())
 			compute_promises(newcurr);
-		return newcurr;
+
+		*curr = newcurr;
+		return false;
 	}
 
-	curr->set_seq_number(get_next_seq_num());
+	(*curr)->set_seq_number(get_next_seq_num());
 
-	newcurr = node_stack->explore_action(curr, scheduler->get_enabled());
+	newcurr = node_stack->explore_action(*curr, scheduler->get_enabled());
 	if (newcurr) {
 		/* First restore type and order in case of RMW operation */
-		if (curr->is_rmwr())
-			newcurr->copy_typeandorder(curr);
+		if ((*curr)->is_rmwr())
+			newcurr->copy_typeandorder(*curr);
 
-		ASSERT(curr->get_location() == newcurr->get_location());
-		newcurr->copy_from_new(curr);
+		ASSERT((*curr)->get_location() == newcurr->get_location());
+		newcurr->copy_from_new(*curr);
 
 		/* Discard duplicate ModelAction; use action from NodeStack */
-		delete curr;
+		delete *curr;
 
 		/* Always compute new clock vector */
 		newcurr->create_cv(get_parent_action(newcurr->get_tid()));
+
+		*curr = newcurr;
+		return false; /* Action was explored previously */
 	} else {
-		newcurr = curr;
+		newcurr = *curr;
 
 		/* Always compute new clock vector */
 		newcurr->create_cv(get_parent_action(newcurr->get_tid()));
@@ -795,8 +800,8 @@ ModelAction * ModelChecker::initialize_curr_action(ModelAction *curr)
 		else if (newcurr->is_notify_one()) {
 			newcurr->get_node()->set_misc_max(condvar_waiters_map->get_safe_ptr(newcurr->get_location())->size());
 		}
+		return true; /* This was a new ModelAction */
 	}
-	return newcurr;
 }
 
 /**
@@ -854,18 +859,17 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 		return get_next_thread(NULL);
 	}
 
-	ModelAction *newcurr = initialize_curr_action(curr);
+	bool newly_explored = initialize_curr_action(&curr);
 
-	wake_up_sleeping_actions(newcurr);
+	wake_up_sleeping_actions(curr);
 
 	/* Add the action to lists before any other model-checking tasks */
 	if (!second_part_of_rmw)
-		add_action_to_lists(newcurr);
+		add_action_to_lists(curr);
 
 	/* Build may_read_from set for newly-created actions */
-	if (curr == newcurr && curr->is_read())
+	if (newly_explored && curr->is_read())
 		build_reads_from_past(curr);
-	curr = newcurr;
 
 	/* Initialize work_queue with the "current action" work */
 	work_queue_t work_queue(1, CheckCurrWorkEntry(curr));

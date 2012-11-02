@@ -262,6 +262,7 @@ void Node::explore_child(ModelAction *act, enabled_type_t * is_enabled)
 bool Node::set_backtrack(thread_id_t id)
 {
 	int i = id_to_int(id);
+	ASSERT(i<((int)backtrack.size()));
 	if (backtrack[i])
 		return false;
 	backtrack[i] = true;
@@ -429,6 +430,7 @@ bool Node::relseq_break_empty() {
 void Node::explore(thread_id_t tid)
 {
 	int i = id_to_int(tid);
+	ASSERT(i<((int)backtrack.size()));
 	if (backtrack[i]) {
 		backtrack[i] = false;
 		numBacktracks--;

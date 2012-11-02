@@ -53,7 +53,7 @@ struct fairness_info {
  */
 class Node {
 public:
-	Node(ModelAction *act = NULL, Node *par = NULL, int nthreads = 1, Node *prevfairness = NULL);
+	Node(ModelAction *act = NULL, Node *par = NULL, int nthreads = 2, Node *prevfairness = NULL);
 	~Node();
 	/* return true = thread choice has already been explored */
 	bool has_been_explored(thread_id_t tid);

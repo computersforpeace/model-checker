@@ -383,6 +383,10 @@ void ModelChecker::set_backtracking(ModelAction *act)
 	for(int i = low_tid; i < high_tid; i++) {
 		thread_id_t tid = int_to_id(i);
 
+		/* Make sure this thread can be enabled here. */
+		if (i >= node->get_num_threads())
+			break;
+
 		/* Don't backtrack into a point where the thread is disabled or sleeping. */
 		if (node->get_enabled_array()[i]!=THREAD_ENABLED)
 			continue;

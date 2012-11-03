@@ -1094,7 +1094,7 @@ void ModelChecker::check_recency(ModelAction *curr, const ModelAction *rf) {
 				ModelAction *act=*rit;
 				bool foundvalue = false;
 				for (int j = 0; j<act->get_node()->get_read_from_size(); j++) {
-					if (act->get_node()->get_read_from_at(i)==write) {
+					if (act->get_node()->get_read_from_at(j)==write) {
 						foundvalue = true;
 						break;
 					}

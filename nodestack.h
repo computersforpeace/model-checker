@@ -66,6 +66,8 @@ public:
 	thread_id_t get_next_backtrack();
 	bool is_enabled(Thread *t);
 	bool is_enabled(thread_id_t tid);
+	enabled_type_t enabled_status(thread_id_t tid);
+
 	ModelAction * get_action() { return action; }
 	bool has_priority(thread_id_t tid);
 	int get_num_threads() {return num_threads;}

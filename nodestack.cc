@@ -291,6 +291,14 @@ bool Node::is_enabled(Thread *t)
 	return thread_id < num_threads && (enabled_array[thread_id] != THREAD_DISABLED);
 }
 
+enabled_type_t Node::enabled_status(thread_id_t tid) {
+	int thread_id=id_to_int(tid);
+	if (thread_id < num_threads)
+		return enabled_array[thread_id];
+	else
+		return THREAD_DISABLED;
+}
+
 bool Node::is_enabled(thread_id_t tid)
 {
 	int thread_id=id_to_int(tid);

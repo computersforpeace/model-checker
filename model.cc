@@ -218,7 +218,8 @@ void ModelChecker::execute_sleep_set() {
 	for(unsigned int i=0;i<get_num_threads();i++) {
 		thread_id_t tid=int_to_id(i);
 		Thread *thr=get_thread(tid);
-		if ( scheduler->get_enabled(thr) == THREAD_SLEEP_SET ) {
+		if ( scheduler->get_enabled(thr) == THREAD_SLEEP_SET &&
+				 thr->get_pending() == NULL ) {
 			thr->set_state(THREAD_RUNNING);
 			scheduler->next_thread(thr);
 			Thread::swap(&system_context, thr);
@@ -271,8 +272,10 @@ bool ModelChecker::next_execution()
 			pending_rel_seqs->size());
 
 
-	if (isfinalfeasible() || (params.bound != 0 && priv->used_sequence_numbers > params.bound ) || DBG_ENABLED() )
+	if (isfinalfeasible() || (params.bound != 0 && priv->used_sequence_numbers > params.bound ) || DBG_ENABLED() ) {
+		checkDataRaces();
 		print_summary();
+	}
 
 	if ((diverge = get_next_backtrack()) == NULL)
 		return false;
@@ -971,7 +974,7 @@ bool ModelChecker::promises_expired() {
 /** @return whether the current partial trace must be a prefix of a
  * feasible trace. */
 bool ModelChecker::isfeasibleprefix() {
-	return promises->size() == 0 && pending_rel_seqs->size() == 0;
+	return promises->size() == 0 && pending_rel_seqs->size() == 0 && isfeasible();
 }
 
 /** @return whether the current partial trace is feasible. */
@@ -1094,7 +1097,7 @@ void ModelChecker::check_recency(ModelAction *curr, const ModelAction *rf) {
 				ModelAction *act=*rit;
 				bool foundvalue = false;
 				for (int j = 0; j<act->get_node()->get_read_from_size(); j++) {
-					if (act->get_node()->get_read_from_at(i)==write) {
+					if (act->get_node()->get_read_from_at(j)==write) {
 						foundvalue = true;
 						break;
 					}
@@ -1388,7 +1391,7 @@ bool ModelChecker::mo_may_allow(const ModelAction *writer, const ModelAction *re
 
 	/* Iterate over all threads */
 	for (i = 0; i < thrd_lists->size(); i++) {
-		ModelAction *write_after_read = NULL;
+		const ModelAction *write_after_read = NULL;
 
 		/* Iterate over actions in thread, starting from most recent */
 		action_list_t *list = &(*thrd_lists)[i];
@@ -1400,9 +1403,12 @@ bool ModelChecker::mo_may_allow(const ModelAction *writer, const ModelAction *re
 				break;
 			else if (act->is_write())
 				write_after_read = act;
+			else if (act->is_read()&&act->get_reads_from()!=NULL) {
+				write_after_read = act->get_reads_from();
+			}
 		}
-
-		if (write_after_read && mo_graph->checkReachable(write_after_read, writer))
+		
+		if (write_after_read && write_after_read!=writer && mo_graph->checkReachable(write_after_read, writer))
 			return false;
 	}
 
@@ -1833,7 +1839,7 @@ void ModelChecker::compute_promises(ModelAction *curr)
 				!act->same_thread(curr) &&
 				act->get_location() == curr->get_location() &&
 				promise->get_value() == curr->get_value()) {
-			curr->get_node()->set_promise(i);
+			curr->get_node()->set_promise(i, act->is_rmw());
 		}
 	}
 }
@@ -1851,6 +1857,16 @@ void ModelChecker::check_promises(thread_id_t tid, ClockVector *old_cv, ClockVec
 				failed_promise = true;
 				return;
 			}
+		}
+	}
+}
+
+void ModelChecker::check_promises_thread_disabled() {
+	for (unsigned int i = 0; i < promises->size(); i++) {
+		Promise *promise = (*promises)[i];
+		if (promise->check_promise()) {
+			failed_promise = true;
+			return;
 		}
 	}
 }
@@ -1914,7 +1930,7 @@ void ModelChecker::mo_check_promises(thread_id_t tid, const ModelAction *write) 
 		if (promise->has_sync_thread(tid))
 			continue;
 		
-		if (mo_graph->checkReachable(promise->get_write(), write)) {
+		if (promise->get_write()&&mo_graph->checkReachable(promise->get_write(), write)) {
 			if (promise->increment_threads(tid)) {
 				failed_promise = true;
 				return;

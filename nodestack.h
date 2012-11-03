@@ -24,11 +24,14 @@ class Thread;
  * <li>@b fulfilled: satisfied by this Node's ModelAction under the current
  * configuration.</li></ol>
  */
-typedef enum {
-	PROMISE_IGNORE = 0, /**< This promise is inapplicable; ignore it */
-	PROMISE_UNFULFILLED, /**< This promise is applicable but unfulfilled */
-	PROMISE_FULFILLED /**< This promise is applicable and fulfilled */
-} promise_t;
+
+#define	PROMISE_IGNORE 0 /**< This promise is inapplicable; ignore it */
+#define	PROMISE_UNFULFILLED 1 /**< This promise is applicable but unfulfilled */
+#define	PROMISE_FULFILLED 2 /**< This promise is applicable and fulfilled */
+#define PROMISE_MASK 0xf
+#define PROMISE_RMW 0x10
+
+typedef int promise_t;
 
 struct future_value {
 	uint64_t value;
@@ -88,7 +91,7 @@ public:
 	int get_read_from_size();
 	const ModelAction * get_read_from_at(int i);
 
-	void set_promise(unsigned int i);
+	void set_promise(unsigned int i, bool is_rmw);
 	bool get_promise(unsigned int i);
 	bool increment_promise();
 	bool promise_empty();

@@ -105,11 +105,14 @@ void Node::print_may_read_from()
  * Sets a promise to explore meeting with the given node.
  * @param i is the promise index.
  */
-void Node::set_promise(unsigned int i) {
+void Node::set_promise(unsigned int i, bool is_rmw) {
 	if (i >= promises.size())
 		promises.resize(i + 1, PROMISE_IGNORE);
-	if (promises[i] == PROMISE_IGNORE)
+	if (promises[i] == PROMISE_IGNORE) {
 		promises[i] = PROMISE_UNFULFILLED;
+		if (is_rmw)
+			promises[i] |= PROMISE_RMW;
+	}
 }
 
 /**
@@ -118,7 +121,7 @@ void Node::set_promise(unsigned int i) {
  * @return true if the promise should be satisfied by the given model action.
  */
 bool Node::get_promise(unsigned int i) {
-	return (i < promises.size()) && (promises[i] == PROMISE_FULFILLED);
+	return (i < promises.size()) && ((promises[i] & PROMISE_MASK) == PROMISE_FULFILLED);
 }
 
 /**
@@ -127,16 +130,27 @@ bool Node::get_promise(unsigned int i) {
  */
 bool Node::increment_promise() {
 	DBG();
-
+	unsigned int rmw_count=0;
 	for (unsigned int i = 0; i < promises.size(); i++) {
-		if (promises[i] == PROMISE_UNFULFILLED) {
-			promises[i] = PROMISE_FULFILLED;
+		if (promises[i]==(PROMISE_RMW|PROMISE_FULFILLED))
+			rmw_count++;
+	}
+	
+	for (unsigned int i = 0; i < promises.size(); i++) {
+		if ((promises[i] & PROMISE_MASK) == PROMISE_UNFULFILLED) {
+			if ((rmw_count > 0) && (promises[i] & PROMISE_RMW)) {
+				//sending our value to two rmws... not going to work..try next combination
+				continue;
+			}
+			promises[i] = (promises[i] & PROMISE_RMW) |PROMISE_FULFILLED;
 			while (i > 0) {
 				i--;
-				if (promises[i] == PROMISE_FULFILLED)
-					promises[i] = PROMISE_UNFULFILLED;
+				if ((promises[i] & PROMISE_MASK) == PROMISE_FULFILLED)
+					promises[i] = (promises[i] & PROMISE_RMW) | PROMISE_UNFULFILLED;
 			}
 			return true;
+		} else if (promises[i] == (PROMISE_RMW|PROMISE_FULFILLED)) {
+			rmw_count--;
 		}
 	}
 	return false;
@@ -147,9 +161,15 @@ bool Node::increment_promise() {
  * @return true if we have explored all promise combinations.
  */
 bool Node::promise_empty() {
-	for (unsigned int i = 0; i < promises.size();i++)
-		if (promises[i] == PROMISE_UNFULFILLED)
+	bool fulfilledrmw=false;
+	for (int i = promises.size()-1 ; i>=0; i--) {
+		if (promises[i]==PROMISE_UNFULFILLED)
 			return false;
+		if (!fulfilledrmw && ((promises[i]&PROMISE_MASK)==PROMISE_UNFULFILLED))
+			return false;
+		if (promises[i]==(PROMISE_FULFILLED|PROMISE_RMW))
+			fulfilledrmw=true;
+	}
 	return true;
 }
 

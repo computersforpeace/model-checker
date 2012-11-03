@@ -3,7 +3,6 @@
 #include <iostream>
 #include <fstream>
 #include <unistd.h>
-#include <sys/types.h>
 #include <sstream>
 #include <cstring>
 #include <string>
@@ -16,7 +15,7 @@
 
 #define MYBINARYNAME "model"
 #define MYLIBRARYNAME "libmodel.so"
-#define MAPFILE_FORMAT "/proc/%d/maps"
+#define MAPFILE "/proc/self/maps"
 
 SnapshotStack * snapshotObject;
 
@@ -73,12 +72,10 @@ static void SnapshotGlobalSegments(){
  *	library to snapshot them.
  */
 static void SnapshotGlobalSegments(){
-	int pid = getpid();
-	char buf[9000], filename[100];
+	char buf[9000];
 	FILE *map;
 
-	sprintf(filename, MAPFILE_FORMAT, pid);
-	map = fopen(filename, "r");
+	map = fopen(MAPFILE, "r");
 	if (!map) {
 		perror("fopen");
 		exit(EXIT_FAILURE);

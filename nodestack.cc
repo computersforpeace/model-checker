@@ -161,21 +161,14 @@ bool Node::increment_promise() {
  * @return true if we have explored all promise combinations.
  */
 bool Node::promise_empty() {
-	unsigned int rmw_count=0;
-	for (unsigned int i = 0; i < promises.size(); i++) {
-		if (promises[i]==(PROMISE_RMW|PROMISE_FULFILLED))
-			rmw_count++;
-	}
-
-	for (unsigned int i = 0; i < promises.size();i++) {
-		if ((promises[i]& PROMISE_MASK) == PROMISE_UNFULFILLED) {
-			//if this isn't a feasible option, keep going
-			if ((rmw_count > 0)&&(promises[i] & PROMISE_RMW))
-				continue;
+	bool fulfilledrmw=false;
+	for (int i = promises.size()-1 ; i>=0; i--) {
+		if (promises[i]==PROMISE_UNFULFILLED)
 			return false;
-		} else if (promises[i] == (PROMISE_RMW|PROMISE_FULFILLED)) {
-			rmw_count--;
-		}
+		if (!fulfilledrmw && ((promises[i]&PROMISE_MASK)==PROMISE_UNFULFILLED))
+			return false;
+		if (promises[i]==(PROMISE_FULFILLED|PROMISE_RMW))
+			fulfilledrmw=true;
 	}
 	return true;
 }

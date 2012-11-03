@@ -1388,7 +1388,6 @@ bool ModelChecker::mo_may_allow(const ModelAction *writer, const ModelAction *re
 {
 	std::vector<action_list_t> *thrd_lists = obj_thrd_map->get_safe_ptr(reader->get_location());
 	unsigned int i;
-
 	/* Iterate over all threads */
 	for (i = 0; i < thrd_lists->size(); i++) {
 		const ModelAction *write_after_read = NULL;
@@ -1403,7 +1402,7 @@ bool ModelChecker::mo_may_allow(const ModelAction *writer, const ModelAction *re
 				break;
 			else if (act->is_write())
 				write_after_read = act;
-			else if (act->is_read()&&act->get_reads_from()!=NULL) {
+			else if (act->is_read()&&act->get_reads_from()!=NULL&&act!=reader) {
 				write_after_read = act->get_reads_from();
 			}
 		}
@@ -1411,7 +1410,6 @@ bool ModelChecker::mo_may_allow(const ModelAction *writer, const ModelAction *re
 		if (write_after_read && write_after_read!=writer && mo_graph->checkReachable(write_after_read, writer))
 			return false;
 	}
-
 	return true;
 }
 

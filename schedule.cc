@@ -29,6 +29,8 @@ void Scheduler::set_enabled(Thread *t, enabled_type_t enabled_status) {
 		enabled_len=threadid+1;
 	}
 	enabled[threadid]=enabled_status;
+	if (enabled_status == THREAD_DISABLED)
+		model->check_promises_thread_disabled();
 }
 
 /**

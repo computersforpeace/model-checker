@@ -99,6 +99,7 @@ public:
 	bool isfeasible();
 	bool isfeasibleotherthanRMW();
 	bool isfinalfeasible();
+	void check_promises_thread_disabled();
 	void mo_check_promises(thread_id_t tid, const ModelAction *write);
 	void check_promises(thread_id_t tid, ClockVector *old_cv, ClockVector * merge_cv);
 	void get_release_seq_heads(ModelAction *act, rel_heads_list_t *release_heads);

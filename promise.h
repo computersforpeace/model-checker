@@ -31,6 +31,7 @@ class Promise {
 		return synced_thread[id];
 	}
 
+	bool check_promise();
 	uint64_t get_value() const { return value; }
 	void set_write(const ModelAction *act) { write = act; }
 	const ModelAction * get_write() { return write; }

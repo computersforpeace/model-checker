@@ -365,7 +365,7 @@ bool ModelAction::synchronize_with(const ModelAction *act) {
 
 bool ModelAction::has_synchronized_with(const ModelAction *act) const
 {
-	return cv->has_synchronized_with(act->cv);
+	return cv->synchronized_since(act);
 }
 
 /**

@@ -218,7 +218,8 @@ void ModelChecker::execute_sleep_set() {
 	for(unsigned int i=0;i<get_num_threads();i++) {
 		thread_id_t tid=int_to_id(i);
 		Thread *thr=get_thread(tid);
-		if ( scheduler->get_enabled(thr) == THREAD_SLEEP_SET ) {
+		if ( scheduler->get_enabled(thr) == THREAD_SLEEP_SET &&
+				 thr->get_pending() == NULL ) {
 			thr->set_state(THREAD_RUNNING);
 			scheduler->next_thread(thr);
 			Thread::swap(&system_context, thr);
@@ -971,7 +972,7 @@ bool ModelChecker::promises_expired() {
 /** @return whether the current partial trace must be a prefix of a
  * feasible trace. */
 bool ModelChecker::isfeasibleprefix() {
-	return promises->size() == 0 && pending_rel_seqs->size() == 0;
+	return promises->size() == 0 && pending_rel_seqs->size() == 0 && isfeasible();
 }
 
 /** @return whether the current partial trace is feasible. */

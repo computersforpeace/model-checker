@@ -1839,7 +1839,7 @@ void ModelChecker::compute_promises(ModelAction *curr)
 				!act->same_thread(curr) &&
 				act->get_location() == curr->get_location() &&
 				promise->get_value() == curr->get_value()) {
-			curr->get_node()->set_promise(i);
+			curr->get_node()->set_promise(i, act->is_rmw());
 		}
 	}
 }

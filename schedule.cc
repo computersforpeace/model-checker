@@ -43,7 +43,9 @@ bool Scheduler::is_enabled(Thread *t) const
 }
 
 enabled_type_t Scheduler::get_enabled(Thread *t) {
-	return enabled[id_to_int(t->get_id())];
+	int id = id_to_int(t->get_id());
+	ASSERT(id<enabled_len);
+	return enabled[id];
 }
 
 void Scheduler::update_sleep_set(Node *n) {

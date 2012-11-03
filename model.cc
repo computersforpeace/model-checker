@@ -388,7 +388,7 @@ void ModelChecker::set_backtracking(ModelAction *act)
 			break;
 
 		/* Don't backtrack into a point where the thread is disabled or sleeping. */
-		if (node->get_enabled_array()[i]!=THREAD_ENABLED)
+		if (node->enabled_status(tid)!=THREAD_ENABLED)
 			continue;
 	
 		/* Check if this has been explored already */
@@ -2025,7 +2025,8 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 bool ModelChecker::sleep_can_read_from(ModelAction * curr, const ModelAction *write) {
 	while(true) {
 		Node *prevnode=write->get_node()->get_parent();
-		bool thread_sleep=prevnode->get_enabled_array()[id_to_int(curr->get_tid())]==THREAD_SLEEP_SET;
+		
+		bool thread_sleep=prevnode->enabled_status(curr->get_tid())==THREAD_SLEEP_SET;
 		if (write->is_release()&&thread_sleep)
 			return true;
 		if (!write->is_rmw()) {

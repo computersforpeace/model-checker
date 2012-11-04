@@ -192,8 +192,13 @@ bool Node::misc_empty() {
 
 
 /**
- * Adds a value from a weakly ordered future write to backtrack to.
+ * Adds a value from a weakly ordered future write to backtrack to. This
+ * operation may "fail" if the future value is already set (with a later
+ * expiration), or if the futurevalues set has reached its maximum.
+ * @see model_params.maxfuturevalues
+ *
  * @param value is the value to backtrack to.
+ * @return True if the future value was successully added; false otherwise
  */
 bool Node::add_future_value(uint64_t value, modelclock_t expiration) {
 	int suitableindex=-1;
@@ -211,7 +216,12 @@ bool Node::add_future_value(uint64_t value, modelclock_t expiration) {
 		future_values[suitableindex].expiration=expiration;
 		return true;
 	}
-	struct future_value newfv={value, expiration};
+
+	if (model->params.maxfuturevalues > 0 &&
+			(int)future_values.size() >= model->params.maxfuturevalues)
+		return false;
+
+	struct future_value newfv = {value, expiration};
 	future_values.push_back(newfv);
 	return true;
 }

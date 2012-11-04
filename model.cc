@@ -208,7 +208,7 @@ Thread * ModelChecker::get_next_thread(ModelAction *curr)
 	return thread_map->get(id_to_int(tid));
 }
 
-/** 
+/**
  * We need to know what the next actions of all threads in the sleep
  * set will be.  This method computes them and stores the actions at
  * the corresponding thread object's pending action.
@@ -241,7 +241,7 @@ void ModelChecker::wake_up_sleeping_actions(ModelAction * curr) {
 				scheduler->remove_sleep(thr);
 			}
 		}
-	}	
+	}
 }
 
 /**
@@ -393,7 +393,7 @@ void ModelChecker::set_backtracking(ModelAction *act)
 		/* Don't backtrack into a point where the thread is disabled or sleeping. */
 		if (node->enabled_status(tid)!=THREAD_ENABLED)
 			continue;
-	
+
 		/* Check if this has been explored already */
 		if (node->has_been_explored(tid))
 			continue;
@@ -1066,7 +1066,7 @@ void ModelChecker::check_recency(ModelAction *curr, const ModelAction *rf) {
 			ModelAction *act = *rit;
 			if (!act->is_read())
 				return;
-			
+
 			if (act->get_reads_from() != rf)
 				return;
 			if (act->get_node()->get_read_from_size() <= 1)
@@ -1291,7 +1291,7 @@ bool ModelChecker::w_modification_order(ModelAction *curr)
 				 * 1) If RMW and it actually read from something, then we
 				 * already have all relevant edges, so just skip to next
 				 * thread.
-				 * 
+				 *
 				 * 2) If RMW and it didn't read from anything, we should
 				 * whatever edge we can get to speed up convergence.
 				 *
@@ -1301,7 +1301,7 @@ bool ModelChecker::w_modification_order(ModelAction *curr)
 				if (curr->is_rmw()) {
 					if (curr->get_reads_from()!=NULL)
 						break;
-					else 
+					else
 						continue;
 				} else
 					continue;
@@ -1320,7 +1320,7 @@ bool ModelChecker::w_modification_order(ModelAction *curr)
 				 */
 				if (act->is_write())
 					mo_graph->addEdge(act, curr);
-				else if (act->is_read()) { 
+				else if (act->is_read()) {
 					//if previous read accessed a null, just keep going
 					if (act->get_reads_from() == NULL)
 						continue;
@@ -1402,11 +1402,11 @@ bool ModelChecker::mo_may_allow(const ModelAction *writer, const ModelAction *re
 				break;
 			else if (act->is_write())
 				write_after_read = act;
-			else if (act->is_read()&&act->get_reads_from()!=NULL&&act!=reader) {
+			else if (act->is_read() && act->get_reads_from() != NULL && act != reader) {
 				write_after_read = act->get_reads_from();
 			}
 		}
-		
+
 		if (write_after_read && write_after_read!=writer && mo_graph->checkReachable(write_after_read, writer))
 			return false;
 	}
@@ -1690,7 +1690,7 @@ void ModelChecker::add_action_to_lists(ModelAction *act)
 	if (act->is_wait()) {
 		void *mutex_loc=(void *) act->get_value();
 		obj_map->get_safe_ptr(mutex_loc)->push_back(act);
-	
+
 		std::vector<action_list_t> *vec = obj_thrd_map->get_safe_ptr(mutex_loc);
 		if (tid >= (int)vec->size())
 			vec->resize(priv->next_thread_id);
@@ -1802,7 +1802,7 @@ bool ModelChecker::resolve_promises(ModelAction *write)
 			//Make sure the promise's value matches the write's value
 			ASSERT(promise->get_value() == write->get_value());
 			delete(promise);
-			
+
 			promises->erase(promises->begin() + promise_index);
 			threads_to_check.push_back(read->get_tid());
 
@@ -1872,7 +1872,7 @@ void ModelChecker::check_promises_thread_disabled() {
 /** Checks promises in response to addition to modification order for threads.
  * Definitions:
  * pthread is the thread that performed the read that created the promise
- * 
+ *
  * pread is the read that created the promise
  *
  * pwrite is either the first write to same location as pread by
@@ -1901,7 +1901,7 @@ void ModelChecker::mo_check_promises(thread_id_t tid, const ModelAction *write) 
 	for (unsigned int i = 0; i < promises->size(); i++) {
 		Promise *promise = (*promises)[i];
 		const ModelAction *act = promise->get_action();
-		
+
 		//Is this promise on the same location?
 		if ( act->get_location() != location )
 			continue;
@@ -1923,11 +1923,11 @@ void ModelChecker::mo_check_promises(thread_id_t tid, const ModelAction *write) 
 				return;
 			}
 		}
-		
+
 		//Don't do any lookups twice for the same thread
 		if (promise->has_sync_thread(tid))
 			continue;
-		
+
 		if (promise->get_write()&&mo_graph->checkReachable(promise->get_write(), write)) {
 			if (promise->increment_threads(tid)) {
 				failed_promise = true;
@@ -2039,7 +2039,7 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 bool ModelChecker::sleep_can_read_from(ModelAction * curr, const ModelAction *write) {
 	while(true) {
 		Node *prevnode=write->get_node()->get_parent();
-		
+
 		bool thread_sleep=prevnode->enabled_status(curr->get_tid())==THREAD_SLEEP_SET;
 		if (write->is_release()&&thread_sleep)
 			return true;
@@ -2059,7 +2059,7 @@ static void print_list(action_list_t *list)
 	printf("---------------------------------------------------------------------\n");
 	printf("Trace:\n");
 	unsigned int hash=0;
-	
+
 	for (it = list->begin(); it != list->end(); it++) {
 		(*it)->print();
 		hash=hash^(hash<<3)^((*it)->hash());
@@ -2071,12 +2071,12 @@ static void print_list(action_list_t *list)
 #if SUPPORT_MOD_ORDER_DUMP
 void ModelChecker::dumpGraph(char *filename) {
 	char buffer[200];
-  sprintf(buffer, "%s.dot",filename);
-  FILE *file=fopen(buffer, "w");
-  fprintf(file, "digraph %s {\n",filename);
+	sprintf(buffer, "%s.dot",filename);
+	FILE *file=fopen(buffer, "w");
+	fprintf(file, "digraph %s {\n",filename);
 	mo_graph->dumpNodes(file);
 	ModelAction ** thread_array=(ModelAction **)model_calloc(1, sizeof(ModelAction *)*get_num_threads());
-	
+
 	for (action_list_t::iterator it = action_trace->begin(); it != action_trace->end(); it++) {
 		ModelAction *action=*it;
 		if (action->is_read()) {
@@ -2087,12 +2087,12 @@ void ModelChecker::dumpGraph(char *filename) {
 		if (thread_array[action->get_tid()] != NULL) {
 			fprintf(file, "N%u -> N%u[label=\"sb\", color=blue];\n", thread_array[action->get_tid()]->get_seq_number(), action->get_seq_number());
 		}
-		
+
 		thread_array[action->get_tid()]=action;
 	}
-  fprintf(file,"}\n");
+	fprintf(file,"}\n");
 	model_free(thread_array);
-  fclose(file);	
+	fclose(file);
 }
 #endif
 
@@ -2109,7 +2109,7 @@ void ModelChecker::print_summary()
 	sprintf(buffername, "exec%04u", num_executions);
 	mo_graph->dumpGraphToFile(buffername);
 	sprintf(buffername, "graph%04u", num_executions);
-  dumpGraph(buffername);
+	dumpGraph(buffername);
 #endif
 
 	if (!isfinalfeasible())
@@ -2130,7 +2130,7 @@ void ModelChecker::add_thread(Thread *t)
 }
 
 /**
- * Removes a thread from the scheduler. 
+ * Removes a thread from the scheduler.
  * @param the thread to remove.
  */
 void ModelChecker::remove_thread(Thread *t)

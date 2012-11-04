@@ -49,5 +49,6 @@ void model_assert(bool expr, const char *file, int line)
 		printf("  [BUG] Program has hit assertion in file %s at line %d\n",
 				file, line);
 		model->set_assert();
+		model->switch_to_master(NULL);
 	}
 }

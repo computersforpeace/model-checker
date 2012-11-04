@@ -20,6 +20,7 @@ static void param_defaults(struct model_params * params) {
 	params->fairwindow = 0;
 	params->enabledcount = 1;
 	params->bound = 0;
+	params->maxfuturevalues = 0;
 }
 
 static void print_usage(struct model_params *params) {
@@ -33,6 +34,8 @@ static void print_usage(struct model_params *params) {
 "-h                    Display this help message and exit\n"
 "-m                    Maximum times a thread can read from the same write\n"
 "                      while other writes exist. Default: %d\n"
+"-M                    Maximum number of future values that can be sent to\n"
+"                      the same read. Default: %d\n"
 "-s                    Maximum actions that the model checker will wait for\n"
 "                      a write from the future past the expected number of\n"
 "                      actions. Default: %d\n"
@@ -42,12 +45,12 @@ static void print_usage(struct model_params *params) {
 "-e                    Enabled count. Default: %d\n"
 "-b                    Upper length bound. Default: %d\n"
 "--                    Program arguments follow.\n\n",
-params->maxreads, params->maxfuturedelay, params->fairwindow, params->enabledcount, params->bound);
+params->maxreads, params->maxfuturevalues, params->maxfuturedelay, params->fairwindow, params->enabledcount, params->bound);
 	exit(EXIT_SUCCESS);
 }
 
 static void parse_options(struct model_params *params, int *argc, char ***argv) {
-	const char *shortopts = "hm:s:f:e:b:";
+	const char *shortopts = "hm:M:s:f:e:b:";
 	int opt;
 	bool error = false;
 	while (!error && (opt = getopt(*argc, *argv, shortopts)) != -1) {
@@ -69,6 +72,9 @@ static void parse_options(struct model_params *params, int *argc, char ***argv) 
 			break;
 		case 'm':
 			params->maxreads = atoi(optarg);
+			break;
+		case 'M':
+			params->maxfuturevalues = atoi(optarg);
 			break;
 		default: /* '?' */
 			error = true;

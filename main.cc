@@ -21,7 +21,7 @@ static void param_defaults(struct model_params * params) {
 	params->enabledcount = 1;
 	params->bound = 0;
 	params->maxfuturevalues = 0;
-	params->expireslop = 2;
+	params->expireslop = 10;
 }
 
 static void print_usage(struct model_params *params) {

@@ -106,6 +106,7 @@ public:
 	void finish_execution();
 	bool isfeasibleprefix();
 	void set_assert() {asserted=true;}
+	bool is_deadlocked() const;
 
 	/** @brief Alert the model-checker that an incorrectly-ordered
 	 * synchronization was made */

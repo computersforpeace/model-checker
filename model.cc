@@ -245,6 +245,26 @@ void ModelChecker::wake_up_sleeping_actions(ModelAction * curr) {
 }
 
 /**
+ * Check if we are in a deadlock. Should only be called at the end of an
+ * execution, although it should not give false positives in the middle of an
+ * execution (there should be some ENABLED thread).
+ *
+ * @return True if program is in a deadlock; false otherwise
+ */
+bool ModelChecker::is_deadlocked() const
+{
+	bool blocking_threads = false;
+	for (unsigned int i = 0; i < get_num_threads(); i++) {
+		Thread *t = get_thread(int_to_id(i));
+		if (scheduler->is_enabled(t) != THREAD_DISABLED)
+			return false;
+		else if (!t->is_model_thread() && t->get_pending())
+			blocking_threads = true;
+	}
+	return blocking_threads;
+}
+
+/**
  * Queries the model-checker for more executions to explore and, if one
  * exists, resets the model-checker state to execute a new execution.
  *
@@ -257,6 +277,8 @@ bool ModelChecker::next_execution()
 
 	num_executions++;
 
+	if (is_deadlocked())
+		printf("ERROR: DEADLOCK\n");
 	if (isfinalfeasible()) {
 		printf("Earliest divergence point since last feasible execution:\n");
 		if (earliest_diverge)

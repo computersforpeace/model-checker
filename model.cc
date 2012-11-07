@@ -101,7 +101,7 @@ thread_id_t ModelChecker::get_next_id()
 }
 
 /** @return the number of user threads created during this execution */
-unsigned int ModelChecker::get_num_threads()
+unsigned int ModelChecker::get_num_threads() const
 {
 	return priv->next_thread_id;
 }

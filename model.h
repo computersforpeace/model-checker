@@ -98,7 +98,7 @@ public:
 	Thread * get_thread(ModelAction *act) const;
 
 	thread_id_t get_next_id();
-	unsigned int get_num_threads();
+	unsigned int get_num_threads() const;
 	Thread * get_current_thread();
 
 	int switch_to_master(ModelAction *act);

@@ -193,30 +193,33 @@ bool Node::misc_empty() {
 
 /**
  * Adds a value from a weakly ordered future write to backtrack to. This
- * operation may "fail" if the future value is already set (with a later
- * expiration), or if the futurevalues set has reached its maximum.
+ * operation may "fail" if the future value has already been run (within some
+ * sloppiness window of this expiration), or if the futurevalues set has
+ * reached its maximum.
  * @see model_params.maxfuturevalues
  *
  * @param value is the value to backtrack to.
  * @return True if the future value was successully added; false otherwise
  */
 bool Node::add_future_value(uint64_t value, modelclock_t expiration) {
-	int suitableindex=-1;
+	int idx = -1; /* Highest index where value is found */
 	for (unsigned int i = 0; i < future_values.size(); i++) {
 		if (future_values[i].value == value) {
-			if (future_values[i].expiration>=expiration)
+			if (expiration <= future_values[i].expiration)
 				return false;
-			if (future_index < ((int) i)) {
-				suitableindex=i;
-			}
+			idx = i;
 		}
 	}
-
-	if (suitableindex!=-1) {
-		future_values[suitableindex].expiration=expiration;
+	if (idx > future_index) {
+		/* Future value hasn't been explored; update expiration */
+		future_values[idx].expiration = expiration;
 		return true;
+	} else if (idx >= 0 && expiration <= future_values[idx].expiration + model->params.expireslop) {
+		/* Future value has been explored and is within the "sloppy" window */
+		return false;
 	}
 
+	/* Limit the size of the future-values set */
 	if (model->params.maxfuturevalues > 0 &&
 			(int)future_values.size() >= model->params.maxfuturevalues)
 		return false;

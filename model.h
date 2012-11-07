@@ -41,6 +41,11 @@ struct model_params {
 	/** @brief Maximum number of future values that can be sent to the same
 	 *  read */
 	int maxfuturevalues;
+
+	/** @brief Only generate a new future value/expiration pair if the
+	 *  expiration time exceeds the existing one by more than the slop
+	 *  value */
+	unsigned int expireslop;
 };
 
 struct PendingFutureValue {

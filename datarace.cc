@@ -16,7 +16,7 @@ void initRaceDetector() {
 
 /** This function looks up the entry in the shadow table corresponding to a
  * given address.*/
-static uint64_t * lookupAddressEntry(void * address) {
+static uint64_t * lookupAddressEntry(const void * address) {
 	struct ShadowTable *currtable=root;
 #if BIT48
 	currtable=(struct ShadowTable *) currtable->array[(((uintptr_t)address)>>32)&MASK16BIT];
@@ -75,7 +75,7 @@ static void expandRecord(uint64_t * shadow) {
 }
 
 /** This function is called when we detect a data race.*/
-static void reportDataRace(thread_id_t oldthread, modelclock_t oldclock, bool isoldwrite, ModelAction *newaction, bool isnewwrite, void *address) {
+static void reportDataRace(thread_id_t oldthread, modelclock_t oldclock, bool isoldwrite, ModelAction *newaction, bool isnewwrite, const void *address) {
 	struct DataRace *race = (struct DataRace *)snapshot_malloc(sizeof(struct DataRace));
 	race->oldthread=oldthread;
 	race->oldclock=oldclock;
@@ -210,7 +210,7 @@ void raceCheckWrite(thread_id_t thread, void *location, ClockVector *currClock) 
 }
 
 /** This function does race detection on a read for an expanded record. */
-void fullRaceCheckRead(thread_id_t thread, void *location, uint64_t * shadow, ClockVector *currClock) {
+void fullRaceCheckRead(thread_id_t thread, const void *location, uint64_t * shadow, ClockVector *currClock) {
 	struct RaceRecord * record=(struct RaceRecord *) (*shadow);
 
 	/* Check for datarace against last write. */
@@ -268,7 +268,7 @@ void fullRaceCheckRead(thread_id_t thread, void *location, uint64_t * shadow, Cl
 }
 
 /** This function does race detection on a read. */
-void raceCheckRead(thread_id_t thread, void *location, ClockVector *currClock) {
+void raceCheckRead(thread_id_t thread, const void *location, ClockVector *currClock) {
 	uint64_t * shadow=lookupAddressEntry(location);
 	uint64_t shadowval=*shadow;
 

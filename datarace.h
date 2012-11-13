@@ -36,14 +36,14 @@ struct DataRace {
 	bool isnewwrite;
 
 	/* Address of data race. */
-	void *address;
+	const void *address;
 };
 
 #define MASK16BIT 0xffff
 
 void initRaceDetector();
 void raceCheckWrite(thread_id_t thread, void *location, ClockVector *currClock);
-void raceCheckRead(thread_id_t thread, void *location, ClockVector *currClock);
+void raceCheckRead(thread_id_t thread, const void *location, ClockVector *currClock);
 bool checkDataRaces();
 void printRace(struct DataRace *race);
 

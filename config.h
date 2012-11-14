@@ -9,6 +9,10 @@
 /*		#ifndef CONFIG_DEBUG
 		#define CONFIG_DEBUG
 		#endif
+
+		#ifndef CONFIG_ASSERT
+		#define CONFIG_ASSERT
+		#endif
 */
 
 /** Turn on support for dumping cyclegraphs as dot files at each
@@ -44,5 +48,7 @@
 /* Size of stack to allocate for a thread. */
 #define STACK_SIZE (1024 * 1024)
 
+/** Enable debugging assertions (via ASSERT()) */
+#define CONFIG_ASSERT
 
 #endif

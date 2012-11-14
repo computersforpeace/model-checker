@@ -18,6 +18,17 @@
 
 ModelChecker *model;
 
+/**
+ * Structure for holding small ModelChecker members that should be snapshotted
+ */
+struct model_snapshot_members {
+	ModelAction *current_action;
+	unsigned int next_thread_id;
+	modelclock_t used_sequence_numbers;
+	Thread *nextThread;
+	ModelAction *next_backtrack;
+};
+
 /** @brief Constructor */
 ModelChecker::ModelChecker(struct model_params params) :
 	/* Initialize default scheduler */
@@ -861,6 +872,16 @@ bool ModelChecker::check_action_enabled(ModelAction *curr) {
 	}
 
 	return true;
+}
+
+/**
+ * Stores the ModelAction for the current thread action.  Call this
+ * immediately before switching from user- to system-context to pass
+ * data between them.
+ * @param act The ModelAction created by the user-thread action
+ */
+void ModelChecker::set_current_action(ModelAction *act) {
+	priv->current_action = act;
 }
 
 /**

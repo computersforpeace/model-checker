@@ -23,6 +23,7 @@ class CycleGraph;
 class Promise;
 class Scheduler;
 class Thread;
+struct model_snapshot_members;
 
 /** @brief Shorthand for a list of release sequence heads */
 typedef std::vector< const ModelAction *, ModelAlloc<const ModelAction *> > rel_heads_list_t;
@@ -51,17 +52,6 @@ struct model_params {
 struct PendingFutureValue {
 	ModelAction *writer;
 	ModelAction * act;
-};
-
-/**
- * Structure for holding small ModelChecker members that should be snapshotted
- */
-struct model_snapshot_members {
-	ModelAction *current_action;
-	unsigned int next_thread_id;
-	modelclock_t used_sequence_numbers;
-	Thread *nextThread;
-	ModelAction *next_backtrack;
 };
 
 /** @brief Records information regarding a single pending release sequence */
@@ -142,13 +132,7 @@ private:
 	void wake_up_sleeping_actions(ModelAction * curr);
 	modelclock_t get_next_seq_num();
 
-	/**
-	 * Stores the ModelAction for the current thread action.  Call this
-	 * immediately before switching from user- to system-context to pass
-	 * data between them.
-	 * @param act The ModelAction created by the user-thread action
-	 */
-	void set_current_action(ModelAction *act) { priv->current_action = act; }
+	void set_current_action(ModelAction *act);
 	Thread * check_current_action(ModelAction *curr);
 	bool initialize_curr_action(ModelAction **curr);
 	bool process_read(ModelAction *curr, bool second_part_of_rmw);

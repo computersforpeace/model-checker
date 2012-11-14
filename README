@@ -28,3 +28,12 @@ Sample run instructions:
   make
   export LD_LIBRARY_PATH=.
   # run test program
+
+Note that we also provide a series of benchmarks, placed under the benchmarks/
+directory. After building CDSChecker, you can build and run the benchmarks as
+follows:
+
+  cd benchmarks
+  make
+  ./run.sh barrier/barrier -f 10 -m 2  # runs barrier test with fairness/memory liveness
+  ./bench.sh <dir>                     # run all benchmarks twice, with timing results; all logged to <dir>

@@ -1557,7 +1557,7 @@ bool ModelChecker::release_seq_heads(const ModelAction *rf,
 		ModelAction *last = get_last_action(int_to_id(i));
 		Thread *th = get_thread(int_to_id(i));
 		if ((last && rf->happens_before(last)) ||
-				!scheduler->is_enabled(th) ||
+				!is_enabled(th) ||
 				th->is_complete())
 			future_ordered = true;
 

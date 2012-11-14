@@ -266,10 +266,11 @@ bool ModelChecker::is_deadlocked() const
 {
 	bool blocking_threads = false;
 	for (unsigned int i = 0; i < get_num_threads(); i++) {
-		Thread *t = get_thread(int_to_id(i));
-		if (scheduler->is_enabled(t) != THREAD_DISABLED)
+		thread_id_t tid = int_to_id(i);
+		if (is_enabled(tid))
 			return false;
-		else if (!t->is_model_thread() && t->get_pending())
+		Thread *t = get_thread(tid);
+		if (!t->is_model_thread() && t->get_pending())
 			blocking_threads = true;
 	}
 	return blocking_threads;

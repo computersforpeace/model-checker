@@ -2199,6 +2199,26 @@ Thread * ModelChecker::get_thread(ModelAction *act) const
 }
 
 /**
+ * @brief Check if a Thread is currently enabled
+ * @param t The Thread to check
+ * @return True if the Thread is currently enabled
+ */
+bool ModelChecker::is_enabled(Thread *t) const
+{
+	return scheduler->is_enabled(t);
+}
+
+/**
+ * @brief Check if a Thread is currently enabled
+ * @param tid The ID of the Thread to check
+ * @return True if the Thread is currently enabled
+ */
+bool ModelChecker::is_enabled(thread_id_t tid) const
+{
+	return scheduler->is_enabled(tid);
+}
+
+/**
  * Switch from a user-context to the "master thread" context (a.k.a. system
  * context). This switch is made with the intention of exploring a particular
  * model-checking action (described by a ModelAction object). Must be called

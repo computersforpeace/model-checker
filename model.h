@@ -51,7 +51,7 @@ struct model_params {
 
 struct PendingFutureValue {
 	ModelAction *writer;
-	ModelAction * act;
+	ModelAction *act;
 };
 
 /** @brief Records information regarding a single pending release sequence */

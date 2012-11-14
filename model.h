@@ -115,7 +115,6 @@ public:
 	void set_bad_synchronization() { bad_synchronization = true; }
 
 	const model_params params;
-	Scheduler * get_scheduler() { return scheduler;}
 	Node * get_curr_node();
 
 	MEMALLOC

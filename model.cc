@@ -1038,7 +1038,8 @@ void ModelChecker::check_curr_backtracking(ModelAction * curr) {
 	}
 }
 
-bool ModelChecker::promises_expired() {
+bool ModelChecker::promises_expired() const
+{
 	for (unsigned int promise_index = 0; promise_index < promises->size(); promise_index++) {
 		Promise *promise = (*promises)[promise_index];
 		if (promise->get_expiration()<priv->used_sequence_numbers) {
@@ -1050,12 +1051,14 @@ bool ModelChecker::promises_expired() {
 
 /** @return whether the current partial trace must be a prefix of a
  * feasible trace. */
-bool ModelChecker::isfeasibleprefix() {
+bool ModelChecker::isfeasibleprefix() const
+{
 	return promises->size() == 0 && pending_rel_seqs->size() == 0 && isfeasible();
 }
 
 /** @return whether the current partial trace is feasible. */
-bool ModelChecker::isfeasible() {
+bool ModelChecker::isfeasible() const
+{
 	if (DBG_ENABLED() && mo_graph->checkForRMWViolation())
 		DEBUG("Infeasible: RMW violation\n");
 
@@ -1064,7 +1067,8 @@ bool ModelChecker::isfeasible() {
 
 /** @return whether the current partial trace is feasible other than
  * multiple RMW reading from the same store. */
-bool ModelChecker::isfeasibleotherthanRMW() {
+bool ModelChecker::isfeasibleotherthanRMW() const
+{
 	if (DBG_ENABLED()) {
 		if (mo_graph->checkForCycles())
 			DEBUG("Infeasible: modification order cycles\n");
@@ -1081,7 +1085,8 @@ bool ModelChecker::isfeasibleotherthanRMW() {
 }
 
 /** Returns whether the current completed trace is feasible. */
-bool ModelChecker::isfinalfeasible() {
+bool ModelChecker::isfinalfeasible() const
+{
 	if (DBG_ENABLED() && promises->size() != 0)
 		DEBUG("Infeasible: unrevolved promises\n");
 

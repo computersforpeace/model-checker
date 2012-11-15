@@ -98,15 +98,15 @@ public:
 	ClockVector * get_cv(thread_id_t tid);
 	ModelAction * get_parent_action(thread_id_t tid);
 	bool next_execution();
-	bool isfeasible();
-	bool isfeasibleotherthanRMW();
-	bool isfinalfeasible();
+	bool isfeasible() const;
+	bool isfeasibleotherthanRMW() const;
+	bool isfinalfeasible() const;
 	void check_promises_thread_disabled();
 	void mo_check_promises(thread_id_t tid, const ModelAction *write);
 	void check_promises(thread_id_t tid, ClockVector *old_cv, ClockVector * merge_cv);
 	void get_release_seq_heads(ModelAction *act, rel_heads_list_t *release_heads);
 	void finish_execution();
-	bool isfeasibleprefix();
+	bool isfeasibleprefix() const;
 	void set_assert() {asserted=true;}
 	bool is_deadlocked() const;
 	bool is_complete_execution() const;
@@ -130,7 +130,7 @@ private:
 	void reset_asserted() {asserted=false;}
 	int num_executions;
 	int num_feasible_executions;
-	bool promises_expired();
+	bool promises_expired() const;
 	void execute_sleep_set();
 	void wake_up_sleeping_actions(ModelAction * curr);
 	modelclock_t get_next_seq_num();

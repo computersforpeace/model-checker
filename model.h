@@ -23,6 +23,7 @@ class CycleGraph;
 class Promise;
 class Scheduler;
 class Thread;
+struct model_snapshot_members;
 
 /** @brief Shorthand for a list of release sequence heads */
 typedef std::vector< const ModelAction *, ModelAlloc<const ModelAction *> > rel_heads_list_t;
@@ -37,22 +38,20 @@ struct model_params {
 	unsigned int fairwindow;
 	unsigned int enabledcount;
 	unsigned int bound;
+
+	/** @brief Maximum number of future values that can be sent to the same
+	 *  read */
+	int maxfuturevalues;
+
+	/** @brief Only generate a new future value/expiration pair if the
+	 *  expiration time exceeds the existing one by more than the slop
+	 *  value */
+	unsigned int expireslop;
 };
 
 struct PendingFutureValue {
 	ModelAction *writer;
-	ModelAction * act;
-};
-
-/**
- * Structure for holding small ModelChecker members that should be snapshotted
- */
-struct model_snapshot_members {
-	ModelAction *current_action;
-	unsigned int next_thread_id;
-	modelclock_t used_sequence_numbers;
-	Thread *nextThread;
-	ModelAction *next_backtrack;
+	ModelAction *act;
 };
 
 /** @brief Records information regarding a single pending release sequence */
@@ -88,8 +87,11 @@ public:
 	Thread * get_thread(thread_id_t tid) const;
 	Thread * get_thread(ModelAction *act) const;
 
+	bool is_enabled(Thread *t) const;
+	bool is_enabled(thread_id_t tid) const;
+
 	thread_id_t get_next_id();
-	unsigned int get_num_threads();
+	unsigned int get_num_threads() const;
 	Thread * get_current_thread();
 
 	int switch_to_master(ModelAction *act);
@@ -106,13 +108,13 @@ public:
 	void finish_execution();
 	bool isfeasibleprefix();
 	void set_assert() {asserted=true;}
+	bool is_deadlocked() const;
 
 	/** @brief Alert the model-checker that an incorrectly-ordered
 	 * synchronization was made */
 	void set_bad_synchronization() { bad_synchronization = true; }
 
 	const model_params params;
-	Scheduler * get_scheduler() { return scheduler;}
 	Node * get_curr_node();
 
 	MEMALLOC
@@ -132,13 +134,7 @@ private:
 	void wake_up_sleeping_actions(ModelAction * curr);
 	modelclock_t get_next_seq_num();
 
-	/**
-	 * Stores the ModelAction for the current thread action.  Call this
-	 * immediately before switching from user- to system-context to pass
-	 * data between them.
-	 * @param act The ModelAction created by the user-thread action
-	 */
-	void set_current_action(ModelAction *act) { priv->current_action = act; }
+	void set_current_action(ModelAction *act);
 	Thread * check_current_action(ModelAction *curr);
 	bool initialize_curr_action(ModelAction **curr);
 	bool process_read(ModelAction *curr, bool second_part_of_rmw);

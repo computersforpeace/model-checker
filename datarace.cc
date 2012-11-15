@@ -5,29 +5,45 @@
 #include <cstring>
 #include "mymemory.h"
 #include "clockvector.h"
+#include "config.h"
 
 struct ShadowTable *root;
 std::vector<struct DataRace *> unrealizedraces;
+void *memory_base;
+void *memory_top;
+
 
 /** This function initialized the data race detector. */
 void initRaceDetector() {
 	root = (struct ShadowTable *)snapshot_calloc(sizeof(struct ShadowTable), 1);
+	memory_base = snapshot_calloc(sizeof(struct ShadowBaseTable)*SHADOWBASETABLES, 1);
+	memory_top = ((char *)memory_base) + sizeof(struct ShadowBaseTable)*SHADOWBASETABLES;
+}
+
+void * table_calloc(size_t size) {
+	if ((((char *)memory_base)+size)>memory_top) {
+		return snapshot_calloc(size, 1);
+	} else {
+		void *tmp=memory_base;
+		memory_base=((char *)memory_base)+size;
+		return tmp;
+	}
 }
 
 /** This function looks up the entry in the shadow table corresponding to a
  * given address.*/
-static uint64_t * lookupAddressEntry(void * address) {
+static uint64_t * lookupAddressEntry(const void * address) {
 	struct ShadowTable *currtable=root;
 #if BIT48
 	currtable=(struct ShadowTable *) currtable->array[(((uintptr_t)address)>>32)&MASK16BIT];
 	if (currtable==NULL) {
-		currtable = (struct ShadowTable *)(root->array[(((uintptr_t)address)>>32)&MASK16BIT] = snapshot_calloc(sizeof(struct ShadowTable), 1));
+		currtable = (struct ShadowTable *)(root->array[(((uintptr_t)address)>>32)&MASK16BIT] = table_calloc(sizeof(struct ShadowTable)));
 	}
 #endif
 
 	struct ShadowBaseTable * basetable=(struct ShadowBaseTable *) currtable->array[(((uintptr_t)address)>>16)&MASK16BIT];
 	if (basetable==NULL) {
-		basetable = (struct ShadowBaseTable *)(currtable->array[(((uintptr_t)address)>>16)&MASK16BIT] = snapshot_calloc(sizeof(struct ShadowBaseTable), 1));
+		basetable = (struct ShadowBaseTable *)(currtable->array[(((uintptr_t)address)>>16)&MASK16BIT] = table_calloc(sizeof(struct ShadowBaseTable)));
 	}
 	return &basetable->array[((uintptr_t)address)&MASK16BIT];
 }
@@ -75,7 +91,7 @@ static void expandRecord(uint64_t * shadow) {
 }
 
 /** This function is called when we detect a data race.*/
-static void reportDataRace(thread_id_t oldthread, modelclock_t oldclock, bool isoldwrite, ModelAction *newaction, bool isnewwrite, void *address) {
+static void reportDataRace(thread_id_t oldthread, modelclock_t oldclock, bool isoldwrite, ModelAction *newaction, bool isnewwrite, const void *address) {
 	struct DataRace *race = (struct DataRace *)snapshot_malloc(sizeof(struct DataRace));
 	race->oldthread=oldthread;
 	race->oldclock=oldclock;
@@ -210,7 +226,7 @@ void raceCheckWrite(thread_id_t thread, void *location, ClockVector *currClock) 
 }
 
 /** This function does race detection on a read for an expanded record. */
-void fullRaceCheckRead(thread_id_t thread, void *location, uint64_t * shadow, ClockVector *currClock) {
+void fullRaceCheckRead(thread_id_t thread, const void *location, uint64_t * shadow, ClockVector *currClock) {
 	struct RaceRecord * record=(struct RaceRecord *) (*shadow);
 
 	/* Check for datarace against last write. */
@@ -268,7 +284,7 @@ void fullRaceCheckRead(thread_id_t thread, void *location, uint64_t * shadow, Cl
 }
 
 /** This function does race detection on a read. */
-void raceCheckRead(thread_id_t thread, void *location, ClockVector *currClock) {
+void raceCheckRead(thread_id_t thread, const void *location, ClockVector *currClock) {
 	uint64_t * shadow=lookupAddressEntry(location);
 	uint64_t shadowval=*shadow;
 

@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <model-assert.h>
+
 #include "common.h"
 #include "model.h"
 #include "stacktrace.h"
@@ -39,4 +41,14 @@ void model_print_summary(void)
 void assert_hook(void)
 {
 	printf("Add breakpoint to line %u in file %s.\n",__LINE__,__FILE__);
+}
+
+void model_assert(bool expr, const char *file, int line)
+{
+	if (!expr) {
+		printf("  [BUG] Program has hit assertion in file %s at line %d\n",
+				file, line);
+		model->set_assert();
+		model->switch_to_master(NULL);
+	}
 }

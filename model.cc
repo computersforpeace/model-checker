@@ -18,6 +18,17 @@
 
 ModelChecker *model;
 
+/**
+ * Structure for holding small ModelChecker members that should be snapshotted
+ */
+struct model_snapshot_members {
+	ModelAction *current_action;
+	unsigned int next_thread_id;
+	modelclock_t used_sequence_numbers;
+	Thread *nextThread;
+	ModelAction *next_backtrack;
+};
+
 /** @brief Constructor */
 ModelChecker::ModelChecker(struct model_params params) :
 	/* Initialize default scheduler */
@@ -101,7 +112,7 @@ thread_id_t ModelChecker::get_next_id()
 }
 
 /** @return the number of user threads created during this execution */
-unsigned int ModelChecker::get_num_threads()
+unsigned int ModelChecker::get_num_threads() const
 {
 	return priv->next_thread_id;
 }
@@ -245,6 +256,27 @@ void ModelChecker::wake_up_sleeping_actions(ModelAction * curr) {
 }
 
 /**
+ * Check if we are in a deadlock. Should only be called at the end of an
+ * execution, although it should not give false positives in the middle of an
+ * execution (there should be some ENABLED thread).
+ *
+ * @return True if program is in a deadlock; false otherwise
+ */
+bool ModelChecker::is_deadlocked() const
+{
+	bool blocking_threads = false;
+	for (unsigned int i = 0; i < get_num_threads(); i++) {
+		thread_id_t tid = int_to_id(i);
+		if (is_enabled(tid))
+			return false;
+		Thread *t = get_thread(tid);
+		if (!t->is_model_thread() && t->get_pending())
+			blocking_threads = true;
+	}
+	return blocking_threads;
+}
+
+/**
  * Queries the model-checker for more executions to explore and, if one
  * exists, resets the model-checker state to execute a new execution.
  *
@@ -257,6 +289,8 @@ bool ModelChecker::next_execution()
 
 	num_executions++;
 
+	if (is_deadlocked())
+		printf("ERROR: DEADLOCK\n");
 	if (isfinalfeasible()) {
 		printf("Earliest divergence point since last feasible execution:\n");
 		if (earliest_diverge)
@@ -272,7 +306,7 @@ bool ModelChecker::next_execution()
 			pending_rel_seqs->size());
 
 
-	if (isfinalfeasible() || (params.bound != 0 && priv->used_sequence_numbers > params.bound ) || DBG_ENABLED() ) {
+	if (isfinalfeasible() || DBG_ENABLED()) {
 		checkDataRaces();
 		print_summary();
 	}
@@ -839,6 +873,16 @@ bool ModelChecker::check_action_enabled(ModelAction *curr) {
 	}
 
 	return true;
+}
+
+/**
+ * Stores the ModelAction for the current thread action.  Call this
+ * immediately before switching from user- to system-context to pass
+ * data between them.
+ * @param act The ModelAction created by the user-thread action
+ */
+void ModelChecker::set_current_action(ModelAction *act) {
+	priv->current_action = act;
 }
 
 /**
@@ -1513,7 +1557,7 @@ bool ModelChecker::release_seq_heads(const ModelAction *rf,
 		ModelAction *last = get_last_action(int_to_id(i));
 		Thread *th = get_thread(int_to_id(i));
 		if ((last && rf->happens_before(last)) ||
-				!scheduler->is_enabled(th) ||
+				!is_enabled(th) ||
 				th->is_complete())
 			future_ordered = true;
 
@@ -2000,17 +2044,14 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 
 			/* Don't consider more than one seq_cst write if we are a seq_cst read. */
 			if (!curr->is_seqcst() || (!act->is_seqcst() && (last_seq_cst == NULL || !act->happens_before(last_seq_cst))) || act == last_seq_cst) {
-				DEBUG("Adding action to may_read_from:\n");
-				if (DBG_ENABLED()) {
-					act->print();
-					curr->print();
-				}
-
-				if (curr->get_sleep_flag() && ! curr->is_seqcst()) {
-					if (sleep_can_read_from(curr, act))
-						curr->get_node()->add_read_from(act);
-				} else
+				if (!curr->get_sleep_flag() || curr->is_seqcst() || sleep_can_read_from(curr, act)) {
+					DEBUG("Adding action to may_read_from:\n");
+					if (DBG_ENABLED()) {
+						act->print();
+						curr->print();
+					}
 					curr->get_node()->add_read_from(act);
+				}
 			}
 
 			/* Include at most one act per-thread that "happens before" curr */
@@ -2156,6 +2197,26 @@ Thread * ModelChecker::get_thread(thread_id_t tid) const
 Thread * ModelChecker::get_thread(ModelAction *act) const
 {
 	return get_thread(act->get_tid());
+}
+
+/**
+ * @brief Check if a Thread is currently enabled
+ * @param t The Thread to check
+ * @return True if the Thread is currently enabled
+ */
+bool ModelChecker::is_enabled(Thread *t) const
+{
+	return scheduler->is_enabled(t);
+}
+
+/**
+ * @brief Check if a Thread is currently enabled
+ * @param tid The ID of the Thread to check
+ * @return True if the Thread is currently enabled
+ */
+bool ModelChecker::is_enabled(thread_id_t tid) const
+{
+	return scheduler->is_enabled(tid);
 }
 
 /**

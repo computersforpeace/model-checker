@@ -36,6 +36,7 @@ public:
 	enabled_type_t get_enabled(Thread *t);
 	void update_sleep_set(Node *n);
 	bool is_enabled(Thread *t) const;
+	bool is_enabled(thread_id_t tid) const;
 
 	SNAPSHOTALLOC
 private:

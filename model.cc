@@ -306,7 +306,7 @@ bool ModelChecker::next_execution()
 			pending_rel_seqs->size());
 
 
-	if (isfinalfeasible() || (params.bound != 0 && priv->used_sequence_numbers > params.bound ) || DBG_ENABLED() ) {
+	if (isfinalfeasible() || DBG_ENABLED()) {
 		checkDataRaces();
 		print_summary();
 	}

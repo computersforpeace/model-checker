@@ -153,38 +153,6 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift=0, void * (*
 		size++;
 	}
 
-	/**
-	 * @brief Get a valid pointer to a value corresponding to a given key
-	 *
-	 * Ensure that key is present in the hash table, then return a pointer
-	 * to its value bin. This may require either creating a new bin for
-	 * this key (with a default-constructed value) or simply locating and
-	 * returning a pointer to an existing value.
-	 * @param key The key to check
-	 * @return A pointer to the value in the table
-	 */
-	_Val * get_safe_ptr(_Key key) {
-		if (size > threshold)
-			resize(capacity << 1);
-
-		struct hashlistnode<_Key,_Val, _malloc, _calloc, _free> *ptr = table[(((_KeyInt)key) & mask)>>_Shift];
-		struct hashlistnode<_Key,_Val, _malloc, _calloc, _free> *search = ptr;
-
-		while(search!=NULL) {
-			if (search->key==key) {
-				return &search->val;
-			}
-			search=search->next;
-		}
-
-		struct hashlistnode<_Key,_Val, _malloc, _calloc, _free> *newptr=(struct hashlistnode<_Key,_Val, _malloc, _calloc, _free> *)new struct hashlistnode<_Key,_Val, _malloc, _calloc, _free>;
-		newptr->key=key;
-		newptr->next=ptr;
-		table[(((_KeyInt)key)&mask)>>_Shift]=newptr;
-		size++;
-		return &newptr->val;
-	}
-
 	/** Lookup the corresponding value for the given key. */
 	_Val get(_Key key) {
 		struct hashlistnode<_Key,_Val, _malloc, _calloc, _free> *search = table[(((_KeyInt)key) & mask)>>_Shift];
@@ -196,19 +164,6 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift=0, void * (*
 			search=search->next;
 		}
 		return (_Val)0;
-	}
-
-	/** Lookup the corresponding value for the given key. */
-	_Val * getptr(_Key key) {
-		struct hashlistnode<_Key,_Val, _malloc, _calloc, _free> *search = table[(((_KeyInt)key) & mask)>>_Shift];
-
-		while(search!=NULL) {
-			if (search->key==key) {
-				return & search->val;
-			}
-			search=search->next;
-		}
-		return (_Val *) NULL;
 	}
 
 	/** Check whether the table contains a value for the given key. */

@@ -406,9 +406,7 @@ bool ModelChecker::next_execution()
 
 	num_executions++;
 
-	if (is_deadlocked())
-		printf("ERROR: DEADLOCK\n");
-	if (isfinalfeasible()) {
+	if (isfinalfeasible() && (is_complete_execution() || have_bug_reports())) {
 		printf("Earliest divergence point since last feasible execution:\n");
 		if (earliest_diverge)
 			earliest_diverge->print();
@@ -417,11 +415,14 @@ bool ModelChecker::next_execution()
 
 		earliest_diverge = NULL;
 		num_feasible_executions++;
-	}
 
+		if (is_deadlocked())
+			assert_bug("Deadlock detected", false);
 
-	if (isfinalfeasible() || DBG_ENABLED()) {
+		print_bugs();
 		checkDataRaces();
+		print_summary();
+	} else if (DBG_ENABLED()) {
 		print_summary();
 	}
 

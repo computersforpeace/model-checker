@@ -337,9 +337,6 @@ bool ModelChecker::next_execution()
 		num_feasible_executions++;
 	}
 
-	DEBUG("Number of acquires waiting on pending release sequences: %zu\n",
-			pending_rel_seqs->size());
-
 
 	if (isfinalfeasible() || DBG_ENABLED()) {
 		checkDataRaces();

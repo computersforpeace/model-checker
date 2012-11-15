@@ -295,6 +295,21 @@ bool ModelChecker::is_deadlocked() const
 }
 
 /**
+ * Check if this is a complete execution. That is, have all thread completed
+ * execution (rather than exiting because sleep sets have forced a redundant
+ * execution).
+ *
+ * @return True if the execution is complete.
+ */
+bool ModelChecker::is_complete_execution() const
+{
+	for (unsigned int i = 0; i < get_num_threads(); i++)
+		if (is_enabled(int_to_id(i)))
+			return false;
+	return true;
+}
+
+/**
  * Queries the model-checker for more executions to explore and, if one
  * exists, resets the model-checker state to execute a new execution.
  *

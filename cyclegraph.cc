@@ -6,6 +6,7 @@
 
 /** Initializes a CycleGraph object. */
 CycleGraph::CycleGraph() :
+	discovered(new HashTable<CycleNode *, CycleNode *, uintptr_t, 4, model_malloc, model_calloc, model_free>(16)),
 	hasCycles(false),
 	oldCycles(false),
 	hasRMWViolation(false),
@@ -182,10 +183,10 @@ bool CycleGraph::checkReachable(const ModelAction *from, const ModelAction *to) 
  */
 bool CycleGraph::checkReachable(CycleNode *from, CycleNode *to) {
 	std::vector<CycleNode *, ModelAlloc<CycleNode *> > queue;
-	HashTable<CycleNode *, CycleNode *, uintptr_t, 4, model_malloc, model_calloc, model_free> discovered(64);
+	discovered->reset();
 
 	queue.push_back(from);
-	discovered.put(from, from);
+	discovered->put(from, from);
 	while(!queue.empty()) {
 		CycleNode * node=queue.back();
 		queue.pop_back();
@@ -194,8 +195,8 @@ bool CycleGraph::checkReachable(CycleNode *from, CycleNode *to) {
 
 		for(unsigned int i=0;i<node->getEdges()->size();i++) {
 			CycleNode *next=(*node->getEdges())[i];
-			if (!discovered.contains(next)) {
-				discovered.put(next,next);
+			if (!discovered->contains(next)) {
+				discovered->put(next,next);
 				queue.push_back(next);
 			}
 		}
@@ -205,12 +206,12 @@ bool CycleGraph::checkReachable(CycleNode *from, CycleNode *to) {
 
 bool CycleGraph::checkPromise(const ModelAction *fromact, Promise *promise) {
 	std::vector<CycleNode *, ModelAlloc<CycleNode *> > queue;
-	HashTable<CycleNode *, CycleNode *, uintptr_t, 4, model_malloc, model_calloc, model_free> discovered(64);
+	discovered->reset();
 	CycleNode *from = actionToNode.get(fromact);
 
 
 	queue.push_back(from);
-	discovered.put(from, from);
+	discovered->put(from, from);
 	while(!queue.empty()) {
 		CycleNode * node=queue.back();
 		queue.pop_back();
@@ -221,8 +222,8 @@ bool CycleGraph::checkPromise(const ModelAction *fromact, Promise *promise) {
 
 		for(unsigned int i=0;i<node->getEdges()->size();i++) {
 			CycleNode *next=(*node->getEdges())[i];
-			if (!discovered.contains(next)) {
-				discovered.put(next,next);
+			if (!discovered->contains(next)) {
+				discovered->put(next,next);
 				queue.push_back(next);
 			}
 		}

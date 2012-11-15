@@ -23,27 +23,11 @@
  * @tparam _free   Provide your own 'free' for the table, or default to
  *                 snapshotting.
  */
-template<typename _Key, typename _Val, void * (* _malloc)(size_t), void * (* _calloc)(size_t, size_t), void (*_free)(void *)>
+template<typename _Key, typename _Val>
+
 struct hashlistnode {
 	_Key key;
 	_Val val;
-	struct hashlistnode<_Key,_Val, _malloc, _calloc, _free> *next;
-
-	void * operator new(size_t size) {
-		return _malloc(size);
-	}
-
-	void operator delete(void *p, size_t size) {
-		_free(p);
-	}
-
-	void * operator new[](size_t size) {
-		return _malloc(size);
-	}
-
-	void operator delete[](void *p, size_t size) {
-		_free(p);
-	}
 };
 
 /**
@@ -74,24 +58,17 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift=0, void * (*
 	 */
 	HashTable(unsigned int initialcapacity=1024, double factor=0.5) {
 		// Allocate space for the hash table
-		table = (struct hashlistnode<_Key,_Val, _malloc, _calloc,_free> **) _calloc(initialcapacity, sizeof(struct hashlistnode<_Key,_Val, _malloc, _calloc, _free> *));
+		table = (struct hashlistnode<_Key,_Val> *) _calloc(initialcapacity, sizeof(struct hashlistnode<_Key,_Val>));
 		loadfactor = factor;
 		capacity = initialcapacity;
+		capacitymask = initialcapacity - 1;
+
 		threshold = (unsigned int) (initialcapacity*loadfactor);
-		mask = (capacity << _Shift)-1;
 		size = 0; // Initial number of elements in the hash
 	}
 
 	/** Destructor */
 	~HashTable() {
-		for(unsigned int i=0;i<capacity;i++) {
-			struct hashlistnode<_Key,_Val, _malloc, _calloc, _free> * bin = table[i];
-			while(bin!=NULL) {
-				struct hashlistnode<_Key,_Val, _malloc, _calloc, _free> * next=bin->next;
-				delete bin;
-				bin=next;
-			}
-		}
 		_free(table);
 	}
 
@@ -117,15 +94,7 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift=0, void * (*
 
 	/** Reset the table to its initial state. */
 	void reset() {
-		for(unsigned int i=0;i<capacity;i++) {
-			struct hashlistnode<_Key,_Val, _malloc, _calloc, _free> * bin = table[i];
-			while(bin!=NULL) {
-				struct hashlistnode<_Key,_Val, _malloc, _calloc, _free> * next=bin->next;
-				delete bin;
-				bin=next;
-			}
-		}
-		memset(table, 0, capacity*sizeof(struct hashlistnode<_Key, _Val, _malloc, _calloc, _free> *));
+		memset(table, 0, capacity*sizeof(struct hashlistnode<_Key, _Val>));
 		size=0;
 	}
 
@@ -134,90 +103,99 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift=0, void * (*
 		if (size > threshold)
 			resize(capacity << 1);
 
-		struct hashlistnode<_Key,_Val, _malloc, _calloc, _free> *ptr = table[(((_KeyInt)key) & mask)>>_Shift];
-		struct hashlistnode<_Key,_Val, _malloc, _calloc, _free> *search = ptr;
+		struct hashlistnode<_Key,_Val> *search;
 
-		while(search!=NULL) {
+		unsigned int index=((_KeyInt)key)>>_Shift;
+		do {
+			index=index&capacitymask;
+			search = &table[index];
 			if (search->key==key) {
 				search->val=val;
 				return;
 			}
-			search=search->next;
-		}
-
-		struct hashlistnode<_Key,_Val, _malloc, _calloc, _free> *newptr=(struct hashlistnode<_Key,_Val,_malloc,_calloc,_free> *)new struct hashlistnode<_Key,_Val, _malloc, _calloc, _free>;
-		newptr->key=key;
-		newptr->val=val;
-		newptr->next=ptr;
-		table[(((_KeyInt)key)&mask)>>_Shift]=newptr;
+			index++;
+		} while(search->key);
+		
+		search->key=key;
+		search->val=val;
 		size++;
 	}
 
 	/** Lookup the corresponding value for the given key. */
 	_Val get(_Key key) {
-		struct hashlistnode<_Key,_Val, _malloc, _calloc, _free> *search = table[(((_KeyInt)key) & mask)>>_Shift];
+		struct hashlistnode<_Key,_Val> *search;
 
-		while(search!=NULL) {
+		unsigned int index=((_KeyInt)key)>>_Shift;
+		do {
+			index=index&capacitymask;
+			search = &table[index];
 			if (search->key==key) {
 				return search->val;
 			}
-			search=search->next;
-		}
-		return (_Val)0;
+			index++;
+		} while(search->key);
+		return (_Val) 0;
 	}
 
 	/** Check whether the table contains a value for the given key. */
 	bool contains(_Key key) {
-		struct hashlistnode<_Key,_Val, _malloc, _calloc, _free> *search = table[(((_KeyInt)key) & mask)>>_Shift];
+		struct hashlistnode<_Key,_Val> *search;
 
-		while(search!=NULL) {
+		unsigned int index=((_KeyInt)key)>>_Shift;
+		do {
+			index=index&capacitymask;
+			search = &table[index];
 			if (search->key==key) {
 				return true;
 			}
-			search=search->next;
-		}
+			index++;
+		} while(search->key);
 		return false;
 	}
 
 	/** Resize the table. */
 	void resize(unsigned int newsize) {
-		struct hashlistnode<_Key,_Val, _malloc, _calloc, _free> ** oldtable = table;
-		struct hashlistnode<_Key,_Val, _malloc, _calloc, _free> ** newtable;
+		struct hashlistnode<_Key,_Val> * oldtable = table;
+		struct hashlistnode<_Key,_Val> * newtable;
 		unsigned int oldcapacity = capacity;
 
-		if((newtable = (struct hashlistnode<_Key,_Val, _malloc, _calloc, _free> **) _calloc(newsize, sizeof(struct hashlistnode<_Key,_Val, _malloc, _calloc, _free> *))) == NULL) {
+		if((newtable = (struct hashlistnode<_Key,_Val> *) _calloc(newsize, sizeof(struct hashlistnode<_Key,_Val>))) == NULL) {
 			printf("Calloc error %s %d\n", __FILE__, __LINE__);
 			exit(-1);
 		}
-
+		
 		table = newtable;          //Update the global hashtable upon resize()
 		capacity = newsize;
+		capacitymask = newsize - 1;
+
 		threshold = (unsigned int) (newsize * loadfactor);
-		mask = (newsize << _Shift)-1;
 
-		for(unsigned int i = 0; i < oldcapacity; i++) {
-			struct hashlistnode<_Key, _Val, _malloc, _calloc, _free> * bin = oldtable[i];
+		struct hashlistnode<_Key, _Val> * bin = &oldtable[0];
+		struct hashlistnode<_Key, _Val> * lastbin = &oldtable[oldcapacity];
+		for(; bin < lastbin; bin++) {
+			_Key key=bin->key;
 
-			while(bin!=NULL) {
-				_Key key=bin->key;
-				struct hashlistnode<_Key, _Val, _malloc, _calloc, _free> * next=bin->next;
+			struct hashlistnode<_Key,_Val> *search;
+			
+			unsigned int index=((_KeyInt)key)>>_Shift;
+			do {
+				index=index&capacitymask;
+				search = &table[index];
+				index++;
+			} while(search->key);
 
-				unsigned int index = (((_KeyInt)key) & mask) >>_Shift;
-				struct hashlistnode<_Key, _Val, _malloc, _calloc, _free> * tmp=newtable[index];
-				bin->next=tmp;
-				newtable[index]=bin;
-				bin = next;
-			}
+			search->key=key;
+			search->val=bin->val;
 		}
 
 		_free(oldtable);            //Free the memory of the old hash table
 	}
 
  private:
-	struct hashlistnode<_Key,_Val, _malloc, _calloc, _free> **table;
+	struct hashlistnode<_Key,_Val> *table;
 	unsigned int capacity;
-	_KeyInt mask;
 	unsigned int size;
+	unsigned int capacitymask;
 	unsigned int threshold;
 	double loadfactor;
 };

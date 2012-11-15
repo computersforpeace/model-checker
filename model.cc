@@ -40,10 +40,10 @@ ModelChecker::ModelChecker(struct model_params params) :
 	earliest_diverge(NULL),
 	action_trace(new action_list_t()),
 	thread_map(new HashTable<int, Thread *, int>()),
-	obj_map(new HashTable<const void *, action_list_t, uintptr_t, 4>()),
-	lock_waiters_map(new HashTable<const void *, action_list_t, uintptr_t, 4>()),
-	condvar_waiters_map(new HashTable<const void *, action_list_t, uintptr_t, 4>()),
-	obj_thrd_map(new HashTable<void *, std::vector<action_list_t>, uintptr_t, 4 >()),
+	obj_map(new HashTable<const void *, action_list_t *, uintptr_t, 4>()),
+	lock_waiters_map(new HashTable<const void *, action_list_t *, uintptr_t, 4>()),
+	condvar_waiters_map(new HashTable<const void *, action_list_t *, uintptr_t, 4>()),
+	obj_thrd_map(new HashTable<void *, std::vector<action_list_t> *, uintptr_t, 4 >()),
 	promises(new std::vector< Promise *, SnapshotAlloc<Promise *> >()),
 	futurevalues(new std::vector< struct PendingFutureValue, SnapshotAlloc<struct PendingFutureValue> >()),
 	pending_rel_seqs(new std::vector< struct release_seq *, SnapshotAlloc<struct release_seq *> >()),
@@ -88,6 +88,24 @@ ModelChecker::~ModelChecker()
 	delete node_stack;
 	delete scheduler;
 	delete mo_graph;
+}
+
+static action_list_t * get_safe_ptr_action(HashTable<const void *, action_list_t *, uintptr_t, 4> * hash, void * ptr) {
+	action_list_t * tmp=hash->get(ptr);
+	if (tmp==NULL) {
+		tmp=new action_list_t();
+		hash->put(ptr, tmp);
+	}
+	return tmp;
+}
+
+static std::vector<action_list_t> * get_safe_ptr_vect_action(HashTable<void *, std::vector<action_list_t> *, uintptr_t, 4> * hash, void * ptr) {
+	std::vector<action_list_t> * tmp=hash->get(ptr);
+	if (tmp==NULL) {
+		tmp=new std::vector<action_list_t>();
+		hash->put(ptr, tmp);
+	}
+	return tmp;
 }
 
 /**
@@ -330,7 +348,7 @@ ModelAction * ModelChecker::get_last_conflict(ModelAction *act)
 	case ATOMIC_WRITE:
 	case ATOMIC_RMW: {
 		/* linear search: from most recent to oldest */
-		action_list_t *list = obj_map->get_safe_ptr(act->get_location());
+		action_list_t *list = get_safe_ptr_action(obj_map, act->get_location());
 		action_list_t::reverse_iterator rit;
 		for (rit = list->rbegin(); rit != list->rend(); rit++) {
 			ModelAction *prev = *rit;
@@ -342,7 +360,7 @@ ModelAction * ModelChecker::get_last_conflict(ModelAction *act)
 	case ATOMIC_LOCK:
 	case ATOMIC_TRYLOCK: {
 		/* linear search: from most recent to oldest */
-		action_list_t *list = obj_map->get_safe_ptr(act->get_location());
+		action_list_t *list = get_safe_ptr_action(obj_map, act->get_location());
 		action_list_t::reverse_iterator rit;
 		for (rit = list->rbegin(); rit != list->rend(); rit++) {
 			ModelAction *prev = *rit;
@@ -353,7 +371,7 @@ ModelAction * ModelChecker::get_last_conflict(ModelAction *act)
 	}
 	case ATOMIC_UNLOCK: {
 		/* linear search: from most recent to oldest */
-		action_list_t *list = obj_map->get_safe_ptr(act->get_location());
+		action_list_t *list = get_safe_ptr_action(obj_map, act->get_location());
 		action_list_t::reverse_iterator rit;
 		for (rit = list->rbegin(); rit != list->rend(); rit++) {
 			ModelAction *prev = *rit;
@@ -364,7 +382,7 @@ ModelAction * ModelChecker::get_last_conflict(ModelAction *act)
 	}
 	case ATOMIC_WAIT: {
 		/* linear search: from most recent to oldest */
-		action_list_t *list = obj_map->get_safe_ptr(act->get_location());
+		action_list_t *list = get_safe_ptr_action(obj_map, act->get_location());
 		action_list_t::reverse_iterator rit;
 		for (rit = list->rbegin(); rit != list->rend(); rit++) {
 			ModelAction *prev = *rit;
@@ -379,7 +397,7 @@ ModelAction * ModelChecker::get_last_conflict(ModelAction *act)
 	case ATOMIC_NOTIFY_ALL:
 	case ATOMIC_NOTIFY_ONE: {
 		/* linear search: from most recent to oldest */
-		action_list_t *list = obj_map->get_safe_ptr(act->get_location());
+		action_list_t *list = get_safe_ptr_action(obj_map, act->get_location());
 		action_list_t::reverse_iterator rit;
 		for (rit = list->rbegin(); rit != list->rend(); rit++) {
 			ModelAction *prev = *rit;
@@ -579,7 +597,7 @@ bool ModelChecker::process_mutex(ModelAction *curr) {
 		//unlock the lock
 		state->islocked = false;
 		//wake up the other threads
-		action_list_t *waiters = lock_waiters_map->get_safe_ptr(curr->get_location());
+		action_list_t *waiters = get_safe_ptr_action(lock_waiters_map, curr->get_location());
 		//activate all the waiting threads
 		for (action_list_t::iterator rit = waiters->begin(); rit != waiters->end(); rit++) {
 			scheduler->wake(get_thread(*rit));
@@ -591,7 +609,7 @@ bool ModelChecker::process_mutex(ModelAction *curr) {
 		//unlock the lock
 		state->islocked = false;
 		//wake up the other threads
-		action_list_t *waiters = lock_waiters_map->get_safe_ptr((void *) curr->get_value());
+		action_list_t *waiters = get_safe_ptr_action(lock_waiters_map, (void *) curr->get_value());
 		//activate all the waiting threads
 		for (action_list_t::iterator rit = waiters->begin(); rit != waiters->end(); rit++) {
 			scheduler->wake(get_thread(*rit));
@@ -599,14 +617,14 @@ bool ModelChecker::process_mutex(ModelAction *curr) {
 		waiters->clear();
 		//check whether we should go to sleep or not...simulate spurious failures
 		if (curr->get_node()->get_misc()==0) {
-			condvar_waiters_map->get_safe_ptr(curr->get_location())->push_back(curr);
+			get_safe_ptr_action(condvar_waiters_map, curr->get_location())->push_back(curr);
 			//disable us
 			scheduler->sleep(get_current_thread());
 		}
 		break;
 	}
 	case ATOMIC_NOTIFY_ALL: {
-		action_list_t *waiters = condvar_waiters_map->get_safe_ptr(curr->get_location());
+		action_list_t *waiters = get_safe_ptr_action(condvar_waiters_map, curr->get_location());
 		//activate all the waiting threads
 		for (action_list_t::iterator rit = waiters->begin(); rit != waiters->end(); rit++) {
 			scheduler->wake(get_thread(*rit));
@@ -615,7 +633,7 @@ bool ModelChecker::process_mutex(ModelAction *curr) {
 		break;
 	}
 	case ATOMIC_NOTIFY_ONE: {
-		action_list_t *waiters = condvar_waiters_map->get_safe_ptr(curr->get_location());
+		action_list_t *waiters = get_safe_ptr_action(condvar_waiters_map, curr->get_location());
 		int wakeupthread=curr->get_node()->get_misc();
 		action_list_t::iterator it = waiters->begin();
 		advance(it, wakeupthread);
@@ -839,7 +857,7 @@ bool ModelChecker::initialize_curr_action(ModelAction **curr)
 		else if (newcurr->is_wait())
 			newcurr->get_node()->set_misc_max(2);
 		else if (newcurr->is_notify_one()) {
-			newcurr->get_node()->set_misc_max(condvar_waiters_map->get_safe_ptr(newcurr->get_location())->size());
+			newcurr->get_node()->set_misc_max(get_safe_ptr_action(condvar_waiters_map, newcurr->get_location())->size());
 		}
 		return true; /* This was a new ModelAction */
 	}
@@ -861,7 +879,7 @@ bool ModelChecker::check_action_enabled(ModelAction *curr) {
 		struct std::mutex_state * state = lock->get_state();
 		if (state->islocked) {
 			//Stick the action in the appropriate waiting queue
-			lock_waiters_map->get_safe_ptr(curr->get_location())->push_back(curr);
+			get_safe_ptr_action(lock_waiters_map, curr->get_location())->push_back(curr);
 			return false;
 		}
 	} else if (curr->get_type() == THREAD_JOIN) {
@@ -1086,7 +1104,7 @@ void ModelChecker::check_recency(ModelAction *curr, const ModelAction *rf) {
 		//accidentally clear by rolling back
 		if (!isfeasible())
 			return;
-		std::vector<action_list_t> *thrd_lists = obj_thrd_map->get_safe_ptr(curr->get_location());
+		std::vector<action_list_t> *thrd_lists = get_safe_ptr_vect_action(obj_thrd_map, curr->get_location());
 		int tid = id_to_int(curr->get_tid());
 
 		/* Skip checks */
@@ -1178,7 +1196,7 @@ void ModelChecker::check_recency(ModelAction *curr, const ModelAction *rf) {
  */
 bool ModelChecker::r_modification_order(ModelAction *curr, const ModelAction *rf)
 {
-	std::vector<action_list_t> *thrd_lists = obj_thrd_map->get_safe_ptr(curr->get_location());
+	std::vector<action_list_t> *thrd_lists = get_safe_ptr_vect_action(obj_thrd_map, curr->get_location());
 	unsigned int i;
 	bool added = false;
 	ASSERT(curr->is_read());
@@ -1237,7 +1255,7 @@ bool ModelChecker::r_modification_order(ModelAction *curr, const ModelAction *rf
  */
 void ModelChecker::post_r_modification_order(ModelAction *curr, const ModelAction *rf)
 {
-	std::vector<action_list_t> *thrd_lists = obj_thrd_map->get_safe_ptr(curr->get_location());
+	std::vector<action_list_t> *thrd_lists = get_safe_ptr_vect_action(obj_thrd_map, curr->get_location());
 	unsigned int i;
 	ASSERT(curr->is_read());
 
@@ -1308,7 +1326,7 @@ void ModelChecker::post_r_modification_order(ModelAction *curr, const ModelActio
  */
 bool ModelChecker::w_modification_order(ModelAction *curr)
 {
-	std::vector<action_list_t> *thrd_lists = obj_thrd_map->get_safe_ptr(curr->get_location());
+	std::vector<action_list_t> *thrd_lists = get_safe_ptr_vect_action(obj_thrd_map, curr->get_location());
 	unsigned int i;
 	bool added = false;
 	ASSERT(curr->is_write());
@@ -1430,7 +1448,7 @@ bool ModelChecker::thin_air_constraint_may_allow(const ModelAction * writer, con
  */
 bool ModelChecker::mo_may_allow(const ModelAction *writer, const ModelAction *reader)
 {
-	std::vector<action_list_t> *thrd_lists = obj_thrd_map->get_safe_ptr(reader->get_location());
+	std::vector<action_list_t> *thrd_lists = get_safe_ptr_vect_action(obj_thrd_map, reader->get_location());
 	unsigned int i;
 	/* Iterate over all threads */
 	for (i = 0; i < thrd_lists->size(); i++) {
@@ -1522,7 +1540,7 @@ bool ModelChecker::release_seq_heads(const ModelAction *rf,
 	/* else relaxed write; check modification order for contiguous subsequence
 	 * -> rf must be same thread as release */
 	int tid = id_to_int(rf->get_tid());
-	std::vector<action_list_t> *thrd_lists = obj_thrd_map->get_safe_ptr(rf->get_location());
+	std::vector<action_list_t> *thrd_lists = get_safe_ptr_vect_action(obj_thrd_map, rf->get_location());
 	action_list_t *list = &(*thrd_lists)[tid];
 	action_list_t::const_reverse_iterator rit;
 
@@ -1720,9 +1738,9 @@ void ModelChecker::add_action_to_lists(ModelAction *act)
 	int tid = id_to_int(act->get_tid());
 	action_trace->push_back(act);
 
-	obj_map->get_safe_ptr(act->get_location())->push_back(act);
+	get_safe_ptr_action(obj_map, act->get_location())->push_back(act);
 
-	std::vector<action_list_t> *vec = obj_thrd_map->get_safe_ptr(act->get_location());
+	std::vector<action_list_t> *vec = get_safe_ptr_vect_action(obj_thrd_map, act->get_location());
 	if (tid >= (int)vec->size())
 		vec->resize(priv->next_thread_id);
 	(*vec)[tid].push_back(act);
@@ -1733,9 +1751,9 @@ void ModelChecker::add_action_to_lists(ModelAction *act)
 
 	if (act->is_wait()) {
 		void *mutex_loc=(void *) act->get_value();
-		obj_map->get_safe_ptr(mutex_loc)->push_back(act);
+		get_safe_ptr_action(obj_map, mutex_loc)->push_back(act);
 
-		std::vector<action_list_t> *vec = obj_thrd_map->get_safe_ptr(mutex_loc);
+		std::vector<action_list_t> *vec = get_safe_ptr_vect_action(obj_thrd_map, mutex_loc);
 		if (tid >= (int)vec->size())
 			vec->resize(priv->next_thread_id);
 		(*vec)[tid].push_back(act);
@@ -1771,7 +1789,7 @@ ModelAction * ModelChecker::get_last_action(thread_id_t tid) const
 ModelAction * ModelChecker::get_last_seq_cst(ModelAction *curr) const
 {
 	void *location = curr->get_location();
-	action_list_t *list = obj_map->get_safe_ptr(location);
+	action_list_t *list = get_safe_ptr_action(obj_map, location);
 	/* Find: max({i in dom(S) | seq_cst(t_i) && isWrite(t_i) && samevar(t_i, t)}) */
 	action_list_t::reverse_iterator rit;
 	for (rit = list->rbegin(); rit != list->rend(); rit++)
@@ -1791,7 +1809,7 @@ ModelAction * ModelChecker::get_last_seq_cst(ModelAction *curr) const
 ModelAction * ModelChecker::get_last_unlock(ModelAction *curr) const
 {
 	void *location = curr->get_location();
-	action_list_t *list = obj_map->get_safe_ptr(location);
+	action_list_t *list = get_safe_ptr_action(obj_map, location);
 	/* Find: max({i in dom(S) | isUnlock(t_i) && samevar(t_i, t)}) */
 	action_list_t::reverse_iterator rit;
 	for (rit = list->rbegin(); rit != list->rend(); rit++)
@@ -2013,7 +2031,7 @@ void ModelChecker::compute_relseq_breakwrites(ModelAction *curr)
  */
 void ModelChecker::build_reads_from_past(ModelAction *curr)
 {
-	std::vector<action_list_t> *thrd_lists = obj_thrd_map->get_safe_ptr(curr->get_location());
+	std::vector<action_list_t> *thrd_lists = get_safe_ptr_vect_action(obj_thrd_map, curr->get_location());
 	unsigned int i;
 	ASSERT(curr->is_read());
 

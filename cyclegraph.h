@@ -37,6 +37,7 @@ class CycleGraph {
 	SNAPSHOTALLOC
  private:
 	CycleNode * getNode(const ModelAction *);
+	HashTable<CycleNode *, CycleNode *, uintptr_t, 4, model_malloc, model_calloc, model_free> * discovered;
 
 	/** @brief A table for mapping ModelActions to CycleNodes */
 	HashTable<const ModelAction *, CycleNode *, uintptr_t, 4> actionToNode;

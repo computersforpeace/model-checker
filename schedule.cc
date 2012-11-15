@@ -35,13 +35,29 @@ void Scheduler::set_enabled(Thread *t, enabled_type_t enabled_status) {
 
 /**
  * @brief Check if a Thread is currently enabled
+ *
+ * Check if a Thread is currently enabled. "Enabled" includes both
+ * THREAD_ENABLED and THREAD_SLEEP_SET.
  * @param t The Thread to check
  * @return True if the Thread is currently enabled
  */
 bool Scheduler::is_enabled(Thread *t) const
 {
-	int id = id_to_int(t->get_id());
-	return (id >= enabled_len) ? false : (enabled[id] != THREAD_DISABLED);
+	return is_enabled(t->get_id());
+}
+
+/**
+ * @brief Check if a Thread is currently enabled
+ *
+ * Check if a Thread is currently enabled. "Enabled" includes both
+ * THREAD_ENABLED and THREAD_SLEEP_SET.
+ * @param tid The ID of the Thread to check
+ * @return True if the Thread is currently enabled
+ */
+bool Scheduler::is_enabled(thread_id_t tid) const
+{
+	int i = id_to_int(tid);
+	return (i >= enabled_len) ? false : (enabled[i] != THREAD_DISABLED);
 }
 
 enabled_type_t Scheduler::get_enabled(Thread *t) {

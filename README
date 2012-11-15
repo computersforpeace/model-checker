@@ -1,0 +1,59 @@
+****************************************
+CDSChecker Readme
+****************************************
+
+This is an evaluation-only version of CDSChecker. Please do not distribute.
+
+CDSChecker compiles as a dynamically-linked shared library by simply running
+'make'. It should compile on Linux and Mac OSX, and has been tested with LLVM
+(clang/clang++) and GCC.
+
+Test programs should use the standard C11/C++11 library headers
+(<atomic>/<stdatomic.h>, <mutex>, <condition_variable>, <thread.h>) and must
+name their main routine as user_main(int, char**) rather than main(int, char**).
+We only support C11 thread syntax (thrd_t, etc. from <thread.h>).
+
+Test programs may also use our included happens-before race detector by
+including <librace.h> and utilizing the appropriate functions
+(store_{8,16,32,64}() and load_{8,16,32,64}()) for loading/storing data from/to
+from non-atomic shared memory.
+
+Test programs should be compiled against our shared library (libmodel.so) using
+the headers in the include/ directory. Then the shared library must be made
+available to the dynamic linker, using the LD_LIBRARY_PATH environment
+variable, for instance.
+
+Sample run instructions:
+
+$ make
+$ export LD_LIBRARY_PATH=.
+$ ./test/userprog.o                   # Runs simple test program
+$ ./test/userprog.o -h                # Prints help information
+Usage: <program name> [MC_OPTIONS] -- [PROGRAM ARGUMENTS]
+
+Options:
+-h                    Display this help message and exit
+-m                    Maximum times a thread can read from the same write
+                      while other writes exist. Default: 0
+-M                    Maximum number of future values that can be sent to
+                      the same read. Default: 0
+-s                    Maximum actions that the model checker will wait for
+                      a write from the future past the expected number of
+                      actions. Default: 100
+-S                    Future value expiration sloppiness. Default: 10
+-f                    Specify a fairness window in which actions that are
+                      enabled sufficiently many times should receive
+                      priority for execution. Default: 0
+-e                    Enabled count. Default: 1
+-b                    Upper length bound. Default: 0
+--                    Program arguments follow.
+
+
+Note that we also provide a series of benchmarks (distributed separately),
+which can be placed under the benchmarks/ directory. After building CDSChecker,
+you can build and run the benchmarks as follows:
+
+  cd benchmarks
+  make
+  ./run.sh barrier/barrier -f 10 -m 2  # runs barrier test with fairness/memory liveness
+  ./bench.sh <dir>                     # run all benchmarks twice, with timing results; all logged to <dir>

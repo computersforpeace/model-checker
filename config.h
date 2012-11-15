@@ -48,6 +48,10 @@
 /* Size of stack to allocate for a thread. */
 #define STACK_SIZE (1024 * 1024)
 
+/** How many shadow tables of memory to preallocate for data race detector. */
 #define SHADOWBASETABLES 4
+
+/** Enable debugging assertions (via ASSERT()) */
+#define CONFIG_ASSERT
 
 #endif

@@ -18,6 +18,17 @@
 
 ModelChecker *model;
 
+/**
+ * Structure for holding small ModelChecker members that should be snapshotted
+ */
+struct model_snapshot_members {
+	ModelAction *current_action;
+	unsigned int next_thread_id;
+	modelclock_t used_sequence_numbers;
+	Thread *nextThread;
+	ModelAction *next_backtrack;
+};
+
 /** @brief Constructor */
 ModelChecker::ModelChecker(struct model_params params) :
 	/* Initialize default scheduler */
@@ -255,10 +266,11 @@ bool ModelChecker::is_deadlocked() const
 {
 	bool blocking_threads = false;
 	for (unsigned int i = 0; i < get_num_threads(); i++) {
-		Thread *t = get_thread(int_to_id(i));
-		if (scheduler->is_enabled(t) != THREAD_DISABLED)
+		thread_id_t tid = int_to_id(i);
+		if (is_enabled(tid))
 			return false;
-		else if (!t->is_model_thread() && t->get_pending())
+		Thread *t = get_thread(tid);
+		if (!t->is_model_thread() && t->get_pending())
 			blocking_threads = true;
 	}
 	return blocking_threads;
@@ -294,7 +306,7 @@ bool ModelChecker::next_execution()
 			pending_rel_seqs->size());
 
 
-	if (isfinalfeasible() || (params.bound != 0 && priv->used_sequence_numbers > params.bound ) || DBG_ENABLED() ) {
+	if (isfinalfeasible() || DBG_ENABLED()) {
 		checkDataRaces();
 		print_summary();
 	}
@@ -861,6 +873,16 @@ bool ModelChecker::check_action_enabled(ModelAction *curr) {
 	}
 
 	return true;
+}
+
+/**
+ * Stores the ModelAction for the current thread action.  Call this
+ * immediately before switching from user- to system-context to pass
+ * data between them.
+ * @param act The ModelAction created by the user-thread action
+ */
+void ModelChecker::set_current_action(ModelAction *act) {
+	priv->current_action = act;
 }
 
 /**
@@ -1535,7 +1557,7 @@ bool ModelChecker::release_seq_heads(const ModelAction *rf,
 		ModelAction *last = get_last_action(int_to_id(i));
 		Thread *th = get_thread(int_to_id(i));
 		if ((last && rf->happens_before(last)) ||
-				!scheduler->is_enabled(th) ||
+				!is_enabled(th) ||
 				th->is_complete())
 			future_ordered = true;
 
@@ -2175,6 +2197,26 @@ Thread * ModelChecker::get_thread(thread_id_t tid) const
 Thread * ModelChecker::get_thread(ModelAction *act) const
 {
 	return get_thread(act->get_tid());
+}
+
+/**
+ * @brief Check if a Thread is currently enabled
+ * @param t The Thread to check
+ * @return True if the Thread is currently enabled
+ */
+bool ModelChecker::is_enabled(Thread *t) const
+{
+	return scheduler->is_enabled(t);
+}
+
+/**
+ * @brief Check if a Thread is currently enabled
+ * @param tid The ID of the Thread to check
+ * @return True if the Thread is currently enabled
+ */
+bool ModelChecker::is_enabled(thread_id_t tid) const
+{
+	return scheduler->is_enabled(tid);
 }
 
 /**

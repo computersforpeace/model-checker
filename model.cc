@@ -417,7 +417,7 @@ bool ModelChecker::next_execution()
 		num_feasible_executions++;
 
 		if (is_deadlocked())
-			assert_bug("Deadlock detected", false);
+			assert_bug("Deadlock detected");
 
 		print_bugs();
 		checkDataRaces();
@@ -677,10 +677,8 @@ bool ModelChecker::process_mutex(ModelAction *curr) {
 	}
 		//otherwise fall into the lock case
 	case ATOMIC_LOCK: {
-		if (curr->get_cv()->getClock(state->alloc_tid) <= state->alloc_clock) {
-			printf("Lock access before initialization\n");
-			set_assert();
-		}
+		if (curr->get_cv()->getClock(state->alloc_tid) <= state->alloc_clock)
+			assert_bug("Lock access before initialization");
 		state->islocked = true;
 		ModelAction *unlock = get_last_unlock(curr);
 		//synchronize with the previous unlock statement
@@ -890,7 +888,7 @@ void ModelChecker::process_relseq_fixup(ModelAction *curr, work_queue_t *work_qu
 
 	/* See if we have realized a data race */
 	if (checkDataRaces())
-		set_assert();
+		assert_bug("Datarace");
 }
 
 /**
@@ -1821,9 +1819,8 @@ bool ModelChecker::resolve_release_sequences(void *location, work_queue_t *work_
 	}
 
 	// If we resolved promises or data races, see if we have realized a data race.
-	if (checkDataRaces()) {
-		set_assert();
-	}
+	if (checkDataRaces())
+		assert_bug("Datarace");
 
 	return updated;
 }

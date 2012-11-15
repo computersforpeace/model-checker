@@ -102,10 +102,8 @@ static void reportDataRace(thread_id_t oldthread, modelclock_t oldclock, bool is
 	unrealizedraces.push_back(race);
 
 	/* If the race is realized, bail out now. */
-	if (checkDataRaces()) {
-		model->set_assert();
-		model->switch_to_master(NULL);
-	}
+	if (checkDataRaces())
+		model->assert_bug("Datarace", true);
 }
 
 /** This function goes through the list of unrealized data races,

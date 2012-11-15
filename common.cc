@@ -46,9 +46,9 @@ void assert_hook(void)
 void model_assert(bool expr, const char *file, int line)
 {
 	if (!expr) {
-		printf("  [BUG] Program has hit assertion in file %s at line %d\n",
+		char msg[100];
+		sprintf(msg, "Program has hit assertion in file %s at line %d\n",
 				file, line);
-		model->set_assert();
-		model->switch_to_master(NULL);
+		model->assert_bug(msg, true);
 	}
 }

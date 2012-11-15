@@ -48,5 +48,6 @@
 /* Size of stack to allocate for a thread. */
 #define STACK_SIZE (1024 * 1024)
 
+#define SHADOWBASETABLES 4
 
 #endif

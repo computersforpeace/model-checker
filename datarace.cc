@@ -5,13 +5,29 @@
 #include <cstring>
 #include "mymemory.h"
 #include "clockvector.h"
+#include "config.h"
 
 struct ShadowTable *root;
 std::vector<struct DataRace *> unrealizedraces;
+void *memory_base;
+void *memory_top;
+
 
 /** This function initialized the data race detector. */
 void initRaceDetector() {
 	root = (struct ShadowTable *)snapshot_calloc(sizeof(struct ShadowTable), 1);
+	memory_base = snapshot_calloc(sizeof(struct ShadowBaseTable)*SHADOWBASETABLES, 1);
+	memory_top = ((char *)memory_base) + sizeof(struct ShadowBaseTable)*SHADOWBASETABLES;
+}
+
+void * table_calloc(size_t size) {
+	if ((((char *)memory_base)+size)>memory_top) {
+		return snapshot_calloc(size, 1);
+	} else {
+		void *tmp=memory_base;
+		memory_base=((char *)memory_base)+size;
+		return tmp;
+	}
 }
 
 /** This function looks up the entry in the shadow table corresponding to a
@@ -21,13 +37,13 @@ static uint64_t * lookupAddressEntry(void * address) {
 #if BIT48
 	currtable=(struct ShadowTable *) currtable->array[(((uintptr_t)address)>>32)&MASK16BIT];
 	if (currtable==NULL) {
-		currtable = (struct ShadowTable *)(root->array[(((uintptr_t)address)>>32)&MASK16BIT] = snapshot_calloc(sizeof(struct ShadowTable), 1));
+		currtable = (struct ShadowTable *)(root->array[(((uintptr_t)address)>>32)&MASK16BIT] = table_calloc(sizeof(struct ShadowTable)));
 	}
 #endif
 
 	struct ShadowBaseTable * basetable=(struct ShadowBaseTable *) currtable->array[(((uintptr_t)address)>>16)&MASK16BIT];
 	if (basetable==NULL) {
-		basetable = (struct ShadowBaseTable *)(currtable->array[(((uintptr_t)address)>>16)&MASK16BIT] = snapshot_calloc(sizeof(struct ShadowBaseTable), 1));
+		basetable = (struct ShadowBaseTable *)(currtable->array[(((uintptr_t)address)>>16)&MASK16BIT] = table_calloc(sizeof(struct ShadowBaseTable)));
 	}
 	return &basetable->array[((uintptr_t)address)&MASK16BIT];
 }

@@ -18,6 +18,18 @@
 
 ModelChecker *model;
 
+struct bug_message {
+	bug_message(const char *str) {
+		const char *fmt = "  [BUG] %s\n";
+		msg = (char *)snapshot_malloc(strlen(fmt) + strlen(str));
+		sprintf(msg, fmt, str);
+	}
+	~bug_message() { if (msg) snapshot_free(msg); }
+
+	char *msg;
+	void print() { printf("%s", msg); }
+};
+
 /**
  * Structure for holding small ModelChecker members that should be snapshotted
  */
@@ -27,6 +39,7 @@ struct model_snapshot_members {
 	modelclock_t used_sequence_numbers;
 	Thread *nextThread;
 	ModelAction *next_backtrack;
+	std::vector< bug_message *, SnapshotAlloc<bug_message *> > bugs;
 };
 
 /** @brief Constructor */
@@ -89,6 +102,9 @@ ModelChecker::~ModelChecker()
 	delete scheduler;
 	delete mo_graph;
 
+	for (unsigned int i = 0; i < priv->bugs.size(); i++)
+		delete priv->bugs[i];
+	priv->bugs.clear();
 	snapshot_free(priv);
 }
 
@@ -309,6 +325,72 @@ bool ModelChecker::is_complete_execution() const
 		if (is_enabled(int_to_id(i)))
 			return false;
 	return true;
+}
+
+/**
+ * @brief Assert a bug in the executing program.
+ *
+ * Use this function to assert any sort of bug in the user program. If the
+ * current trace is feasible (actually, a prefix of some feasible execution),
+ * then this execution will be aborted, printing the appropriate message. If
+ * the current trace is not yet feasible, the error message will be stashed and
+ * printed if the execution ever becomes feasible.
+ *
+ * This function can also be used to immediately trigger the bug; that is, we
+ * don't wait for a feasible execution before aborting. Only use the
+ * "immediate" option when you know that the infeasibility is justified (e.g.,
+ * pending release sequences are not a problem)
+ *
+ * @param msg Descriptive message for the bug (do not include newline char)
+ * @param user_thread Was this assertion triggered from a user thread?
+ * @param immediate Should this bug be triggered immediately?
+ */
+void ModelChecker::assert_bug(const char *msg, bool user_thread, bool immediate)
+{
+	priv->bugs.push_back(new bug_message(msg));
+
+	if (immediate || isfeasibleprefix()) {
+		set_assert();
+		if (user_thread)
+			switch_to_master(NULL);
+	}
+}
+
+/**
+ * @brief Assert a bug in the executing program, with a default message
+ * @see ModelChecker::assert_bug
+ * @param user_thread Was this assertion triggered from a user thread?
+ */
+void ModelChecker::assert_bug(bool user_thread)
+{
+	assert_bug("bug detected", user_thread);
+}
+
+/**
+ * @brief Assert a bug in the executing program immediately
+ * @see ModelChecker::assert_bug
+ * @param msg Descriptive message for the bug (do not include newline char)
+ */
+void ModelChecker::assert_bug_immediate(const char *msg)
+{
+	printf("Feasible: %s\n", isfeasibleprefix() ? "yes" : "no");
+	assert_bug(msg, false, true);
+}
+
+/** @return True, if any bugs have been reported for this execution */
+bool ModelChecker::have_bug_reports() const
+{
+	return priv->bugs.size() != 0;
+}
+
+/** @brief Print bug report listing for this execution (if any bugs exist) */
+void ModelChecker::print_bugs() const
+{
+	if (have_bug_reports()) {
+		printf("Bug report: %zu bugs detected\n", priv->bugs.size());
+		for (unsigned int i = 0; i < priv->bugs.size(); i++)
+			priv->bugs[i]->print();
+	}
 }
 
 /**
@@ -2303,6 +2385,10 @@ bool ModelChecker::take_step() {
 	/* Infeasible -> don't take any more steps */
 	if (!isfeasible())
 		return false;
+	else if (isfeasibleprefix() && have_bug_reports()) {
+		set_assert();
+		return false;
+	}
 
 	if (params.bound != 0) {
 		if (priv->used_sequence_numbers > params.bound) {

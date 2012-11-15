@@ -107,6 +107,11 @@ public:
 	void get_release_seq_heads(ModelAction *act, rel_heads_list_t *release_heads);
 	void finish_execution();
 	bool isfeasibleprefix() const;
+
+	void assert_bug(const char *msg, bool user_thread = false, bool immediate = false);
+	void assert_bug(bool user_thread = true);
+	void assert_bug_immediate(const char *msg);
+
 	void set_assert() {asserted=true;}
 	bool is_deadlocked() const;
 	bool is_complete_execution() const;
@@ -232,6 +237,9 @@ private:
 	bool asserted;
 	/** @brief Incorrectly-ordered synchronization was made */
 	bool bad_synchronization;
+
+	bool have_bug_reports() const;
+	void print_bugs() const;
 };
 
 extern ModelChecker *model;

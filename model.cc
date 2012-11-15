@@ -56,7 +56,7 @@ ModelChecker::ModelChecker(struct model_params params) :
 	bad_synchronization(false)
 {
 	/* Allocate this "size" on the snapshotting heap */
-	priv = (struct model_snapshot_members *)calloc(1, sizeof(*priv));
+	priv = (struct model_snapshot_members *)snapshot_calloc(1, sizeof(*priv));
 	/* First thread created will have id INITIAL_THREAD_ID */
 	priv->next_thread_id = INITIAL_THREAD_ID;
 
@@ -88,6 +88,8 @@ ModelChecker::~ModelChecker()
 	delete node_stack;
 	delete scheduler;
 	delete mo_graph;
+
+	snapshot_free(priv);
 }
 
 static action_list_t * get_safe_ptr_action(HashTable<const void *, action_list_t *, uintptr_t, 4> * hash, void * ptr) {

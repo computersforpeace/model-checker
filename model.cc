@@ -373,7 +373,9 @@ bool ModelChecker::have_bug_reports() const
 void ModelChecker::print_bugs() const
 {
 	if (have_bug_reports()) {
-		printf("Bug report: %zu bugs detected\n", priv->bugs.size());
+		printf("Bug report: %zu bug%s detected\n",
+				priv->bugs.size(),
+				priv->bugs.size() > 1 ? "s" : "");
 		for (unsigned int i = 0; i < priv->bugs.size(); i++)
 			priv->bugs[i]->print();
 	}

@@ -42,6 +42,7 @@ struct model_snapshot_members {
 	Thread *nextThread;
 	ModelAction *next_backtrack;
 	std::vector< bug_message *, SnapshotAlloc<bug_message *> > bugs;
+	struct execution_stats stats;
 };
 
 /** @brief Constructor */
@@ -49,8 +50,6 @@ ModelChecker::ModelChecker(struct model_params params) :
 	/* Initialize default scheduler */
 	params(params),
 	scheduler(new Scheduler()),
-	num_executions(0),
-	num_feasible_executions(0),
 	diverge(NULL),
 	earliest_diverge(NULL),
 	action_trace(new action_list_t()),
@@ -396,6 +395,33 @@ void ModelChecker::print_bugs() const
 }
 
 /**
+ * @brief Record end-of-execution stats
+ *
+ * Must be run when exiting an execution. Records various stats.
+ * @see struct execution_stats
+ */
+void ModelChecker::record_stats()
+{
+	stats.num_total++;
+	if (!isfinalfeasible())
+		stats.num_infeasible++;
+	else if (have_bug_reports())
+		stats.num_buggy_executions++;
+	else if (is_complete_execution())
+		stats.num_complete++;
+}
+
+/** @brief Print execution stats */
+void ModelChecker::print_stats() const
+{
+	printf("Number of complete, bug-free executions: %d\n", stats.num_complete);
+	printf("Number of buggy executions: %d\n", stats.num_buggy_executions);
+	printf("Number of infeasible executions: %d\n", stats.num_infeasible);
+	printf("Total executions: %d\n", stats.num_total);
+	printf("Total nodes created: %d\n", node_stack->get_total_nodes());
+}
+
+/**
  * Queries the model-checker for more executions to explore and, if one
  * exists, resets the model-checker state to execute a new execution.
  *
@@ -406,7 +432,7 @@ bool ModelChecker::next_execution()
 {
 	DBG();
 
-	num_executions++;
+	record_stats();
 
 	if (isfinalfeasible() && (is_complete_execution() || have_bug_reports())) {
 		printf("Earliest divergence point since last feasible execution:\n");
@@ -416,15 +442,17 @@ bool ModelChecker::next_execution()
 			printf("(Not set)\n");
 
 		earliest_diverge = NULL;
-		num_feasible_executions++;
 
 		if (is_deadlocked())
 			assert_bug("Deadlock detected");
 
 		print_bugs();
 		checkDataRaces();
+		printf("\n");
+		print_stats();
 		print_summary();
 	} else if (DBG_ENABLED()) {
+		printf("\n");
 		print_summary();
 	}
 
@@ -2255,17 +2283,12 @@ void ModelChecker::dumpGraph(char *filename) {
 
 void ModelChecker::print_summary()
 {
-	printf("\n");
-	printf("Number of executions: %d\n", num_executions);
-	printf("Number of feasible executions: %d\n", num_feasible_executions);
-	printf("Total nodes created: %d\n", node_stack->get_total_nodes());
-
 #if SUPPORT_MOD_ORDER_DUMP
 	scheduler->print();
 	char buffername[100];
-	sprintf(buffername, "exec%04u", num_executions);
+	sprintf(buffername, "exec%04u", stats.num_total);
 	mo_graph->dumpGraphToFile(buffername);
-	sprintf(buffername, "graph%04u", num_executions);
+	sprintf(buffername, "graph%04u", stats.num_total);
 	dumpGraph(buffername);
 #endif
 

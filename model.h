@@ -49,6 +49,14 @@ struct model_params {
 	unsigned int expireslop;
 };
 
+/** @brief Model checker execution stats */
+struct execution_stats {
+	int num_total; /**< @brief Total number of executions */
+	int num_infeasible; /**< @brief Number of infeasible executions */
+	int num_buggy_executions; /** @brief Number of buggy executions */
+	int num_complete; /**< @brief Number of feasible, non-buggy, complete executions */
+};
+
 struct PendingFutureValue {
 	ModelAction *writer;
 	ModelAction *act;
@@ -133,8 +141,6 @@ private:
 	bool mo_may_allow(const ModelAction * writer, const ModelAction *reader);
 	bool has_asserted() {return asserted;}
 	void reset_asserted() {asserted=false;}
-	int num_executions;
-	int num_feasible_executions;
 	bool promises_expired() const;
 	void execute_sleep_set();
 	void wake_up_sleeping_actions(ModelAction * curr);
@@ -237,6 +243,11 @@ private:
 	bool asserted;
 	/** @brief Incorrectly-ordered synchronization was made */
 	bool bad_synchronization;
+
+	/** @brief The cumulative execution stats */
+	struct execution_stats stats;
+	void record_stats();
+	void print_stats() const;
 
 	bool have_bug_reports() const;
 	void print_bugs() const;

@@ -106,43 +106,53 @@ static void reportDataRace(thread_id_t oldthread, modelclock_t oldclock, bool is
 		model->assert_bug("Data race", true);
 }
 
-/** This function goes through the list of unrealized data races,
- *	removes the impossible ones, and print the realized ones. */
-
+/**
+ * @brief Check and report data races
+ *
+ * If the trace is feasible (a feasible prefix), clear out the list of
+ * unrealized data races, asserting any realized ones as execution bugs so that
+ * the model-checker will end the execution.
+ *
+ * @return True if any data races were realized
+ */
 bool checkDataRaces() {
 	if (model->isfeasibleprefix()) {
+		bool race_asserted = false;
 		/* Prune the non-racing unrealized dataraces */
-		unsigned int i,newloc=0;
-		for(i=0;i<unrealizedraces.size();i++) {
-			struct DataRace * race=unrealizedraces[i];
+		for (unsigned i = 0; i < unrealizedraces.size(); i++) {
+			struct DataRace *race = unrealizedraces[i];
 			if (clock_may_race(race->newaction->get_cv(), race->newaction->get_tid(), race->oldclock, race->oldthread)) {
-				unrealizedraces[newloc++]=race;
+				assert_race(race);
+				race_asserted = true;
 			}
+			snapshot_free(race);
 		}
-		if (newloc!=i)
-			unrealizedraces.resize(newloc);
-
-		if (unrealizedraces.size()!=0) {
-			/* We have an actual realized race. */
-			for(i=0;i<unrealizedraces.size();i++) {
-				struct DataRace * race=unrealizedraces[i];
-				printRace(race);
-			}
-			return true;
-		}
+		unrealizedraces.clear();
+		return race_asserted;
 	}
 	return false;
 }
 
-void printRace(struct DataRace *race)
+/**
+ * @brief Assert a data race
+ *
+ * Asserts a data race which is currently realized, causing the execution to
+ * end and stashing a message in the model-checker's bug list
+ *
+ * @param race The race to report
+ */
+void assert_race(struct DataRace *race)
 {
-	printf("Data race detected @ address %p:\n", race->address);
-	printf("    Access 1: %5s in thread %2d @ clock %3u\n",
+	char buf[200];
+	char *ptr = buf;
+	ptr += sprintf(ptr, "Data race detected @ address %p:\n", race->address);
+	ptr += sprintf(ptr, "    Access 1: %5s in thread %2d @ clock %3u\n",
 			race->isoldwrite ? "write" : "read",
 			id_to_int(race->oldthread), race->oldclock);
-	printf("    Access 2: %5s in thread %2d @ clock %3u\n",
+	ptr += sprintf(ptr, "    Access 2: %5s in thread %2d @ clock %3u",
 			race->isnewwrite ? "write" : "read",
 			id_to_int(race->newaction->get_tid()), race->newaction->get_seq_number());
+	model->assert_bug(buf);
 }
 
 /** This function does race detection for a write on an expanded record. */

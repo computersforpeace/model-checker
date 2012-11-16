@@ -28,6 +28,8 @@ struct bug_message {
 
 	char *msg;
 	void print() { printf("%s", msg); }
+
+	SNAPSHOTALLOC
 };
 
 /**

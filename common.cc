@@ -49,6 +49,6 @@ void model_assert(bool expr, const char *file, int line)
 		char msg[100];
 		sprintf(msg, "Program has hit assertion in file %s at line %d\n",
 				file, line);
-		model->assert_bug(msg, true);
+		model->assert_user_bug(msg);
 	}
 }

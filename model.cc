@@ -337,45 +337,30 @@ bool ModelChecker::is_complete_execution() const
  * the current trace is not yet feasible, the error message will be stashed and
  * printed if the execution ever becomes feasible.
  *
- * This function can also be used to immediately trigger the bug; that is, we
- * don't wait for a feasible execution before aborting. Only use the
- * "immediate" option when you know that the infeasibility is justified (e.g.,
- * pending release sequences are not a problem)
- *
  * @param msg Descriptive message for the bug (do not include newline char)
- * @param user_thread Was this assertion triggered from a user thread?
- * @param immediate Should this bug be triggered immediately?
+ * @return True if bug is immediately-feasible
  */
-void ModelChecker::assert_bug(const char *msg, bool user_thread, bool immediate)
+bool ModelChecker::assert_bug(const char *msg)
 {
 	priv->bugs.push_back(new bug_message(msg));
 
-	if (immediate || isfeasibleprefix()) {
+	if (isfeasibleprefix()) {
 		set_assert();
-		if (user_thread)
-			switch_to_master(NULL);
+		return true;
 	}
+	return false;
 }
 
 /**
- * @brief Assert a bug in the executing program, with a default message
- * @see ModelChecker::assert_bug
- * @param user_thread Was this assertion triggered from a user thread?
- */
-void ModelChecker::assert_bug(bool user_thread)
-{
-	assert_bug("bug detected", user_thread);
-}
-
-/**
- * @brief Assert a bug in the executing program immediately
+ * @brief Assert a bug in the executing program, asserted by a user thread
  * @see ModelChecker::assert_bug
  * @param msg Descriptive message for the bug (do not include newline char)
  */
-void ModelChecker::assert_bug_immediate(const char *msg)
+void ModelChecker::assert_user_bug(const char *msg)
 {
-	printf("Feasible: %s\n", isfeasibleprefix() ? "yes" : "no");
-	assert_bug(msg, false, true);
+	/* If feasible bug, bail out now */
+	if (assert_bug(msg))
+		switch_to_master(NULL);
 }
 
 /** @return True, if any bugs have been reported for this execution */

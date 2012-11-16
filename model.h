@@ -116,9 +116,8 @@ public:
 	void finish_execution();
 	bool isfeasibleprefix() const;
 
-	void assert_bug(const char *msg, bool user_thread = false, bool immediate = false);
-	void assert_bug(bool user_thread = true);
-	void assert_bug_immediate(const char *msg);
+	bool assert_bug(const char *msg);
+	void assert_user_bug(const char *msg);
 
 	void set_assert() {asserted=true;}
 	bool is_deadlocked() const;

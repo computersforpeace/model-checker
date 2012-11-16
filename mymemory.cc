@@ -135,7 +135,7 @@ void * HandleEarlyAllocationRequest(size_t sz)
 	sz = (sz + 7) & ~7;
 
 	if (sz > (BOOTSTRAPBYTES-offset)) {
-		printf("OUT OF BOOTSTRAP MEMORY\n");
+		model_print("OUT OF BOOTSTRAP MEMORY\n");
 		exit(EXIT_FAILURE);
 	}
 

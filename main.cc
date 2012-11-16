@@ -28,7 +28,7 @@ static void print_usage(struct model_params *params) {
 	/* Reset defaults before printing */
 	param_defaults(params);
 
-	printf(
+	model_print(
 "Usage: <program name> [MC_OPTIONS] -- [PROGRAM ARGUMENTS]\n"
 "\n"
 "Options:\n"

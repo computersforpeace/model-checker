@@ -27,7 +27,7 @@ struct bug_message {
 	~bug_message() { if (msg) snapshot_free(msg); }
 
 	char *msg;
-	void print() { printf("%s", msg); }
+	void print() { model_print("%s", msg); }
 
 	SNAPSHOTALLOC
 };
@@ -373,7 +373,7 @@ bool ModelChecker::have_bug_reports() const
 void ModelChecker::print_bugs() const
 {
 	if (have_bug_reports()) {
-		printf("Bug report: %zu bug%s detected\n",
+		model_print("Bug report: %zu bug%s detected\n",
 				priv->bugs.size(),
 				priv->bugs.size() > 1 ? "s" : "");
 		for (unsigned int i = 0; i < priv->bugs.size(); i++)
@@ -401,11 +401,11 @@ void ModelChecker::record_stats()
 /** @brief Print execution stats */
 void ModelChecker::print_stats() const
 {
-	printf("Number of complete, bug-free executions: %d\n", stats.num_complete);
-	printf("Number of buggy executions: %d\n", stats.num_buggy_executions);
-	printf("Number of infeasible executions: %d\n", stats.num_infeasible);
-	printf("Total executions: %d\n", stats.num_total);
-	printf("Total nodes created: %d\n", node_stack->get_total_nodes());
+	model_print("Number of complete, bug-free executions: %d\n", stats.num_complete);
+	model_print("Number of buggy executions: %d\n", stats.num_buggy_executions);
+	model_print("Number of infeasible executions: %d\n", stats.num_infeasible);
+	model_print("Total executions: %d\n", stats.num_total);
+	model_print("Total nodes created: %d\n", node_stack->get_total_nodes());
 }
 
 /**
@@ -422,11 +422,11 @@ bool ModelChecker::next_execution()
 	record_stats();
 
 	if (isfinalfeasible() && (is_complete_execution() || have_bug_reports())) {
-		printf("Earliest divergence point since last feasible execution:\n");
+		model_print("Earliest divergence point since last feasible execution:\n");
 		if (earliest_diverge)
 			earliest_diverge->print();
 		else
-			printf("(Not set)\n");
+			model_print("(Not set)\n");
 
 		earliest_diverge = NULL;
 
@@ -435,11 +435,11 @@ bool ModelChecker::next_execution()
 
 		checkDataRaces();
 		print_bugs();
-		printf("\n");
+		model_print("\n");
 		print_stats();
 		print_summary();
 	} else if (DBG_ENABLED()) {
-		printf("\n");
+		model_print("\n");
 		print_summary();
 	}
 
@@ -447,7 +447,7 @@ bool ModelChecker::next_execution()
 		return false;
 
 	if (DBG_ENABLED()) {
-		printf("Next execution will diverge at:\n");
+		model_print("Next execution will diverge at:\n");
 		diverge->print();
 	}
 
@@ -2198,11 +2198,11 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 		assert_bug("May read from uninitialized atomic");
 
 	if (DBG_ENABLED() || !initialized) {
-		printf("Reached read action:\n");
+		model_print("Reached read action:\n");
 		curr->print();
-		printf("Printing may_read_from\n");
+		model_print("Printing may_read_from\n");
 		curr->get_node()->print_may_read_from();
-		printf("End printing may_read_from\n");
+		model_print("End printing may_read_from\n");
 	}
 }
 
@@ -2226,16 +2226,16 @@ static void print_list(action_list_t *list)
 {
 	action_list_t::iterator it;
 
-	printf("---------------------------------------------------------------------\n");
-	printf("Trace:\n");
+	model_print("---------------------------------------------------------------------\n");
+	model_print("Trace:\n");
 	unsigned int hash=0;
 
 	for (it = list->begin(); it != list->end(); it++) {
 		(*it)->print();
 		hash=hash^(hash<<3)^((*it)->hash());
 	}
-	printf("HASH %u\n", hash);
-	printf("---------------------------------------------------------------------\n");
+	model_print("HASH %u\n", hash);
+	model_print("---------------------------------------------------------------------\n");
 }
 
 #if SUPPORT_MOD_ORDER_DUMP
@@ -2278,9 +2278,9 @@ void ModelChecker::print_summary()
 #endif
 
 	if (!isfinalfeasible())
-		printf("INFEASIBLE EXECUTION!\n");
+		model_print("INFEASIBLE EXECUTION!\n");
 	print_list(action_trace);
-	printf("\n");
+	model_print("\n");
 }
 
 /**
@@ -2415,7 +2415,7 @@ bool ModelChecker::take_step() {
 	 */
 	if (!pending_rel_seqs->empty() && (!next || next->is_model_thread()) &&
 			isfinalfeasible() && !unrealizedraces.empty()) {
-		printf("*** WARNING: release sequence fixup action (%zu pending release seuqences) ***\n",
+		model_print("*** WARNING: release sequence fixup action (%zu pending release seuqences) ***\n",
 				pending_rel_seqs->size());
 		ModelAction *fixup = new ModelAction(MODEL_FIXUP_RELSEQ,
 				std::memory_order_seq_cst, NULL, VALUE_NONE,

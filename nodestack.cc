@@ -91,7 +91,7 @@ void Node::print()
 	if (action)
 		action->print();
 	else
-		printf("******** empty action ********\n");
+		model_print("******** empty action ********\n");
 }
 
 /** @brief Prints info about may_read_from set */
@@ -495,14 +495,14 @@ NodeStack::~NodeStack()
 
 void NodeStack::print()
 {
-	printf("............................................\n");
-	printf("NodeStack printing node_list:\n");
+	model_print("............................................\n");
+	model_print("NodeStack printing node_list:\n");
 	for (unsigned int it = 0; it < node_list.size(); it++) {
 		if (it == this->iter)
-			printf("vvv following action is the current iterator vvv\n");
+			model_print("vvv following action is the current iterator vvv\n");
 		node_list[it]->print();
 	}
-	printf("............................................\n");
+	model_print("............................................\n");
 }
 
 /** Note: The is_enabled set contains what actions were enabled when

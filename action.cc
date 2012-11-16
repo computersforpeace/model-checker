@@ -468,22 +468,22 @@ void ModelAction::print() const
 		break;
 	}
 
-	printf("(%4d) Thread: %-2d   Action: %-13s   MO: %7s  Loc: %14p   Value: %-#18" PRIx64,
+	model_print("(%4d) Thread: %-2d   Action: %-13s   MO: %7s  Loc: %14p   Value: %-#18" PRIx64,
 			seq_number, id_to_int(tid), type_str, mo_str, location, valuetoprint);
 	if (is_read()) {
 		if (reads_from)
-			printf("  Rf: %-3d", reads_from->get_seq_number());
+			model_print("  Rf: %-3d", reads_from->get_seq_number());
 		else
-			printf("  Rf: ?  ");
+			model_print("  Rf: ?  ");
 	}
 	if (cv) {
 		if (is_read())
-			printf(" ");
+			model_print(" ");
 		else
-			printf("          ");
+			model_print("          ");
 		cv->print();
 	} else
-		printf("\n");
+		model_print("\n");
 }
 
 /** @brief Print nicely-formatted info about this ModelAction */

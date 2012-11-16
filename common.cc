@@ -24,10 +24,10 @@ void print_trace(void)
 	size = backtrace(array, MAX_TRACE_LEN);
 	strings = backtrace_symbols(array, size);
 
-	printf("\nDumping stack trace (%d frames):\n", size);
+	model_print("\nDumping stack trace (%d frames):\n", size);
 
 	for (i = 0; i < size; i++)
-		printf("\t%s\n", strings[i]);
+		model_print("\t%s\n", strings[i]);
 
 	free(strings);
 #endif /* CONFIG_STACKTRACE */
@@ -40,7 +40,7 @@ void model_print_summary(void)
 
 void assert_hook(void)
 {
-	printf("Add breakpoint to line %u in file %s.\n",__LINE__,__FILE__);
+	model_print("Add breakpoint to line %u in file %s.\n",__LINE__,__FILE__);
 }
 
 void model_assert(bool expr, const char *file, int line)

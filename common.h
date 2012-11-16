@@ -8,8 +8,10 @@
 #include <stdio.h>
 #include "config.h"
 
+#define model_print(fmt, ...) do { printf(fmt, ##__VA_ARGS__); } while (0)
+
 #ifdef CONFIG_DEBUG
-#define DEBUG(fmt, ...) do { printf("*** %25s(): line %-4d *** " fmt, __func__, __LINE__, ##__VA_ARGS__); } while (0)
+#define DEBUG(fmt, ...) do { model_print("*** %25s(): line %-4d *** " fmt, __func__, __LINE__, ##__VA_ARGS__); } while (0)
 #define DBG() DEBUG("\n")
 #define DBG_ENABLED() (1)
 #else

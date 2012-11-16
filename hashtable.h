@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "mymemory.h"
+#include "common.h"
 
 /**
  * Hashtable linked node class, for chained storage of hash table conflicts. By
@@ -161,7 +162,7 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift=0, void * (*
 		unsigned int oldcapacity = capacity;
 
 		if((newtable = (struct hashlistnode<_Key,_Val> *) _calloc(newsize, sizeof(struct hashlistnode<_Key,_Val>))) == NULL) {
-			printf("Calloc error %s %d\n", __FILE__, __LINE__);
+			model_print("Calloc error %s %d\n", __FILE__, __LINE__);
 			exit(-1);
 		}
 		

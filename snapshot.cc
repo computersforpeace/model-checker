@@ -19,10 +19,10 @@
 
 #include "common.h"
 
-#define FAILURE(mesg) { printf("failed in the API: %s with errno relative message: %s\n", mesg, strerror( errno ) ); exit(EXIT_FAILURE); }
+#define FAILURE(mesg) { model_print("failed in the API: %s with errno relative message: %s\n", mesg, strerror( errno ) ); exit(EXIT_FAILURE); }
 
 #ifdef CONFIG_SSDEBUG
-#define SSDEBUG		printf
+#define SSDEBUG		model_print
 #else
 #define SSDEBUG(...)	do { } while (0)
 #endif
@@ -86,9 +86,9 @@ static void initSnapShotRecord(unsigned int numbackingpages, unsigned int numsna
  */
 static void HandlePF( int sig, siginfo_t *si, void * unused){
 	if( si->si_code == SEGV_MAPERR ){
-		printf("Real Fault at %p\n", si->si_addr);
+		model_print("Real Fault at %p\n", si->si_addr);
 		print_trace();
-		printf("For debugging, place breakpoint at: %s:%d\n",
+		model_print("For debugging, place breakpoint at: %s:%d\n",
 				__FILE__, __LINE__);
 		exit( EXIT_FAILURE );
 	}
@@ -96,7 +96,7 @@ static void HandlePF( int sig, siginfo_t *si, void * unused){
 
 	unsigned int backingpage=snapshotrecord->lastBackingPage++; //Could run out of pages...
 	if (backingpage==snapshotrecord->maxBackingPages) {
-		printf("Out of backing pages at %p\n", si->si_addr);
+		model_print("Out of backing pages at %p\n", si->si_addr);
 		exit( EXIT_FAILURE );
 	}
 
@@ -151,12 +151,12 @@ void initSnapshotLibrary(unsigned int numbackingpages,
 	sa.sa_sigaction = HandlePF;
 #ifdef MAC
 	if( sigaction( SIGBUS, &sa, NULL ) == -1 ){
-		printf("SIGACTION CANNOT BE INSTALLED\n");
+		model_print("SIGACTION CANNOT BE INSTALLED\n");
 		exit(EXIT_FAILURE);
 	}
 #endif
 	if( sigaction( SIGSEGV, &sa, NULL ) == -1 ){
-		printf("SIGACTION CANNOT BE INSTALLED\n");
+		model_print("SIGACTION CANNOT BE INSTALLED\n");
 		exit(EXIT_FAILURE);
 	}
 
@@ -251,7 +251,7 @@ void addMemoryRegionToSnapShot( void * addr, unsigned int numPages) {
 #if USE_MPROTECT_SNAPSHOT
 	unsigned int memoryregion=snapshotrecord->lastRegion++;
 	if (memoryregion==snapshotrecord->maxRegions) {
-		printf("Exceeded supported number of memory regions!\n");
+		model_print("Exceeded supported number of memory regions!\n");
 		exit(EXIT_FAILURE);
 	}
 
@@ -268,13 +268,13 @@ snapshot_id takeSnapshot( ){
 	for(unsigned int region=0; region<snapshotrecord->lastRegion;region++) {
 		if( mprotect(snapshotrecord->regionsToSnapShot[region].basePtr, snapshotrecord->regionsToSnapShot[region].sizeInPages*sizeof(struct SnapShotPage), PROT_READ ) == -1 ){
 			perror("mprotect");
-			printf("Failed to mprotect inside of takeSnapShot\n");
+			model_print("Failed to mprotect inside of takeSnapShot\n");
 			exit(EXIT_FAILURE);
 		}
 	}
 	unsigned int snapshot=snapshotrecord->lastSnapShot++;
 	if (snapshot==snapshotrecord->maxSnapShots) {
-		printf("Out of snapshots\n");
+		model_print("Out of snapshots\n");
 		exit(EXIT_FAILURE);
 	}
 	snapshotrecord->snapShots[snapshot].firstBackingPage=snapshotrecord->lastBackingPage;
@@ -305,7 +305,7 @@ void rollBack( snapshot_id theID ){
 	for(unsigned int region=0; region<snapshotrecord->lastRegion;region++) {
 		if( mprotect(snapshotrecord->regionsToSnapShot[region].basePtr, snapshotrecord->regionsToSnapShot[region].sizeInPages*sizeof(struct SnapShotPage), PROT_READ | PROT_WRITE ) == -1 ){
 			perror("mprotect");
-			printf("Failed to mprotect inside of takeSnapShot\n");
+			model_print("Failed to mprotect inside of takeSnapShot\n");
 			exit(EXIT_FAILURE);
 		}
 	}

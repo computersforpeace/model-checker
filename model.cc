@@ -1037,7 +1037,7 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 
 	/* Initialize work_queue with the "current action" work */
 	work_queue_t work_queue(1, CheckCurrWorkEntry(curr));
-	while (!work_queue.empty()) {
+	while (!work_queue.empty() && !has_asserted()) {
 		WorkQueueEntry work = work_queue.front();
 		work_queue.pop_front();
 
@@ -2179,11 +2179,8 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 		}
 	}
 
-	if (!initialized) {
-		/** @todo Need a more informative way of reporting errors. */
-		printf("ERROR: may read from uninitialized atomic\n");
-		set_assert();
-	}
+	if (!initialized)
+		assert_bug("May read from uninitialized atomic");
 
 	if (DBG_ENABLED() || !initialized) {
 		printf("Reached read action:\n");

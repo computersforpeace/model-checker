@@ -918,7 +918,7 @@ void ModelChecker::process_relseq_fixup(ModelAction *curr, work_queue_t *work_qu
 
 	/* See if we have realized a data race */
 	if (checkDataRaces())
-		assert_bug("Datarace");
+		assert_bug("Data race");
 }
 
 /**
@@ -1850,7 +1850,7 @@ bool ModelChecker::resolve_release_sequences(void *location, work_queue_t *work_
 
 	// If we resolved promises or data races, see if we have realized a data race.
 	if (checkDataRaces())
-		assert_bug("Datarace");
+		assert_bug("Data race");
 
 	return updated;
 }

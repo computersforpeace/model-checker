@@ -103,7 +103,7 @@ static void reportDataRace(thread_id_t oldthread, modelclock_t oldclock, bool is
 
 	/* If the race is realized, bail out now. */
 	if (checkDataRaces())
-		model->assert_bug("Datarace", true);
+		model->assert_bug("Data race", true);
 }
 
 /** This function goes through the list of unrealized data races,
@@ -136,7 +136,7 @@ bool checkDataRaces() {
 
 void printRace(struct DataRace *race)
 {
-	printf("Datarace detected @ address %p:\n", race->address);
+	printf("Data race detected @ address %p:\n", race->address);
 	printf("    Access 1: %5s in thread %2d @ clock %3u\n",
 			race->isoldwrite ? "write" : "read",
 			id_to_int(race->oldthread), race->oldclock);

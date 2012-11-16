@@ -103,7 +103,7 @@ static void reportDataRace(thread_id_t oldthread, modelclock_t oldclock, bool is
 
 	/* If the race is realized, bail out now. */
 	if (checkDataRaces())
-		model->assert_bug("Data race", true);
+		model->switch_to_master(NULL);
 }
 
 /**

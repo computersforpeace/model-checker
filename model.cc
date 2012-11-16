@@ -446,8 +446,8 @@ bool ModelChecker::next_execution()
 		if (is_deadlocked())
 			assert_bug("Deadlock detected");
 
-		print_bugs();
 		checkDataRaces();
+		print_bugs();
 		printf("\n");
 		print_stats();
 		print_summary();
@@ -917,8 +917,7 @@ void ModelChecker::process_relseq_fixup(ModelAction *curr, work_queue_t *work_qu
 	}
 
 	/* See if we have realized a data race */
-	if (checkDataRaces())
-		assert_bug("Data race");
+	checkDataRaces();
 }
 
 /**
@@ -1849,8 +1848,7 @@ bool ModelChecker::resolve_release_sequences(void *location, work_queue_t *work_
 	}
 
 	// If we resolved promises or data races, see if we have realized a data race.
-	if (checkDataRaces())
-		assert_bug("Data race");
+	checkDataRaces();
 
 	return updated;
 }

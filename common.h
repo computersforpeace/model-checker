@@ -8,7 +8,9 @@
 #include <stdio.h>
 #include "config.h"
 
-#define model_print(fmt, ...) do { printf(fmt, ##__VA_ARGS__); } while (0)
+extern FILE *model_out;
+
+#define model_print(fmt, ...) do { fprintf(model_out, fmt, ##__VA_ARGS__); } while (0)
 
 #ifdef CONFIG_DEBUG
 #define DEBUG(fmt, ...) do { model_print("*** %25s(): line %-4d *** " fmt, __func__, __LINE__, ##__VA_ARGS__); } while (0)

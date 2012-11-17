@@ -13,6 +13,7 @@
 #include "promise.h"
 #include "datarace.h"
 #include "threads-model.h"
+#include "output.h"
 
 #define INITIAL_THREAD_ID	0
 
@@ -139,6 +140,10 @@ void ModelChecker::reset_to_initial_state()
 	too_many_reads = false;
 	bad_synchronization = false;
 	reset_asserted();
+
+	/* Print all model-checker output before rollback */
+	fflush(model_out);
+
 	snapshotObject->backTrackBeforeStep(0);
 }
 

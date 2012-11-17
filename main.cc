@@ -7,6 +7,7 @@
 #include <threads.h>
 #include "common.h"
 #include "threads-model.h"
+#include "output.h"
 
 #include "datarace.h"
 
@@ -144,6 +145,9 @@ static void model_main() {
 int main(int argc, char ** argv) {
 	main_argc = argc;
 	main_argv = argv;
+
+	/* Configure output redirection for the model-checker */
+	redirect_output();
 
 	/* Let's jump in quickly and start running stuff */
 	initSnapshotLibrary(10000, 1024, 1024, 4000, &model_main);

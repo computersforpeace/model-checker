@@ -77,6 +77,8 @@ void model_assert(bool expr, const char *file, int line)
  * output much data, we will need to buffer it in user-space during execution.
  * This also means that if ModelChecker decides not to print an execution, it
  * should promptly clear the pipe.
+ *
+ * This function should only be called once.
  */
 void redirect_output()
 {

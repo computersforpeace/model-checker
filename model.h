@@ -87,8 +87,7 @@ public:
 	/** @returns the context for the main model-checking system thread */
 	ucontext_t * get_system_context() { return &system_context; }
 
-	/** Prints an execution summary with trace information. */
-	void print_summary();
+	void print_summary() const;
 #if SUPPORT_MOD_ORDER_DUMP
 	void dumpGraph(char *filename);
 #endif

@@ -2287,7 +2287,8 @@ void ModelChecker::dumpGraph(char *filename) {
 }
 #endif
 
-void ModelChecker::print_summary()
+/** @brief Prints an execution trace summary. */
+void ModelChecker::print_summary() const
 {
 #if SUPPORT_MOD_ORDER_DUMP
 	scheduler->print();

@@ -122,6 +122,7 @@ public:
 	void set_assert() {asserted=true;}
 	bool is_deadlocked() const;
 	bool is_complete_execution() const;
+	void print_stats() const;
 
 	/** @brief Alert the model-checker that an incorrectly-ordered
 	 * synchronization was made */
@@ -246,7 +247,6 @@ private:
 	/** @brief The cumulative execution stats */
 	struct execution_stats stats;
 	void record_stats();
-	void print_stats() const;
 
 	bool have_bug_reports() const;
 	void print_bugs() const;

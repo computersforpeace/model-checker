@@ -130,6 +130,8 @@ static void model_main() {
 		model->finish_execution();
 	} while (model->next_execution());
 
+	model->print_stats();
+
 	delete model;
 
 	DEBUG("Exiting\n");

@@ -436,7 +436,6 @@ bool ModelChecker::next_execution()
 		checkDataRaces();
 		print_bugs();
 		model_print("\n");
-		print_stats();
 		print_summary();
 	} else if (DBG_ENABLED()) {
 		model_print("\n");

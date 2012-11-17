@@ -47,6 +47,9 @@ struct model_params {
 	 *  expiration time exceeds the existing one by more than the slop
 	 *  value */
 	unsigned int expireslop;
+
+	/** @brief Verbosity (0 = quiet; 1 = noisy) */
+	int verbose;
 };
 
 /** @brief Model checker execution stats */

@@ -425,24 +425,39 @@ bool ModelChecker::next_execution()
 	DBG();
 
 	if (isfinalfeasible() && (is_complete_execution() || have_bug_reports())) {
-		model_print("Earliest divergence point since last feasible execution:\n");
-		if (earliest_diverge)
-			earliest_diverge->print();
-		else
-			model_print("(Not set)\n");
-
-		earliest_diverge = NULL;
-
 		if (is_deadlocked())
 			assert_bug("Deadlock detected");
 
 		checkDataRaces();
-		print_bugs();
-		model_print("\n");
-		print_summary();
+
+		if (DBG_ENABLED() || params.verbose || have_bug_reports()) {
+			print_program_output();
+
+			if (DBG_ENABLED() || params.verbose) {
+				model_print("Earliest divergence point since last feasible execution:\n");
+				if (earliest_diverge)
+					earliest_diverge->print();
+				else
+					model_print("(Not set)\n");
+
+				model_print("\n");
+				print_stats();
+			}
+
+			print_bugs();
+			model_print("\n");
+			print_summary();
+		} else
+			clear_program_output();
+
+		earliest_diverge = NULL;
 	} else if (DBG_ENABLED()) {
+		print_program_output();
 		model_print("\n");
+		print_stats();
 		print_summary();
+	} else {
+		clear_program_output();
 	}
 
 	record_stats();

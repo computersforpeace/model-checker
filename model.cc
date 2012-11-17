@@ -419,8 +419,6 @@ bool ModelChecker::next_execution()
 {
 	DBG();
 
-	record_stats();
-
 	if (isfinalfeasible() && (is_complete_execution() || have_bug_reports())) {
 		model_print("Earliest divergence point since last feasible execution:\n");
 		if (earliest_diverge)
@@ -441,6 +439,8 @@ bool ModelChecker::next_execution()
 		model_print("\n");
 		print_summary();
 	}
+
+	record_stats();
 
 	if ((diverge = get_next_backtrack()) == NULL)
 		return false;
@@ -2221,12 +2221,14 @@ bool ModelChecker::sleep_can_read_from(ModelAction * curr, const ModelAction *wr
 	}
 }
 
-static void print_list(action_list_t *list)
+static void print_list(action_list_t *list, int exec_num = -1)
 {
 	action_list_t::iterator it;
 
 	model_print("---------------------------------------------------------------------\n");
-	model_print("Trace:\n");
+	if (exec_num >= 0)
+		model_print("Execution %d:\n", exec_num);
+
 	unsigned int hash=0;
 
 	for (it = list->begin(); it != list->end(); it++) {
@@ -2278,7 +2280,7 @@ void ModelChecker::print_summary()
 
 	if (!isfinalfeasible())
 		model_print("INFEASIBLE EXECUTION!\n");
-	print_list(action_trace);
+	print_list(action_trace, stats.num_total);
 	model_print("\n");
 }
 

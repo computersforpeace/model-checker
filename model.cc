@@ -414,6 +414,33 @@ void ModelChecker::print_stats() const
 }
 
 /**
+ * @brief End-of-exeuction print
+ * @param printbugs Should any existing bugs be printed?
+ */
+void ModelChecker::print_execution(bool printbugs) const
+{
+	print_program_output();
+
+	if (DBG_ENABLED() || params.verbose) {
+		model_print("Earliest divergence point since last feasible execution:\n");
+		if (earliest_diverge)
+			earliest_diverge->print();
+		else
+			model_print("(Not set)\n");
+
+		model_print("\n");
+		print_stats();
+	}
+
+	/* Don't print invalid bugs */
+	if (printbugs)
+		print_bugs();
+
+	model_print("\n");
+	print_summary();
+}
+
+/**
  * Queries the model-checker for more executions to explore and, if one
  * exists, resets the model-checker state to execute a new execution.
  *
@@ -423,44 +450,28 @@ void ModelChecker::print_stats() const
 bool ModelChecker::next_execution()
 {
 	DBG();
+	/* Is this execution a feasible execution that's worth bug-checking? */
+	bool complete = isfinalfeasible() && (is_complete_execution() ||
+			have_bug_reports());
 
-	if (isfinalfeasible() && (is_complete_execution() || have_bug_reports())) {
+	/* End-of-execution bug checks */
+	if (complete) {
 		if (is_deadlocked())
 			assert_bug("Deadlock detected");
 
 		checkDataRaces();
-
-		if (DBG_ENABLED() || params.verbose || have_bug_reports()) {
-			print_program_output();
-
-			if (DBG_ENABLED() || params.verbose) {
-				model_print("Earliest divergence point since last feasible execution:\n");
-				if (earliest_diverge)
-					earliest_diverge->print();
-				else
-					model_print("(Not set)\n");
-
-				model_print("\n");
-				print_stats();
-			}
-
-			print_bugs();
-			model_print("\n");
-			print_summary();
-		} else
-			clear_program_output();
-
-		earliest_diverge = NULL;
-	} else if (DBG_ENABLED()) {
-		print_program_output();
-		model_print("\n");
-		print_stats();
-		print_summary();
-	} else {
-		clear_program_output();
 	}
 
 	record_stats();
+
+	/* Output */
+	if (DBG_ENABLED() || params.verbose || have_bug_reports())
+		print_execution(complete);
+	else
+		clear_program_output();
+
+	if (complete)
+		earliest_diverge = NULL;
 
 	if ((diverge = get_next_backtrack()) == NULL)
 		return false;

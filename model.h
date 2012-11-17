@@ -252,6 +252,7 @@ private:
 
 	bool have_bug_reports() const;
 	void print_bugs() const;
+	void print_execution(bool printbugs) const;
 };
 
 extern ModelChecker *model;

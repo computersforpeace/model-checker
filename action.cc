@@ -156,6 +156,11 @@ bool ModelAction::is_initialization() const
 	return type == ATOMIC_INIT;
 }
 
+bool ModelAction::is_relaxed() const
+{
+	return order == std::memory_order_relaxed;
+}
+
 bool ModelAction::is_acquire() const
 {
 	switch (order) {

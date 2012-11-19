@@ -106,6 +106,7 @@ public:
 	bool is_rmw() const;
 	bool is_fence() const;
 	bool is_initialization() const;
+	bool is_relaxed() const;
 	bool is_acquire() const;
 	bool is_release() const;
 	bool is_seqcst() const;

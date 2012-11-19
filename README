@@ -46,6 +46,7 @@ Options:
                       priority for execution. Default: 0
 -e                    Enabled count. Default: 1
 -b                    Upper length bound. Default: 0
+-v                    Print verbose execution information.
 --                    Program arguments follow.
 
 

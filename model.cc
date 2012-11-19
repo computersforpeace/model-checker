@@ -494,6 +494,9 @@ ModelAction * ModelChecker::get_last_conflict(ModelAction *act)
 	case ATOMIC_READ:
 	case ATOMIC_WRITE:
 	case ATOMIC_RMW: {
+		/* Optimization: relaxed operations don't need backtracking */
+		if (act->is_relaxed())
+			return NULL;
 		/* linear search: from most recent to oldest */
 		action_list_t *list = get_safe_ptr_action(obj_map, act->get_location());
 		action_list_t::reverse_iterator rit;

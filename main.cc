@@ -54,11 +54,11 @@ params->maxreads, params->maxfuturevalues, params->maxfuturedelay, params->expir
 	exit(EXIT_SUCCESS);
 }
 
-static void parse_options(struct model_params *params, int *argc, char ***argv) {
+static void parse_options(struct model_params *params, int argc, char **argv) {
 	const char *shortopts = "hm:M:s:S:f:e:b:v";
 	int opt;
 	bool error = false;
-	while (!error && (opt = getopt(*argc, *argv, shortopts)) != -1) {
+	while (!error && (opt = getopt(argc, argv, shortopts)) != -1) {
 		switch (opt) {
 		case 'h':
 			print_usage(params);
@@ -92,9 +92,15 @@ static void parse_options(struct model_params *params, int *argc, char ***argv) 
 			break;
 		}
 	}
-	(*argv)[optind - 1] = (*argv)[0];
-	(*argc) -= (optind - 1);
-	(*argv) += (optind - 1);
+
+	/* Pass remaining arguments to user program */
+	params->argc = argc - (optind - 1);
+	params->argv = argv + (optind - 1);
+
+	/* Reset program name */
+	params->argv[0] = argv[0];
+
+	/* Reset (global) optind for potential use by user program */
 	optind = 1;
 
 	if (error)
@@ -110,11 +116,7 @@ static void model_main() {
 
 	param_defaults(&params);
 
-	parse_options(&params, &main_argc, &main_argv);
-
-	/* Pass remaining arguments to user program */
-	params.argc = main_argc;
-	params.argv = main_argv;
+	parse_options(&params, main_argc, main_argv);
 
 	//Initialize race detector
 	initRaceDetector();

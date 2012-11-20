@@ -1214,14 +1214,17 @@ bool ModelChecker::promises_expired() const
  * This is the strongest feasibility check available.
  * @return whether the current trace (partial or complete) must be a prefix of
  * a feasible trace.
- * */
+ */
 bool ModelChecker::isfeasibleprefix() const
 {
-	return promises->size() == 0 && pending_rel_seqs->size() == 0 && !is_infeasible();
+	return pending_rel_seqs->size() == 0 && is_feasible_prefix_ignore_relseq();
 }
 
-/** Returns whether the current completed trace is feasible. */
-bool ModelChecker::isfinalfeasible() const
+/**
+ * Returns whether the current completed trace is feasible, except for pending
+ * release sequences.
+ */
+bool ModelChecker::is_feasible_prefix_ignore_relseq() const
 {
 	if (DBG_ENABLED() && promises->size() != 0)
 		DEBUG("Infeasible: unrevolved promises\n");
@@ -2498,7 +2501,7 @@ bool ModelChecker::take_step() {
 	 * (4) no pending promises
 	 */
 	if (!pending_rel_seqs->empty() && (!next || next->is_model_thread()) &&
-			isfinalfeasible() && !unrealizedraces.empty()) {
+			is_feasible_prefix_ignore_relseq() && !unrealizedraces.empty()) {
 		model_print("*** WARNING: release sequence fixup action (%zu pending release seuqences) ***\n",
 				pending_rel_seqs->size());
 		ModelAction *fixup = new ModelAction(MODEL_FIXUP_RELSEQ,

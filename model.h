@@ -111,11 +111,11 @@ public:
 
 	thread_id_t get_next_id();
 	unsigned int get_num_threads() const;
-	Thread * get_current_thread();
+	Thread * get_current_thread() const;
 
 	int switch_to_master(ModelAction *act);
-	ClockVector * get_cv(thread_id_t tid);
-	ModelAction * get_parent_action(thread_id_t tid);
+	ClockVector * get_cv(thread_id_t tid) const;
+	ModelAction * get_parent_action(thread_id_t tid) const;
 	void check_promises_thread_disabled();
 	void mo_check_promises(thread_id_t tid, const ModelAction *write);
 	void check_promises(thread_id_t tid, ClockVector *old_cv, ClockVector * merge_cv);
@@ -128,7 +128,7 @@ public:
 	void set_bad_synchronization();
 
 	const model_params params;
-	Node * get_curr_node();
+	Node * get_curr_node() const;
 
 	MEMALLOC
 private:

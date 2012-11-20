@@ -172,7 +172,7 @@ unsigned int ModelChecker::get_num_threads() const
 }
 
 /** @return The currently executing Thread. */
-Thread * ModelChecker::get_current_thread()
+Thread * ModelChecker::get_current_thread() const
 {
 	return scheduler->get_current_thread();
 }
@@ -183,7 +183,8 @@ modelclock_t ModelChecker::get_next_seq_num()
 	return ++priv->used_sequence_numbers;
 }
 
-Node * ModelChecker::get_curr_node() {
+Node * ModelChecker::get_curr_node() const
+{
 	return node_stack->get_head();
 }
 
@@ -2016,7 +2017,7 @@ ModelAction * ModelChecker::get_last_unlock(ModelAction *curr) const
 	return NULL;
 }
 
-ModelAction * ModelChecker::get_parent_action(thread_id_t tid)
+ModelAction * ModelChecker::get_parent_action(thread_id_t tid) const
 {
 	ModelAction *parent = get_last_action(tid);
 	if (!parent)
@@ -2029,7 +2030,7 @@ ModelAction * ModelChecker::get_parent_action(thread_id_t tid)
  * @param tid The thread whose clock vector we want
  * @return Desired clock vector
  */
-ClockVector * ModelChecker::get_cv(thread_id_t tid)
+ClockVector * ModelChecker::get_cv(thread_id_t tid) const
 {
 	return get_parent_action(tid)->get_cv();
 }

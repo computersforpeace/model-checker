@@ -116,7 +116,6 @@ public:
 	int switch_to_master(ModelAction *act);
 	ClockVector * get_cv(thread_id_t tid);
 	ModelAction * get_parent_action(thread_id_t tid);
-	bool isfinalfeasible() const;
 	void check_promises_thread_disabled();
 	void mo_check_promises(thread_id_t tid, const ModelAction *write);
 	void check_promises(thread_id_t tid, ClockVector *old_cv, ClockVector * merge_cv);
@@ -244,6 +243,7 @@ private:
 	struct execution_stats stats;
 	void record_stats();
 
+	bool isfinalfeasible() const;
 	bool is_infeasible_ignoreRMW() const;
 	bool is_infeasible() const;
 	bool is_deadlocked() const;

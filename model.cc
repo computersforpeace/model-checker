@@ -1217,6 +1217,15 @@ bool ModelChecker::isfeasibleprefix() const
 	return promises->size() == 0 && pending_rel_seqs->size() == 0 && !is_infeasible();
 }
 
+/** Returns whether the current completed trace is feasible. */
+bool ModelChecker::isfinalfeasible() const
+{
+	if (DBG_ENABLED() && promises->size() != 0)
+		DEBUG("Infeasible: unrevolved promises\n");
+
+	return !is_infeasible() && promises->size() == 0;
+}
+
 /**
  * Check if the current partial trace is infeasible. Does not check any
  * end-of-execution flags, which might rule out the execution. Thus, this is
@@ -1256,15 +1265,6 @@ bool ModelChecker::is_infeasible_ignoreRMW() const
 	return mo_graph->checkForCycles() || priv->failed_promise ||
 		priv->too_many_reads || priv->bad_synchronization ||
 		promises_expired();
-}
-
-/** Returns whether the current completed trace is feasible. */
-bool ModelChecker::isfinalfeasible() const
-{
-	if (DBG_ENABLED() && promises->size() != 0)
-		DEBUG("Infeasible: unrevolved promises\n");
-
-	return !is_infeasible() && promises->size() == 0;
 }
 
 /** Close out a RMWR by converting previous RMWR into a RMW or READ. */

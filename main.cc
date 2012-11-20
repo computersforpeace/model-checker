@@ -4,9 +4,7 @@
 
 #include <unistd.h>
 
-#include <threads.h>
 #include "common.h"
-#include "threads-model.h"
 #include "output.h"
 
 #include "datarace.h"

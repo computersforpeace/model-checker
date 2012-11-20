@@ -45,7 +45,11 @@ struct model_snapshot_members {
 		nextThread(NULL),
 		next_backtrack(NULL),
 		bugs(),
-		stats()
+		stats(),
+		failed_promise(false),
+		too_many_reads(false),
+		bad_synchronization(false),
+		asserted(false)
 	{ }
 
 	~model_snapshot_members() {
@@ -61,6 +65,11 @@ struct model_snapshot_members {
 	ModelAction *next_backtrack;
 	std::vector< bug_message *, SnapshotAlloc<bug_message *> > bugs;
 	struct execution_stats stats;
+	bool failed_promise;
+	bool too_many_reads;
+	/** @brief Incorrectly-ordered synchronization was made */
+	bool bad_synchronization;
+	bool asserted;
 
 	SNAPSHOTALLOC
 };
@@ -84,11 +93,7 @@ ModelChecker::ModelChecker(struct model_params params) :
 	thrd_last_action(new std::vector< ModelAction *, SnapshotAlloc<ModelAction *> >(1)),
 	node_stack(new NodeStack()),
 	priv(new struct model_snapshot_members()),
-	mo_graph(new CycleGraph()),
-	failed_promise(false),
-	too_many_reads(false),
-	asserted(false),
-	bad_synchronization(false)
+	mo_graph(new CycleGraph())
 {
 	/* Initialize a model-checker thread, for special ModelActions */
 	model_thread = new Thread(get_next_id());
@@ -147,10 +152,6 @@ void ModelChecker::reset_to_initial_state()
 {
 	DEBUG("+++ Resetting to initial state +++\n");
 	node_stack->reset_execution();
-	failed_promise = false;
-	too_many_reads = false;
-	bad_synchronization = false;
-	reset_asserted();
 
 	/* Print all model-checker output before rollback */
 	fflush(model_out);
@@ -306,6 +307,23 @@ void ModelChecker::wake_up_sleeping_actions(ModelAction * curr) {
 			}
 		}
 	}
+}
+
+/** @brief Alert the model-checker that an incorrectly-ordered
+ * synchronization was made */
+void ModelChecker::set_bad_synchronization()
+{
+	priv->bad_synchronization = true;
+}
+
+bool ModelChecker::has_asserted() const
+{
+	return priv->asserted;
+}
+
+void ModelChecker::set_assert()
+{
+	priv->asserted = true;
 }
 
 /**
@@ -679,7 +697,7 @@ bool ModelChecker::process_read(ModelAction *curr, bool second_part_of_rmw)
 
 			if (!second_part_of_rmw&&!isfeasible()&&(curr->get_node()->increment_read_from()||curr->get_node()->increment_future_value())) {
 				mo_graph->rollbackChanges();
-				too_many_reads = false;
+				priv->too_many_reads = false;
 				continue;
 			}
 
@@ -1215,16 +1233,16 @@ bool ModelChecker::isfeasibleotherthanRMW() const
 	if (DBG_ENABLED()) {
 		if (mo_graph->checkForCycles())
 			DEBUG("Infeasible: modification order cycles\n");
-		if (failed_promise)
+		if (priv->failed_promise)
 			DEBUG("Infeasible: failed promise\n");
-		if (too_many_reads)
+		if (priv->too_many_reads)
 			DEBUG("Infeasible: too many reads\n");
-		if (bad_synchronization)
+		if (priv->bad_synchronization)
 			DEBUG("Infeasible: bad synchronization ordering\n");
 		if (promises_expired())
 			DEBUG("Infeasible: promises expired\n");
 	}
-	return !mo_graph->checkForCycles() && !failed_promise && !too_many_reads && !bad_synchronization && !promises_expired();
+	return !mo_graph->checkForCycles() && !priv->failed_promise && !priv->too_many_reads && !priv->bad_synchronization && !promises_expired();
 }
 
 /** Returns whether the current completed trace is feasible. */
@@ -1333,7 +1351,7 @@ void ModelChecker::check_recency(ModelAction *curr, const ModelAction *rf) {
 				}
 			}
 			if (feasiblewrite) {
-				too_many_reads = true;
+				priv->too_many_reads = true;
 				return;
 			}
 		}
@@ -2075,7 +2093,7 @@ void ModelChecker::check_promises(thread_id_t tid, ClockVector *old_cv, ClockVec
 				merge_cv->synchronized_since(act)) {
 			if (promise->increment_threads(tid)) {
 				//Promise has failed
-				failed_promise = true;
+				priv->failed_promise = true;
 				return;
 			}
 		}
@@ -2086,7 +2104,7 @@ void ModelChecker::check_promises_thread_disabled() {
 	for (unsigned int i = 0; i < promises->size(); i++) {
 		Promise *promise = (*promises)[i];
 		if (promise->check_promise()) {
-			failed_promise = true;
+			priv->failed_promise = true;
 			return;
 		}
 	}
@@ -2137,12 +2155,12 @@ void ModelChecker::mo_check_promises(thread_id_t tid, const ModelAction *write) 
 				promise->set_write(write);
 				//The pwrite cannot happen before the promise
 				if (write->happens_before(act) && (write != act)) {
-					failed_promise = true;
+					priv->failed_promise = true;
 					return;
 				}
 			}
 			if (mo_graph->checkPromise(write, promise)) {
-				failed_promise = true;
+				priv->failed_promise = true;
 				return;
 			}
 		}
@@ -2153,7 +2171,7 @@ void ModelChecker::mo_check_promises(thread_id_t tid, const ModelAction *write) 
 
 		if (promise->get_write()&&mo_graph->checkReachable(promise->get_write(), write)) {
 			if (promise->increment_threads(tid)) {
-				failed_promise = true;
+				priv->failed_promise = true;
 				return;
 			}
 		}

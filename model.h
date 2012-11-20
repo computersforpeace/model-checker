@@ -126,9 +126,7 @@ public:
 	bool is_complete_execution() const;
 	void print_stats() const;
 
-	/** @brief Alert the model-checker that an incorrectly-ordered
-	 * synchronization was made */
-	void set_bad_synchronization() { bad_synchronization = true; }
+	void set_bad_synchronization();
 
 	const model_params params;
 	Node * get_curr_node();
@@ -141,9 +139,8 @@ private:
 	bool sleep_can_read_from(ModelAction * curr, const ModelAction *write);
 	bool thin_air_constraint_may_allow(const ModelAction * writer, const ModelAction *reader);
 	bool mo_may_allow(const ModelAction * writer, const ModelAction *reader);
-	bool has_asserted() {return asserted;}
-	void reset_asserted() { asserted = false; }
-	void set_assert() { asserted = true; }
+	bool has_asserted() const;
+	void set_assert();
 	bool promises_expired() const;
 	void execute_sleep_set();
 	void wake_up_sleeping_actions(ModelAction * curr);
@@ -241,11 +238,6 @@ private:
 	 * <tt>b</tt>.
 	 */
 	CycleGraph *mo_graph;
-	bool failed_promise;
-	bool too_many_reads;
-	bool asserted;
-	/** @brief Incorrectly-ordered synchronization was made */
-	bool bad_synchronization;
 
 	/** @brief The cumulative execution stats */
 	struct execution_stats stats;

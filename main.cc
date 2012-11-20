@@ -104,15 +104,8 @@ static void parse_options(struct model_params *params, int *argc, char ***argv) 
 int main_argc;
 char **main_argv;
 
-/** Wrapper to run the user's main function, with appropriate arguments */
-void wrapper_user_main(void *)
-{
-	user_main(main_argc, main_argv);
-}
-
 /** The model_main function contains the main model checking loop. */
 static void model_main() {
-	thrd_t user_thread;
 	struct model_params params;
 
 	param_defaults(&params);
@@ -130,18 +123,8 @@ static void model_main() {
 	snapshotObject = new SnapshotStack();
 
 	model = new ModelChecker(params);
-
 	snapshotObject->snapshotStep(0);
-	do {
-		/* Start user program */
-		model->add_thread(new Thread(&user_thread, &wrapper_user_main, NULL));
-
-		/* Wait for all threads to complete */
-		model->finish_execution();
-	} while (model->next_execution());
-
-	model->print_stats();
-
+	model->run();
 	delete model;
 
 	DEBUG("Exiting\n");

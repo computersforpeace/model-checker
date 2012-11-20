@@ -91,6 +91,8 @@ public:
 	ModelChecker(struct model_params params);
 	~ModelChecker();
 
+	void run();
+
 	/** @returns the context for the main model-checking system thread */
 	ucontext_t * get_system_context() { return &system_context; }
 
@@ -252,6 +254,8 @@ private:
 	bool have_bug_reports() const;
 	void print_bugs() const;
 	void print_execution(bool printbugs) const;
+
+	friend void user_main_wrapper();
 };
 
 extern ModelChecker *model;

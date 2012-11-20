@@ -2516,3 +2516,25 @@ void ModelChecker::finish_execution() {
 
 	while (take_step());
 }
+
+/** Wrapper to run the user's main function, with appropriate arguments */
+void user_main_wrapper(void *)
+{
+	user_main(model->params.argc, model->params.argv);
+}
+
+/** @brief Run ModelChecker for the user program */
+void ModelChecker::run()
+{
+	do {
+		thrd_t user_thread;
+
+		/* Start user program */
+		add_thread(new Thread(&user_thread, &user_main_wrapper, NULL));
+
+		/* Wait for all threads to complete */
+		finish_execution();
+	} while (next_execution());
+
+	print_stats();
+}

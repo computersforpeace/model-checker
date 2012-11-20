@@ -1000,7 +1000,7 @@ bool ModelChecker::initialize_curr_action(ModelAction **curr)
 
 	(*curr)->set_seq_number(get_next_seq_num());
 
-	newcurr = node_stack->explore_action(*curr, scheduler->get_enabled());
+	newcurr = node_stack->explore_action(*curr, scheduler->get_enabled_array());
 	if (newcurr) {
 		/* First restore type and order in case of RMW operation */
 		if ((*curr)->is_rmwr())

@@ -30,7 +30,7 @@ public:
 	Thread * next_thread(Thread *t);
 	Thread * get_current_thread() const;
 	void print() const;
-	enabled_type_t * get_enabled() { return enabled; };
+	enabled_type_t * get_enabled_array() { return enabled; };
 	void remove_sleep(Thread *t);
 	void add_sleep(Thread *t);
 	enabled_type_t get_enabled(Thread *t);

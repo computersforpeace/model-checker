@@ -244,8 +244,8 @@ private:
 	struct execution_stats stats;
 	void record_stats();
 
-	bool isfeasibleotherthanRMW() const;
-	bool isfeasible() const;
+	bool is_infeasible_ignoreRMW() const;
+	bool is_infeasible() const;
 	bool is_deadlocked() const;
 	bool is_complete_execution() const;
 	bool have_bug_reports() const;

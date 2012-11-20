@@ -695,7 +695,7 @@ bool ModelChecker::process_read(ModelAction *curr, bool second_part_of_rmw)
 			}
 
 
-			if (!second_part_of_rmw&&!isfeasible()&&(curr->get_node()->increment_read_from()||curr->get_node()->increment_future_value())) {
+			if (!second_part_of_rmw&&is_infeasible()&&(curr->get_node()->increment_read_from()||curr->get_node()->increment_future_value())) {
 				mo_graph->rollbackChanges();
 				priv->too_many_reads = false;
 				continue;
@@ -1214,21 +1214,32 @@ bool ModelChecker::promises_expired() const
  * feasible trace. */
 bool ModelChecker::isfeasibleprefix() const
 {
-	return promises->size() == 0 && pending_rel_seqs->size() == 0 && isfeasible();
+	return promises->size() == 0 && pending_rel_seqs->size() == 0 && !is_infeasible();
 }
 
-/** @return whether the current partial trace is feasible. */
-bool ModelChecker::isfeasible() const
+/**
+ * Check if the current partial trace is infeasible. Does not check any
+ * end-of-execution flags, which might rule out the execution. Thus, this is
+ * useful only for ruling an execution as infeasible.
+ * @return whether the current partial trace is infeasible.
+ */
+bool ModelChecker::is_infeasible() const
 {
 	if (DBG_ENABLED() && mo_graph->checkForRMWViolation())
 		DEBUG("Infeasible: RMW violation\n");
 
-	return !mo_graph->checkForRMWViolation() && isfeasibleotherthanRMW();
+	return mo_graph->checkForRMWViolation() || is_infeasible_ignoreRMW();
 }
 
-/** @return whether the current partial trace is feasible other than
- * multiple RMW reading from the same store. */
-bool ModelChecker::isfeasibleotherthanRMW() const
+/**
+ * Check If the current partial trace is infeasible, while ignoring
+ * infeasibility related to 2 RMW's reading from the same store. It does not
+ * check end-of-execution feasibility.
+ * @see ModelChecker::is_infeasible
+ * @return whether the current partial trace is infeasible, ignoring multiple
+ * RMWs reading from the same store.
+ * */
+bool ModelChecker::is_infeasible_ignoreRMW() const
 {
 	if (DBG_ENABLED()) {
 		if (mo_graph->checkForCycles())
@@ -1242,7 +1253,9 @@ bool ModelChecker::isfeasibleotherthanRMW() const
 		if (promises_expired())
 			DEBUG("Infeasible: promises expired\n");
 	}
-	return !mo_graph->checkForCycles() && !priv->failed_promise && !priv->too_many_reads && !priv->bad_synchronization && !promises_expired();
+	return mo_graph->checkForCycles() || priv->failed_promise ||
+		priv->too_many_reads || priv->bad_synchronization ||
+		promises_expired();
 }
 
 /** Returns whether the current completed trace is feasible. */
@@ -1251,7 +1264,7 @@ bool ModelChecker::isfinalfeasible() const
 	if (DBG_ENABLED() && promises->size() != 0)
 		DEBUG("Infeasible: unrevolved promises\n");
 
-	return isfeasible() && promises->size() == 0;
+	return !is_infeasible() && promises->size() == 0;
 }
 
 /** Close out a RMWR by converting previous RMWR into a RMW or READ. */
@@ -1283,7 +1296,7 @@ void ModelChecker::check_recency(ModelAction *curr, const ModelAction *rf) {
 			return;
 		//Must make sure that execution is currently feasible...  We could
 		//accidentally clear by rolling back
-		if (!isfeasible())
+		if (is_infeasible())
 			return;
 		std::vector<action_list_t> *thrd_lists = get_safe_ptr_vect_action(obj_thrd_map, curr->get_location());
 		int tid = id_to_int(curr->get_tid());
@@ -1326,7 +1339,7 @@ void ModelChecker::check_recency(ModelAction *curr, const ModelAction *rf) {
 			/* Test to see whether this is a feasible write to read from*/
 			mo_graph->startChanges();
 			r_modification_order(curr, write);
-			bool feasiblereadfrom = isfeasible();
+			bool feasiblereadfrom = !is_infeasible();
 			mo_graph->rollbackChanges();
 
 			if (!feasiblereadfrom)
@@ -1586,8 +1599,8 @@ bool ModelChecker::w_modification_order(ModelAction *curr)
 
 				 */
 				if (thin_air_constraint_may_allow(curr, act)) {
-					if (isfeasible() ||
-							(curr->is_rmw() && act->is_rmw() && curr->get_reads_from() == act->get_reads_from() && isfeasibleotherthanRMW())) {
+					if (!is_infeasible() ||
+							(curr->is_rmw() && act->is_rmw() && curr->get_reads_from() == act->get_reads_from() && !is_infeasible_ignoreRMW())) {
 						struct PendingFutureValue pfv = {curr,act};
 						futurevalues->push_back(pfv);
 					}
@@ -2456,7 +2469,7 @@ bool ModelChecker::take_step() {
 	Thread *next = scheduler->next_thread(priv->nextThread);
 
 	/* Infeasible -> don't take any more steps */
-	if (!isfeasible())
+	if (is_infeasible())
 		return false;
 	else if (isfeasibleprefix() && have_bug_reports()) {
 		set_assert();

@@ -37,6 +37,23 @@ struct bug_message {
  * Structure for holding small ModelChecker members that should be snapshotted
  */
 struct model_snapshot_members {
+	model_snapshot_members() :
+		current_action(NULL),
+		/* First thread created will have id INITIAL_THREAD_ID */
+		next_thread_id(INITIAL_THREAD_ID),
+		used_sequence_numbers(0),
+		nextThread(NULL),
+		next_backtrack(NULL),
+		bugs(),
+		stats()
+	{ }
+
+	~model_snapshot_members() {
+		for (unsigned int i = 0; i < bugs.size(); i++)
+			delete bugs[i];
+		bugs.clear();
+	}
+
 	ModelAction *current_action;
 	unsigned int next_thread_id;
 	modelclock_t used_sequence_numbers;
@@ -44,6 +61,8 @@ struct model_snapshot_members {
 	ModelAction *next_backtrack;
 	std::vector< bug_message *, SnapshotAlloc<bug_message *> > bugs;
 	struct execution_stats stats;
+
+	SNAPSHOTALLOC
 };
 
 /** @brief Constructor */
@@ -64,17 +83,13 @@ ModelChecker::ModelChecker(struct model_params params) :
 	pending_rel_seqs(new std::vector< struct release_seq *, SnapshotAlloc<struct release_seq *> >()),
 	thrd_last_action(new std::vector< ModelAction *, SnapshotAlloc<ModelAction *> >(1)),
 	node_stack(new NodeStack()),
+	priv(new struct model_snapshot_members()),
 	mo_graph(new CycleGraph()),
 	failed_promise(false),
 	too_many_reads(false),
 	asserted(false),
 	bad_synchronization(false)
 {
-	/* Allocate this "size" on the snapshotting heap */
-	priv = (struct model_snapshot_members *)snapshot_calloc(1, sizeof(*priv));
-	/* First thread created will have id INITIAL_THREAD_ID */
-	priv->next_thread_id = INITIAL_THREAD_ID;
-
 	/* Initialize a model-checker thread, for special ModelActions */
 	model_thread = new Thread(get_next_id());
 	thread_map->put(id_to_int(model_thread->get_id()), model_thread);
@@ -103,11 +118,7 @@ ModelChecker::~ModelChecker()
 	delete node_stack;
 	delete scheduler;
 	delete mo_graph;
-
-	for (unsigned int i = 0; i < priv->bugs.size(); i++)
-		delete priv->bugs[i];
-	priv->bugs.clear();
-	snapshot_free(priv);
+	delete priv;
 }
 
 static action_list_t * get_safe_ptr_action(HashTable<const void *, action_list_t *, uintptr_t, 4> * hash, void * ptr) {

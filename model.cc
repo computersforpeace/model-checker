@@ -2510,13 +2510,6 @@ bool ModelChecker::take_step() {
 	return (Thread::swap(&system_context, next) == 0);
 }
 
-/** Runs the current execution until threre are no more steps to take. */
-void ModelChecker::finish_execution() {
-	DBG();
-
-	while (take_step());
-}
-
 /** Wrapper to run the user's main function, with appropriate arguments */
 void user_main_wrapper(void *)
 {
@@ -2533,7 +2526,7 @@ void ModelChecker::run()
 		add_thread(new Thread(&user_thread, &user_main_wrapper, NULL));
 
 		/* Wait for all threads to complete */
-		finish_execution();
+		while (take_step());
 	} while (next_execution());
 
 	print_stats();

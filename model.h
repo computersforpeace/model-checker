@@ -116,23 +116,15 @@ public:
 	int switch_to_master(ModelAction *act);
 	ClockVector * get_cv(thread_id_t tid);
 	ModelAction * get_parent_action(thread_id_t tid);
-	bool next_execution();
-	bool isfeasible() const;
-	bool isfeasibleotherthanRMW() const;
 	bool isfinalfeasible() const;
 	void check_promises_thread_disabled();
 	void mo_check_promises(thread_id_t tid, const ModelAction *write);
 	void check_promises(thread_id_t tid, ClockVector *old_cv, ClockVector * merge_cv);
 	void get_release_seq_heads(ModelAction *act, rel_heads_list_t *release_heads);
-	void finish_execution();
 	bool isfeasibleprefix() const;
 
 	bool assert_bug(const char *msg);
 	void assert_user_bug(const char *msg);
-
-	bool is_deadlocked() const;
-	bool is_complete_execution() const;
-	void print_stats() const;
 
 	void set_bad_synchronization();
 
@@ -154,6 +146,7 @@ private:
 	void wake_up_sleeping_actions(ModelAction * curr);
 	modelclock_t get_next_seq_num();
 
+	bool next_execution();
 	void set_current_action(ModelAction *act);
 	Thread * check_current_action(ModelAction *curr);
 	bool initialize_curr_action(ModelAction **curr);
@@ -251,9 +244,14 @@ private:
 	struct execution_stats stats;
 	void record_stats();
 
+	bool isfeasibleotherthanRMW() const;
+	bool isfeasible() const;
+	bool is_deadlocked() const;
+	bool is_complete_execution() const;
 	bool have_bug_reports() const;
 	void print_bugs() const;
 	void print_execution(bool printbugs) const;
+	void print_stats() const;
 
 	friend void user_main_wrapper();
 };

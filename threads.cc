@@ -34,8 +34,6 @@ Thread * thread_current(void)
  * Provides a startup wrapper for each thread, allowing some initial
  * model-checking data to be recorded. This method also gets around makecontext
  * not being 64-bit clean
- * @todo We should make the START event always immediately follow the
- * CREATE event, so we don't get redundant traces...
  */
 void thread_startup()
 {

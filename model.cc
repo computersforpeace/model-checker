@@ -424,7 +424,7 @@ void ModelChecker::print_bugs() const
 void ModelChecker::record_stats()
 {
 	stats.num_total++;
-	if (!isfinalfeasible())
+	if (!isfeasibleprefix())
 		stats.num_infeasible++;
 	else if (have_bug_reports())
 		stats.num_buggy_executions++;
@@ -483,7 +483,7 @@ bool ModelChecker::next_execution()
 {
 	DBG();
 	/* Is this execution a feasible execution that's worth bug-checking? */
-	bool complete = isfinalfeasible() && (is_complete_execution() ||
+	bool complete = isfeasibleprefix() && (is_complete_execution() ||
 			have_bug_reports());
 
 	/* End-of-execution bug checks */
@@ -1210,8 +1210,11 @@ bool ModelChecker::promises_expired() const
 	return false;
 }
 
-/** @return whether the current partial trace must be a prefix of a
- * feasible trace. */
+/**
+ * This is the strongest feasibility check available.
+ * @return whether the current trace (partial or complete) must be a prefix of
+ * a feasible trace.
+ * */
 bool ModelChecker::isfeasibleprefix() const
 {
 	return promises->size() == 0 && pending_rel_seqs->size() == 0 && !is_infeasible();
@@ -2358,7 +2361,7 @@ void ModelChecker::print_summary() const
 	dumpGraph(buffername);
 #endif
 
-	if (!isfinalfeasible())
+	if (!isfeasibleprefix())
 		model_print("INFEASIBLE EXECUTION!\n");
 	print_list(action_trace, stats.num_total);
 	model_print("\n");

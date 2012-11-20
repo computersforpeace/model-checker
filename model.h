@@ -122,7 +122,6 @@ public:
 	bool assert_bug(const char *msg);
 	void assert_user_bug(const char *msg);
 
-	void set_assert() {asserted=true;}
 	bool is_deadlocked() const;
 	bool is_complete_execution() const;
 	void print_stats() const;
@@ -143,7 +142,8 @@ private:
 	bool thin_air_constraint_may_allow(const ModelAction * writer, const ModelAction *reader);
 	bool mo_may_allow(const ModelAction * writer, const ModelAction *reader);
 	bool has_asserted() {return asserted;}
-	void reset_asserted() {asserted=false;}
+	void reset_asserted() { asserted = false; }
+	void set_assert() { asserted = true; }
 	bool promises_expired() const;
 	void execute_sleep_set();
 	void wake_up_sleeping_actions(ModelAction * curr);

@@ -50,6 +50,12 @@ struct model_params {
 
 	/** @brief Verbosity (0 = quiet; 1 = noisy) */
 	int verbose;
+
+	/** @brief Command-line argument count to pass to user program */
+	int argc;
+
+	/** @brief Command-line arguments to pass to user program */
+	char **argv;
 };
 
 /** @brief Model checker execution stats */

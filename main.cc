@@ -119,6 +119,10 @@ static void model_main() {
 
 	parse_options(&params, &main_argc, &main_argv);
 
+	/* Pass remaining arguments to user program */
+	params.argc = main_argc;
+	params.argv = main_argv;
+
 	//Initialize race detector
 	initRaceDetector();
 

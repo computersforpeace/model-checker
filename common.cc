@@ -14,8 +14,8 @@
 
 #define MAX_TRACE_LEN 100
 
-FILE *model_out;
-int fd_user_out; /**< @brief File descriptor from which to read user program output */
+/** @brief Model-checker output stream; default to stdout until redirected */
+FILE *model_out = stdout;
 
 #define CONFIG_STACKTRACE
 /** Print a backtrace of the current program state. */
@@ -59,6 +59,10 @@ void model_assert(bool expr, const char *file, int line)
 		model->assert_user_bug(msg);
 	}
 }
+
+#ifndef CONFIG_DEBUG
+
+static int fd_user_out; /**< @brief File descriptor from which to read user program output */
 
 /**
  * @brief Setup output redirecting
@@ -161,3 +165,4 @@ void print_program_output()
 		}
 	}
 }
+#endif /* ! CONFIG_DEBUG */

@@ -23,7 +23,6 @@ typedef struct atomic_flag
 #ifdef __cplusplus
     bool test_and_set( memory_order = memory_order_seq_cst ) volatile;
     void clear( memory_order = memory_order_seq_cst ) volatile;
-    void fence( memory_order ) const volatile;
 
     CPP0X( atomic_flag() = default; )
     CPP0X( atomic_flag( const atomic_flag& ) = delete; )
@@ -46,8 +45,6 @@ extern bool atomic_flag_test_and_set_explicit
 extern void atomic_flag_clear( volatile atomic_flag* );
 extern void atomic_flag_clear_explicit
 ( volatile atomic_flag*, memory_order );
-extern void atomic_flag_fence
-( const volatile atomic_flag*, memory_order );
 extern void __atomic_flag_wait__
 ( volatile atomic_flag* );
 extern void __atomic_flag_wait_explicit__
@@ -64,9 +61,6 @@ inline bool atomic_flag::test_and_set( memory_order __x__ ) volatile
 
 inline void atomic_flag::clear( memory_order __x__ ) volatile
 { atomic_flag_clear_explicit( this, __x__ ); }
-
-inline void atomic_flag::fence( memory_order __x__ ) const volatile
-{ atomic_flag_fence( this, __x__ ); }
 
 #endif
 
@@ -124,7 +118,7 @@ inline void atomic_flag::fence( memory_order __x__ ) const volatile
                 else {  model_rmwc_action((void *)__p__, __x__); *__q__ = __t__;  __r__ = false;} \
                 __r__; })
 
-#define _ATOMIC_FENCE_( __a__, __x__ ) \
+#define _ATOMIC_FENCE_( __x__ ) \
 	({ model_fence_action(__x__);})
  
 
@@ -151,7 +145,6 @@ typedef struct atomic_bool
                         memory_order = memory_order_seq_cst) volatile;
     bool compare_exchange_strong ( bool&, bool,
                         memory_order = memory_order_seq_cst) volatile;
-    void fence( memory_order ) const volatile;
 
     CPP0X( atomic_bool() = delete; )
     CPP0X( constexpr explicit atomic_bool( bool __v__ ) : __f__( __v__ ) { } )
@@ -170,7 +163,6 @@ typedef struct atomic_bool
                                               memory_order, memory_order );
     friend bool atomic_compare_exchange_strong_explicit( volatile atomic_bool*, bool*, bool,
                                               memory_order, memory_order );
-    friend void atomic_fence( const volatile atomic_bool*, memory_order );
 
 CPP0X(private:)
 #endif
@@ -191,7 +183,6 @@ typedef struct atomic_address
                        memory_order = memory_order_seq_cst ) volatile;
     bool compare_exchange_strong( void*&, void*,
                        memory_order = memory_order_seq_cst ) volatile;
-    void fence( memory_order ) const volatile;
     void* fetch_add( ptrdiff_t, memory_order = memory_order_seq_cst ) volatile;
     void* fetch_sub( ptrdiff_t, memory_order = memory_order_seq_cst ) volatile;
 
@@ -218,7 +209,6 @@ typedef struct atomic_address
                               void**, void*, memory_order, memory_order );
     friend bool atomic_compare_exchange_strong_explicit( volatile atomic_address*,
                               void**, void*, memory_order, memory_order );
-    friend void atomic_fence( const volatile atomic_address*, memory_order );
     friend void* atomic_fetch_add_explicit( volatile atomic_address*, ptrdiff_t,
                                             memory_order );
     friend void* atomic_fetch_sub_explicit( volatile atomic_address*, ptrdiff_t,
@@ -247,7 +237,6 @@ typedef struct atomic_char
                        memory_order = memory_order_seq_cst ) volatile;
     bool compare_exchange_strong( char&, char,
                        memory_order = memory_order_seq_cst ) volatile;
-    void fence( memory_order ) const volatile;
     char fetch_add( char,
                            memory_order = memory_order_seq_cst ) volatile;
     char fetch_sub( char,
@@ -304,7 +293,6 @@ typedef struct atomic_char
                       char*, char, memory_order, memory_order );
     friend bool atomic_compare_exchange_strong_explicit( volatile atomic_char*,
                       char*, char, memory_order, memory_order );
-    friend void atomic_fence( const volatile atomic_char*, memory_order );
     friend char atomic_fetch_add_explicit( volatile atomic_char*,
                                                   char, memory_order );
     friend char atomic_fetch_sub_explicit( volatile atomic_char*,
@@ -339,7 +327,6 @@ typedef struct atomic_schar
                        memory_order = memory_order_seq_cst ) volatile;
     bool compare_exchange_strong( signed char&, signed char,
                        memory_order = memory_order_seq_cst ) volatile;
-    void fence( memory_order ) const volatile;
     signed char fetch_add( signed char,
                            memory_order = memory_order_seq_cst ) volatile;
     signed char fetch_sub( signed char,
@@ -396,7 +383,6 @@ typedef struct atomic_schar
                       signed char*, signed char, memory_order, memory_order );
     friend bool atomic_compare_exchange_strong_explicit( volatile atomic_schar*,
                       signed char*, signed char, memory_order, memory_order );
-    friend void atomic_fence( const volatile atomic_schar*, memory_order );
     friend signed char atomic_fetch_add_explicit( volatile atomic_schar*,
                                                   signed char, memory_order );
     friend signed char atomic_fetch_sub_explicit( volatile atomic_schar*,
@@ -431,7 +417,6 @@ typedef struct atomic_uchar
                        memory_order = memory_order_seq_cst ) volatile;
     bool compare_exchange_strong( unsigned char&, unsigned char,
                        memory_order = memory_order_seq_cst ) volatile;
-    void fence( memory_order ) const volatile;
     unsigned char fetch_add( unsigned char,
                            memory_order = memory_order_seq_cst ) volatile;
     unsigned char fetch_sub( unsigned char,
@@ -488,7 +473,6 @@ typedef struct atomic_uchar
                       unsigned char*, unsigned char, memory_order, memory_order );
     friend bool atomic_compare_exchange_strong_explicit( volatile atomic_uchar*,
                       unsigned char*, unsigned char, memory_order, memory_order );
-    friend void atomic_fence( const volatile atomic_uchar*, memory_order );
     friend unsigned char atomic_fetch_add_explicit( volatile atomic_uchar*,
                                                   unsigned char, memory_order );
     friend unsigned char atomic_fetch_sub_explicit( volatile atomic_uchar*,
@@ -523,7 +507,6 @@ typedef struct atomic_short
                        memory_order = memory_order_seq_cst ) volatile;
     bool compare_exchange_strong( short&, short,
                        memory_order = memory_order_seq_cst ) volatile;
-    void fence( memory_order ) const volatile;
     short fetch_add( short,
                            memory_order = memory_order_seq_cst ) volatile;
     short fetch_sub( short,
@@ -580,7 +563,6 @@ typedef struct atomic_short
                       short*, short, memory_order, memory_order );
     friend bool atomic_compare_exchange_strong_explicit( volatile atomic_short*,
                       short*, short, memory_order, memory_order );
-    friend void atomic_fence( const volatile atomic_short*, memory_order );
     friend short atomic_fetch_add_explicit( volatile atomic_short*,
                                                   short, memory_order );
     friend short atomic_fetch_sub_explicit( volatile atomic_short*,
@@ -615,7 +597,6 @@ typedef struct atomic_ushort
                        memory_order = memory_order_seq_cst ) volatile;
     bool compare_exchange_strong( unsigned short&, unsigned short,
                        memory_order = memory_order_seq_cst ) volatile;
-    void fence( memory_order ) const volatile;
     unsigned short fetch_add( unsigned short,
                            memory_order = memory_order_seq_cst ) volatile;
     unsigned short fetch_sub( unsigned short,
@@ -672,7 +653,6 @@ typedef struct atomic_ushort
                       unsigned short*, unsigned short, memory_order, memory_order );
     friend bool atomic_compare_exchange_strong_explicit( volatile atomic_ushort*,
                       unsigned short*, unsigned short, memory_order, memory_order );
-    friend void atomic_fence( const volatile atomic_ushort*, memory_order );
     friend unsigned short atomic_fetch_add_explicit( volatile atomic_ushort*,
                                                   unsigned short, memory_order );
     friend unsigned short atomic_fetch_sub_explicit( volatile atomic_ushort*,
@@ -707,7 +687,6 @@ typedef struct atomic_int
                        memory_order = memory_order_seq_cst ) volatile;
     bool compare_exchange_strong( int&, int,
                        memory_order = memory_order_seq_cst ) volatile;
-    void fence( memory_order ) const volatile;
     int fetch_add( int,
                            memory_order = memory_order_seq_cst ) volatile;
     int fetch_sub( int,
@@ -764,7 +743,6 @@ typedef struct atomic_int
                       int*, int, memory_order, memory_order );
     friend bool atomic_compare_exchange_strong_explicit( volatile atomic_int*,
                       int*, int, memory_order, memory_order );
-    friend void atomic_fence( const volatile atomic_int*, memory_order );
     friend int atomic_fetch_add_explicit( volatile atomic_int*,
                                                   int, memory_order );
     friend int atomic_fetch_sub_explicit( volatile atomic_int*,
@@ -799,7 +777,6 @@ typedef struct atomic_uint
                        memory_order = memory_order_seq_cst ) volatile;
     bool compare_exchange_strong( unsigned int&, unsigned int,
                        memory_order = memory_order_seq_cst ) volatile;
-    void fence( memory_order ) const volatile;
     unsigned int fetch_add( unsigned int,
                            memory_order = memory_order_seq_cst ) volatile;
     unsigned int fetch_sub( unsigned int,
@@ -856,7 +833,6 @@ typedef struct atomic_uint
                       unsigned int*, unsigned int, memory_order, memory_order );
     friend bool atomic_compare_exchange_strong_explicit( volatile atomic_uint*,
                       unsigned int*, unsigned int, memory_order, memory_order );
-    friend void atomic_fence( const volatile atomic_uint*, memory_order );
     friend unsigned int atomic_fetch_add_explicit( volatile atomic_uint*,
                                                   unsigned int, memory_order );
     friend unsigned int atomic_fetch_sub_explicit( volatile atomic_uint*,
@@ -891,7 +867,6 @@ typedef struct atomic_long
                        memory_order = memory_order_seq_cst ) volatile;
     bool compare_exchange_strong( long&, long,
                        memory_order = memory_order_seq_cst ) volatile;
-    void fence( memory_order ) const volatile;
     long fetch_add( long,
                            memory_order = memory_order_seq_cst ) volatile;
     long fetch_sub( long,
@@ -948,7 +923,6 @@ typedef struct atomic_long
                       long*, long, memory_order, memory_order );
     friend bool atomic_compare_exchange_strong_explicit( volatile atomic_long*,
                       long*, long, memory_order, memory_order );
-    friend void atomic_fence( const volatile atomic_long*, memory_order );
     friend long atomic_fetch_add_explicit( volatile atomic_long*,
                                                   long, memory_order );
     friend long atomic_fetch_sub_explicit( volatile atomic_long*,
@@ -983,7 +957,6 @@ typedef struct atomic_ulong
                        memory_order = memory_order_seq_cst ) volatile;
     bool compare_exchange_strong( unsigned long&, unsigned long,
                        memory_order = memory_order_seq_cst ) volatile;
-    void fence( memory_order ) const volatile;
     unsigned long fetch_add( unsigned long,
                            memory_order = memory_order_seq_cst ) volatile;
     unsigned long fetch_sub( unsigned long,
@@ -1040,7 +1013,6 @@ typedef struct atomic_ulong
                       unsigned long*, unsigned long, memory_order, memory_order );
     friend bool atomic_compare_exchange_strong_explicit( volatile atomic_ulong*,
                       unsigned long*, unsigned long, memory_order, memory_order );
-    friend void atomic_fence( const volatile atomic_ulong*, memory_order );
     friend unsigned long atomic_fetch_add_explicit( volatile atomic_ulong*,
                                                   unsigned long, memory_order );
     friend unsigned long atomic_fetch_sub_explicit( volatile atomic_ulong*,
@@ -1075,7 +1047,6 @@ typedef struct atomic_llong
                        memory_order = memory_order_seq_cst ) volatile;
     bool compare_exchange_strong( long long&, long long,
                        memory_order = memory_order_seq_cst ) volatile;
-    void fence( memory_order ) const volatile;
     long long fetch_add( long long,
                            memory_order = memory_order_seq_cst ) volatile;
     long long fetch_sub( long long,
@@ -1132,7 +1103,6 @@ typedef struct atomic_llong
                       long long*, long long, memory_order, memory_order );
     friend bool atomic_compare_exchange_strong_explicit( volatile atomic_llong*,
                       long long*, long long, memory_order, memory_order );
-    friend void atomic_fence( const volatile atomic_llong*, memory_order );
     friend long long atomic_fetch_add_explicit( volatile atomic_llong*,
                                                   long long, memory_order );
     friend long long atomic_fetch_sub_explicit( volatile atomic_llong*,
@@ -1167,7 +1137,6 @@ typedef struct atomic_ullong
                        memory_order = memory_order_seq_cst ) volatile;
     bool compare_exchange_strong( unsigned long long&, unsigned long long,
                        memory_order = memory_order_seq_cst ) volatile;
-    void fence( memory_order ) const volatile;
     unsigned long long fetch_add( unsigned long long,
                            memory_order = memory_order_seq_cst ) volatile;
     unsigned long long fetch_sub( unsigned long long,
@@ -1224,7 +1193,6 @@ typedef struct atomic_ullong
                       unsigned long long*, unsigned long long, memory_order, memory_order );
     friend bool atomic_compare_exchange_strong_explicit( volatile atomic_ullong*,
                       unsigned long long*, unsigned long long, memory_order, memory_order );
-    friend void atomic_fence( const volatile atomic_ullong*, memory_order );
     friend unsigned long long atomic_fetch_add_explicit( volatile atomic_ullong*,
                                                   unsigned long long, memory_order );
     friend unsigned long long atomic_fetch_sub_explicit( volatile atomic_ullong*,
@@ -1291,7 +1259,6 @@ typedef struct atomic_wchar_t
                        memory_order = memory_order_seq_cst ) volatile;
     bool compare_exchange_strong( wchar_t&, wchar_t,
                        memory_order = memory_order_seq_cst ) volatile;
-    void fence( memory_order ) const volatile;
     wchar_t fetch_add( wchar_t,
                            memory_order = memory_order_seq_cst ) volatile;
     wchar_t fetch_sub( wchar_t,
@@ -1348,7 +1315,6 @@ typedef struct atomic_wchar_t
                     wchar_t*, wchar_t, memory_order, memory_order );
     friend bool atomic_compare_exchange_strong_explicit( volatile atomic_wchar_t*,
                     wchar_t*, wchar_t, memory_order, memory_order );
-    friend void atomic_fence( const volatile atomic_wchar_t*, memory_order );
     friend wchar_t atomic_fetch_add_explicit( volatile atomic_wchar_t*,
                                                   wchar_t, memory_order );
     friend wchar_t atomic_fetch_sub_explicit( volatile atomic_wchar_t*,
@@ -1390,7 +1356,6 @@ struct atomic
     bool compare_exchange_strong( T&, T, memory_order, memory_order ) volatile;
     bool compare_exchange_weak( T&, T, memory_order = memory_order_seq_cst ) volatile;
     bool compare_exchange_strong( T&, T, memory_order = memory_order_seq_cst ) volatile;
-    void fence( memory_order ) const volatile;
 
     CPP0X( atomic() = default; )
     CPP0X( constexpr explicit atomic( T __v__ ) : __f__( __v__ ) { } )
@@ -1689,10 +1654,6 @@ inline bool atomic_compare_exchange_strong
 { return atomic_compare_exchange_strong_explicit( __a__, __e__, __m__,
                  memory_order_seq_cst, memory_order_seq_cst ); }
 
-inline void atomic_fence
-( const volatile atomic_bool* __a__, memory_order __x__ )
-{ _ATOMIC_FENCE_( __a__, __x__ ); }
-
 
 inline bool atomic_is_lock_free( const volatile atomic_address* __a__ )
 { return false; }
@@ -1739,10 +1700,6 @@ inline bool atomic_compare_exchange_strong
 ( volatile atomic_address* __a__, void** __e__, void* __m__ )
 { return atomic_compare_exchange_strong_explicit( __a__, __e__, __m__,
                  memory_order_seq_cst, memory_order_seq_cst ); }
-
-inline void atomic_fence
-( const volatile atomic_address* __a__, memory_order __x__ )
-{ _ATOMIC_FENCE_( __a__, __x__ ); }
 
 
 inline bool atomic_is_lock_free( const volatile atomic_char* __a__ )
@@ -1791,10 +1748,6 @@ inline bool atomic_compare_exchange_strong
 { return atomic_compare_exchange_strong_explicit( __a__, __e__, __m__,
                  memory_order_seq_cst, memory_order_seq_cst ); }
 
-inline void atomic_fence
-( const volatile atomic_char* __a__, memory_order __x__ )
-{ _ATOMIC_FENCE_( __a__, __x__ ); }
-
 
 inline bool atomic_is_lock_free( const volatile atomic_schar* __a__ )
 { return false; }
@@ -1841,10 +1794,6 @@ inline bool atomic_compare_exchange_strong
 ( volatile atomic_schar* __a__, signed char* __e__, signed char __m__ )
 { return atomic_compare_exchange_strong_explicit( __a__, __e__, __m__,
                  memory_order_seq_cst, memory_order_seq_cst ); }
-
-inline void atomic_fence
-( const volatile atomic_schar* __a__, memory_order __x__ )
-{ _ATOMIC_FENCE_( __a__, __x__ ); }
 
 
 inline bool atomic_is_lock_free( const volatile atomic_uchar* __a__ )
@@ -1893,10 +1842,6 @@ inline bool atomic_compare_exchange_strong
 { return atomic_compare_exchange_strong_explicit( __a__, __e__, __m__,
                  memory_order_seq_cst, memory_order_seq_cst ); }
 
-inline void atomic_fence
-( const volatile atomic_uchar* __a__, memory_order __x__ )
-{ _ATOMIC_FENCE_( __a__, __x__ ); }
-
 
 inline bool atomic_is_lock_free( const volatile atomic_short* __a__ )
 { return false; }
@@ -1943,10 +1888,6 @@ inline bool atomic_compare_exchange_strong
 ( volatile atomic_short* __a__, short* __e__, short __m__ )
 { return atomic_compare_exchange_strong_explicit( __a__, __e__, __m__,
                  memory_order_seq_cst, memory_order_seq_cst ); }
-
-inline void atomic_fence
-( const volatile atomic_short* __a__, memory_order __x__ )
-{ _ATOMIC_FENCE_( __a__, __x__ ); }
 
 
 inline bool atomic_is_lock_free( const volatile atomic_ushort* __a__ )
@@ -1995,10 +1936,6 @@ inline bool atomic_compare_exchange_strong
 { return atomic_compare_exchange_strong_explicit( __a__, __e__, __m__,
                  memory_order_seq_cst, memory_order_seq_cst ); }
 
-inline void atomic_fence
-( const volatile atomic_ushort* __a__, memory_order __x__ )
-{ _ATOMIC_FENCE_( __a__, __x__ ); }
-
 
 inline bool atomic_is_lock_free( const volatile atomic_int* __a__ )
 { return false; }
@@ -2045,10 +1982,6 @@ inline bool atomic_compare_exchange_strong
 ( volatile atomic_int* __a__, int* __e__, int __m__ )
 { return atomic_compare_exchange_strong_explicit( __a__, __e__, __m__,
                  memory_order_seq_cst, memory_order_seq_cst ); }
-
-inline void atomic_fence
-( const volatile atomic_int* __a__, memory_order __x__ )
-{ _ATOMIC_FENCE_( __a__, __x__ ); }
 
 
 inline bool atomic_is_lock_free( const volatile atomic_uint* __a__ )
@@ -2097,10 +2030,6 @@ inline bool atomic_compare_exchange_strong
 { return atomic_compare_exchange_strong_explicit( __a__, __e__, __m__,
                  memory_order_seq_cst, memory_order_seq_cst ); }
 
-inline void atomic_fence
-( const volatile atomic_uint* __a__, memory_order __x__ )
-{ _ATOMIC_FENCE_( __a__, __x__ ); }
-
 
 inline bool atomic_is_lock_free( const volatile atomic_long* __a__ )
 { return false; }
@@ -2147,10 +2076,6 @@ inline bool atomic_compare_exchange_strong
 ( volatile atomic_long* __a__, long* __e__, long __m__ )
 { return atomic_compare_exchange_strong_explicit( __a__, __e__, __m__,
                  memory_order_seq_cst, memory_order_seq_cst ); }
-
-inline void atomic_fence
-( const volatile atomic_long* __a__, memory_order __x__ )
-{ _ATOMIC_FENCE_( __a__, __x__ ); }
 
 
 inline bool atomic_is_lock_free( const volatile atomic_ulong* __a__ )
@@ -2199,10 +2124,6 @@ inline bool atomic_compare_exchange_strong
 { return atomic_compare_exchange_strong_explicit( __a__, __e__, __m__,
                  memory_order_seq_cst, memory_order_seq_cst ); }
 
-inline void atomic_fence
-( const volatile atomic_ulong* __a__, memory_order __x__ )
-{ _ATOMIC_FENCE_( __a__, __x__ ); }
-
 
 inline bool atomic_is_lock_free( const volatile atomic_llong* __a__ )
 { return false; }
@@ -2249,10 +2170,6 @@ inline bool atomic_compare_exchange_strong
 ( volatile atomic_llong* __a__, long long* __e__, long long __m__ )
 { return atomic_compare_exchange_strong_explicit( __a__, __e__, __m__,
                  memory_order_seq_cst, memory_order_seq_cst ); }
-
-inline void atomic_fence
-( const volatile atomic_llong* __a__, memory_order __x__ )
-{ _ATOMIC_FENCE_( __a__, __x__ ); }
 
 
 inline bool atomic_is_lock_free( const volatile atomic_ullong* __a__ )
@@ -2301,10 +2218,6 @@ inline bool atomic_compare_exchange_strong
 { return atomic_compare_exchange_strong_explicit( __a__, __e__, __m__,
                  memory_order_seq_cst, memory_order_seq_cst ); }
 
-inline void atomic_fence
-( const volatile atomic_ullong* __a__, memory_order __x__ )
-{ _ATOMIC_FENCE_( __a__, __x__ ); }
-
 
 inline bool atomic_is_lock_free( const volatile atomic_wchar_t* __a__ )
 { return false; }
@@ -2351,10 +2264,6 @@ inline bool atomic_compare_exchange_strong
 ( volatile atomic_wchar_t* __a__, wchar_t* __e__, wchar_t __m__ )
 { return atomic_compare_exchange_strong_explicit( __a__, __e__, __m__,
                  memory_order_seq_cst, memory_order_seq_cst ); }
-
-inline void atomic_fence
-( const volatile atomic_wchar_t* __a__, memory_order __x__ )
-{ _ATOMIC_FENCE_( __a__, __x__ ); }
 
 
 inline void* atomic_fetch_add_explicit
@@ -2961,9 +2870,6 @@ _ATOMIC_CMPSWP_WEAK_( __a__, __e__, __m__, __x__ )
 #define atomic_compare_exchange_strong_explicit( __a__, __e__, __m__, __x__, __y__ ) \
 _ATOMIC_CMPSWP_( __a__, __e__, __m__, __x__ )
 
-#define atomic_fence( __a__, __x__ ) \
-({ _ATOMIC_FENCE_( __a__, __x__ ); })
-
 
 #define atomic_fetch_add_explicit( __a__, __m__, __x__ ) \
 _ATOMIC_MODIFY_( __a__, +=, __m__, __x__ )
@@ -3043,10 +2949,6 @@ inline bool atomic_bool::compare_exchange_strong
       __x__ == memory_order_acq_rel ? memory_order_acquire :
       __x__ == memory_order_release ? memory_order_relaxed : __x__ ); }
 
-inline void atomic_bool::fence
-( memory_order __x__ ) const volatile
-{ return atomic_fence( this, __x__ ); }
-
 
 inline bool atomic_address::is_lock_free() const volatile
 { return false; }
@@ -3084,10 +2986,6 @@ inline bool atomic_address::compare_exchange_strong
 { return atomic_compare_exchange_strong_explicit( this, &__e__, __m__, __x__,
       __x__ == memory_order_acq_rel ? memory_order_acquire :
       __x__ == memory_order_release ? memory_order_relaxed : __x__ ); }
-
-inline void atomic_address::fence
-( memory_order __x__ ) const volatile
-{ return atomic_fence( this, __x__ ); }
 
 
 inline bool atomic_char::is_lock_free() const volatile
@@ -3127,10 +3025,6 @@ inline bool atomic_char::compare_exchange_strong
       __x__ == memory_order_acq_rel ? memory_order_acquire :
       __x__ == memory_order_release ? memory_order_relaxed : __x__ ); }
 
-inline void atomic_char::fence
-( memory_order __x__ ) const volatile
-{ return atomic_fence( this, __x__ ); }
-
 
 inline bool atomic_schar::is_lock_free() const volatile
 { return false; }
@@ -3168,10 +3062,6 @@ inline bool atomic_schar::compare_exchange_strong
 { return atomic_compare_exchange_strong_explicit( this, &__e__, __m__, __x__,
       __x__ == memory_order_acq_rel ? memory_order_acquire :
       __x__ == memory_order_release ? memory_order_relaxed : __x__ ); }
-
-inline void atomic_schar::fence
-( memory_order __x__ ) const volatile
-{ return atomic_fence( this, __x__ ); }
 
 
 inline bool atomic_uchar::is_lock_free() const volatile
@@ -3211,10 +3101,6 @@ inline bool atomic_uchar::compare_exchange_strong
       __x__ == memory_order_acq_rel ? memory_order_acquire :
       __x__ == memory_order_release ? memory_order_relaxed : __x__ ); }
 
-inline void atomic_uchar::fence
-( memory_order __x__ ) const volatile
-{ return atomic_fence( this, __x__ ); }
-
 
 inline bool atomic_short::is_lock_free() const volatile
 { return false; }
@@ -3252,10 +3138,6 @@ inline bool atomic_short::compare_exchange_strong
 { return atomic_compare_exchange_strong_explicit( this, &__e__, __m__, __x__,
       __x__ == memory_order_acq_rel ? memory_order_acquire :
       __x__ == memory_order_release ? memory_order_relaxed : __x__ ); }
-
-inline void atomic_short::fence
-( memory_order __x__ ) const volatile
-{ return atomic_fence( this, __x__ ); }
 
 
 inline bool atomic_ushort::is_lock_free() const volatile
@@ -3295,10 +3177,6 @@ inline bool atomic_ushort::compare_exchange_strong
       __x__ == memory_order_acq_rel ? memory_order_acquire :
       __x__ == memory_order_release ? memory_order_relaxed : __x__ ); }
 
-inline void atomic_ushort::fence
-( memory_order __x__ ) const volatile
-{ return atomic_fence( this, __x__ ); }
-
 
 inline bool atomic_int::is_lock_free() const volatile
 { return false; }
@@ -3336,10 +3214,6 @@ inline bool atomic_int::compare_exchange_strong
 { return atomic_compare_exchange_strong_explicit( this, &__e__, __m__, __x__,
       __x__ == memory_order_acq_rel ? memory_order_acquire :
       __x__ == memory_order_release ? memory_order_relaxed : __x__ ); }
-
-inline void atomic_int::fence
-( memory_order __x__ ) const volatile
-{ return atomic_fence( this, __x__ ); }
 
 
 inline bool atomic_uint::is_lock_free() const volatile
@@ -3379,10 +3253,6 @@ inline bool atomic_uint::compare_exchange_strong
       __x__ == memory_order_acq_rel ? memory_order_acquire :
       __x__ == memory_order_release ? memory_order_relaxed : __x__ ); }
 
-inline void atomic_uint::fence
-( memory_order __x__ ) const volatile
-{ return atomic_fence( this, __x__ ); }
-
 
 inline bool atomic_long::is_lock_free() const volatile
 { return false; }
@@ -3420,10 +3290,6 @@ inline bool atomic_long::compare_exchange_strong
 { return atomic_compare_exchange_strong_explicit( this, &__e__, __m__, __x__,
       __x__ == memory_order_acq_rel ? memory_order_acquire :
       __x__ == memory_order_release ? memory_order_relaxed : __x__ ); }
-
-inline void atomic_long::fence
-( memory_order __x__ ) const volatile
-{ return atomic_fence( this, __x__ ); }
 
 
 inline bool atomic_ulong::is_lock_free() const volatile
@@ -3463,10 +3329,6 @@ inline bool atomic_ulong::compare_exchange_strong
       __x__ == memory_order_acq_rel ? memory_order_acquire :
       __x__ == memory_order_release ? memory_order_relaxed : __x__ ); }
 
-inline void atomic_ulong::fence
-( memory_order __x__ ) const volatile
-{ return atomic_fence( this, __x__ ); }
-
 
 inline bool atomic_llong::is_lock_free() const volatile
 { return false; }
@@ -3504,10 +3366,6 @@ inline bool atomic_llong::compare_exchange_strong
 { return atomic_compare_exchange_strong_explicit( this, &__e__, __m__, __x__,
       __x__ == memory_order_acq_rel ? memory_order_acquire :
       __x__ == memory_order_release ? memory_order_relaxed : __x__ ); }
-
-inline void atomic_llong::fence
-( memory_order __x__ ) const volatile
-{ return atomic_fence( this, __x__ ); }
 
 
 inline bool atomic_ullong::is_lock_free() const volatile
@@ -3547,10 +3405,6 @@ inline bool atomic_ullong::compare_exchange_strong
       __x__ == memory_order_acq_rel ? memory_order_acquire :
       __x__ == memory_order_release ? memory_order_relaxed : __x__ ); }
 
-inline void atomic_ullong::fence
-( memory_order __x__ ) const volatile
-{ return atomic_fence( this, __x__ ); }
-
 
 inline bool atomic_wchar_t::is_lock_free() const volatile
 { return false; }
@@ -3588,10 +3442,6 @@ inline bool atomic_wchar_t::compare_exchange_strong
 { return atomic_compare_exchange_strong_explicit( this, &__e__, __m__, __x__,
       __x__ == memory_order_acq_rel ? memory_order_acquire :
       __x__ == memory_order_release ? memory_order_relaxed : __x__ ); }
-
-inline void atomic_wchar_t::fence
-( memory_order __x__ ) const volatile
-{ return atomic_fence( this, __x__ ); }
 
 
 template< typename T >

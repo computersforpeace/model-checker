@@ -26,11 +26,6 @@ void atomic_flag_clear_explicit
 void atomic_flag_clear( volatile atomic_flag* __a__ )
 { atomic_flag_clear_explicit( __a__, memory_order_seq_cst ); }
 
-void atomic_flag_fence( const volatile atomic_flag* __a__, memory_order __x__ )
-{
-	ASSERT(0);
-}
-
 void __atomic_flag_wait__( volatile atomic_flag* __a__ )
 { while ( atomic_flag_test_and_set( __a__ ) ); }
 

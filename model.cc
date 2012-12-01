@@ -1535,7 +1535,7 @@ bool ModelChecker::w_modification_order(ModelAction *curr)
 	if (curr->is_seqcst()) {
 		/* We have to at least see the last sequentially consistent write,
 			 so we are initialized. */
-		ModelAction *last_seq_cst = get_last_seq_cst(curr);
+		ModelAction *last_seq_cst = get_last_seq_cst_write(curr);
 		if (last_seq_cst != NULL) {
 			mo_graph->addEdge(last_seq_cst, curr);
 			added = true;
@@ -1985,7 +1985,7 @@ ModelAction * ModelChecker::get_last_action(thread_id_t tid) const
  * check
  * @return The last seq_cst write
  */
-ModelAction * ModelChecker::get_last_seq_cst(ModelAction *curr) const
+ModelAction * ModelChecker::get_last_seq_cst_write(ModelAction *curr) const
 {
 	void *location = curr->get_location();
 	action_list_t *list = get_safe_ptr_action(obj_map, location);
@@ -2240,7 +2240,7 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 	bool initialized = false;
 
 	if (curr->is_seqcst()) {
-		last_seq_cst = get_last_seq_cst(curr);
+		last_seq_cst = get_last_seq_cst_write(curr);
 		/* We have to at least see the last sequentially consistent write,
 			 so we are initialized. */
 		if (last_seq_cst != NULL)

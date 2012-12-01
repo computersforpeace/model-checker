@@ -171,6 +171,7 @@ private:
 	void add_action_to_lists(ModelAction *act);
 	ModelAction * get_last_action(thread_id_t tid) const;
 	ModelAction * get_last_seq_cst_write(ModelAction *curr) const;
+	ModelAction * get_last_seq_cst_fence(thread_id_t tid, const ModelAction *before_fence) const;
 	ModelAction * get_last_unlock(ModelAction *curr) const;
 	void build_reads_from_past(ModelAction *curr);
 	ModelAction * process_rmw(ModelAction *curr);

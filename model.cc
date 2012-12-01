@@ -1998,6 +1998,35 @@ ModelAction * ModelChecker::get_last_seq_cst_write(ModelAction *curr) const
 }
 
 /**
+ * Gets the last memory_order_seq_cst fence (in the total global sequence)
+ * performed in a particular thread, prior to a particular fence.
+ * @param tid The ID of the thread to check
+ * @param before_fence The fence from which to begin the search; if NULL, then
+ * search for the most recent fence in the thread.
+ * @return The last prior seq_cst fence in the thread, if exists; otherwise, NULL
+ */
+ModelAction * ModelChecker::get_last_seq_cst_fence(thread_id_t tid, const ModelAction *before_fence) const
+{
+	/* All fences should have NULL location */
+	action_list_t *list = get_safe_ptr_action(obj_map, NULL);
+	action_list_t::reverse_iterator rit = list->rbegin();
+
+	if (before_fence) {
+		for (; rit != list->rend(); rit++)
+			if (*rit == before_fence)
+				break;
+
+		ASSERT(*rit == before_fence);
+		rit++;
+	}
+
+	for (; rit != list->rend(); rit++)
+		if ((*rit)->is_fence() && (tid == (*rit)->get_tid()) && (*rit)->is_seqcst())
+			return *rit;
+	return NULL;
+}
+
+/**
  * Gets the last unlock operation performed on a particular mutex (i.e., memory
  * location). This function identifies the mutex according to the current
  * action, which is presumed to perform on the same mutex.

@@ -2289,15 +2289,20 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 				continue;
 
 			/* Don't consider more than one seq_cst write if we are a seq_cst read. */
-			if (!curr->is_seqcst() || (!act->is_seqcst() && (last_sc_write == NULL || !act->happens_before(last_sc_write))) || act == last_sc_write) {
-				if (!curr->get_sleep_flag() || curr->is_seqcst() || sleep_can_read_from(curr, act)) {
-					DEBUG("Adding action to may_read_from:\n");
-					if (DBG_ENABLED()) {
-						act->print();
-						curr->print();
-					}
-					curr->get_node()->add_read_from(act);
+			bool allow_read = true;
+
+			if (curr->is_seqcst() && (act->is_seqcst() || (last_sc_write != NULL && act->happens_before(last_sc_write))) && act != last_sc_write)
+				allow_read = false;
+			else if (curr->get_sleep_flag() && !curr->is_seqcst() && !sleep_can_read_from(curr, act))
+				allow_read = false;
+
+			if (allow_read) {
+				DEBUG("Adding action to may_read_from:\n");
+				if (DBG_ENABLED()) {
+					act->print();
+					curr->print();
 				}
+				curr->get_node()->add_read_from(act);
 			}
 
 			/* Include at most one act per-thread that "happens before" curr */

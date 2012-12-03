@@ -2234,16 +2234,16 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 	unsigned int i;
 	ASSERT(curr->is_read());
 
-	ModelAction *last_seq_cst = NULL;
+	ModelAction *last_sc_write = NULL;
 
 	/* Track whether this object has been initialized */
 	bool initialized = false;
 
 	if (curr->is_seqcst()) {
-		last_seq_cst = get_last_seq_cst_write(curr);
+		last_sc_write = get_last_seq_cst_write(curr);
 		/* We have to at least see the last sequentially consistent write,
 			 so we are initialized. */
-		if (last_seq_cst != NULL)
+		if (last_sc_write != NULL)
 			initialized = true;
 	}
 
@@ -2260,7 +2260,7 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 				continue;
 
 			/* Don't consider more than one seq_cst write if we are a seq_cst read. */
-			if (!curr->is_seqcst() || (!act->is_seqcst() && (last_seq_cst == NULL || !act->happens_before(last_seq_cst))) || act == last_seq_cst) {
+			if (!curr->is_seqcst() || (!act->is_seqcst() && (last_sc_write == NULL || !act->happens_before(last_sc_write))) || act == last_sc_write) {
 				if (!curr->get_sleep_flag() || curr->is_seqcst() || sleep_can_read_from(curr, act)) {
 					DEBUG("Adding action to may_read_from:\n");
 					if (DBG_ENABLED()) {

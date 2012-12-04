@@ -1797,6 +1797,8 @@ bool ModelChecker::release_seq_heads(const ModelAction *rf,
 
 		if (rf->is_release())
 			release_heads->push_back(rf);
+		else if (rf->get_last_fence_release())
+			release_heads->push_back(rf->get_last_fence_release());
 		if (!rf->is_rmw())
 			break; /* End of RMW chain */
 
@@ -1822,8 +1824,17 @@ bool ModelChecker::release_seq_heads(const ModelAction *rf,
 	if (rf->is_release())
 		return true; /* complete */
 
-	/* else relaxed write; check modification order for contiguous subsequence
-	 * -> rf must be same thread as release */
+	/* else relaxed write
+	 * - check for fence-release in the same thread (29.8, stmt. 3)
+	 * - check modification order for contiguous subsequence
+	 *   -> rf must be same thread as release */
+
+	const ModelAction *fence_release = rf->get_last_fence_release();
+	/* Synchronize with a fence-release unconditionally; we don't need to
+	 * find any more "contiguous subsequence..." for it */
+	if (fence_release)
+		release_heads->push_back(fence_release);
+
 	int tid = id_to_int(rf->get_tid());
 	std::vector<action_list_t> *thrd_lists = get_safe_ptr_vect_action(obj_thrd_map, rf->get_location());
 	action_list_t *list = &(*thrd_lists)[tid];
@@ -1833,14 +1844,21 @@ bool ModelChecker::release_seq_heads(const ModelAction *rf,
 	rit = std::find(list->rbegin(), list->rend(), rf);
 	ASSERT(rit != list->rend());
 
-	/* Find the last write/release */
-	for (; rit != list->rend(); rit++)
+	/* Find the last {write,fence}-release */
+	for (; rit != list->rend(); rit++) {
+		if (fence_release && *(*rit) < *fence_release)
+			break;
 		if ((*rit)->is_release())
 			break;
+	}
 	if (rit == list->rend()) {
 		/* No write-release in this thread */
 		return true; /* complete */
-	}
+	} else if (fence_release && *(*rit) < *fence_release) {
+		/* The fence-release is more recent (and so, "stronger") than
+		 * the most recent write-release */
+		return true; /* complete */
+	} /* else, need to establish contiguous release sequence */
 	ModelAction *release = *rit;
 
 	ASSERT(rf->same_thread(release));

@@ -1403,13 +1403,47 @@ bool ModelChecker::r_modification_order(ModelAction *curr, const ModelAction *rf
 	bool added = false;
 	ASSERT(curr->is_read());
 
+	/* Last SC fence in the current thread */
+	ModelAction *last_sc_fence_local = get_last_seq_cst_fence(curr->get_tid(), NULL);
+
 	/* Iterate over all threads */
 	for (i = 0; i < thrd_lists->size(); i++) {
+		/* Last SC fence in thread i */
+		ModelAction *last_sc_fence_thread_local = NULL;
+		if (int_to_id((int)i) != curr->get_tid())
+			last_sc_fence_thread_local = get_last_seq_cst_fence(int_to_id(i), NULL);
+
+		/* Last SC fence in thread i, before last SC fence in current thread */
+		ModelAction *last_sc_fence_thread_before = NULL;
+		if (last_sc_fence_local)
+			last_sc_fence_thread_before = get_last_seq_cst_fence(int_to_id(i), last_sc_fence_local);
+
 		/* Iterate over actions in thread, starting from most recent */
 		action_list_t *list = &(*thrd_lists)[i];
 		action_list_t::reverse_iterator rit;
 		for (rit = list->rbegin(); rit != list->rend(); rit++) {
 			ModelAction *act = *rit;
+
+			if (act->is_write() && act != rf && act != curr) {
+				/* C++, Section 29.3 statement 5 */
+				if (curr->is_seqcst() && last_sc_fence_thread_local &&
+						*act < *last_sc_fence_thread_local) {
+					mo_graph->addEdge(act, rf);
+					added = true;
+				}
+				/* C++, Section 29.3 statement 4 */
+				else if (act->is_seqcst() && last_sc_fence_local &&
+						*act < *last_sc_fence_local) {
+					mo_graph->addEdge(act, rf);
+					added = true;
+				}
+				/* C++, Section 29.3 statement 6 */
+				else if (last_sc_fence_thread_before &&
+						*act < *last_sc_fence_thread_before) {
+					mo_graph->addEdge(act, rf);
+					added = true;
+				}
+			}
 
 			/*
 			 * Include at most one act per-thread that "happens
@@ -1543,8 +1577,16 @@ bool ModelChecker::w_modification_order(ModelAction *curr)
 		}
 	}
 
+	/* Last SC fence in the current thread */
+	ModelAction *last_sc_fence_local = get_last_seq_cst_fence(curr->get_tid(), NULL);
+
 	/* Iterate over all threads */
 	for (i = 0; i < thrd_lists->size(); i++) {
+		/* Last SC fence in thread i, before last SC fence in current thread */
+		ModelAction *last_sc_fence_thread_before = NULL;
+		if (last_sc_fence_local && int_to_id((int)i) != curr->get_tid())
+			last_sc_fence_thread_before = get_last_seq_cst_fence(int_to_id(i), last_sc_fence_local);
+
 		/* Iterate over actions in thread, starting from most recent */
 		action_list_t *list = &(*thrd_lists)[i];
 		action_list_t::reverse_iterator rit;
@@ -1569,6 +1611,13 @@ bool ModelChecker::w_modification_order(ModelAction *curr)
 						continue;
 				} else
 					continue;
+			}
+
+			/* C++, Section 29.3 statement 7 */
+			if (last_sc_fence_thread_before && act->is_write() &&
+					*act < *last_sc_fence_thread_before) {
+				mo_graph->addEdge(act, curr);
+				added = true;
 			}
 
 			/*

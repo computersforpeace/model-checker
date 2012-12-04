@@ -521,6 +521,7 @@ bool ModelChecker::next_execution()
 ModelAction * ModelChecker::get_last_conflict(ModelAction *act)
 {
 	switch (act->get_type()) {
+	case ATOMIC_FENCE:
 	case ATOMIC_READ:
 	case ATOMIC_WRITE:
 	case ATOMIC_RMW: {

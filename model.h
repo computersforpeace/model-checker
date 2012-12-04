@@ -152,6 +152,7 @@ private:
 	bool initialize_curr_action(ModelAction **curr);
 	bool process_read(ModelAction *curr, bool second_part_of_rmw);
 	bool process_write(ModelAction *curr);
+	bool process_fence(ModelAction *curr);
 	bool process_mutex(ModelAction *curr);
 	bool process_thread_action(ModelAction *curr);
 	void process_relseq_fixup(ModelAction *curr, work_queue_t *work_queue);

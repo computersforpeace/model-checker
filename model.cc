@@ -859,6 +859,54 @@ bool ModelChecker::process_write(ModelAction *curr)
 }
 
 /**
+ * Process a fence ModelAction
+ * @param curr The ModelAction to process
+ * @return True if synchronization was updated
+ */
+bool ModelChecker::process_fence(ModelAction *curr)
+{
+	/*
+	 * fence-relaxed: no-op
+	 * fence-release: only log the occurence (not in this function), for
+	 *   use in later synchronization
+	 * fence-acquire (this function): search for hypothetical release
+	 *   sequences
+	 */
+	bool updated = false;
+	if (curr->is_acquire()) {
+		action_list_t *list = action_trace;
+		action_list_t::reverse_iterator rit;
+		/* Find X : is_read(X) && X --sb-> curr */
+		for (rit = list->rbegin(); rit != list->rend(); rit++) {
+			ModelAction *act = *rit;
+			if (act->get_tid() != curr->get_tid())
+				continue;
+			/* Stop at the beginning of the thread */
+			if (act->is_thread_start())
+				break;
+			/* Stop once we reach a prior fence-acquire */
+			if (act->is_fence() && act->is_acquire())
+				break;
+			if (!act->is_read())
+				continue;
+			/* read-acquire will find its own release sequences */
+			if (act->is_acquire())
+				continue;
+
+			/* Establish hypothetical release sequences */
+			rel_heads_list_t release_heads;
+			get_release_seq_heads(curr, act, &release_heads);
+			for (unsigned int i = 0; i < release_heads.size(); i++)
+				if (!act->synchronize_with(release_heads[i]))
+					set_bad_synchronization();
+			if (release_heads.size() != 0)
+				updated = true;
+		}
+	}
+	return updated;
+}
+
+/**
  * @brief Process the current action for thread-related activity
  *
  * Performs current-action processing for a THREAD_* ModelAction. Proccesses
@@ -1172,6 +1220,9 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 
 			if (act->is_write() && process_write(act))
 				update = true;
+
+			if (act->is_fence() && process_fence(act))
+				update_all = true;
 
 			if (act->is_mutex_op() && process_mutex(act))
 				update_all = true;

@@ -70,6 +70,11 @@ void ModelAction::set_seq_number(modelclock_t num)
 	seq_number = num;
 }
 
+bool ModelAction::is_thread_start() const
+{
+	return type == THREAD_START;
+}
+
 bool ModelAction::is_relseq_fixup() const
 {
 	return type == MODEL_FIXUP_RELSEQ;

@@ -85,6 +85,8 @@ public:
 	Node * get_node() const { return node; }
 	void set_node(Node *n) { node = n; }
 
+	void set_read_from(const ModelAction *act);
+
 	/** Store the most recent fence-release from the same thread
 	 *  @param fence The fence-release that occured prior to this */
 	void set_last_fence_release(const ModelAction *fence) { last_fence_release = fence; }
@@ -123,7 +125,6 @@ public:
 
 	void create_cv(const ModelAction *parent = NULL);
 	ClockVector * get_cv() const { return cv; }
-	bool read_from(const ModelAction *act);
 	bool synchronize_with(const ModelAction *act);
 
 	bool has_synchronized_with(const ModelAction *act) const;

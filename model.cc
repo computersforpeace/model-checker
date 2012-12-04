@@ -705,7 +705,7 @@ bool ModelChecker::process_read(ModelAction *curr, bool second_part_of_rmw)
 				continue;
 			}
 
-			curr->read_from(reads_from);
+			read_from(curr, reads_from);
 			mo_graph->commitChanges();
 			mo_check_promises(curr->get_tid(), reads_from);
 
@@ -714,7 +714,7 @@ bool ModelChecker::process_read(ModelAction *curr, bool second_part_of_rmw)
 			/* Read from future value */
 			value = curr->get_node()->get_future_value();
 			modelclock_t expiration = curr->get_node()->get_future_value_expiration();
-			curr->read_from(NULL);
+			read_from(curr, NULL);
 			Promise *valuepromise = new Promise(curr, value, expiration);
 			promises->push_back(valuepromise);
 		}
@@ -1045,6 +1045,34 @@ bool ModelChecker::initialize_curr_action(ModelAction **curr)
 		}
 		return true; /* This was a new ModelAction */
 	}
+}
+
+/**
+ * @brief Establish reads-from relation between two actions
+ *
+ * Perform basic operations involved with establishing a concrete rf relation,
+ * including setting the ModelAction data and checking for release sequences.
+ *
+ * @param act The action that is reading (must be a read)
+ * @param rf The action from which we are reading (must be a write)
+ *
+ * @return True if this read established synchronization
+ */
+bool ModelChecker::read_from(ModelAction *act, const ModelAction *rf)
+{
+	act->set_read_from(rf);
+	if (rf != NULL && act->is_acquire()) {
+		rel_heads_list_t release_heads;
+		get_release_seq_heads(act, &release_heads);
+		int num_heads = release_heads.size();
+		for (unsigned int i = 0; i < release_heads.size(); i++)
+			if (!act->synchronize_with(release_heads[i])) {
+				set_bad_synchronization();
+				num_heads--;
+			}
+		return num_heads > 0;
+	}
+	return false;
 }
 
 /**
@@ -2154,7 +2182,7 @@ bool ModelChecker::resolve_promises(ModelAction *write)
 			if (read->is_rmw()) {
 				mo_graph->addRMWEdge(write, read);
 			}
-			read->read_from(write);
+			read_from(read, write);
 			//First fix up the modification order for actions that happened
 			//before the read
 			r_modification_order(read, write);

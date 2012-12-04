@@ -1913,7 +1913,7 @@ bool ModelChecker::release_seq_heads(const ModelAction *rf,
 }
 
 /**
- * A public interface for getting the release sequence head(s) with which a
+ * An interface for getting the release sequence head(s) with which a
  * given ModelAction must synchronize. This function only returns a non-empty
  * result when it can locate a release sequence head with certainty. Otherwise,
  * it may mark the internal state of the ModelChecker so that it will handle

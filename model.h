@@ -118,13 +118,10 @@ public:
 	void check_promises_thread_disabled();
 	void mo_check_promises(thread_id_t tid, const ModelAction *write);
 	void check_promises(thread_id_t tid, ClockVector *old_cv, ClockVector * merge_cv);
-	void get_release_seq_heads(ModelAction *act, rel_heads_list_t *release_heads);
 	bool isfeasibleprefix() const;
 
 	bool assert_bug(const char *msg);
 	void assert_user_bug(const char *msg);
-
-	void set_bad_synchronization();
 
 	const model_params params;
 	Node * get_curr_node() const;
@@ -139,6 +136,7 @@ private:
 	bool mo_may_allow(const ModelAction * writer, const ModelAction *reader);
 	bool has_asserted() const;
 	void set_assert();
+	void set_bad_synchronization();
 	bool promises_expired() const;
 	void execute_sleep_set();
 	void wake_up_sleeping_actions(ModelAction * curr);
@@ -180,6 +178,7 @@ private:
 	void post_r_modification_order(ModelAction *curr, const ModelAction *rf);
 	bool r_modification_order(ModelAction *curr, const ModelAction *rf);
 	bool w_modification_order(ModelAction *curr);
+	void get_release_seq_heads(ModelAction *act, rel_heads_list_t *release_heads);
 	bool release_seq_heads(const ModelAction *rf, rel_heads_list_t *release_heads, struct release_seq *pending) const;
 	bool resolve_release_sequences(void *location, work_queue_t *work_queue);
 

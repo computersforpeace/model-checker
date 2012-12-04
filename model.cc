@@ -91,6 +91,7 @@ ModelChecker::ModelChecker(struct model_params params) :
 	futurevalues(new std::vector< struct PendingFutureValue, SnapshotAlloc<struct PendingFutureValue> >()),
 	pending_rel_seqs(new std::vector< struct release_seq *, SnapshotAlloc<struct release_seq *> >()),
 	thrd_last_action(new std::vector< ModelAction *, SnapshotAlloc<ModelAction *> >(1)),
+	thrd_last_fence_release(new std::vector< ModelAction *, SnapshotAlloc<ModelAction *> >()),
 	node_stack(new NodeStack()),
 	priv(new struct model_snapshot_members()),
 	mo_graph(new CycleGraph())
@@ -120,6 +121,7 @@ ModelChecker::~ModelChecker()
 	delete pending_rel_seqs;
 
 	delete thrd_last_action;
+	delete thrd_last_fence_release;
 	delete node_stack;
 	delete scheduler;
 	delete mo_graph;
@@ -1024,6 +1026,10 @@ bool ModelChecker::initialize_curr_action(ModelAction **curr)
 
 		/* Always compute new clock vector */
 		newcurr->create_cv(get_parent_action(newcurr->get_tid()));
+
+		/* Assign most recent release fence */
+		newcurr->set_last_fence_release(get_last_fence_release(newcurr->get_tid()));
+
 		/*
 		 * Perform one-time actions when pushing new ModelAction onto
 		 * NodeStack
@@ -1998,6 +2004,12 @@ void ModelChecker::add_action_to_lists(ModelAction *act)
 		thrd_last_action->resize(get_num_threads());
 	(*thrd_last_action)[tid] = act;
 
+	if (act->is_fence() && act->is_release()) {
+		if ((int)thrd_last_fence_release->size() <= tid)
+			thrd_last_fence_release->resize(get_num_threads());
+		(*thrd_last_fence_release)[tid] = act;
+	}
+
 	if (act->is_wait()) {
 		void *mutex_loc=(void *) act->get_value();
 		get_safe_ptr_action(obj_map, mutex_loc)->push_back(act);
@@ -2019,6 +2031,20 @@ ModelAction * ModelChecker::get_last_action(thread_id_t tid) const
 	int threadid = id_to_int(tid);
 	if (threadid < (int)thrd_last_action->size())
 		return (*thrd_last_action)[id_to_int(tid)];
+	else
+		return NULL;
+}
+
+/**
+ * @brief Get the last fence release performed by a particular Thread
+ * @param tid The thread ID of the Thread in question
+ * @return The last fence release in the thread, if one exists; NULL otherwise
+ */
+ModelAction * ModelChecker::get_last_fence_release(thread_id_t tid) const
+{
+	int threadid = id_to_int(tid);
+	if (threadid < (int)thrd_last_fence_release->size())
+		return (*thrd_last_fence_release)[id_to_int(tid)];
 	else
 		return NULL;
 }

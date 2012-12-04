@@ -170,6 +170,7 @@ private:
 	void check_curr_backtracking(ModelAction * curr);
 	void add_action_to_lists(ModelAction *act);
 	ModelAction * get_last_action(thread_id_t tid) const;
+	ModelAction * get_last_fence_release(thread_id_t tid) const;
 	ModelAction * get_last_seq_cst_write(ModelAction *curr) const;
 	ModelAction * get_last_seq_cst_fence(thread_id_t tid, const ModelAction *before_fence) const;
 	ModelAction * get_last_unlock(ModelAction *curr) const;
@@ -213,6 +214,7 @@ private:
 	std::vector< struct release_seq *, SnapshotAlloc<struct release_seq *> > *pending_rel_seqs;
 
 	std::vector< ModelAction *, SnapshotAlloc<ModelAction *> > *thrd_last_action;
+	std::vector< ModelAction *, SnapshotAlloc<ModelAction *> > *thrd_last_fence_release;
 	NodeStack *node_stack;
 
 	/** Private data members that should be snapshotted. They are grouped

@@ -85,6 +85,12 @@ public:
 	Node * get_node() const { return node; }
 	void set_node(Node *n) { node = n; }
 
+	/** Store the most recent fence-release from the same thread
+	 *  @param fence The fence-release that occured prior to this */
+	void set_last_fence_release(const ModelAction *fence) { last_fence_release = fence; }
+	/** @return The most recent fence-release from the same thread */
+	const ModelAction * get_last_fence_release() const { return last_fence_release; }
+
 	void copy_from_new(ModelAction *newaction);
 	void set_seq_number(modelclock_t num);
 	void set_try_lock(bool obtainedlock);
@@ -157,6 +163,9 @@ private:
 
 	/** The action that this action reads from. Only valid for reads */
 	const ModelAction *reads_from;
+
+	/** The last fence release from the same thread */
+	const ModelAction *last_fence_release;
 
 	/** A back reference to a Node in NodeStack, if this ModelAction is
 	 * saved on the NodeStack. */

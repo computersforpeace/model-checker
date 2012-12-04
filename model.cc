@@ -1063,7 +1063,7 @@ bool ModelChecker::read_from(ModelAction *act, const ModelAction *rf)
 	act->set_read_from(rf);
 	if (rf != NULL && act->is_acquire()) {
 		rel_heads_list_t release_heads;
-		get_release_seq_heads(act, &release_heads);
+		get_release_seq_heads(act, act, &release_heads);
 		int num_heads = release_heads.size();
 		for (unsigned int i = 0; i < release_heads.size(); i++)
 			if (!act->synchronize_with(release_heads[i])) {
@@ -1935,18 +1935,25 @@ bool ModelChecker::release_seq_heads(const ModelAction *rf,
  * given ModelAction must synchronize. This function only returns a non-empty
  * result when it can locate a release sequence head with certainty. Otherwise,
  * it may mark the internal state of the ModelChecker so that it will handle
- * the release sequence at a later time, causing @a act to update its
+ * the release sequence at a later time, causing @a acquire to update its
  * synchronization at some later point in execution.
- * @param act The 'acquire' action that may read from a release sequence
+ *
+ * @param acquire The 'acquire' action that may synchronize with a release
+ * sequence
+ * @param read The read action that may read from a release sequence; this may
+ * be the same as acquire, or else an earlier action in the same thread (i.e.,
+ * when 'acquire' is a fence-acquire)
  * @param release_heads A pass-by-reference return parameter. Will be filled
  * with the head(s) of the release sequence(s), if they exists with certainty.
  * @see ModelChecker::release_seq_heads
  */
-void ModelChecker::get_release_seq_heads(ModelAction *act, rel_heads_list_t *release_heads)
+void ModelChecker::get_release_seq_heads(ModelAction *acquire,
+		ModelAction *read, rel_heads_list_t *release_heads)
 {
-	const ModelAction *rf = act->get_reads_from();
+	const ModelAction *rf = read->get_reads_from();
 	struct release_seq *sequence = (struct release_seq *)snapshot_calloc(1, sizeof(struct release_seq));
-	sequence->acquire = act;
+	sequence->acquire = acquire;
+	sequence->read = read;
 
 	if (!release_seq_heads(rf, release_heads, sequence)) {
 		/* add act to 'lazy checking' list */
@@ -1975,21 +1982,22 @@ bool ModelChecker::resolve_release_sequences(void *location, work_queue_t *work_
 	std::vector< struct release_seq *, SnapshotAlloc<struct release_seq *> >::iterator it = pending_rel_seqs->begin();
 	while (it != pending_rel_seqs->end()) {
 		struct release_seq *pending = *it;
-		ModelAction *act = pending->acquire;
+		ModelAction *acquire = pending->acquire;
+		const ModelAction *read = pending->read;
 
 		/* Only resolve sequences on the given location, if provided */
-		if (location && act->get_location() != location) {
+		if (location && read->get_location() != location) {
 			it++;
 			continue;
 		}
 
-		const ModelAction *rf = act->get_reads_from();
+		const ModelAction *rf = read->get_reads_from();
 		rel_heads_list_t release_heads;
 		bool complete;
 		complete = release_seq_heads(rf, &release_heads, pending);
 		for (unsigned int i = 0; i < release_heads.size(); i++) {
-			if (!act->has_synchronized_with(release_heads[i])) {
-				if (act->synchronize_with(release_heads[i]))
+			if (!acquire->has_synchronized_with(release_heads[i])) {
+				if (acquire->synchronize_with(release_heads[i]))
 					updated = true;
 				else
 					set_bad_synchronization();
@@ -1999,15 +2007,16 @@ bool ModelChecker::resolve_release_sequences(void *location, work_queue_t *work_
 		if (updated) {
 			/* Re-check all pending release sequences */
 			work_queue->push_back(CheckRelSeqWorkEntry(NULL));
-			/* Re-check act for mo_graph edges */
-			work_queue->push_back(MOEdgeWorkEntry(act));
+			/* Re-check read-acquire for mo_graph edges */
+			if (acquire->is_read())
+				work_queue->push_back(MOEdgeWorkEntry(acquire));
 
 			/* propagate synchronization to later actions */
 			action_list_t::reverse_iterator rit = action_trace->rbegin();
-			for (; (*rit) != act; rit++) {
+			for (; (*rit) != acquire; rit++) {
 				ModelAction *propagate = *rit;
-				if (act->happens_before(propagate)) {
-					propagate->synchronize_with(act);
+				if (acquire->happens_before(propagate)) {
+					propagate->synchronize_with(acquire);
 					/* Re-check 'propagate' for mo_graph edges */
 					work_queue->push_back(MOEdgeWorkEntry(propagate));
 				}

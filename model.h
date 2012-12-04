@@ -75,7 +75,11 @@ struct PendingFutureValue {
 struct release_seq {
 	/** @brief The acquire operation */
 	ModelAction *acquire;
-	/** @brief The head of the RMW chain from which 'acquire' reads; may be
+	/** @brief The read operation that may read from a release sequence;
+	 *  may be the same as acquire, or else an earlier action in the same
+	 *  thread (i.e., when 'acquire' is a fence-acquire) */
+	const ModelAction *read;
+	/** @brief The head of the RMW chain from which 'read' reads; may be
 	 *  equal to 'release' */
 	const ModelAction *rf;
 	/** @brief The head of the potential longest release sequence chain */
@@ -178,7 +182,7 @@ private:
 	void post_r_modification_order(ModelAction *curr, const ModelAction *rf);
 	bool r_modification_order(ModelAction *curr, const ModelAction *rf);
 	bool w_modification_order(ModelAction *curr);
-	void get_release_seq_heads(ModelAction *act, rel_heads_list_t *release_heads);
+	void get_release_seq_heads(ModelAction *acquire, ModelAction *read, rel_heads_list_t *release_heads);
 	bool release_seq_heads(const ModelAction *rf, rel_heads_list_t *release_heads, struct release_seq *pending) const;
 	bool resolve_release_sequences(void *location, work_queue_t *work_queue);
 

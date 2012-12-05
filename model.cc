@@ -879,6 +879,8 @@ bool ModelChecker::process_fence(ModelAction *curr)
 		/* Find X : is_read(X) && X --sb-> curr */
 		for (rit = list->rbegin(); rit != list->rend(); rit++) {
 			ModelAction *act = *rit;
+			if (act == curr)
+				continue;
 			if (act->get_tid() != curr->get_tid())
 				continue;
 			/* Stop at the beginning of the thread */
@@ -897,7 +899,7 @@ bool ModelChecker::process_fence(ModelAction *curr)
 			rel_heads_list_t release_heads;
 			get_release_seq_heads(curr, act, &release_heads);
 			for (unsigned int i = 0; i < release_heads.size(); i++)
-				if (!act->synchronize_with(release_heads[i]))
+				if (!curr->synchronize_with(release_heads[i]))
 					set_bad_synchronization();
 			if (release_heads.size() != 0)
 				updated = true;

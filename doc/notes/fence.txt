@@ -2,12 +2,10 @@
  Fence support:
 -------------------------------------------------------------------------------
 
-[refer to release sequence notes for some definitions and similar (but simpler)
-algorithm]
-
 Fences provide a few new modification order constraints as well as an
 interesting extension to release sequences, detailed in 29.3 (p4-p7) and 29.8
-(p2-p4).
+(p2-p4). The specifications are pasted here in Appendix A and are applied to our
+model-checker in these notes.
 
 Section 29.3 details the modification order constraints established by
 sequentially-consistent fences.
@@ -169,9 +167,9 @@ Cases:
 * else, rf is relaxed write (NOT RMW)
   - check same thread
 
-**************************************
- From the C++11 specification (N3337)
-**************************************
+**************************************************
+ Appendix A: From the C++11 specification (N3337)
+**************************************************
 
 -------------
 Section 29.3

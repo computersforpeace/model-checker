@@ -1517,18 +1517,21 @@ bool ModelChecker::r_modification_order(ModelAction *curr, const ModelAction *rf
 						*act < *last_sc_fence_thread_local) {
 					mo_graph->addEdge(act, rf);
 					added = true;
+					break;
 				}
 				/* C++, Section 29.3 statement 4 */
 				else if (act->is_seqcst() && last_sc_fence_local &&
 						*act < *last_sc_fence_local) {
 					mo_graph->addEdge(act, rf);
 					added = true;
+					break;
 				}
 				/* C++, Section 29.3 statement 6 */
 				else if (last_sc_fence_thread_before &&
 						*act < *last_sc_fence_thread_before) {
 					mo_graph->addEdge(act, rf);
 					added = true;
+					break;
 				}
 			}
 
@@ -1705,6 +1708,7 @@ bool ModelChecker::w_modification_order(ModelAction *curr)
 					*act < *last_sc_fence_thread_before) {
 				mo_graph->addEdge(act, curr);
 				added = true;
+				break;
 			}
 
 			/*

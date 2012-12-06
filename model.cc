@@ -286,8 +286,7 @@ void ModelChecker::execute_sleep_set() {
 	for(unsigned int i=0;i<get_num_threads();i++) {
 		thread_id_t tid=int_to_id(i);
 		Thread *thr=get_thread(tid);
-		if ( scheduler->get_enabled(thr) == THREAD_SLEEP_SET &&
-				 thr->get_pending() == NULL ) {
+		if (scheduler->is_sleep_set(thr) && thr->get_pending() == NULL) {
 			thr->set_state(THREAD_RUNNING);
 			scheduler->next_thread(thr);
 			Thread::swap(&system_context, thr);
@@ -298,16 +297,15 @@ void ModelChecker::execute_sleep_set() {
 	priv->current_action = NULL;
 }
 
-void ModelChecker::wake_up_sleeping_actions(ModelAction * curr) {
-	for(unsigned int i=0;i<get_num_threads();i++) {
-		thread_id_t tid=int_to_id(i);
-		Thread *thr=get_thread(tid);
-		if ( scheduler->get_enabled(thr) == THREAD_SLEEP_SET ) {
-			ModelAction *pending_act=thr->get_pending();
-			if ((!curr->is_rmwr())&&pending_act->could_synchronize_with(curr)) {
+void ModelChecker::wake_up_sleeping_actions(ModelAction *curr)
+{
+	for (unsigned int i = 0; i < get_num_threads(); i++) {
+		Thread *thr = get_thread(int_to_id(i));
+		if (scheduler->is_sleep_set(thr)) {
+			ModelAction *pending_act = thr->get_pending();
+			if ((!curr->is_rmwr()) && pending_act->could_synchronize_with(curr))
 				//Remove this thread from sleep set
 				scheduler->remove_sleep(thr);
-			}
 		}
 	}
 }

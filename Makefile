@@ -64,16 +64,16 @@ PHONY += tests
 tests: $(LIB_SO)
 	$(MAKE) -C $(TESTS_DIR)
 
-BENCHMARKS := benchmarks
+BENCH_DIR := benchmarks
 
 PHONY += benchmarks
 benchmarks: $(LIB_SO)
-	@if ! test -d $(BENCHMARKS); then \
-		echo "Directory $(BENCHMARKS) does not exist" && \
+	@if ! test -d $(BENCH_DIR); then \
+		echo "Directory $(BENCH_DIR) does not exist" && \
 		echo "Please clone the benchmarks repository" && \
 		echo && \
 		exit 1; \
 	fi
-	$(MAKE) -C $(BENCHMARKS)
+	$(MAKE) -C $(BENCH_DIR)
 
 .PHONY: $(PHONY)

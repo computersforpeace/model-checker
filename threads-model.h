@@ -43,14 +43,14 @@ public:
 	static int swap(ucontext_t *ctxt, Thread *t);
 	static int swap(Thread *t, ucontext_t *ctxt);
 
-	thread_state get_state() { return state; }
+	thread_state get_state() const { return state; }
 	void set_state(thread_state s) { state = s; }
-	thread_id_t get_id();
-	thrd_t get_thrd_t() { return *user_thread; }
-	Thread * get_parent() { return parent; }
+	thread_id_t get_id() const;
+	thrd_t get_thrd_t() const { return *user_thread; }
+	Thread * get_parent() const { return parent; }
 
 	void set_creation(ModelAction *act) { creation = act; }
-	ModelAction * get_creation() { return creation; }
+	ModelAction * get_creation() const { return creation; }
 
 	/**
 	 * Set a return value for the last action in this thread (e.g., for an
@@ -65,16 +65,16 @@ public:
 	 * be called from a user context.
 	 * @return The value 'returned' by the action
 	 */
-	uint64_t get_return_value() { return last_action_val; }
+	uint64_t get_return_value() const { return last_action_val; }
 
 	/** @return True if this thread is finished executing */
-	bool is_complete() { return state == THREAD_COMPLETED; }
+	bool is_complete() const { return state == THREAD_COMPLETED; }
 
 	/** @return True if this thread is blocked */
-	bool is_blocked() { return state == THREAD_BLOCKED; }
+	bool is_blocked() const { return state == THREAD_BLOCKED; }
 
 	/** @return True if no threads are waiting on this Thread */
-	bool wait_list_empty() { return wait_list.empty(); }
+	bool wait_list_empty() const { return wait_list.empty(); }
 
 	/**
 	 * Add a ModelAction to the waiting list for this thread.
@@ -82,15 +82,15 @@ public:
 	 */
 	void push_wait_list(ModelAction *act) { wait_list.push_back(act); }
 
-	unsigned int num_wait_list() {
+	unsigned int num_wait_list() const {
 		return wait_list.size();
 	}
 
-	ModelAction * get_waiter(unsigned int i) {
+	ModelAction * get_waiter(unsigned int i) const {
 		return wait_list[i];
 	}
 
-	ModelAction * get_pending() { return pending; }
+	ModelAction * get_pending() const { return pending; }
 	void set_pending(ModelAction *act) { pending = act; }
 	/**
 	 * Remove one ModelAction from the waiting list
@@ -102,7 +102,7 @@ public:
 		return ret;
 	}
 
-	bool is_model_thread() { return model_thread; }
+	bool is_model_thread() const { return model_thread; }
 
 	friend void thread_startup();
 

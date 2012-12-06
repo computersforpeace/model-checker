@@ -174,7 +174,7 @@ Thread::~Thread()
 }
 
 /** @return The thread_id_t corresponding to this Thread object. */
-thread_id_t Thread::get_id()
+thread_id_t Thread::get_id() const
 {
 	return id;
 }

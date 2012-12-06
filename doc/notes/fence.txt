@@ -129,8 +129,115 @@ Intuition/Implementation:
  Release/acquire synchronization: extended to fences (29.3 p4-p7)
 **********************************************************************
 
-[INCOMPLETE]
+The C++ specification statements regarding release and acquire fences make
+extensions to release sequences, using what they call "hypothetical release
+sequences." These hypothetical release sequences are the same as normal release
+sequences, except that the "head" doesn't have to be a release: it can have any
+memory order (e.g., relaxed). This change actually simplifies our release
+sequences (for the fence case), as we don't actually have to establish a
+contiguous modification order all the way to a release operation; we just need
+to reach the same thread (via a RMW chain, for instance).
 
+The statements given in the specification regarding release and acquire fences
+do not result in totally separable conditions, so I will write down my
+semi-formal notation here along with some simple notes then present my
+implementation notes at the end.
+
+Note that we will use A --rs-> B to denote that B is in the release sequence
+headed by A (we allow A = B, unless otherwise stated). The hypothetical release
+sequence will be similarly denoted A --hrs-> B.
+
+29.8p2
+
+If
+    is_fence(A) && is_write(X) && is_write(Y) && is_read(Z) && is_fence(B) &&
+    is_release(A) && is_acquire(B) &&
+    A --sb-> X --hrs-> Y --rf-> Z --sb-> B
+then
+    A --sw-> B
+
+Notes:
+ * The fence-release A does not result in any action on its own (i.e., when it
+   is first explored); it only affects later release operations, at which point
+   we may need to associate store X with A. Thus, for every store X, we eagerly
+   record the most recent fence-release, then this record can be utilized during
+   later (hypothetical) release sequence checks.
+ * The fence-acquire B is more troublesome, since there may be many qualifying
+   loads Z (loads from different locations; loads which read from different
+   threads; etc.). Each Z may read from different hypothetical release
+   sequences, ending in a different release A with which B should synchronize.
+   It is difficult (but not impossible) to find good stopping conditions at
+   which we should terminate our search for Z. However, we at least know we only
+   need to consder Z such that:
+       W --sb-> Z --sb-> B
+   where W is a previous fence-acquire.
+
+29.8p3
+
+If
+    is_fence(A) && is_write(X) && is_write(Y) && is_read(B) &&
+    is_release(A) && is_acquire(B) &&
+    A --sb-> X --hrs-> Y --rf-> B
+then
+    A --sw-> B
+
+Notes:
+ * See the note for fence-release A in 29.8p2
+
+29.8p4
+
+If
+    is_write(A) && is_write(X) && is_read(Y) && is_fence(B) &&
+    is_release(A) && is_acquire(B) &&
+    A --rs-> X --rf-> Y --sb-> B
+then
+    A --sw-> B
+
+Notes:
+ * See the note for fence-acquire B in 29.8p2. The A, Z, and B in 29.8p2
+   correspond to A, Y, and B in this rule (29.8p4).
+
+Summary notes:
+
+Now, noting the overlap in implementation notes between 29.8p2,3,4 and the
+similarity between release sequences and hypothetical release sequences, I can
+extend our release sequence support to provide easy facilities for
+release/acquire fence support.
+
+I extend release sequence support to include fences first by distinguishing the
+'acquire' from the 'load'; previously, release sequence searches were always
+triggered by a load-acquire operation. Now, we may have a *fence*-acquire which
+finds a previous load-*relaxed*, then follows any chain to a release sequence
+(29.8p4). Any release heads found by our existing release sequence support must
+synchronize with the fence-acquire. Any uncertain release sequences can be
+stashed (along with both the fence-acquire and the load-relaxed) as "pending" in
+the existing lists.
+
+Next I extend the release sequence support to include hypothetical release
+sequences. Note that any search for a release sequence can also search for a
+hypothetical release sequence with little additional effort (and even saving
+effort in cases where a fence-release hides a prior store-release, whose release
+sequence may be harder to establish eagerly). Because the "most recent" 
+fence-release is stashed in each ModelAction (see the fence-release note in
+29.8p2), release sequence searches can easily add the most recent fence-release
+to the release_heads vector as it explores a RMW chain. Then, once it reaches a
+thread in which it looks for a store-release, it can perform this interesting
+optimization: if the most recent store-release is sequenced before the most
+recent fence-release, then we can ignore the store-release and simply
+synchronize with the fence-release. This avoids a "contiguous MO" computation.
+
+So, with hypothetical release sequences seamlessly integrated into the release
+sequence code, we easily cover 29.8p3 (fence-release --sw-> load-acquire). Then,
+it's a simple extension to see how 29.8p2 is just a combination of the rules
+described for 29.8p3 and 29.8p4: a fence-acquire triggers a search for loads in
+its same thread; these loads then launch a series of release sequence
+searches--hypothetical (29.8p2) or real (29.8p4)--and synchronizes with all the
+release heads.
+
+The best part about all of the preceding explanations: the lazy fixups, etc.,
+can simply be re-used from existing release sequence code, with slight
+adjustments for dealing the presence of a fence-acquire preceded by a
+load-relaxed.
 
 *******************************
  Miscellaneous Notes
@@ -140,32 +247,6 @@ fence(memory_order_consume) acts like memory_order_release, so if we ever
 support consume, we must alias consume -> release
 
 fence(memory_order_relaxed) is a no-op
-
-*******************************
- Approximate Algorithm [incomplete; just copied from the (out-of-date) release
- sequence notes
-*******************************
-
-Check read-write chain...
-
-Given:
-current action = curr
-read from = rf
-Cases:
-* rf is NULL: return uncertain
-* rf is RMW:
-	- if rf is release:
-		add rf to release heads
-	- if rf is rel_acq:
-		return certain [note: we don't need to extend release sequence
-		further because this acquire will have synchronized already]
-	  else
-		return (recursively) "get release sequence head of rf"
-* if rf is release:
-	add rf to release heads
-	return certain
-* else, rf is relaxed write (NOT RMW)
-  - check same thread
 
 **************************************************
  Appendix A: From the C++11 specification (N3337)

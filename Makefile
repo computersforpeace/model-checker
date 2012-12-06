@@ -17,19 +17,7 @@ endif
 
 TESTS_DIR = test
 
-program_H_SRCS := $(wildcard *.h) $(wildcard include/*.h)
-program_C_SRCS := $(wildcard *.c) $(wildcard *.cc)
-DEPS = make.deps
-
 all: $(LIB_SO) tests
-
-$(DEPS): build_deps := 1
-$(DEPS): $(program_C_SRCS) $(program_H_SRCS)
-	$(CXX) -MM $(program_C_SRCS) $(CPPFLAGS) > $(DEPS)
-
-ifeq ($(build_deps),1)
-include $(DEPS)
-endif
 
 debug: CPPFLAGS += -DCONFIG_DEBUG
 debug: all
@@ -44,12 +32,14 @@ $(LIB_SO): $(OBJECTS)
 malloc.o: malloc.c
 	$(CC) -fPIC -c malloc.c -DMSPACES -DONLY_MSPACES -DHAVE_MMAP=0 $(CPPFLAGS) -Wno-unused-variable
 
-%.o: %.cc $(DEPS)
-	$(CXX) -fPIC -c $< $(CPPFLAGS)
+%.o: %.cc
+	$(CXX) -MMD -MF .$@.d -fPIC -c $< $(CPPFLAGS)
+
+-include $(OBJECTS:%=.%.d)
 
 PHONY += clean
 clean:
-	rm -f *.o *.so
+	rm -f *.o *.so .*.d
 	$(MAKE) -C $(TESTS_DIR) clean
 
 PHONY += mrclean

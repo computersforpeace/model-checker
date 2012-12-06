@@ -5,9 +5,9 @@
 *.so
 *~
 *.dot
+.*.d
 
 # files in this directory
 /tags
 /doc/docs
-/make.deps
 /benchmarks

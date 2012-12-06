@@ -30,12 +30,12 @@ public:
 	Thread * next_thread(Thread *t);
 	Thread * get_current_thread() const;
 	void print() const;
-	enabled_type_t * get_enabled_array() { return enabled; };
+	enabled_type_t * get_enabled_array() const { return enabled; };
 	void remove_sleep(Thread *t);
 	void add_sleep(Thread *t);
-	enabled_type_t get_enabled(Thread *t);
+	enabled_type_t get_enabled(const Thread *t) const;
 	void update_sleep_set(Node *n);
-	bool is_enabled(Thread *t) const;
+	bool is_enabled(const Thread *t) const;
 	bool is_enabled(thread_id_t tid) const;
 
 	SNAPSHOTALLOC

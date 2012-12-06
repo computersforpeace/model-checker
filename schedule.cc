@@ -60,6 +60,16 @@ bool Scheduler::is_enabled(thread_id_t tid) const
 	return (i >= enabled_len) ? false : (enabled[i] != THREAD_DISABLED);
 }
 
+/**
+ * @brief Check if a Thread is currently in the sleep set
+ * @param t The Thread to check
+ * @return True if the Thread is currently enabled
+ */
+bool Scheduler::is_sleep_set(const Thread *t) const
+{
+	return get_enabled(t) == THREAD_SLEEP_SET;
+}
+
 enabled_type_t Scheduler::get_enabled(const Thread *t) const
 {
 	int id = id_to_int(t->get_id());

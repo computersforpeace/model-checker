@@ -145,9 +145,9 @@ sequence will be similarly denoted A --hrs-> B.
 29.8p2
 
 If
-    is_fence(A) && is_write(X) && is_write(Y) && is_read(Z) && is_fence(B) &&
+    is_fence(A) && is_write(X) && is_write(W) && is_read(Y) && is_fence(B) &&
     is_release(A) && is_acquire(B) &&
-    A --sb-> X --hrs-> Y --rf-> Z --sb-> B
+    A --sb-> X --hrs-> W --rf-> Y --sb-> B
 then
     A --sw-> B
 
@@ -158,21 +158,21 @@ Notes:
    record the most recent fence-release, then this record can be utilized during
    later (hypothetical) release sequence checks.
  * The fence-acquire B is more troublesome, since there may be many qualifying
-   loads Z (loads from different locations; loads which read from different
-   threads; etc.). Each Z may read from different hypothetical release
+   loads Y (loads from different locations; loads which read from different
+   threads; etc.). Each Y may read from different hypothetical release
    sequences, ending in a different release A with which B should synchronize.
    It is difficult (but not impossible) to find good stopping conditions at
-   which we should terminate our search for Z. However, we at least know we only
-   need to consder Z such that:
-       W --sb-> Z --sb-> B
-   where W is a previous fence-acquire.
+   which we should terminate our search for Y. However, we at least know we only
+   need to consder Y such that:
+       V --sb-> Y --sb-> B
+   where V is a previous fence-acquire.
 
 29.8p3
 
 If
-    is_fence(A) && is_write(X) && is_write(Y) && is_read(B) &&
+    is_fence(A) && is_write(X) && is_write(W) && is_read(B) &&
     is_release(A) && is_acquire(B) &&
-    A --sb-> X --hrs-> Y --rf-> B
+    A --sb-> X --hrs-> W --rf-> B
 then
     A --sw-> B
 
@@ -182,15 +182,15 @@ Notes:
 29.8p4
 
 If
-    is_write(A) && is_write(X) && is_read(Y) && is_fence(B) &&
+    is_write(A) && is_write(W) && is_read(X) && is_fence(B) &&
     is_release(A) && is_acquire(B) &&
-    A --rs-> X --rf-> Y --sb-> B
+    A --rs-> W --rf-> X --sb-> B
 then
     A --sw-> B
 
 Notes:
- * See the note for fence-acquire B in 29.8p2. The A, Z, and B in 29.8p2
-   correspond to A, Y, and B in this rule (29.8p4).
+ * See the note for fence-acquire B in 29.8p2. The A, Y, and B in 29.8p2
+   correspond to A, X, and B in this rule (29.8p4).
 
 Summary notes:
 

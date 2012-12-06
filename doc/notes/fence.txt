@@ -45,68 +45,63 @@ fences can be transformed into the following 4 modification order constraints.
 29.3p4
 
 If
-    is_write(A) && is_read(B) && is_write(X) && is_fence(Y) &&
-    is_seqcst(X) && is_seqcst(Y) && A != X &&
-    same_loc(X, A, B) &&
+    is_write(A) && is_read(B) && is_write(W) && is_fence(X) &&
+    is_seqcst(W) && is_seqcst(X) && A != W &&
+    same_loc(W, A, B) &&
     A --rf-> B &&
-    X --sc-> Y --sb-> B
+    W --sc-> X --sb-> B
 then
-    X --mo-> A
+    W --mo-> A
 
 Intuition/Implementation:
- * We may (but don't currently) limit our considertion of X to only the most
-   recent (in the SC order) store to the same location as A and B prior to Y
-   (note that all prior writes will be ordered prior to X in both SC and MO)
- * We should consider the "most recent" seq-cst fence Y that precedes B
+ * We may (but don't currently) limit our considertion of W to only the most
+   recent (in the SC order) store to the same location as A and B prior to X
+   (note that all prior writes will be ordered prior to W in both SC and MO)
+ * We should consider the "most recent" seq-cst fence X that precedes B
  * This search can be combined with the r_modification_order search, since we
-   already iterate through the necessary stores X
+   already iterate through the necessary stores W
 
 29.3p5
 
 If
-    is_write(A) && is_read(B) && is_write(X) && is_fence(Y) &&
-    is_seqcst(B) && is_seqcst(Y) &&
-    same_loc(X, A, B) &&
-    A != X &&
+    is_write(A) && is_read(B) && is_write(W) && is_fence(X) &&
+    is_seqcst(B) && is_seqcst(X) &&
+    same_loc(W, A, B) &&
+    A != W &&
     A --rf-> B &&
-    X --sb-> Y --sc-> B
+    W --sb-> X --sc-> B
 then
-    X --mo-> A
+    W --mo-> A
 
 Intuition/Implementation:
- * We only need to examine the "most recent" seq-cst fence Y from each thread
- * We only need to examine the "most recent" qualifying store X that precedes Y;
-   all other X will provide a weaker MO constraint
+ * We only need to examine the "most recent" seq-cst fence X from each thread
+ * We only need to examine the "most recent" qualifying store W that precedes X;
+   all other W will provide a weaker MO constraint
  * This search can be combined with the r_modification_order search, since we
-   already iterate through the necessary stores X
-
-For atomic operations A and B on an atomic object M, where A modifies M and B
-takes its value, if there is a memory_order_seq_cst fence X such that A is
-sequenced before X and B follows X in S, then B observes either the effects of
-A or a later modification of M in its modification order.
+   already iterate through the necessary stores W
 
 29.3p6
 
 If
-    is_write(A) && is_read(B) && is_write(X) && is_fence(Y) && is_fence(Z) &&
-    is_seqcst(Y) && is_seqcst(Z) &&
-    same_loc(X, A, B) &&
-    A != X &&
+    is_write(A) && is_read(B) && is_write(W) && is_fence(X) && is_fence(Y) &&
+    is_seqcst(X) && is_seqcst(Y) &&
+    same_loc(W, A, B) &&
+    A != W &&
     A --rf-> B &&
-    X --sb-> Y --sc-> Z --sb-> B
+    W --sb-> X --sc-> Y --sb-> B
 then
-    X --mo-> A
+    W --mo-> A
 
 Intuition/Implementation:
- * We should consider only the "most recent" fence Z in the same thread as B
+ * We should consider only the "most recent" fence Y in the same thread as B
    (prior fences may only yield the same or weaker constraints)
- * We may then consider the "most recent" seq-cst fence Y prior to Z (in SC order)
+ * We may then consider the "most recent" seq-cst fence X prior to Y (in SC order)
    from each thread (prior fences may only yield the same or weaker constraints)
- * We should consider only the "most recent" store X (to the same location as A,
-   B) in the same thread as Y (prior stores may only yield the same or weaker
+ * We should consider only the "most recent" store W (to the same location as A,
+   B) in the same thread as X (prior stores may only yield the same or weaker
    constraints)
  * This search can be combined with the r_modification_order search, since we
-   already iterate through the necessary stores X
+   already iterate through the necessary stores W
 
 29.3p7
 

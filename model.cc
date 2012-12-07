@@ -2462,16 +2462,8 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 
 	ModelAction *last_sc_write = NULL;
 
-	/* Track whether this object has been initialized */
-	bool initialized = false;
-
-	if (curr->is_seqcst()) {
+	if (curr->is_seqcst())
 		last_sc_write = get_last_seq_cst_write(curr);
-		/* We have to at least see the last sequentially consistent write,
-			 so we are initialized. */
-		if (last_sc_write != NULL)
-			initialized = true;
-	}
 
 	/* Iterate over all threads */
 	for (i = 0; i < thrd_lists->size(); i++) {
@@ -2503,17 +2495,12 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 			}
 
 			/* Include at most one act per-thread that "happens before" curr */
-			if (act->happens_before(curr)) {
-				initialized = true;
+			if (act->happens_before(curr))
 				break;
-			}
 		}
 	}
 
-	if (!initialized)
-		assert_bug("May read from uninitialized atomic");
-
-	if (DBG_ENABLED() || !initialized) {
+	if (DBG_ENABLED()) {
 		model_print("Reached read action:\n");
 		curr->print();
 		model_print("Printing may_read_from\n");

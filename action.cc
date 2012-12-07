@@ -346,6 +346,12 @@ void ModelAction::set_try_lock(bool obtainedlock) {
 		value=VALUE_TRYFAILED;
 }
 
+/** @return The Node associated with this ModelAction */
+Node * ModelAction::get_node() const
+{
+	return node;
+}
+
 /**
  * Update the model action's read_from action
  * @param act The action to read from; should be a write

@@ -83,7 +83,7 @@ public:
 	uint64_t get_value() const { return value; }
 	const ModelAction * get_reads_from() const { return reads_from; }
 
-	Node * get_node() const { return node; }
+	Node * get_node() const;
 	void set_node(Node *n) { node = n; }
 
 	void set_read_from(const ModelAction *act);

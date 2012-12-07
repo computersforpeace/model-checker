@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <algorithm>
 #include <mutex>
+#include <new>
 
 #include "model.h"
 #include "action.h"
@@ -2521,6 +2522,19 @@ bool ModelChecker::sleep_can_read_from(ModelAction * curr, const ModelAction *wr
 			return true;
 		write=write->get_reads_from();
 	}
+}
+
+/**
+ * @brief Create a new action representing an uninitialized atomic
+ * @param location The memory location of the atomic object
+ * @return A pointer to a new ModelAction
+ */
+ModelAction * ModelChecker::new_uninitialized_action(void *location) const
+{
+	ModelAction *act = (ModelAction *)snapshot_malloc(sizeof(class ModelAction));
+	act = new (act) ModelAction(ATOMIC_UNINIT, std::memory_order_relaxed, location, 0, model_thread);
+	act->create_cv(NULL);
+	return act;
 }
 
 static void print_list(action_list_t *list, int exec_num = -1)

@@ -187,6 +187,8 @@ private:
 	bool release_seq_heads(const ModelAction *rf, rel_heads_list_t *release_heads, struct release_seq *pending) const;
 	bool resolve_release_sequences(void *location, work_queue_t *work_queue);
 
+	ModelAction * new_uninitialized_action(void *location) const;
+
 	ModelAction *diverge;
 	ModelAction *earliest_diverge;
 

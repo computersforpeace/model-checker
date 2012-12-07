@@ -2105,7 +2105,7 @@ void ModelChecker::add_action_to_lists(ModelAction *act)
 	ModelAction *uninit = NULL;
 	int uninit_id = -1;
 	action_list_t *list = get_safe_ptr_action(obj_map, act->get_location());
-	if (list->empty()) {
+	if (list->empty() && act->is_atomic_var()) {
 		uninit = new_uninitialized_action(act->get_location());
 		uninit_id = id_to_int(uninit->get_tid());
 		list->push_back(uninit);

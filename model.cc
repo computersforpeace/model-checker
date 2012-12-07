@@ -2510,7 +2510,10 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 }
 
 bool ModelChecker::sleep_can_read_from(ModelAction * curr, const ModelAction *write) {
-	while(true) {
+	while (true) {
+		/* UNINIT actions don't have a Node, and they never sleep */
+		if (write->is_uninitialized())
+			return true;
 		Node *prevnode=write->get_node()->get_parent();
 
 		bool thread_sleep=prevnode->enabled_status(curr->get_tid())==THREAD_SLEEP_SET;

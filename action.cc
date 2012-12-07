@@ -349,6 +349,8 @@ void ModelAction::set_try_lock(bool obtainedlock) {
 /** @return The Node associated with this ModelAction */
 Node * ModelAction::get_node() const
 {
+	/* UNINIT actions do not have a Node */
+	ASSERT(!is_uninitialized());
 	return node;
 }
 

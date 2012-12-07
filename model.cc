@@ -712,7 +712,7 @@ bool ModelChecker::process_read(ModelAction *curr, bool second_part_of_rmw)
 			/* Read from future value */
 			value = curr->get_node()->get_future_value();
 			modelclock_t expiration = curr->get_node()->get_future_value_expiration();
-			read_from(curr, NULL);
+			curr->set_read_from(NULL);
 			Promise *valuepromise = new Promise(curr, value, expiration);
 			promises->push_back(valuepromise);
 		}

@@ -66,6 +66,8 @@ void ModelAction::copy_from_new(ModelAction *newaction)
 
 void ModelAction::set_seq_number(modelclock_t num)
 {
+	/* ATOMIC_UNINIT actions should never have non-zero clock */
+	ASSERT(!is_uninitialized());
 	ASSERT(seq_number == ACTION_INITIAL_CLOCK);
 	seq_number = num;
 }
@@ -122,6 +124,11 @@ bool ModelAction::is_failed_trylock() const
 	return (type == ATOMIC_TRYLOCK && value == VALUE_TRYFAILED);
 }
 
+bool ModelAction::is_uninitialized() const
+{
+	return type == ATOMIC_UNINIT;
+}
+
 bool ModelAction::is_read() const
 {
 	return type == ATOMIC_READ || type == ATOMIC_RMWR || type == ATOMIC_RMW;
@@ -129,7 +136,7 @@ bool ModelAction::is_read() const
 
 bool ModelAction::is_write() const
 {
-	return type == ATOMIC_WRITE || type == ATOMIC_RMW || type == ATOMIC_INIT;
+	return type == ATOMIC_WRITE || type == ATOMIC_RMW || type == ATOMIC_INIT || type == ATOMIC_UNINIT;
 }
 
 bool ModelAction::could_be_write() const
@@ -346,6 +353,8 @@ void ModelAction::set_try_lock(bool obtainedlock) {
 void ModelAction::set_read_from(const ModelAction *act)
 {
 	reads_from = act;
+	if (act && act->is_uninitialized())
+		model->assert_bug("May read from uninitialized atomic\n");
 }
 
 /**
@@ -400,6 +409,9 @@ void ModelAction::print() const
 		break;
 	case THREAD_FINISH:
 		type_str = "thread finish";
+		break;
+	case ATOMIC_UNINIT:
+		type_str = "uninitialized";
 		break;
 	case ATOMIC_READ:
 		type_str = "atomic read";

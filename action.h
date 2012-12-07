@@ -45,6 +45,7 @@ typedef enum action_type {
 	THREAD_YIELD,         /**< A thread yield action */
 	THREAD_JOIN,          /**< A thread join action */
 	THREAD_FINISH,        /**< A thread completion action */
+	ATOMIC_UNINIT,        /**< Represents an uninitialized atomic */
 	ATOMIC_READ,          /**< An atomic read action */
 	ATOMIC_WRITE,         /**< An atomic write action */
 	ATOMIC_RMWR,          /**< The read part of an atomic RMW action */
@@ -107,6 +108,7 @@ public:
 	bool is_notify_one() const;
 	bool is_success_lock() const;
 	bool is_failed_trylock() const;
+	bool is_uninitialized() const;
 	bool is_read() const;
 	bool is_write() const;
 	bool could_be_write() const;

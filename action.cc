@@ -124,6 +124,12 @@ bool ModelAction::is_failed_trylock() const
 	return (type == ATOMIC_TRYLOCK && value == VALUE_TRYFAILED);
 }
 
+/** @return True if this operation is performed on a C/C++ atomic variable */
+bool ModelAction::is_atomic_var() const
+{
+	return is_read() || could_be_write();
+}
+
 bool ModelAction::is_uninitialized() const
 {
 	return type == ATOMIC_UNINIT;

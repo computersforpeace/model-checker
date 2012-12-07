@@ -108,6 +108,7 @@ public:
 	bool is_notify_one() const;
 	bool is_success_lock() const;
 	bool is_failed_trylock() const;
+	bool is_atomic_var() const;
 	bool is_uninitialized() const;
 	bool is_read() const;
 	bool is_write() const;

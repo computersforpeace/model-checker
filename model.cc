@@ -2102,18 +2102,32 @@ bool ModelChecker::resolve_release_sequences(void *location, work_queue_t *work_
 void ModelChecker::add_action_to_lists(ModelAction *act)
 {
 	int tid = id_to_int(act->get_tid());
-	action_trace->push_back(act);
+	ModelAction *uninit = NULL;
+	int uninit_id = -1;
+	action_list_t *list = get_safe_ptr_action(obj_map, act->get_location());
+	if (list->empty()) {
+		uninit = new_uninitialized_action(act->get_location());
+		uninit_id = id_to_int(uninit->get_tid());
+		list->push_back(uninit);
+	}
+	list->push_back(act);
 
-	get_safe_ptr_action(obj_map, act->get_location())->push_back(act);
+	action_trace->push_back(act);
+	if (uninit)
+		action_trace->push_front(uninit);
 
 	std::vector<action_list_t> *vec = get_safe_ptr_vect_action(obj_thrd_map, act->get_location());
 	if (tid >= (int)vec->size())
 		vec->resize(priv->next_thread_id);
 	(*vec)[tid].push_back(act);
+	if (uninit)
+		(*vec)[uninit_id].push_front(uninit);
 
 	if ((int)thrd_last_action->size() <= tid)
 		thrd_last_action->resize(get_num_threads());
 	(*thrd_last_action)[tid] = act;
+	if (uninit)
+		(*thrd_last_action)[uninit_id] = uninit;
 
 	if (act->is_fence() && act->is_release()) {
 		if ((int)thrd_last_fence_release->size() <= tid)

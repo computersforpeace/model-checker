@@ -129,19 +129,21 @@ ModelChecker::~ModelChecker()
 	delete priv;
 }
 
-static action_list_t * get_safe_ptr_action(HashTable<const void *, action_list_t *, uintptr_t, 4> * hash, void * ptr) {
-	action_list_t * tmp=hash->get(ptr);
-	if (tmp==NULL) {
-		tmp=new action_list_t();
+static action_list_t * get_safe_ptr_action(HashTable<const void *, action_list_t *, uintptr_t, 4> * hash, void * ptr)
+{
+	action_list_t *tmp = hash->get(ptr);
+	if (tmp == NULL) {
+		tmp = new action_list_t();
 		hash->put(ptr, tmp);
 	}
 	return tmp;
 }
 
-static std::vector<action_list_t> * get_safe_ptr_vect_action(HashTable<void *, std::vector<action_list_t> *, uintptr_t, 4> * hash, void * ptr) {
-	std::vector<action_list_t> * tmp=hash->get(ptr);
-	if (tmp==NULL) {
-		tmp=new std::vector<action_list_t>();
+static std::vector<action_list_t> * get_safe_ptr_vect_action(HashTable<void *, std::vector<action_list_t> *, uintptr_t, 4> * hash, void * ptr)
+{
+	std::vector<action_list_t> *tmp = hash->get(ptr);
+	if (tmp == NULL) {
+		tmp = new std::vector<action_list_t>();
 		hash->put(ptr, tmp);
 	}
 	return tmp;
@@ -208,7 +210,7 @@ Thread * ModelChecker::get_next_thread(ModelAction *curr)
 {
 	thread_id_t tid;
 
-	if (curr!=NULL) {
+	if (curr != NULL) {
 		/* Do not split atomic actions. */
 		if (curr->is_rmwr())
 			return thread_current();
@@ -283,10 +285,11 @@ Thread * ModelChecker::get_next_thread(ModelAction *curr)
  * the corresponding thread object's pending action.
  */
 
-void ModelChecker::execute_sleep_set() {
-	for(unsigned int i=0;i<get_num_threads();i++) {
-		thread_id_t tid=int_to_id(i);
-		Thread *thr=get_thread(tid);
+void ModelChecker::execute_sleep_set()
+{
+	for (unsigned int i = 0; i < get_num_threads(); i++) {
+		thread_id_t tid = int_to_id(i);
+		Thread *thr = get_thread(tid);
 		if (scheduler->is_sleep_set(thr) && thr->get_pending() == NULL) {
 			thr->set_state(THREAD_RUNNING);
 			scheduler->next_thread(thr);
@@ -602,11 +605,11 @@ ModelAction * ModelChecker::get_last_conflict(ModelAction *act)
 void ModelChecker::set_backtracking(ModelAction *act)
 {
 	Thread *t = get_thread(act);
-	ModelAction * prev = get_last_conflict(act);
+	ModelAction *prev = get_last_conflict(act);
 	if (prev == NULL)
 		return;
 
-	Node * node = prev->get_node()->get_parent();
+	Node *node = prev->get_node()->get_parent();
 
 	int low_tid, high_tid;
 	if (node->is_enabled(t)) {
@@ -1136,8 +1139,8 @@ bool ModelChecker::read_from(ModelAction *act, const ModelAction *rf)
  */
 bool ModelChecker::check_action_enabled(ModelAction *curr) {
 	if (curr->is_lock()) {
-		std::mutex * lock = (std::mutex *)curr->get_location();
-		struct std::mutex_state * state = lock->get_state();
+		std::mutex *lock = (std::mutex *)curr->get_location();
+		struct std::mutex_state *state = lock->get_state();
 		if (state->islocked) {
 			//Stick the action in the appropriate waiting queue
 			get_safe_ptr_action(lock_waiters_map, curr->get_location())->push_back(curr);
@@ -1271,7 +1274,8 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 	return get_next_thread(curr);
 }
 
-void ModelChecker::check_curr_backtracking(ModelAction * curr) {
+void ModelChecker::check_curr_backtracking(ModelAction *curr)
+{
 	Node *currnode = curr->get_node();
 	Node *parnode = currnode->get_parent();
 
@@ -1383,9 +1387,9 @@ ModelAction * ModelChecker::process_rmw(ModelAction *act) {
  *
  * If so, we decide that the execution is no longer feasible.
  */
-void ModelChecker::check_recency(ModelAction *curr, const ModelAction *rf) {
+void ModelChecker::check_recency(ModelAction *curr, const ModelAction *rf)
+{
 	if (params.maxreads != 0) {
-
 		if (curr->get_node()->get_read_from_size() <= 1)
 			return;
 		//Must make sure that execution is currently feasible...  We could
@@ -1411,7 +1415,7 @@ void ModelChecker::check_recency(ModelAction *curr, const ModelAction *rf) {
 		//See if we have enough reads from the same value
 		int count = 0;
 		for (; count < params.maxreads; rit++,count++) {
-			if (rit==list->rend())
+			if (rit == list->rend())
 				return;
 			ModelAction *act = *rit;
 			if (!act->is_read())
@@ -1422,12 +1426,12 @@ void ModelChecker::check_recency(ModelAction *curr, const ModelAction *rf) {
 			if (act->get_node()->get_read_from_size() <= 1)
 				return;
 		}
-		for (int i = 0; i<curr->get_node()->get_read_from_size(); i++) {
-			//Get write
-			const ModelAction * write = curr->get_node()->get_read_from_at(i);
+		for (int i = 0; i < curr->get_node()->get_read_from_size(); i++) {
+			/* Get write */
+			const ModelAction *write = curr->get_node()->get_read_from_at(i);
 
-			//Need a different write
-			if (write==rf)
+			/* Need a different write */
+			if (write == rf)
 				continue;
 
 			/* Test to see whether this is a feasible write to read from*/
@@ -1444,7 +1448,7 @@ void ModelChecker::check_recency(ModelAction *curr, const ModelAction *rf) {
 			//new we need to see if this write works for everyone
 
 			for (int loop = count; loop>0; loop--,rit++) {
-				ModelAction *act=*rit;
+				ModelAction *act = *rit;
 				bool foundvalue = false;
 				for (int j = 0; j<act->get_node()->get_read_from_size(); j++) {
 					if (act->get_node()->get_read_from_at(j)==write) {
@@ -1762,7 +1766,8 @@ bool ModelChecker::w_modification_order(ModelAction *curr)
 /** Arbitrary reads from the future are not allowed.  Section 29.3
  * part 9 places some constraints.  This method checks one result of constraint
  * constraint.  Others require compiler support. */
-bool ModelChecker::thin_air_constraint_may_allow(const ModelAction * writer, const ModelAction *reader) {
+bool ModelChecker::thin_air_constraint_may_allow(const ModelAction *writer, const ModelAction *reader)
+{
 	if (!writer->is_rmw())
 		return true;
 
@@ -2377,14 +2382,14 @@ void ModelChecker::check_promises_thread_disabled() {
  * cannot perform a future write that will resolve the promise due to
  * modificatin order constraints.
  *
- *	@parem tid The thread that either read from the model action
+ *	@param tid The thread that either read from the model action
  *	write, or actually did the model action write.
  *
- *	@parem write The ModelAction representing the relevant write.
+ *	@param write The ModelAction representing the relevant write.
  */
-
-void ModelChecker::mo_check_promises(thread_id_t tid, const ModelAction *write) {
-	void * location = write->get_location();
+void ModelChecker::mo_check_promises(thread_id_t tid, const ModelAction *write)
+{
+	void *location = write->get_location();
 	for (unsigned int i = 0; i < promises->size(); i++) {
 		Promise *promise = (*promises)[i];
 		const ModelAction *act = promise->get_action();
@@ -2509,20 +2514,21 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 	}
 }
 
-bool ModelChecker::sleep_can_read_from(ModelAction * curr, const ModelAction *write) {
+bool ModelChecker::sleep_can_read_from(ModelAction *curr, const ModelAction *write)
+{
 	while (true) {
 		/* UNINIT actions don't have a Node, and they never sleep */
 		if (write->is_uninitialized())
 			return true;
-		Node *prevnode=write->get_node()->get_parent();
+		Node *prevnode = write->get_node()->get_parent();
 
-		bool thread_sleep=prevnode->enabled_status(curr->get_tid())==THREAD_SLEEP_SET;
-		if (write->is_release()&&thread_sleep)
+		bool thread_sleep = prevnode->enabled_status(curr->get_tid()) == THREAD_SLEEP_SET;
+		if (write->is_release() && thread_sleep)
 			return true;
 		if (!write->is_rmw()) {
 			return false;
 		}
-		if (write->get_reads_from()==NULL)
+		if (write->get_reads_from() == NULL)
 			return true;
 		write=write->get_reads_from();
 	}

@@ -264,7 +264,7 @@ void ModelAction::process_rmw(ModelAction * act) {
  */
 bool ModelAction::could_synchronize_with(const ModelAction *act) const
 {
-	//Same thread can't be reordered
+	// Same thread can't be reordered
 	if (same_thread(act))
 		return false;
 
@@ -283,15 +283,15 @@ bool ModelAction::could_synchronize_with(const ModelAction *act) const
 			(act->could_be_write() || act->is_fence()))
 		return true;
 
-	//lock just released...we can grab lock
+	// lock just released...we can grab lock
 	if ((is_lock() ||is_trylock()) && (act->is_unlock()||act->is_wait()))
 		return true;
 
-	//lock just acquired...we can fail to grab lock
+	// lock just acquired...we can fail to grab lock
 	if (is_trylock() && act->is_success_lock())
 		return true;
 
-	//other thread stalling on lock...we can release lock
+	// other thread stalling on lock...we can release lock
 	if (is_unlock() && (act->is_trylock()||act->is_lock()))
 		return true;
 
@@ -310,19 +310,19 @@ bool ModelAction::could_synchronize_with(const ModelAction *act) const
 
 bool ModelAction::is_conflicting_lock(const ModelAction *act) const
 {
-	//Must be different threads to reorder
+	// Must be different threads to reorder
 	if (same_thread(act))
 		return false;
 	
-	//Try to reorder a lock past a successful lock
+	// Try to reorder a lock past a successful lock
 	if (act->is_success_lock())
 		return true;
 	
-	//Try to push a successful trylock past an unlock
+	// Try to push a successful trylock past an unlock
 	if (act->is_unlock() && is_trylock() && value == VALUE_TRYSUCCESS)
 		return true;
 
-	//Try to push a successful trylock past a wait
+	// Try to push a successful trylock past a wait
 	if (act->is_wait() && is_trylock() && value == VALUE_TRYSUCCESS)
 		return true;
 

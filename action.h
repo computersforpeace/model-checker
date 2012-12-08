@@ -24,12 +24,10 @@ using std::memory_order_acq_rel;
 using std::memory_order_seq_cst;
 
 /** Note that this value can be legitimately used by a program, and
-		hence by iteself does not indicate no value. */
-
+ *  hence by iteself does not indicate no value. */
 #define VALUE_NONE 0xdeadbeef
 
 /** A special value to represent a successful trylock */
-
 #define VALUE_TRYSUCCESS 1
 
 /** A special value to represent a failed trylock */

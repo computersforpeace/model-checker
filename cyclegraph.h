@@ -63,7 +63,8 @@ class CycleNode {
  public:
 	CycleNode(const ModelAction *action);
 	bool addEdge(CycleNode * node);
-	std::vector<CycleNode *> * getEdges();
+	CycleNode * getEdge(unsigned int i) const;
+	unsigned int getNumEdges() const;
 	bool setRMW(CycleNode *);
 	CycleNode* getRMW();
 	const ModelAction * getAction() {return action;};

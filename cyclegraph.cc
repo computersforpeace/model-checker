@@ -107,9 +107,8 @@ void CycleGraph::addRMWEdge(const ModelAction *from, const ModelAction *rmw) {
 	 * (2) the fromnode is the new node and therefore it should not
 	 * have any outgoing edges.
 	 */
-	std::vector<CycleNode *> * edges=fromnode->getEdges();
-	for(unsigned int i=0;i<edges->size();i++) {
-		CycleNode * tonode=(*edges)[i];
+	for (unsigned int i = 0; i < fromnode->getNumEdges(); i++) {
+		CycleNode *tonode = fromnode->getEdge(i);
 		if (tonode!=rmwnode) {
 			if (rmwnode->addEdge(tonode))
 				rollbackvector.push_back(rmwnode);
@@ -134,14 +133,13 @@ void CycleGraph::addRMWEdge(const ModelAction *from, const ModelAction *rmw) {
 void CycleGraph::dumpNodes(FILE *file) {
 	for (unsigned int i=0;i<nodeList.size();i++) {
 		CycleNode *cn=nodeList[i];
-		std::vector<CycleNode *> * edges=cn->getEdges();
 		const ModelAction *action=cn->getAction();
 		fprintf(file, "N%u [label=\"%u, T%u\"];\n",action->get_seq_number(),action->get_seq_number(), action->get_tid());
 		if (cn->getRMW()!=NULL) {
 			fprintf(file, "N%u -> N%u[style=dotted];\n", action->get_seq_number(), cn->getRMW()->getAction()->get_seq_number());
 		}
-		for (unsigned int j=0;j<edges->size();j++) {
-			CycleNode *dst=(*edges)[j];
+		for (unsigned int j = 0; j < cn->getNumEdges(); j++) {
+			CycleNode *dst = cn->getEdge(j);
 			const ModelAction *dstaction=dst->getAction();
 			fprintf(file, "N%u -> N%u;\n", action->get_seq_number(), dstaction->get_seq_number());
 		}
@@ -193,8 +191,8 @@ bool CycleGraph::checkReachable(CycleNode *from, CycleNode *to) {
 		if (node==to)
 			return true;
 
-		for(unsigned int i=0;i<node->getEdges()->size();i++) {
-			CycleNode *next=(*node->getEdges())[i];
+		for (unsigned int i = 0; i < node->getNumEdges(); i++) {
+			CycleNode *next = node->getEdge(i);
 			if (!discovered->contains(next)) {
 				discovered->put(next,next);
 				queue.push_back(next);
@@ -220,8 +218,8 @@ bool CycleGraph::checkPromise(const ModelAction *fromact, Promise *promise) {
 			return true;
 		}
 
-		for(unsigned int i=0;i<node->getEdges()->size();i++) {
-			CycleNode *next=(*node->getEdges())[i];
+		for (unsigned int i = 0; i < node->getNumEdges(); i++) {
+			CycleNode *next = node->getEdge(i);
 			if (!discovered->contains(next)) {
 				discovered->put(next,next);
 				queue.push_back(next);
@@ -281,9 +279,19 @@ CycleNode::CycleNode(const ModelAction *modelaction) :
 {
 }
 
-/** @returns a vector of the edges from a CycleNode. */
-std::vector<CycleNode *> * CycleNode::getEdges() {
-	return &edges;
+/**
+ * @param i The index of the edge to return
+ * @returns The a CycleNode edge indexed by i
+ */
+CycleNode * CycleNode::getEdge(unsigned int i) const
+{
+	return edges[i];
+}
+
+/** @returns The number of edges leaving this CycleNode */
+unsigned int CycleNode::getNumEdges() const
+{
+	return edges.size();
 }
 
 /**

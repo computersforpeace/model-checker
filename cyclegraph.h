@@ -82,7 +82,7 @@ class CycleNode {
 	const ModelAction *action;
 
 	/** @brief The edges leading out from this node */
-	std::vector<CycleNode *> edges;
+	std::vector<CycleNode *, SnapshotAlloc<CycleNode *> > edges;
 
 	/** Pointer to a RMW node that reads from this node, or NULL, if none
 	 * exists */

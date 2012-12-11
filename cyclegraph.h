@@ -54,8 +54,8 @@ class CycleGraph {
 	bool hasRMWViolation;
 	bool oldRMWViolation;
 
-	std::vector<CycleNode *> rollbackvector;
-	std::vector<CycleNode *> rmwrollbackvector;
+	std::vector< CycleNode *, SnapshotAlloc<CycleNode *> > rollbackvector;
+	std::vector< CycleNode *, SnapshotAlloc<CycleNode *> > rmwrollbackvector;
 };
 
 /** @brief A node within a CycleGraph; corresponds to one ModelAction */
@@ -82,7 +82,7 @@ class CycleNode {
 	const ModelAction *action;
 
 	/** @brief The edges leading out from this node */
-	std::vector<CycleNode *, SnapshotAlloc<CycleNode *> > edges;
+	std::vector< CycleNode *, SnapshotAlloc<CycleNode *> > edges;
 
 	/** Pointer to a RMW node that reads from this node, or NULL, if none
 	 * exists */

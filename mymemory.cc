@@ -1,12 +1,17 @@
-#include "mymemory.h"
-#include "snapshot.h"
-#include "snapshotimp.h"
+#include <stdlib.h>
 #include <stdio.h>
 #include <dlfcn.h>
 #include <unistd.h>
-#include <cstring>
+#include <string.h>
+#include <new>
+
+#include "mymemory.h"
+#include "snapshot.h"
+#include "snapshotimp.h"
 #include "common.h"
+
 #define REQUESTS_BEFORE_ALLOC 1024
+
 size_t allocatedReqs[ REQUESTS_BEFORE_ALLOC ] = { 0 };
 int nextRequest = 0;
 int howManyFreed = 0;
@@ -193,7 +198,7 @@ void * calloc(size_t num, size_t size)
 		return tmp;
 	} else {
 		void *tmp = HandleEarlyAllocationRequest(size * num);
-		std::memset(tmp, 0, size * num);
+		memset(tmp, 0, size * num);
 		return tmp;
 	}
 }

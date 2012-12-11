@@ -1,15 +1,10 @@
+#include <stdlib.h>
+#include <unistd.h>
+#include <cstring>
+#include <inttypes.h>
+
 #include "snapshot-interface.h"
 #include "snapshot.h"
-#include <iostream>
-#include <fstream>
-#include <unistd.h>
-#include <sstream>
-#include <cstring>
-#include <string>
-#include <cassert>
-#include <vector>
-#include <utility>
-#include <inttypes.h>
 #include "common.h"
 
 /* MYBINARYNAME only works because our pathname usually includes 'model' (e.g.,

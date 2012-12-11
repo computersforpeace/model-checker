@@ -4,8 +4,8 @@
 
 #ifndef _MY_MEMORY_H
 #define _MY_MEMORY_H
-#include <stdlib.h>
 #include <limits>
+#include <stddef.h>
 
 #include "config.h"
 

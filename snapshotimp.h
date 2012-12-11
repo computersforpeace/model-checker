@@ -2,14 +2,13 @@
  *	@brief Snapshotting implementation header file..
  */
 
-#ifndef _SNAPSHOTIMP_H
-#define _SNAPSHOTIMP_H
+#ifndef __SNAPSHOTIMP_H__
+#define __SNAPSHOTIMP_H__
+
+#include <stddef.h>
+
 #include "snapshot.h"
-#include <iostream>
-#include <inttypes.h>
-#include <fcntl.h>
-#include <sys/mman.h>
-#include <csignal>
+
 #define SHARED_MEMORY_DEFAULT  (100 * ((size_t)1 << 20)) // 100mb for the shared memory
 #define STACK_SIZE_DEFAULT      (((size_t)1 << 20) * 20)  // 20 mb out of the above 100 mb for my stack
 
@@ -53,6 +52,9 @@ struct SnapShot {
 };
 
 #else
+
+#include <ucontext.h>
+
 struct SnapShot {
 	void *mSharedMemoryBase;
 	void *mStackBase;
@@ -65,4 +67,5 @@ struct SnapShot {
 
 //Global reference to snapshot data structure
 extern struct SnapShot * snapshotrecord;
-#endif
+
+#endif /* __SNAPSHOTIMP_H__ */

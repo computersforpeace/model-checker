@@ -3,20 +3,15 @@
 #include <unistd.h>
 #include <signal.h>
 #include <stdlib.h>
-#include "hashtable.h"
-#include <cstring>
-#include <cstdio>
-#include "snapshot.h"
-#include "snapshotimp.h"
-#include "mymemory.h"
-#include <fcntl.h>
-#include <assert.h>
-#include <pthread.h>
-#include <semaphore.h>
+#include <string.h>
 #include <errno.h>
 #include <sys/wait.h>
 #include <ucontext.h>
 
+#include "hashtable.h"
+#include "snapshot.h"
+#include "snapshotimp.h"
+#include "mymemory.h"
 #include "common.h"
 
 #define FAILURE(mesg) { model_print("failed in the API: %s with errno relative message: %s\n", mesg, strerror( errno ) ); exit(EXIT_FAILURE); }

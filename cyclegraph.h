@@ -31,13 +31,13 @@ class CycleGraph {
 	void rollbackChanges();
 #if SUPPORT_MOD_ORDER_DUMP
 	void dumpNodes(FILE *file);
-	void dumpGraphToFile(const char * filename);
+	void dumpGraphToFile(const char *filename);
 #endif
 
 	SNAPSHOTALLOC
  private:
 	CycleNode * getNode(const ModelAction *);
-	HashTable<CycleNode *, CycleNode *, uintptr_t, 4, model_malloc, model_calloc, model_free> * discovered;
+	HashTable<CycleNode *, CycleNode *, uintptr_t, 4, model_malloc, model_calloc, model_free> *discovered;
 
 	/** @brief A table for mapping ModelActions to CycleNodes */
 	HashTable<const ModelAction *, CycleNode *, uintptr_t, 4> actionToNode;
@@ -62,18 +62,18 @@ class CycleGraph {
 class CycleNode {
  public:
 	CycleNode(const ModelAction *action);
-	bool addEdge(CycleNode * node);
+	bool addEdge(CycleNode *node);
 	CycleNode * getEdge(unsigned int i) const;
 	unsigned int getNumEdges() const;
 	bool setRMW(CycleNode *);
-	CycleNode* getRMW();
-	const ModelAction * getAction() {return action;};
+	CycleNode * getRMW() const;
+	const ModelAction * getAction() const { return action; }
 
 	void popEdge() {
 		edges.pop_back();
-	};
+	}
 	void clearRMW() {
-		hasRMW=NULL;
+		hasRMW = NULL;
 	}
 
 	SNAPSHOTALLOC
@@ -86,7 +86,7 @@ class CycleNode {
 
 	/** Pointer to a RMW node that reads from this node, or NULL, if none
 	 * exists */
-	CycleNode * hasRMW;
+	CycleNode *hasRMW;
 };
 
 #endif

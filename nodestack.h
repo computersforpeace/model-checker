@@ -59,53 +59,53 @@ public:
 	Node(ModelAction *act = NULL, Node *par = NULL, int nthreads = 2, Node *prevfairness = NULL);
 	~Node();
 	/* return true = thread choice has already been explored */
-	bool has_been_explored(thread_id_t tid);
+	bool has_been_explored(thread_id_t tid) const;
 	/* return true = backtrack set is empty */
-	bool backtrack_empty();
+	bool backtrack_empty() const;
 
 	void explore_child(ModelAction *act, enabled_type_t * is_enabled);
 	/* return false = thread was already in backtrack */
 	bool set_backtrack(thread_id_t id);
 	thread_id_t get_next_backtrack();
-	bool is_enabled(Thread *t);
-	bool is_enabled(thread_id_t tid);
-	enabled_type_t enabled_status(thread_id_t tid);
+	bool is_enabled(Thread *t) const;
+	bool is_enabled(thread_id_t tid) const;
+	enabled_type_t enabled_status(thread_id_t tid) const;
 
-	ModelAction * get_action() { return action; }
-	bool has_priority(thread_id_t tid);
-	int get_num_threads() {return num_threads;}
+	ModelAction * get_action() const { return action; }
+	bool has_priority(thread_id_t tid) const;
+	int get_num_threads() const { return num_threads; }
 	/** @return the parent Node to this Node; that is, the action that
 	 * occurred previously in the stack. */
 	Node * get_parent() const { return parent; }
 
 	bool add_future_value(uint64_t value, modelclock_t expiration);
-	uint64_t get_future_value();
-	modelclock_t get_future_value_expiration();
+	uint64_t get_future_value() const;
+	modelclock_t get_future_value_expiration() const;
 	bool increment_future_value();
-	bool future_value_empty();
+	bool future_value_empty() const;
 
 	void add_read_from(const ModelAction *act);
-	const ModelAction * get_read_from();
+	const ModelAction * get_read_from() const;
 	bool increment_read_from();
-	bool read_from_empty();
-	int get_read_from_size();
+	bool read_from_empty() const;
+	int get_read_from_size() const;
 	const ModelAction * get_read_from_at(int i);
 
 	void set_promise(unsigned int i, bool is_rmw);
-	bool get_promise(unsigned int i);
+	bool get_promise(unsigned int i) const;
 	bool increment_promise();
-	bool promise_empty();
+	bool promise_empty() const;
 	enabled_type_t *get_enabled_array() {return enabled_array;}
 
 	void set_misc_max(int i);
-	int get_misc();
+	int get_misc() const;
 	bool increment_misc();
-	bool misc_empty();
+	bool misc_empty() const;
 
 	void add_relseq_break(const ModelAction *write);
-	const ModelAction * get_relseq_break();
+	const ModelAction * get_relseq_break() const;
 	bool increment_relseq_break();
-	bool relseq_break_empty();
+	bool relseq_break_empty() const;
 
 	void print();
 	void print_may_read_from();
@@ -155,13 +155,13 @@ public:
 	NodeStack();
 	~NodeStack();
 	ModelAction * explore_action(ModelAction *act, enabled_type_t * is_enabled);
-	Node * get_head();
-	Node * get_next();
+	Node * get_head() const;
+	Node * get_next() const;
 	void reset_execution();
 	void pop_restofstack(int numAhead);
 	int get_total_nodes() { return total_nodes; }
 
-	void print();
+	void print() const;
 
 	MEMALLOC
 private:

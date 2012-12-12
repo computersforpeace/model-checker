@@ -120,7 +120,8 @@ void Node::set_promise(unsigned int i, bool is_rmw) {
  * @param i The promise index.
  * @return true if the promise should be satisfied by the given model action.
  */
-bool Node::get_promise(unsigned int i) {
+bool Node::get_promise(unsigned int i) const
+{
 	return (i < promises.size()) && ((promises[i] & PROMISE_MASK) == PROMISE_FULFILLED);
 }
 
@@ -160,7 +161,8 @@ bool Node::increment_promise() {
  * Returns whether the promise set is empty.
  * @return true if we have explored all promise combinations.
  */
-bool Node::promise_empty() {
+bool Node::promise_empty() const
+{
 	bool fulfilledrmw=false;
 	for (int i = promises.size()-1 ; i>=0; i--) {
 		if (promises[i]==PROMISE_UNFULFILLED)
@@ -178,7 +180,8 @@ void Node::set_misc_max(int i) {
 	misc_max=i;
 }
 
-int Node::get_misc() {
+int Node::get_misc() const
+{
 	return misc_index;
 }
 
@@ -186,7 +189,8 @@ bool Node::increment_misc() {
 	return (misc_index<misc_max)&&((++misc_index)<misc_max);
 }
 
-bool Node::misc_empty() {
+bool Node::misc_empty() const
+{
 	return (misc_index+1)>=misc_max;
 }
 
@@ -233,7 +237,8 @@ bool Node::add_future_value(uint64_t value, modelclock_t expiration) {
  * Checks whether the future_values set for this node is empty.
  * @return true if the future_values set is empty.
  */
-bool Node::future_value_empty() {
+bool Node::future_value_empty() const
+{
 	return ((future_index + 1) >= ((int)future_values.size()));
 }
 
@@ -244,7 +249,7 @@ bool Node::future_value_empty() {
  * @return true if this thread choice has been explored already, false
  * otherwise
  */
-bool Node::has_been_explored(thread_id_t tid)
+bool Node::has_been_explored(thread_id_t tid) const
 {
 	int id = id_to_int(tid);
 	return explored_children[id];
@@ -254,7 +259,7 @@ bool Node::has_been_explored(thread_id_t tid)
  * Checks if the backtracking set is empty.
  * @return true if the backtracking set is empty
  */
-bool Node::backtrack_empty()
+bool Node::backtrack_empty() const
 {
 	return (numBacktracks == 0);
 }
@@ -263,7 +268,8 @@ bool Node::backtrack_empty()
  * Checks whether the readsfrom set for this node is empty.
  * @return true if the readsfrom set is empty.
  */
-bool Node::read_from_empty() {
+bool Node::read_from_empty() const
+{
 	return ((read_from_index+1) >= may_read_from.size());
 }
 
@@ -318,27 +324,28 @@ thread_id_t Node::get_next_backtrack()
 	return int_to_id(i);
 }
 
-bool Node::is_enabled(Thread *t)
+bool Node::is_enabled(Thread *t) const
 {
 	int thread_id=id_to_int(t->get_id());
 	return thread_id < num_threads && (enabled_array[thread_id] != THREAD_DISABLED);
 }
 
-enabled_type_t Node::enabled_status(thread_id_t tid) {
-	int thread_id=id_to_int(tid);
+enabled_type_t Node::enabled_status(thread_id_t tid) const
+{
+	int thread_id = id_to_int(tid);
 	if (thread_id < num_threads)
 		return enabled_array[thread_id];
 	else
 		return THREAD_DISABLED;
 }
 
-bool Node::is_enabled(thread_id_t tid)
+bool Node::is_enabled(thread_id_t tid) const
 {
 	int thread_id=id_to_int(tid);
 	return thread_id < num_threads && (enabled_array[thread_id] != THREAD_DISABLED);
 }
 
-bool Node::has_priority(thread_id_t tid)
+bool Node::has_priority(thread_id_t tid) const
 {
 	return fairness[id_to_int(tid)].priority;
 }
@@ -357,18 +364,21 @@ void Node::add_read_from(const ModelAction *act)
  * where this->action is a 'read'.
  * @return The first element in future_values
  */
-uint64_t Node::get_future_value() {
+uint64_t Node::get_future_value() const
+{
 	ASSERT(future_index >= 0 && future_index<((int)future_values.size()));
 	return future_values[future_index].value;
 }
 
-modelclock_t Node::get_future_value_expiration() {
+modelclock_t Node::get_future_value_expiration() const
+{
 	ASSERT(future_index >= 0 && future_index<((int)future_values.size()));
 	return future_values[future_index].expiration;
 }
 
 
-int Node::get_read_from_size() {
+int Node::get_read_from_size() const
+{
 	return may_read_from.size();
 }
 
@@ -381,7 +391,8 @@ const ModelAction * Node::get_read_from_at(int i) {
  * where this->action is a 'read'.
  * @return The first element in may_read_from
  */
-const ModelAction * Node::get_read_from() {
+const ModelAction * Node::get_read_from() const
+{
 	if (read_from_index < may_read_from.size())
 		return may_read_from[read_from_index];
 	else
@@ -436,7 +447,7 @@ void Node::add_relseq_break(const ModelAction *write)
  * @return A write that may break the release sequence. If NULL, that means
  * the release sequence should not be broken.
  */
-const ModelAction * Node::get_relseq_break()
+const ModelAction * Node::get_relseq_break() const
 {
 	if (relseq_break_index < (int)relseq_break_writes.size())
 		return relseq_break_writes[relseq_break_index];
@@ -464,7 +475,8 @@ bool Node::increment_relseq_break()
  * @return True if all writes that may break the release sequence have been
  * explored
  */
-bool Node::relseq_break_empty() {
+bool Node::relseq_break_empty() const
+{
 	return ((relseq_break_index + 1) >= ((int)relseq_break_writes.size()));
 }
 
@@ -493,7 +505,7 @@ NodeStack::~NodeStack()
 		delete node_list[i];
 }
 
-void NodeStack::print()
+void NodeStack::print() const
 {
 	model_print("............................................\n");
 	model_print("NodeStack printing node_list:\n");
@@ -548,14 +560,14 @@ void NodeStack::pop_restofstack(int numAhead)
 	node_list.resize(it);
 }
 
-Node * NodeStack::get_head()
+Node * NodeStack::get_head() const
 {
 	if (node_list.empty())
 		return NULL;
 	return node_list[iter];
 }
 
-Node * NodeStack::get_next()
+Node * NodeStack::get_next() const
 {
 	if (node_list.empty()) {
 		DEBUG("Empty\n");

@@ -1293,11 +1293,10 @@ void ModelChecker::check_curr_backtracking(ModelAction *curr)
 
 bool ModelChecker::promises_expired() const
 {
-	for (unsigned int promise_index = 0; promise_index < promises->size(); promise_index++) {
-		Promise *promise = (*promises)[promise_index];
-		if (promise->get_expiration()<priv->used_sequence_numbers) {
+	for (unsigned int i = 0; i < promises->size(); i++) {
+		Promise *promise = (*promises)[i];
+		if (promise->get_expiration() < priv->used_sequence_numbers)
 			return true;
-		}
 	}
 	return false;
 }

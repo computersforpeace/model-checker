@@ -470,7 +470,11 @@ void ModelAction::print() const
 		type_str = "unknown type";
 	}
 
-	uint64_t valuetoprint=type==ATOMIC_READ?(reads_from!=NULL?reads_from->value:VALUE_NONE):value;
+	uint64_t valuetoprint;
+	if (type == ATOMIC_READ && reads_from != NULL)
+		valuetoprint = reads_from->value;
+	else
+		valuetoprint = value;
 
 	switch (this->order) {
 	case std::memory_order_relaxed:

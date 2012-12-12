@@ -1618,6 +1618,10 @@ inline bool atomic_load_explicit
 inline bool atomic_load
 ( volatile atomic_bool* __a__ ) { return atomic_load_explicit( __a__, memory_order_seq_cst ); }
 
+inline void atomic_init
+( volatile atomic_bool* __a__, bool __m__ )
+{ _ATOMIC_INIT_( __a__, __m__ ); }
+
 inline void atomic_store_explicit
 ( volatile atomic_bool* __a__, bool __m__, memory_order __x__ )
 { _ATOMIC_STORE_( __a__, __m__, __x__ ); }
@@ -1664,6 +1668,10 @@ inline void* atomic_load_explicit
 
 inline void* atomic_load( volatile atomic_address* __a__ )
 { return atomic_load_explicit( __a__, memory_order_seq_cst ); }
+
+inline void atomic_init
+( volatile atomic_address* __a__, void* __m__ )
+{ _ATOMIC_INIT_( __a__, __m__ ); }
 
 inline void atomic_store_explicit
 ( volatile atomic_address* __a__, void* __m__, memory_order __x__ )
@@ -1712,6 +1720,10 @@ inline char atomic_load_explicit
 inline char atomic_load( volatile atomic_char* __a__ )
 { return atomic_load_explicit( __a__, memory_order_seq_cst ); }
 
+inline void atomic_init
+( volatile atomic_char* __a__, char __m__ )
+{ _ATOMIC_INIT_( __a__, __m__ ); }
+
 inline void atomic_store_explicit
 ( volatile atomic_char* __a__, char __m__, memory_order __x__ )
 { _ATOMIC_STORE_( __a__, __m__, __x__ ); }
@@ -1758,6 +1770,10 @@ inline signed char atomic_load_explicit
 
 inline signed char atomic_load( volatile atomic_schar* __a__ )
 { return atomic_load_explicit( __a__, memory_order_seq_cst ); }
+
+inline void atomic_init
+( volatile atomic_schar* __a__, signed char __m__ )
+{ _ATOMIC_INIT_( __a__, __m__ ); }
 
 inline void atomic_store_explicit
 ( volatile atomic_schar* __a__, signed char __m__, memory_order __x__ )
@@ -1806,6 +1822,10 @@ inline unsigned char atomic_load_explicit
 inline unsigned char atomic_load( volatile atomic_uchar* __a__ )
 { return atomic_load_explicit( __a__, memory_order_seq_cst ); }
 
+inline void atomic_init
+( volatile atomic_uchar* __a__, unsigned char __m__ )
+{ _ATOMIC_INIT_( __a__, __m__ ); }
+
 inline void atomic_store_explicit
 ( volatile atomic_uchar* __a__, unsigned char __m__, memory_order __x__ )
 { _ATOMIC_STORE_( __a__, __m__, __x__ ); }
@@ -1852,6 +1872,10 @@ inline short atomic_load_explicit
 
 inline short atomic_load( volatile atomic_short* __a__ )
 { return atomic_load_explicit( __a__, memory_order_seq_cst ); }
+
+inline void atomic_init
+( volatile atomic_short* __a__, short __m__ )
+{ _ATOMIC_INIT_( __a__, __m__ ); }
 
 inline void atomic_store_explicit
 ( volatile atomic_short* __a__, short __m__, memory_order __x__ )
@@ -1900,6 +1924,10 @@ inline unsigned short atomic_load_explicit
 inline unsigned short atomic_load( volatile atomic_ushort* __a__ )
 { return atomic_load_explicit( __a__, memory_order_seq_cst ); }
 
+inline void atomic_init
+( volatile atomic_ushort* __a__, unsigned short __m__ )
+{ _ATOMIC_INIT_( __a__, __m__ ); }
+
 inline void atomic_store_explicit
 ( volatile atomic_ushort* __a__, unsigned short __m__, memory_order __x__ )
 { _ATOMIC_STORE_( __a__, __m__, __x__ ); }
@@ -1946,6 +1974,10 @@ inline int atomic_load_explicit
 
 inline int atomic_load( volatile atomic_int* __a__ )
 { return atomic_load_explicit( __a__, memory_order_seq_cst ); }
+
+inline void atomic_init
+( volatile atomic_int* __a__, int __m__ )
+{ _ATOMIC_INIT_( __a__, __m__ ); }
 
 inline void atomic_store_explicit
 ( volatile atomic_int* __a__, int __m__, memory_order __x__ )
@@ -1994,6 +2026,10 @@ inline unsigned int atomic_load_explicit
 inline unsigned int atomic_load( volatile atomic_uint* __a__ )
 { return atomic_load_explicit( __a__, memory_order_seq_cst ); }
 
+inline void atomic_init
+( volatile atomic_uint* __a__, unsigned int __m__ )
+{ _ATOMIC_INIT_( __a__, __m__ ); }
+
 inline void atomic_store_explicit
 ( volatile atomic_uint* __a__, unsigned int __m__, memory_order __x__ )
 { _ATOMIC_STORE_( __a__, __m__, __x__ ); }
@@ -2040,6 +2076,10 @@ inline long atomic_load_explicit
 
 inline long atomic_load( volatile atomic_long* __a__ )
 { return atomic_load_explicit( __a__, memory_order_seq_cst ); }
+
+inline void atomic_init
+( volatile atomic_long* __a__, long __m__ )
+{ _ATOMIC_INIT_( __a__, __m__ ); }
 
 inline void atomic_store_explicit
 ( volatile atomic_long* __a__, long __m__, memory_order __x__ )
@@ -2088,6 +2128,10 @@ inline unsigned long atomic_load_explicit
 inline unsigned long atomic_load( volatile atomic_ulong* __a__ )
 { return atomic_load_explicit( __a__, memory_order_seq_cst ); }
 
+inline void atomic_init
+( volatile atomic_ulong* __a__, unsigned long __m__ )
+{ _ATOMIC_INIT_( __a__, __m__ ); }
+
 inline void atomic_store_explicit
 ( volatile atomic_ulong* __a__, unsigned long __m__, memory_order __x__ )
 { _ATOMIC_STORE_( __a__, __m__, __x__ ); }
@@ -2134,6 +2178,10 @@ inline long long atomic_load_explicit
 
 inline long long atomic_load( volatile atomic_llong* __a__ )
 { return atomic_load_explicit( __a__, memory_order_seq_cst ); }
+
+inline void atomic_init
+( volatile atomic_llong* __a__, long long __m__ )
+{ _ATOMIC_INIT_( __a__, __m__ ); }
 
 inline void atomic_store_explicit
 ( volatile atomic_llong* __a__, long long __m__, memory_order __x__ )
@@ -2182,6 +2230,10 @@ inline unsigned long long atomic_load_explicit
 inline unsigned long long atomic_load( volatile atomic_ullong* __a__ )
 { return atomic_load_explicit( __a__, memory_order_seq_cst ); }
 
+inline void atomic_init
+( volatile atomic_ullong* __a__, unsigned long long __m__ )
+{ _ATOMIC_INIT_( __a__, __m__ ); }
+
 inline void atomic_store_explicit
 ( volatile atomic_ullong* __a__, unsigned long long __m__, memory_order __x__ )
 { _ATOMIC_STORE_( __a__, __m__, __x__ ); }
@@ -2228,6 +2280,10 @@ inline wchar_t atomic_load_explicit
 
 inline wchar_t atomic_load( volatile atomic_wchar_t* __a__ )
 { return atomic_load_explicit( __a__, memory_order_seq_cst ); }
+
+inline void atomic_init
+( volatile atomic_wchar_t* __a__, wchar_t __m__ )
+{ _ATOMIC_INIT_( __a__, __m__ ); }
 
 inline void atomic_store_explicit
 ( volatile atomic_wchar_t* __a__, wchar_t __m__, memory_order __x__ )

@@ -2680,15 +2680,19 @@ bool ModelChecker::is_enabled(thread_id_t tid) const
  * @param act The current action that will be explored. May be NULL only if
  * trace is exiting via an assertion (see ModelChecker::set_assert and
  * ModelChecker::has_asserted).
- * @return Return status from the 'swap' call (i.e., success/fail, 0/-1)
+ * @return Return the value returned by the current action
  */
-int ModelChecker::switch_to_master(ModelAction *act)
+uint64_t ModelChecker::switch_to_master(ModelAction *act)
 {
 	DBG();
 	Thread *old = thread_current();
 	set_current_action(act);
 	old->set_state(THREAD_READY);
-	return Thread::swap(old, &system_context);
+	if (Thread::swap(old, &system_context) < 0) {
+		perror("swap threads");
+		exit(EXIT_FAILURE);
+	}
+	return old->get_return_value();
 }
 
 /**

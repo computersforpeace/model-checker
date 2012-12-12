@@ -4,8 +4,7 @@
 
 /** Performs a read action.*/
 uint64_t model_read_action(void * obj, memory_order ord) {
-	model->switch_to_master(new ModelAction(ATOMIC_READ, ord, obj));
-	return thread_current()->get_return_value();
+	return model->switch_to_master(new ModelAction(ATOMIC_READ, ord, obj));
 }
 
 /** Performs a write action.*/
@@ -24,8 +23,7 @@ void model_init_action(void * obj, uint64_t val) {
  * a write.
  */
 uint64_t model_rmwr_action(void *obj, memory_order ord) {
-	model->switch_to_master(new ModelAction(ATOMIC_RMWR, ord, obj));
-	return thread_current()->get_return_value();
+	return model->switch_to_master(new ModelAction(ATOMIC_RMWR, ord, obj));
 }
 
 /** Performs the write part of a RMW action. */

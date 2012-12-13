@@ -166,7 +166,14 @@ public:
 	MEMALLOC
 private:
 	node_list_t node_list;
-	unsigned int iter;
+
+	/**
+	 * @brief the index position of the current head Node
+	 *
+	 * This index is relative to node_list. The index should point to the
+	 * current head Node.
+	 */
+	int iter;
 
 	int total_nodes;
 };

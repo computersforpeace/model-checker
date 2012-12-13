@@ -513,7 +513,7 @@ void NodeStack::print() const
 	model_print("............................................\n");
 	model_print("NodeStack printing node_list:\n");
 	for (unsigned int it = 0; it < node_list.size(); it++) {
-		if (it == this->iter)
+		if ((int)it == this->iter)
 			model_print("vvv following action is the current iterator vvv\n");
 		node_list[it]->print();
 	}
@@ -528,7 +528,7 @@ ModelAction * NodeStack::explore_action(ModelAction *act, enabled_type_t *is_ena
 
 	ASSERT(!node_list.empty());
 
-	if ((iter + 1) < node_list.size()) {
+	if ((iter + 1) < (int)node_list.size()) {
 		iter++;
 		return node_list[iter]->get_action();
 	}
@@ -536,7 +536,7 @@ ModelAction * NodeStack::explore_action(ModelAction *act, enabled_type_t *is_ena
 	/* Record action */
 	get_head()->explore_child(act, is_enabled);
 	Node *prevfairness = NULL;
-	if (model->params.fairwindow != 0 && iter > model->params.fairwindow)
+	if (model->params.fairwindow != 0 && iter > (int)model->params.fairwindow)
 		prevfairness = node_list[iter - model->params.fairwindow];
 	node_list.push_back(new Node(act, get_head(), model->get_num_threads(), prevfairness));
 	total_nodes++;

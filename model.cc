@@ -2781,9 +2781,13 @@ void ModelChecker::run()
 {
 	do {
 		thrd_t user_thread;
+		Thread *t = new Thread(&user_thread, &user_main_wrapper, NULL);
 
-		/* Start user program */
-		add_thread(new Thread(&user_thread, &user_main_wrapper, NULL));
+		add_thread(t);
+
+		/* Run user thread up to its first action */
+		scheduler->next_thread(t);
+		Thread::swap(&system_context, t);
 
 		/* Wait for all threads to complete */
 		while (take_step());

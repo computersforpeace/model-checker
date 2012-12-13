@@ -254,6 +254,7 @@ Thread * ModelChecker::get_next_thread(ModelAction *curr)
 			tid = next->get_tid();
 			node_stack->pop_restofstack(2);
 		} else {
+			ASSERT(prevnode);
 			/* Make a different thread execute for next step */
 			scheduler->add_sleep(get_thread(next->get_tid()));
 			tid = prevnode->get_next_backtrack();
@@ -1295,7 +1296,7 @@ void ModelChecker::check_curr_backtracking(ModelAction *curr)
 	Node *currnode = curr->get_node();
 	Node *parnode = currnode->get_parent();
 
-	if (!parnode->backtrack_empty() ||
+	if ((parnode && !parnode->backtrack_empty()) ||
 			 !currnode->misc_empty() ||
 			 !currnode->read_from_empty() ||
 			 !currnode->future_value_empty() ||

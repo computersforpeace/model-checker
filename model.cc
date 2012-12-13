@@ -298,7 +298,6 @@ void ModelChecker::execute_sleep_set()
 			thr->set_pending(priv->current_action);
 		}
 	}
-	priv->current_action = NULL;
 }
 
 void ModelChecker::wake_up_sleeping_actions(ModelAction *curr)
@@ -2697,14 +2696,13 @@ uint64_t ModelChecker::switch_to_master(ModelAction *act)
 
 /**
  * Takes the next step in the execution, if possible.
+ * @param curr The current step to take
  * @return Returns true (success) if a step was taken and false otherwise.
  */
-bool ModelChecker::take_step() {
+bool ModelChecker::take_step(ModelAction *curr)
+{
 	if (has_asserted())
 		return false;
-
-	ModelAction *curr = priv->current_action;
-	priv->current_action = NULL;
 
 	Thread *curr_thrd = get_thread(curr);
 	ASSERT(curr_thrd->get_state() == THREAD_READY);
@@ -2791,7 +2789,7 @@ void ModelChecker::run()
 		Thread::swap(&system_context, t);
 
 		/* Wait for all threads to complete */
-		while (take_step());
+		while (take_step(priv->current_action));
 	} while (next_execution());
 
 	print_stats();

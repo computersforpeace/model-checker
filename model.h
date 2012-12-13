@@ -159,7 +159,7 @@ private:
 	bool read_from(ModelAction *act, const ModelAction *rf);
 	bool check_action_enabled(ModelAction *curr);
 
-	bool take_step();
+	bool take_step(ModelAction *curr);
 
 	void check_recency(ModelAction *curr, const ModelAction *rf);
 	ModelAction * get_last_conflict(ModelAction *act);

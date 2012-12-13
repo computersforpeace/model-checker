@@ -2705,17 +2705,13 @@ bool ModelChecker::take_step() {
 
 	Thread *curr = priv->current_action ? get_thread(priv->current_action) : NULL;
 	if (curr) {
-		if (curr->get_state() == THREAD_READY) {
-			ASSERT(priv->current_action);
+		ASSERT(curr->get_state() == THREAD_READY);
 
-			priv->nextThread = check_current_action(priv->current_action);
-			priv->current_action = NULL;
+		priv->nextThread = check_current_action(priv->current_action);
+		priv->current_action = NULL;
 
-			if (curr->is_blocked() || curr->is_complete())
-				scheduler->remove_thread(curr);
-		} else {
-			ASSERT(false);
-		}
+		if (curr->is_blocked() || curr->is_complete())
+			scheduler->remove_thread(curr);
 	}
 	Thread *next = scheduler->next_thread(priv->nextThread);
 

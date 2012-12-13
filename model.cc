@@ -255,7 +255,7 @@ Thread * ModelChecker::get_next_thread(ModelAction *curr)
 			node_stack->pop_restofstack(2);
 		} else {
 			/* Make a different thread execute for next step */
-			scheduler->add_sleep(thread_map->get(id_to_int(next->get_tid())));
+			scheduler->add_sleep(get_thread(next->get_tid()));
 			tid = prevnode->get_next_backtrack();
 			/* Make sure the backtracked thread isn't sleeping. */
 			node_stack->pop_restofstack(1);

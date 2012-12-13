@@ -5,9 +5,6 @@
  * This is a test of the "uninitialized loads" code. While we don't explicitly
  * initialize y, this example's synchronization pattern should guarantee we
  * never see it uninitialized.
- *
- * @todo (12/11/12) this example currently doesn't run properly; it never sees
- * the behavior where 'flag == 2'.
  */
 #include <stdio.h>
 #include <threads.h>

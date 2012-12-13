@@ -557,7 +557,7 @@ ModelAction * ModelChecker::get_last_conflict(ModelAction *act)
 		action_list_t::reverse_iterator rit;
 		for (rit = list->rbegin(); rit != list->rend(); rit++) {
 			ModelAction *prev = *rit;
-			if (!act->same_thread(prev)&&prev->is_failed_trylock())
+			if (!act->same_thread(prev) && prev->is_failed_trylock())
 				return prev;
 		}
 		break;
@@ -568,9 +568,9 @@ ModelAction * ModelChecker::get_last_conflict(ModelAction *act)
 		action_list_t::reverse_iterator rit;
 		for (rit = list->rbegin(); rit != list->rend(); rit++) {
 			ModelAction *prev = *rit;
-			if (!act->same_thread(prev)&&prev->is_failed_trylock())
+			if (!act->same_thread(prev) && prev->is_failed_trylock())
 				return prev;
-			if (!act->same_thread(prev)&&prev->is_notify())
+			if (!act->same_thread(prev) && prev->is_notify())
 				return prev;
 		}
 		break;
@@ -583,7 +583,7 @@ ModelAction * ModelChecker::get_last_conflict(ModelAction *act)
 		action_list_t::reverse_iterator rit;
 		for (rit = list->rbegin(); rit != list->rend(); rit++) {
 			ModelAction *prev = *rit;
-			if (!act->same_thread(prev)&&prev->is_wait())
+			if (!act->same_thread(prev) && prev->is_wait())
 				return prev;
 		}
 		break;
@@ -617,7 +617,7 @@ void ModelChecker::set_backtracking(ModelAction *act)
 		high_tid = get_num_threads();
 	}
 
-	for(int i = low_tid; i < high_tid; i++) {
+	for (int i = low_tid; i < high_tid; i++) {
 		thread_id_t tid = int_to_id(i);
 
 		/* Make sure this thread can be enabled here. */
@@ -717,7 +717,7 @@ bool ModelChecker::process_read(ModelAction *curr, bool second_part_of_rmw)
 			}
 
 
-			if (!second_part_of_rmw&&is_infeasible()&&(curr->get_node()->increment_read_from()||curr->get_node()->increment_future_value())) {
+			if (!second_part_of_rmw && is_infeasible() && (curr->get_node()->increment_read_from() || curr->get_node()->increment_future_value())) {
 				mo_graph->rollbackChanges();
 				priv->too_many_reads = false;
 				continue;
@@ -765,7 +765,7 @@ bool ModelChecker::process_mutex(ModelAction *curr)
 	if (curr->is_trylock() || curr->is_lock() || curr->is_unlock()) {
 		mutex = (std::mutex *)curr->get_location();
 		state = mutex->get_state();
-	} else if(curr->is_wait()) {
+	} else if (curr->is_wait()) {
 		mutex = (std::mutex *)curr->get_value();
 		state = mutex->get_state();
 	}
@@ -1427,7 +1427,7 @@ void ModelChecker::check_recency(ModelAction *curr, const ModelAction *rf)
 		action_list_t::reverse_iterator ritcopy = rit;
 		//See if we have enough reads from the same value
 		int count = 0;
-		for (; count < params.maxreads; rit++,count++) {
+		for (; count < params.maxreads; rit++, count++) {
 			if (rit == list->rend())
 				return;
 			ModelAction *act = *rit;
@@ -1447,7 +1447,7 @@ void ModelChecker::check_recency(ModelAction *curr, const ModelAction *rf)
 			if (write == rf)
 				continue;
 
-			/* Test to see whether this is a feasible write to read from*/
+			/* Test to see whether this is a feasible write to read from */
 			mo_graph->startChanges();
 			r_modification_order(curr, write);
 			bool feasiblereadfrom = !is_infeasible();
@@ -1460,10 +1460,10 @@ void ModelChecker::check_recency(ModelAction *curr, const ModelAction *rf)
 			bool feasiblewrite = true;
 			//new we need to see if this write works for everyone
 
-			for (int loop = count; loop>0; loop--,rit++) {
+			for (int loop = count; loop > 0; loop--, rit++) {
 				ModelAction *act = *rit;
 				bool foundvalue = false;
-				for (int j = 0; j<act->get_node()->get_read_from_size(); j++) {
+				for (int j = 0; j < act->get_node()->get_read_from_size(); j++) {
 					if (act->get_node()->get_read_from_at(j) == write) {
 						foundvalue = true;
 						break;
@@ -1619,7 +1619,7 @@ void ModelChecker::post_r_modification_order(ModelAction *curr, const ModelActio
 
 			/* Include at most one act per-thread that "happens before" curr */
 		if (lastact != NULL) {
-			if (lastact== curr) {
+			if (lastact == curr) {
 				//Case 1: The resolved read is a RMW, and we need to make sure
 				//that the write portion of the RMW mod order after rf
 
@@ -1765,7 +1765,7 @@ bool ModelChecker::w_modification_order(ModelAction *curr)
 				if (thin_air_constraint_may_allow(curr, act)) {
 					if (!is_infeasible() ||
 							(curr->is_rmw() && act->is_rmw() && curr->get_reads_from() == act->get_reads_from() && !is_infeasible_ignoreRMW())) {
-						struct PendingFutureValue pfv = {curr,act};
+						struct PendingFutureValue pfv = {curr, act};
 						futurevalues->push_back(pfv);
 					}
 				}
@@ -2408,14 +2408,14 @@ void ModelChecker::mo_check_promises(thread_id_t tid, const ModelAction *write)
 		const ModelAction *act = promise->get_action();
 
 		//Is this promise on the same location?
-		if ( act->get_location() != location )
+		if (act->get_location() != location)
 			continue;
 
 		//same thread as the promise
-		if ( act->get_tid() == tid ) {
+		if (act->get_tid() == tid) {
 
 			//do we have a pwrite for the promise, if not, set it
-			if (promise->get_write() == NULL ) {
+			if (promise->get_write() == NULL) {
 				promise->set_write(write);
 				//The pwrite cannot happen before the promise
 				if (write->happens_before(act) && (write != act)) {
@@ -2433,7 +2433,7 @@ void ModelChecker::mo_check_promises(thread_id_t tid, const ModelAction *write)
 		if (promise->has_sync_thread(tid))
 			continue;
 
-		if (promise->get_write()&&mo_graph->checkReachable(promise->get_write(), write)) {
+		if (promise->get_write() && mo_graph->checkReachable(promise->get_write(), write)) {
 			if (promise->increment_threads(tid)) {
 				priv->failed_promise = true;
 				return;
@@ -2582,16 +2582,16 @@ static void print_list(action_list_t *list, int exec_num = -1)
 void ModelChecker::dumpGraph(char *filename) const
 {
 	char buffer[200];
-	sprintf(buffer, "%s.dot",filename);
+	sprintf(buffer, "%s.dot", filename);
 	FILE *file = fopen(buffer, "w");
-	fprintf(file, "digraph %s {\n",filename);
+	fprintf(file, "digraph %s {\n", filename);
 	mo_graph->dumpNodes(file);
-	ModelAction **thread_array = (ModelAction **)model_calloc(1, sizeof(ModelAction *)*get_num_threads());
+	ModelAction **thread_array = (ModelAction **)model_calloc(1, sizeof(ModelAction *) * get_num_threads());
 
 	for (action_list_t::iterator it = action_trace->begin(); it != action_trace->end(); it++) {
 		ModelAction *action = *it;
 		if (action->is_read()) {
-			fprintf(file, "N%u [label=\"%u, T%u\"];\n", action->get_seq_number(),action->get_seq_number(), action->get_tid());
+			fprintf(file, "N%u [label=\"%u, T%u\"];\n", action->get_seq_number(), action->get_seq_number(), action->get_tid());
 			if (action->get_reads_from() != NULL)
 				fprintf(file, "N%u -> N%u[label=\"rf\", color=red];\n", action->get_seq_number(), action->get_reads_from()->get_seq_number());
 		}
@@ -2601,7 +2601,7 @@ void ModelChecker::dumpGraph(char *filename) const
 
 		thread_array[action->get_tid()] = action;
 	}
-	fprintf(file,"}\n");
+	fprintf(file, "}\n");
 	model_free(thread_array);
 	fclose(file);
 }

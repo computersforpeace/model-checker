@@ -499,7 +499,7 @@ bool ModelChecker::next_execution()
 	record_stats();
 
 	/* Output */
-	if (DBG_ENABLED() || params.verbose || have_bug_reports())
+	if (DBG_ENABLED() || params.verbose || (complete && have_bug_reports()))
 		print_execution(complete);
 	else
 		clear_program_output();

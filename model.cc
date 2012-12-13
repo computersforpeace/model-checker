@@ -43,7 +43,6 @@ struct model_snapshot_members {
 		/* First thread created will have id INITIAL_THREAD_ID */
 		next_thread_id(INITIAL_THREAD_ID),
 		used_sequence_numbers(0),
-		nextThread(NULL),
 		next_backtrack(NULL),
 		bugs(),
 		stats(),
@@ -62,7 +61,6 @@ struct model_snapshot_members {
 	ModelAction *current_action;
 	unsigned int next_thread_id;
 	modelclock_t used_sequence_numbers;
-	Thread *nextThread;
 	ModelAction *next_backtrack;
 	std::vector< bug_message *, SnapshotAlloc<bug_message *> > bugs;
 	struct execution_stats stats;
@@ -2707,12 +2705,12 @@ bool ModelChecker::take_step(ModelAction *curr)
 	Thread *curr_thrd = get_thread(curr);
 	ASSERT(curr_thrd->get_state() == THREAD_READY);
 
-	priv->nextThread = check_current_action(curr);
+	Thread *next_thrd = check_current_action(curr);
 
 	if (curr_thrd->is_blocked() || curr_thrd->is_complete())
 		scheduler->remove_thread(curr_thrd);
 
-	Thread *next_thrd = scheduler->next_thread(priv->nextThread);
+	next_thrd = scheduler->next_thread(next_thrd);
 
 	/* Infeasible -> don't take any more steps */
 	if (is_infeasible())

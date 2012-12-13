@@ -17,18 +17,18 @@ Scheduler::Scheduler() :
 }
 
 void Scheduler::set_enabled(Thread *t, enabled_type_t enabled_status) {
-	int threadid=id_to_int(t->get_id());
-	if (threadid>=enabled_len) {
+	int threadid = id_to_int(t->get_id());
+	if (threadid >= enabled_len) {
 		enabled_type_t *new_enabled = (enabled_type_t *)snapshot_malloc(sizeof(enabled_type_t) * (threadid + 1));
-		memset(&new_enabled[enabled_len], 0, (threadid+1-enabled_len)*sizeof(enabled_type_t));
+		memset(&new_enabled[enabled_len], 0, (threadid + 1 - enabled_len) * sizeof(enabled_type_t));
 		if (enabled != NULL) {
-			memcpy(new_enabled, enabled, enabled_len*sizeof(enabled_type_t));
+			memcpy(new_enabled, enabled, enabled_len * sizeof(enabled_type_t));
 			snapshot_free(enabled);
 		}
-		enabled=new_enabled;
-		enabled_len=threadid+1;
+		enabled = new_enabled;
+		enabled_len = threadid + 1;
 	}
-	enabled[threadid]=enabled_status;
+	enabled[threadid] = enabled_status;
 	if (enabled_status == THREAD_DISABLED)
 		model->check_promises_thread_disabled();
 }
@@ -78,10 +78,10 @@ enabled_type_t Scheduler::get_enabled(const Thread *t) const
 }
 
 void Scheduler::update_sleep_set(Node *n) {
-	enabled_type_t *enabled_array=n->get_enabled_array();
-	for(int i=0;i<enabled_len;i++) {
-		if (enabled_array[i]==THREAD_SLEEP_SET) {
-			enabled[i]=THREAD_SLEEP_SET;
+	enabled_type_t *enabled_array = n->get_enabled_array();
+	for (int i = 0; i < enabled_len; i++) {
+		if (enabled_array[i] == THREAD_SLEEP_SET) {
+			enabled[i] = THREAD_SLEEP_SET;
 		}
 	}
 }
@@ -160,25 +160,25 @@ void Scheduler::wake(Thread *t)
  */
 Thread * Scheduler::next_thread(Thread *t)
 {
-	if ( t == NULL ) {
+	if (t == NULL) {
 		int old_curr_thread = curr_thread_index;
-		bool have_enabled_thread_with_priority=false;
-		Node *n=model->get_curr_node();
+		bool have_enabled_thread_with_priority = false;
+		Node *n = model->get_curr_node();
 
-		for(int i=0;i<enabled_len;i++) {
-			thread_id_t tid=int_to_id(i);
+		for (int i = 0; i < enabled_len; i++) {
+			thread_id_t tid = int_to_id(i);
 			if (n->has_priority(tid)) {
 				//Have a thread with priority
-				if (enabled[i]!=THREAD_DISABLED)
-					have_enabled_thread_with_priority=true;
+				if (enabled[i] != THREAD_DISABLED)
+					have_enabled_thread_with_priority = true;
 			}
 		}
 
-		while(true) {
-			curr_thread_index = (curr_thread_index+1) % enabled_len;
-			thread_id_t curr_tid=int_to_id(curr_thread_index);
-			if (enabled[curr_thread_index]==THREAD_ENABLED&&
-					(!have_enabled_thread_with_priority||n->has_priority(curr_tid))) {
+		while (true) {
+			curr_thread_index = (curr_thread_index + 1) % enabled_len;
+			thread_id_t curr_tid = int_to_id(curr_thread_index);
+			if (enabled[curr_thread_index] == THREAD_ENABLED &&
+					(!have_enabled_thread_with_priority || n->has_priority(curr_tid))) {
 				t = model->get_thread(curr_tid);
 				break;
 			}

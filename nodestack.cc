@@ -42,7 +42,7 @@ Node::Node(ModelAction *act, Node *par, int nthreads, Node *prevfairness)
 		act->set_node(this);
 		int currtid = id_to_int(act->get_tid());
 		int prevtid = (prevfairness != NULL) ? id_to_int(prevfairness->action->get_tid()) : 0;
-		
+
 		if (model->params.fairwindow != 0) {
 			for (int i = 0; i < nthreads; i++) {
 				ASSERT(i < ((int)fairness.size()));
@@ -138,7 +138,7 @@ bool Node::increment_promise() {
 		if (promises[i] == (PROMISE_RMW|PROMISE_FULFILLED))
 			rmw_count++;
 	}
-	
+
 	for (unsigned int i = 0; i < promises.size(); i++) {
 		if ((promises[i] & PROMISE_MASK) == PROMISE_UNFULFILLED) {
 			if ((rmw_count > 0) && (promises[i] & PROMISE_RMW)) {
@@ -166,7 +166,7 @@ bool Node::increment_promise() {
 bool Node::promise_empty() const
 {
 	bool fulfilledrmw = false;
-	for (int i = promises.size() - 1 ; i >= 0; i--) {
+	for (int i = promises.size() - 1; i >= 0; i--) {
 		if (promises[i] == PROMISE_UNFULFILLED)
 			return false;
 		if (!fulfilledrmw && ((promises[i]&PROMISE_MASK) == PROMISE_UNFULFILLED))
@@ -189,7 +189,7 @@ int Node::get_misc() const
 }
 
 bool Node::increment_misc() {
-	return (misc_index<misc_max)&&((++misc_index)<misc_max);
+	return (misc_index < misc_max) && ((++misc_index) < misc_max);
 }
 
 bool Node::misc_empty() const
@@ -280,14 +280,14 @@ bool Node::read_from_empty() const
  * Mark the appropriate backtracking information for exploring a thread choice.
  * @param act The ModelAction to explore
  */
-void Node::explore_child(ModelAction *act, enabled_type_t * is_enabled)
+void Node::explore_child(ModelAction *act, enabled_type_t *is_enabled)
 {
 	if (!enabled_array)
 		enabled_array = (enabled_type_t *)model_malloc(sizeof(enabled_type_t) * num_threads);
 	if (is_enabled != NULL)
-		memcpy(enabled_array, is_enabled, sizeof(enabled_type_t)*num_threads);
+		memcpy(enabled_array, is_enabled, sizeof(enabled_type_t) * num_threads);
 	else {
-		for(int i = 0; i < num_threads; i++)
+		for (int i = 0; i < num_threads; i++)
 			enabled_array[i] = THREAD_DISABLED;
 	}
 
@@ -304,7 +304,7 @@ void Node::explore_child(ModelAction *act, enabled_type_t * is_enabled)
 bool Node::set_backtrack(thread_id_t id)
 {
 	int i = id_to_int(id);
-	ASSERT(i<((int)backtrack.size()));
+	ASSERT(i < ((int)backtrack.size()));
 	if (backtrack[i])
 		return false;
 	backtrack[i] = true;
@@ -369,13 +369,13 @@ void Node::add_read_from(const ModelAction *act)
  */
 uint64_t Node::get_future_value() const
 {
-	ASSERT(future_index >= 0 && future_index<((int)future_values.size()));
+	ASSERT(future_index >= 0 && future_index < ((int)future_values.size()));
 	return future_values[future_index].value;
 }
 
 modelclock_t Node::get_future_value_expiration() const
 {
-	ASSERT(future_index >= 0 && future_index<((int)future_values.size()));
+	ASSERT(future_index >= 0 && future_index < ((int)future_values.size()));
 	return future_values[future_index].expiration;
 }
 
@@ -486,7 +486,7 @@ bool Node::relseq_break_empty() const
 void Node::explore(thread_id_t tid)
 {
 	int i = id_to_int(tid);
-	ASSERT(i<((int)backtrack.size()));
+	ASSERT(i < ((int)backtrack.size()));
 	if (backtrack[i]) {
 		backtrack[i] = false;
 		numBacktracks--;
@@ -556,7 +556,7 @@ void NodeStack::pop_restofstack(int numAhead)
 {
 	/* Diverging from previous execution; clear out remainder of list */
 	unsigned int it = head_idx + numAhead;
-	for(unsigned int i = it; i < node_list.size(); i++)
+	for (unsigned int i = it; i < node_list.size(); i++)
 		delete node_list[i];
 	node_list.resize(it);
 }

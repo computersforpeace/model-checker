@@ -173,7 +173,7 @@ private:
 	 * This index is relative to node_list. The index should point to the
 	 * current head Node.
 	 */
-	int iter;
+	int head_idx;
 
 	int total_nodes;
 };

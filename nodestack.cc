@@ -496,7 +496,7 @@ void Node::explore(thread_id_t tid)
 
 NodeStack::NodeStack() :
 	node_list(1, new Node()),
-	iter(0),
+	head_idx(0),
 	total_nodes(0)
 {
 	total_nodes++;
@@ -513,7 +513,7 @@ void NodeStack::print() const
 	model_print("............................................\n");
 	model_print("NodeStack printing node_list:\n");
 	for (unsigned int it = 0; it < node_list.size(); it++) {
-		if ((int)it == this->iter)
+		if ((int)it == this->head_idx)
 			model_print("vvv following action is the current iterator vvv\n");
 		node_list[it]->print();
 	}
@@ -528,19 +528,19 @@ ModelAction * NodeStack::explore_action(ModelAction *act, enabled_type_t *is_ena
 
 	ASSERT(!node_list.empty());
 
-	if ((iter + 1) < (int)node_list.size()) {
-		iter++;
-		return node_list[iter]->get_action();
+	if ((head_idx + 1) < (int)node_list.size()) {
+		head_idx++;
+		return node_list[head_idx]->get_action();
 	}
 
 	/* Record action */
 	get_head()->explore_child(act, is_enabled);
 	Node *prevfairness = NULL;
-	if (model->params.fairwindow != 0 && iter > (int)model->params.fairwindow)
-		prevfairness = node_list[iter - model->params.fairwindow];
+	if (model->params.fairwindow != 0 && head_idx > (int)model->params.fairwindow)
+		prevfairness = node_list[head_idx - model->params.fairwindow];
 	node_list.push_back(new Node(act, get_head(), model->get_num_threads(), prevfairness));
 	total_nodes++;
-	iter++;
+	head_idx++;
 	return NULL;
 }
 
@@ -555,7 +555,7 @@ ModelAction * NodeStack::explore_action(ModelAction *act, enabled_type_t *is_ena
 void NodeStack::pop_restofstack(int numAhead)
 {
 	/* Diverging from previous execution; clear out remainder of list */
-	unsigned int it = iter + numAhead;
+	unsigned int it = head_idx + numAhead;
 	for(unsigned int i = it; i < node_list.size(); i++)
 		delete node_list[i];
 	node_list.resize(it);
@@ -565,7 +565,7 @@ Node * NodeStack::get_head() const
 {
 	if (node_list.empty())
 		return NULL;
-	return node_list[iter];
+	return node_list[head_idx];
 }
 
 Node * NodeStack::get_next() const
@@ -574,7 +574,7 @@ Node * NodeStack::get_next() const
 		DEBUG("Empty\n");
 		return NULL;
 	}
-	unsigned int it = iter + 1;
+	unsigned int it = head_idx + 1;
 	if (it == node_list.size()) {
 		DEBUG("At end\n");
 		return NULL;
@@ -584,5 +584,5 @@ Node * NodeStack::get_next() const
 
 void NodeStack::reset_execution()
 {
-	iter = 0;
+	head_idx = 0;
 }

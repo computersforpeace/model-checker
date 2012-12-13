@@ -40,33 +40,35 @@ Node::Node(ModelAction *act, Node *par, int nthreads, Node *prevfairness)
 {
 	if (act) {
 		act->set_node(this);
-		int currtid=id_to_int(act->get_tid());
-		int prevtid=(prevfairness != NULL)?id_to_int(prevfairness->action->get_tid()):0;
+		int currtid = id_to_int(act->get_tid());
+		int prevtid = (prevfairness != NULL) ? id_to_int(prevfairness->action->get_tid()) : 0;
 		
-		if ( model->params.fairwindow != 0 ) {
-			for(int i=0;i<nthreads;i++) {
-				ASSERT(i<((int)fairness.size()));
-				struct fairness_info * fi=& fairness[i];
-				struct fairness_info * prevfi=(par!=NULL)&&(i<par->get_num_threads())?&par->fairness[i]:NULL;
+		if (model->params.fairwindow != 0) {
+			for (int i = 0; i < nthreads; i++) {
+				ASSERT(i < ((int)fairness.size()));
+				struct fairness_info *fi = &fairness[i];
+				struct fairness_info *prevfi = (par != NULL) && (i < par->get_num_threads()) ? &par->fairness[i] : NULL;
 				if (prevfi) {
-					*fi=*prevfi;
+					*fi = *prevfi;
 				}
 				if (parent->is_enabled(int_to_id(i))) {
 					fi->enabled_count++;
 				}
-				if (i==currtid) {
+				if (i == currtid) {
 					fi->turns++;
 					fi->priority = false;
 				}
-				//Do window processing
+				/* Do window processing */
 				if (prevfairness != NULL) {
-					if (prevfairness -> parent->is_enabled(int_to_id(i)))
+					if (prevfairness->parent->is_enabled(int_to_id(i)))
 						fi->enabled_count--;
-					if (i==prevtid) {
+					if (i == prevtid) {
 						fi->turns--;
 					}
-					//Need full window to start evaluating conditions
-					//If we meet the enabled count and have no turns, give us priority
+					/* Need full window to start evaluating
+					 * conditions
+					 * If we meet the enabled count and
+					 * have no turns, give us priority */
 					if ((fi->enabled_count >= model->params.enabledcount) &&
 							(fi->turns == 0))
 						fi->priority = true;
@@ -131,9 +133,9 @@ bool Node::get_promise(unsigned int i) const
  */
 bool Node::increment_promise() {
 	DBG();
-	unsigned int rmw_count=0;
+	unsigned int rmw_count = 0;
 	for (unsigned int i = 0; i < promises.size(); i++) {
-		if (promises[i]==(PROMISE_RMW|PROMISE_FULFILLED))
+		if (promises[i] == (PROMISE_RMW|PROMISE_FULFILLED))
 			rmw_count++;
 	}
 	
@@ -163,21 +165,22 @@ bool Node::increment_promise() {
  */
 bool Node::promise_empty() const
 {
-	bool fulfilledrmw=false;
-	for (int i = promises.size()-1 ; i>=0; i--) {
-		if (promises[i]==PROMISE_UNFULFILLED)
+	bool fulfilledrmw = false;
+	for (int i = promises.size() - 1 ; i >= 0; i--) {
+		if (promises[i] == PROMISE_UNFULFILLED)
 			return false;
-		if (!fulfilledrmw && ((promises[i]&PROMISE_MASK)==PROMISE_UNFULFILLED))
+		if (!fulfilledrmw && ((promises[i]&PROMISE_MASK) == PROMISE_UNFULFILLED))
 			return false;
-		if (promises[i]==(PROMISE_FULFILLED|PROMISE_RMW))
-			fulfilledrmw=true;
+		if (promises[i] == (PROMISE_FULFILLED|PROMISE_RMW))
+			fulfilledrmw = true;
 	}
 	return true;
 }
 
 
-void Node::set_misc_max(int i) {
-	misc_max=i;
+void Node::set_misc_max(int i)
+{
+	misc_max = i;
 }
 
 int Node::get_misc() const
@@ -191,7 +194,7 @@ bool Node::increment_misc() {
 
 bool Node::misc_empty() const
 {
-	return (misc_index+1)>=misc_max;
+	return (misc_index + 1) >= misc_max;
 }
 
 
@@ -270,7 +273,7 @@ bool Node::backtrack_empty() const
  */
 bool Node::read_from_empty() const
 {
-	return ((read_from_index+1) >= may_read_from.size());
+	return ((read_from_index + 1) >= may_read_from.size());
 }
 
 /**
@@ -279,13 +282,13 @@ bool Node::read_from_empty() const
  */
 void Node::explore_child(ModelAction *act, enabled_type_t * is_enabled)
 {
-	if ( ! enabled_array )
-		enabled_array=(enabled_type_t *)model_malloc(sizeof(enabled_type_t)*num_threads);
+	if (!enabled_array)
+		enabled_array = (enabled_type_t *)model_malloc(sizeof(enabled_type_t) * num_threads);
 	if (is_enabled != NULL)
 		memcpy(enabled_array, is_enabled, sizeof(enabled_type_t)*num_threads);
 	else {
-		for(int i=0;i<num_threads;i++)
-			enabled_array[i]=THREAD_DISABLED;
+		for(int i = 0; i < num_threads; i++)
+			enabled_array[i] = THREAD_DISABLED;
 	}
 
 	explore(act->get_tid());
@@ -326,7 +329,7 @@ thread_id_t Node::get_next_backtrack()
 
 bool Node::is_enabled(Thread *t) const
 {
-	int thread_id=id_to_int(t->get_id());
+	int thread_id = id_to_int(t->get_id());
 	return thread_id < num_threads && (enabled_array[thread_id] != THREAD_DISABLED);
 }
 
@@ -341,7 +344,7 @@ enabled_type_t Node::enabled_status(thread_id_t tid) const
 
 bool Node::is_enabled(thread_id_t tid) const
 {
-	int thread_id=id_to_int(tid);
+	int thread_id = id_to_int(tid);
 	return thread_id < num_threads && (enabled_array[thread_id] != THREAD_DISABLED);
 }
 
@@ -519,14 +522,13 @@ void NodeStack::print() const
 
 /** Note: The is_enabled set contains what actions were enabled when
  *  act was chosen. */
-
-ModelAction * NodeStack::explore_action(ModelAction *act, enabled_type_t * is_enabled)
+ModelAction * NodeStack::explore_action(ModelAction *act, enabled_type_t *is_enabled)
 {
 	DBG();
 
 	ASSERT(!node_list.empty());
 
-	if ((iter+1) < node_list.size()) {
+	if ((iter + 1) < node_list.size()) {
 		iter++;
 		return node_list[iter]->get_action();
 	}
@@ -534,9 +536,8 @@ ModelAction * NodeStack::explore_action(ModelAction *act, enabled_type_t * is_en
 	/* Record action */
 	get_head()->explore_child(act, is_enabled);
 	Node *prevfairness = NULL;
-	if ( model->params.fairwindow != 0 && iter > model->params.fairwindow ) {
-		prevfairness = node_list[iter-model->params.fairwindow];
-	}
+	if (model->params.fairwindow != 0 && iter > model->params.fairwindow)
+		prevfairness = node_list[iter - model->params.fairwindow];
 	node_list.push_back(new Node(act, get_head(), model->get_num_threads(), prevfairness));
 	total_nodes++;
 	iter++;
@@ -554,8 +555,8 @@ ModelAction * NodeStack::explore_action(ModelAction *act, enabled_type_t * is_en
 void NodeStack::pop_restofstack(int numAhead)
 {
 	/* Diverging from previous execution; clear out remainder of list */
-	unsigned int it=iter+numAhead;
-	for(unsigned int i=it;i<node_list.size();i++)
+	unsigned int it = iter + numAhead;
+	for(unsigned int i = it; i < node_list.size(); i++)
 		delete node_list[i];
 	node_list.resize(it);
 }
@@ -573,7 +574,7 @@ Node * NodeStack::get_next() const
 		DEBUG("Empty\n");
 		return NULL;
 	}
-	unsigned int it=iter+1;
+	unsigned int it = iter + 1;
 	if (it == node_list.size()) {
 		DEBUG("At end\n");
 		return NULL;

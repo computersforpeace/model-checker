@@ -646,8 +646,7 @@ void ModelChecker::set_backtracking(ModelAction *act)
 				continue;
 		}
 		/* Cache the latest backtracking point */
-		if (!priv->next_backtrack || *prev > *priv->next_backtrack)
-			priv->next_backtrack = prev;
+		set_latest_backtrack(prev);
 
 		/* If this is a new backtracking point, mark the tree */
 		if (!node->set_backtrack(tid))
@@ -660,6 +659,26 @@ void ModelChecker::set_backtracking(ModelAction *act)
 			act->print();
 		}
 	}
+}
+
+/**
+ * @brief Cache the a backtracking point as the "most recent", if eligible
+ *
+ * Note that this does not prepare the NodeStack for this backtracking
+ * operation, it only caches the action on a per-execution basis
+ *
+ * @param act The operation at which we should explore a different next action
+ * (i.e., backtracking point)
+ * @return True, if this action is now the most recent backtracking point;
+ * false otherwise
+ */
+bool ModelChecker::set_latest_backtrack(ModelAction *act)
+{
+	if (!priv->next_backtrack || *act > *priv->next_backtrack) {
+		priv->next_backtrack = act;
+		return true;
+	}
+	return false;
 }
 
 /**
@@ -843,10 +862,9 @@ bool ModelChecker::process_write(ModelAction *curr)
 		for (unsigned int i = 0; i < futurevalues->size(); i++) {
 			struct PendingFutureValue pfv = (*futurevalues)[i];
 			//Do more ambitious checks now that mo is more complete
-			if (mo_may_allow(pfv.writer, pfv.act)&&
-					pfv.act->get_node()->add_future_value(pfv.writer->get_value(), pfv.writer->get_seq_number()+params.maxfuturedelay) &&
-					(!priv->next_backtrack || *pfv.act > *priv->next_backtrack))
-				priv->next_backtrack = pfv.act;
+			if (mo_may_allow(pfv.writer, pfv.act) &&
+					pfv.act->get_node()->add_future_value(pfv.writer->get_value(), pfv.writer->get_seq_number() + params.maxfuturedelay))
+				set_latest_backtrack(pfv.act);
 		}
 		futurevalues->resize(0);
 	}
@@ -1277,15 +1295,13 @@ void ModelChecker::check_curr_backtracking(ModelAction *curr)
 	Node *currnode = curr->get_node();
 	Node *parnode = currnode->get_parent();
 
-	if ((!parnode->backtrack_empty() ||
+	if (!parnode->backtrack_empty() ||
 			 !currnode->misc_empty() ||
 			 !currnode->read_from_empty() ||
 			 !currnode->future_value_empty() ||
 			 !currnode->promise_empty() ||
-			 !currnode->relseq_break_empty())
-			&& (!priv->next_backtrack ||
-					*curr > *priv->next_backtrack)) {
-		priv->next_backtrack = curr;
+			 !currnode->relseq_break_empty()) {
+		set_latest_backtrack(curr);
 	}
 }
 

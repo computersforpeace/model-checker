@@ -101,7 +101,7 @@ public:
 
 	void print_summary() const;
 #if SUPPORT_MOD_ORDER_DUMP
-	void dumpGraph(char *filename);
+	void dumpGraph(char *filename) const;
 #endif
 
 	void add_thread(Thread *t);

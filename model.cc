@@ -2563,7 +2563,8 @@ static void print_list(action_list_t *list, int exec_num = -1)
 }
 
 #if SUPPORT_MOD_ORDER_DUMP
-void ModelChecker::dumpGraph(char *filename) {
+void ModelChecker::dumpGraph(char *filename) const
+{
 	char buffer[200];
 	sprintf(buffer, "%s.dot",filename);
 	FILE *file = fopen(buffer, "w");

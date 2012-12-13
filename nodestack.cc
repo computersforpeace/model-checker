@@ -90,9 +90,15 @@ Node::~Node()
 /** Prints debugging info for the ModelAction associated with this Node */
 void Node::print()
 {
-	if (action)
+	if (action) {
 		action->print();
-	else
+		model_print("          backtrack: %s\n", backtrack_empty() ? "empty" : "non-empty");
+		model_print("          future values: %s\n", future_value_empty() ? "empty" : "non-empty");
+		model_print("          read-from: %s\n", read_from_empty() ? "empty" : "non-empty");
+		model_print("          promises: %s\n", promise_empty() ? "empty" : "non-empty");
+		model_print("          misc: %s\n", misc_empty() ? "empty" : "non-empty");
+		model_print("          rel seq break: %s\n", relseq_break_empty() ? "empty" : "non-empty");
+	} else
 		model_print("******** empty action ********\n");
 }
 

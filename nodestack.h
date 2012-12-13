@@ -56,7 +56,7 @@ struct fairness_info {
  */
 class Node {
 public:
-	Node(ModelAction *act = NULL, Node *par = NULL, int nthreads = 2, Node *prevfairness = NULL);
+	Node(ModelAction *act, Node *par, int nthreads, Node *prevfairness);
 	~Node();
 	/* return true = thread choice has already been explored */
 	bool has_been_explored(thread_id_t tid) const;
@@ -171,7 +171,7 @@ private:
 	 * @brief the index position of the current head Node
 	 *
 	 * This index is relative to node_list. The index should point to the
-	 * current head Node.
+	 * current head Node. It is negative when the list is empty.
 	 */
 	int head_idx;
 

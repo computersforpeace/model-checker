@@ -51,7 +51,7 @@ Node::Node(ModelAction *act, Node *par, int nthreads, Node *prevfairness)
 				if (prevfi) {
 					*fi = *prevfi;
 				}
-				if (parent->is_enabled(int_to_id(i))) {
+				if (parent && parent->is_enabled(int_to_id(i))) {
 					fi->enabled_count++;
 				}
 				if (i == currtid) {
@@ -501,8 +501,8 @@ void Node::explore(thread_id_t tid)
 }
 
 NodeStack::NodeStack() :
-	node_list(1, new Node()),
-	head_idx(0),
+	node_list(),
+	head_idx(-1),
 	total_nodes(0)
 {
 	total_nodes++;
@@ -532,19 +532,20 @@ ModelAction * NodeStack::explore_action(ModelAction *act, enabled_type_t *is_ena
 {
 	DBG();
 
-	ASSERT(!node_list.empty());
-
 	if ((head_idx + 1) < (int)node_list.size()) {
 		head_idx++;
 		return node_list[head_idx]->get_action();
 	}
 
 	/* Record action */
-	get_head()->explore_child(act, is_enabled);
+	Node *head = get_head();
 	Node *prevfairness = NULL;
-	if (model->params.fairwindow != 0 && head_idx > (int)model->params.fairwindow)
-		prevfairness = node_list[head_idx - model->params.fairwindow];
-	node_list.push_back(new Node(act, get_head(), model->get_num_threads(), prevfairness));
+	if (head) {
+		head->explore_child(act, is_enabled);
+		if (model->params.fairwindow != 0 && head_idx > (int)model->params.fairwindow)
+			prevfairness = node_list[head_idx - model->params.fairwindow];
+	}
+	node_list.push_back(new Node(act, head, model->get_num_threads(), prevfairness));
 	total_nodes++;
 	head_idx++;
 	return NULL;
@@ -569,7 +570,7 @@ void NodeStack::pop_restofstack(int numAhead)
 
 Node * NodeStack::get_head() const
 {
-	if (node_list.empty())
+	if (node_list.empty() || head_idx < 0)
 		return NULL;
 	return node_list[head_idx];
 }
@@ -590,5 +591,5 @@ Node * NodeStack::get_next() const
 
 void NodeStack::reset_execution()
 {
-	head_idx = 0;
+	head_idx = -1;
 }

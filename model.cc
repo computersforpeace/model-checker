@@ -1803,13 +1803,13 @@ bool ModelChecker::mo_may_allow(const ModelAction *writer, const ModelAction *re
 		for (rit = list->rbegin(); rit != list->rend(); rit++) {
 			ModelAction *act = *rit;
 
-			if (!reader->happens_before(act))
+			/* Don't disallow due to act == reader */
+			if (!reader->happens_before(act) || reader == act)
 				break;
 			else if (act->is_write())
 				write_after_read = act;
-			else if (act->is_read() && act->get_reads_from() != NULL && act != reader) {
+			else if (act->is_read() && act->get_reads_from() != NULL)
 				write_after_read = act->get_reads_from();
-			}
 		}
 
 		if (write_after_read && write_after_read != writer && mo_graph->checkReachable(write_after_read, writer))

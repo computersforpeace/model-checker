@@ -2703,17 +2703,18 @@ bool ModelChecker::take_step() {
 	if (has_asserted())
 		return false;
 
-	Thread *curr = priv->current_action ? get_thread(priv->current_action) : NULL;
-	if (curr) {
-		ASSERT(curr->get_state() == THREAD_READY);
+	ModelAction *curr = priv->current_action;
+	priv->current_action = NULL;
 
-		priv->nextThread = check_current_action(priv->current_action);
-		priv->current_action = NULL;
+	Thread *curr_thrd = get_thread(curr);
+	ASSERT(curr_thrd->get_state() == THREAD_READY);
 
-		if (curr->is_blocked() || curr->is_complete())
-			scheduler->remove_thread(curr);
-	}
-	Thread *next = scheduler->next_thread(priv->nextThread);
+	priv->nextThread = check_current_action(curr);
+
+	if (curr_thrd->is_blocked() || curr_thrd->is_complete())
+		scheduler->remove_thread(curr_thrd);
+
+	Thread *next_thrd = scheduler->next_thread(priv->nextThread);
 
 	/* Infeasible -> don't take any more steps */
 	if (is_infeasible())
@@ -2729,8 +2730,8 @@ bool ModelChecker::take_step() {
 		}
 	}
 
-	DEBUG("(%d, %d)\n", curr ? id_to_int(curr->get_id()) : -1,
-			next ? id_to_int(next->get_id()) : -1);
+	DEBUG("(%d, %d)\n", curr_thrd ? id_to_int(curr_thrd->get_id()) : -1,
+			next_thrd ? id_to_int(next_thrd->get_id()) : -1);
 
 	/*
 	 * Launch end-of-execution release sequence fixups only when there are:
@@ -2741,7 +2742,7 @@ bool ModelChecker::take_step() {
 	 * (3) pending assertions (i.e., data races)
 	 * (4) no pending promises
 	 */
-	if (!pending_rel_seqs->empty() && (!next || next->is_model_thread()) &&
+	if (!pending_rel_seqs->empty() && (!next_thrd || next_thrd->is_model_thread()) &&
 			is_feasible_prefix_ignore_relseq() && !unrealizedraces.empty()) {
 		model_print("*** WARNING: release sequence fixup action (%zu pending release seuqences) ***\n",
 				pending_rel_seqs->size());
@@ -2752,22 +2753,22 @@ bool ModelChecker::take_step() {
 		return true;
 	}
 
-	/* next == NULL -> don't take any more steps */
-	if (!next)
+	/* next_thrd == NULL -> don't take any more steps */
+	if (!next_thrd)
 		return false;
 
-	next->set_state(THREAD_RUNNING);
+	next_thrd->set_state(THREAD_RUNNING);
 
-	if (next->get_pending() != NULL) {
+	if (next_thrd->get_pending() != NULL) {
 		/* restart a pending action */
-		set_current_action(next->get_pending());
-		next->set_pending(NULL);
-		next->set_state(THREAD_READY);
+		set_current_action(next_thrd->get_pending());
+		next_thrd->set_pending(NULL);
+		next_thrd->set_state(THREAD_READY);
 		return true;
 	}
 
 	/* Return false only if swap fails with an error */
-	return (Thread::swap(&system_context, next) == 0);
+	return (Thread::swap(&system_context, next_thrd) == 0);
 }
 
 /** Wrapper to run the user's main function, with appropriate arguments */

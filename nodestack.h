@@ -89,7 +89,7 @@ public:
 	bool increment_read_from();
 	bool read_from_empty() const;
 	int get_read_from_size() const;
-	const ModelAction * get_read_from_at(int i);
+	const ModelAction * get_read_from_at(int i) const;
 
 	void set_promise(unsigned int i, bool is_rmw);
 	bool get_promise(unsigned int i) const;
@@ -114,9 +114,9 @@ public:
 private:
 	void explore(thread_id_t tid);
 
-	ModelAction *action;
-	Node *parent;
-	int num_threads;
+	ModelAction * const action;
+	Node * const parent;
+	const int num_threads;
 	std::vector< bool, ModelAlloc<bool> > explored_children;
 	std::vector< bool, ModelAlloc<bool> > backtrack;
 	std::vector< struct fairness_info, ModelAlloc< struct fairness_info> > fairness;

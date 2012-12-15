@@ -386,7 +386,8 @@ int Node::get_read_from_size() const
 	return may_read_from.size();
 }
 
-const ModelAction * Node::get_read_from_at(int i) {
+const ModelAction * Node::get_read_from_at(int i) const
+{
 	return may_read_from[i];
 }
 

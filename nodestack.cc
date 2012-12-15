@@ -38,41 +38,40 @@ Node::Node(ModelAction *act, Node *par, int nthreads, Node *prevfairness)
 	misc_index(0),
 	misc_max(0)
 {
-	if (act) {
-		act->set_node(this);
-		int currtid = id_to_int(act->get_tid());
-		int prevtid = (prevfairness != NULL) ? id_to_int(prevfairness->action->get_tid()) : 0;
+	ASSERT(act);
+	act->set_node(this);
+	int currtid = id_to_int(act->get_tid());
+	int prevtid = (prevfairness != NULL) ? id_to_int(prevfairness->action->get_tid()) : 0;
 
-		if (model->params.fairwindow != 0) {
-			for (int i = 0; i < nthreads; i++) {
-				ASSERT(i < ((int)fairness.size()));
-				struct fairness_info *fi = &fairness[i];
-				struct fairness_info *prevfi = (par != NULL) && (i < par->get_num_threads()) ? &par->fairness[i] : NULL;
-				if (prevfi) {
-					*fi = *prevfi;
+	if (model->params.fairwindow != 0) {
+		for (int i = 0; i < nthreads; i++) {
+			ASSERT(i < ((int)fairness.size()));
+			struct fairness_info *fi = &fairness[i];
+			struct fairness_info *prevfi = (par != NULL) && (i < par->get_num_threads()) ? &par->fairness[i] : NULL;
+			if (prevfi) {
+				*fi = *prevfi;
+			}
+			if (parent && parent->is_enabled(int_to_id(i))) {
+				fi->enabled_count++;
+			}
+			if (i == currtid) {
+				fi->turns++;
+				fi->priority = false;
+			}
+			/* Do window processing */
+			if (prevfairness != NULL) {
+				if (prevfairness->parent->is_enabled(int_to_id(i)))
+					fi->enabled_count--;
+				if (i == prevtid) {
+					fi->turns--;
 				}
-				if (parent && parent->is_enabled(int_to_id(i))) {
-					fi->enabled_count++;
-				}
-				if (i == currtid) {
-					fi->turns++;
-					fi->priority = false;
-				}
-				/* Do window processing */
-				if (prevfairness != NULL) {
-					if (prevfairness->parent->is_enabled(int_to_id(i)))
-						fi->enabled_count--;
-					if (i == prevtid) {
-						fi->turns--;
-					}
-					/* Need full window to start evaluating
-					 * conditions
-					 * If we meet the enabled count and
-					 * have no turns, give us priority */
-					if ((fi->enabled_count >= model->params.enabledcount) &&
-							(fi->turns == 0))
-						fi->priority = true;
-				}
+				/* Need full window to start evaluating
+				 * conditions
+				 * If we meet the enabled count and have no
+				 * turns, give us priority */
+				if ((fi->enabled_count >= model->params.enabledcount) &&
+						(fi->turns == 0))
+					fi->priority = true;
 			}
 		}
 	}
@@ -81,8 +80,7 @@ Node::Node(ModelAction *act, Node *par, int nthreads, Node *prevfairness)
 /** @brief Node desctructor */
 Node::~Node()
 {
-	if (action)
-		delete action;
+	delete action;
 	if (enabled_array)
 		model_free(enabled_array);
 }
@@ -90,16 +88,13 @@ Node::~Node()
 /** Prints debugging info for the ModelAction associated with this Node */
 void Node::print()
 {
-	if (action) {
-		action->print();
-		model_print("          backtrack: %s\n", backtrack_empty() ? "empty" : "non-empty");
-		model_print("          future values: %s\n", future_value_empty() ? "empty" : "non-empty");
-		model_print("          read-from: %s\n", read_from_empty() ? "empty" : "non-empty");
-		model_print("          promises: %s\n", promise_empty() ? "empty" : "non-empty");
-		model_print("          misc: %s\n", misc_empty() ? "empty" : "non-empty");
-		model_print("          rel seq break: %s\n", relseq_break_empty() ? "empty" : "non-empty");
-	} else
-		model_print("******** empty action ********\n");
+	action->print();
+	model_print("          backtrack: %s\n", backtrack_empty() ? "empty" : "non-empty");
+	model_print("          future values: %s\n", future_value_empty() ? "empty" : "non-empty");
+	model_print("          read-from: %s\n", read_from_empty() ? "empty" : "non-empty");
+	model_print("          promises: %s\n", promise_empty() ? "empty" : "non-empty");
+	model_print("          misc: %s\n", misc_empty() ? "empty" : "non-empty");
+	model_print("          rel seq break: %s\n", relseq_break_empty() ? "empty" : "non-empty");
 }
 
 /** @brief Prints info about may_read_from set */

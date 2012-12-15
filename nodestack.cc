@@ -108,7 +108,8 @@ void Node::print_may_read_from()
  * Sets a promise to explore meeting with the given node.
  * @param i is the promise index.
  */
-void Node::set_promise(unsigned int i, bool is_rmw) {
+void Node::set_promise(unsigned int i, bool is_rmw)
+{
 	if (i >= promises.size())
 		promises.resize(i + 1, PROMISE_IGNORE);
 	if (promises[i] == PROMISE_IGNORE) {
@@ -132,7 +133,8 @@ bool Node::get_promise(unsigned int i) const
  * Increments to the next combination of promises.
  * @return true if we have a valid combination.
  */
-bool Node::increment_promise() {
+bool Node::increment_promise()
+{
 	DBG();
 	unsigned int rmw_count = 0;
 	for (unsigned int i = 0; i < promises.size(); i++) {
@@ -189,7 +191,8 @@ int Node::get_misc() const
 	return misc_index;
 }
 
-bool Node::increment_misc() {
+bool Node::increment_misc()
+{
 	return (misc_index < misc_max) && ((++misc_index) < misc_max);
 }
 
@@ -209,7 +212,8 @@ bool Node::misc_empty() const
  * @param value is the value to backtrack to.
  * @return True if the future value was successully added; false otherwise
  */
-bool Node::add_future_value(uint64_t value, modelclock_t expiration) {
+bool Node::add_future_value(uint64_t value, modelclock_t expiration)
+{
 	int idx = -1; /* Highest index where value is found */
 	for (unsigned int i = 0; i < future_values.size(); i++) {
 		if (future_values[i].value == value) {
@@ -408,7 +412,8 @@ const ModelAction * Node::get_read_from() const
  * Increments the index into the readsfrom set to explore the next item.
  * @return Returns false if we have explored all items.
  */
-bool Node::increment_read_from() {
+bool Node::increment_read_from()
+{
 	DBG();
 	promises.clear();
 	if (read_from_index < may_read_from.size()) {
@@ -422,7 +427,8 @@ bool Node::increment_read_from() {
  * Increments the index into the future_values set to explore the next item.
  * @return Returns false if we have explored all values.
  */
-bool Node::increment_future_value() {
+bool Node::increment_future_value()
+{
 	DBG();
 	promises.clear();
 	if (future_index < ((int)future_values.size())) {

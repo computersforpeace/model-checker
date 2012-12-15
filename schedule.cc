@@ -168,6 +168,7 @@ Thread * Scheduler::next_thread(Thread *t)
 		for (int i = 0; i < enabled_len; i++) {
 			thread_id_t tid = int_to_id(i);
 			if (n->has_priority(tid)) {
+				DEBUG("Node (tid %d) has priority\n", i);
 				//Have a thread with priority
 				if (enabled[i] != THREAD_DISABLED)
 					have_enabled_thread_with_priority = true;

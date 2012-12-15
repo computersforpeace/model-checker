@@ -1211,6 +1211,10 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 
 	bool newly_explored = initialize_curr_action(&curr);
 
+	DBG();
+	if (DBG_ENABLED())
+		curr->print();
+
 	wake_up_sleeping_actions(curr);
 
 	/* Add the action to lists before any other model-checking tasks */
@@ -2504,14 +2508,8 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 			else if (curr->get_sleep_flag() && !curr->is_seqcst() && !sleep_can_read_from(curr, act))
 				allow_read = false;
 
-			if (allow_read) {
-				DEBUG("Adding action to may_read_from:\n");
-				if (DBG_ENABLED()) {
-					act->print();
-					curr->print();
-				}
+			if (allow_read)
 				curr->get_node()->add_read_from(act);
-			}
 
 			/* Include at most one act per-thread that "happens before" curr */
 			if (act->happens_before(curr))

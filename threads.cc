@@ -104,12 +104,11 @@ int Thread::swap(ucontext_t *ctxt, Thread *t)
 /** Terminate a thread and free its stack. */
 void Thread::complete()
 {
-	if (!is_complete()) {
-		DEBUG("completed thread %d\n", id_to_int(get_id()));
-		state = THREAD_COMPLETED;
-		if (stack)
-			stack_free(stack);
-	}
+	ASSERT(!is_complete());
+	DEBUG("completed thread %d\n", id_to_int(get_id()));
+	state = THREAD_COMPLETED;
+	if (stack)
+		stack_free(stack);
 }
 
 /**
@@ -169,7 +168,8 @@ Thread::Thread(thrd_t *t, void (*func)(void *), void *a) :
 /** Destructor */
 Thread::~Thread()
 {
-	complete();
+	if (!is_complete())
+		complete();
 	model->remove_thread(this);
 }
 

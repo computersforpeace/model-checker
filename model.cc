@@ -1192,11 +1192,10 @@ void ModelChecker::set_current_action(ModelAction *act) {
  * execution when running permutations of previously-observed executions.
  *
  * @param curr The current action to process
- * @return The next Thread that must be executed. May be NULL if ModelChecker
- * makes no choice (e.g., according to replay execution, combining RMW actions,
- * etc.)
+ * @return The ModelAction that is actually executed; may be different than
+ * curr; may be NULL, if the current action is not enabled to run
  */
-Thread * ModelChecker::check_current_action(ModelAction *curr)
+ModelAction * ModelChecker::check_current_action(ModelAction *curr)
 {
 	ASSERT(curr);
 	bool second_part_of_rmw = curr->is_rmwc() || curr->is_rmw();
@@ -1206,7 +1205,7 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 		 * much later, when a lock/join can succeed */
 		get_current_thread()->set_pending(curr);
 		scheduler->sleep(get_current_thread());
-		return get_next_thread(NULL);
+		return NULL;
 	}
 
 	bool newly_explored = initialize_curr_action(&curr);
@@ -1292,7 +1291,7 @@ Thread * ModelChecker::check_current_action(ModelAction *curr)
 
 	check_curr_backtracking(curr);
 	set_backtracking(curr);
-	return get_next_thread(curr);
+	return curr;
 }
 
 void ModelChecker::check_curr_backtracking(ModelAction *curr)
@@ -2721,12 +2720,7 @@ bool ModelChecker::take_step(ModelAction *curr)
 	Thread *curr_thrd = get_thread(curr);
 	ASSERT(curr_thrd->get_state() == THREAD_READY);
 
-	Thread *next_thrd = check_current_action(curr);
-
-	if (curr_thrd->is_blocked() || curr_thrd->is_complete())
-		scheduler->remove_thread(curr_thrd);
-
-	next_thrd = scheduler->next_thread(next_thrd);
+	curr = check_current_action(curr);
 
 	/* Infeasible -> don't take any more steps */
 	if (is_infeasible())
@@ -2736,11 +2730,15 @@ bool ModelChecker::take_step(ModelAction *curr)
 		return false;
 	}
 
-	if (params.bound != 0) {
-		if (priv->used_sequence_numbers > params.bound) {
+	if (params.bound != 0)
+		if (priv->used_sequence_numbers > params.bound)
 			return false;
-		}
-	}
+
+	if (curr_thrd->is_blocked() || curr_thrd->is_complete())
+		scheduler->remove_thread(curr_thrd);
+
+	Thread *next_thrd = get_next_thread(curr);
+	next_thrd = scheduler->next_thread(next_thrd);
 
 	DEBUG("(%d, %d)\n", curr_thrd ? id_to_int(curr_thrd->get_id()) : -1,
 			next_thrd ? id_to_int(next_thrd->get_id()) : -1);

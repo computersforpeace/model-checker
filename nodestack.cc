@@ -41,13 +41,13 @@ Node::Node(ModelAction *act, Node *par, int nthreads, Node *prevfairness)
 	ASSERT(act);
 	act->set_node(this);
 	int currtid = id_to_int(act->get_tid());
-	int prevtid = (prevfairness != NULL) ? id_to_int(prevfairness->action->get_tid()) : 0;
+	int prevtid = prevfairness ? id_to_int(prevfairness->action->get_tid()) : 0;
 
 	if (model->params.fairwindow != 0) {
-		for (int i = 0; i < nthreads; i++) {
+		for (int i = 0; i < num_threads; i++) {
 			ASSERT(i < ((int)fairness.size()));
 			struct fairness_info *fi = &fairness[i];
-			struct fairness_info *prevfi = (par != NULL) && (i < par->get_num_threads()) ? &par->fairness[i] : NULL;
+			struct fairness_info *prevfi = (parent && i < parent->get_num_threads()) ? &parent->fairness[i] : NULL;
 			if (prevfi) {
 				*fi = *prevfi;
 			}

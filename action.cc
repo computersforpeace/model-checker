@@ -238,6 +238,30 @@ void ModelAction::copy_typeandorder(ModelAction * act)
 	this->order = act->order;
 }
 
+/**
+ * Get the Thread which is the operand of this action. This is only valid for
+ * THREAD_* operations (currently only for THREAD_CREATE and THREAD_JOIN). Note
+ * that this provides a central place for determining the conventions of Thread
+ * storage in ModelAction, where we generally aren't very type-safe (e.g., we
+ * store object references in a (void *) address.
+ *
+ * For THREAD_CREATE, this yields the Thread which is created.
+ * For THREAD_JOIN, this yields the Thread we are joining with.
+ *
+ * @return The Thread which this action acts on, if exists; otherwise NULL
+ */
+Thread * ModelAction::get_thread_operand() const
+{
+	if (type == THREAD_CREATE)
+		/* THREAD_CREATE uses (Thread *) for location */
+		return (Thread *)get_location();
+	else if (type == THREAD_JOIN)
+		/* THREAD_JOIN uses (Thread *) for location */
+		return (Thread *)get_location();
+	else
+		return NULL;
+}
+
 /** This method changes an existing read part of an RMW action into either:
  *  (1) a full RMW action in case of the completed write or
  *  (2) a READ action in case a failed action.

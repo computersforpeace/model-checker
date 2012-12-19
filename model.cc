@@ -217,9 +217,8 @@ Thread * ModelChecker::get_next_thread(ModelAction *curr)
 		/* Do not split atomic actions. */
 		if (curr->is_rmwr())
 			return thread_current();
-		/* The THREAD_CREATE action points to the created Thread */
 		else if (curr->get_type() == THREAD_CREATE)
-			return (Thread *)curr->get_location();
+			return curr->get_thread_operand();
 	}
 
 	/* Have we completed exploring the preselected path? */
@@ -949,12 +948,12 @@ bool ModelChecker::process_thread_action(ModelAction *curr)
 
 	switch (curr->get_type()) {
 	case THREAD_CREATE: {
-		Thread *th = (Thread *)curr->get_location();
+		Thread *th = curr->get_thread_operand();
 		th->set_creation(curr);
 		break;
 	}
 	case THREAD_JOIN: {
-		Thread *blocking = (Thread *)curr->get_location();
+		Thread *blocking = curr->get_thread_operand();
 		ModelAction *act = get_last_action(blocking->get_id());
 		curr->synchronize_with(act);
 		updated = true; /* trigger rel-seq checks */

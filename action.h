@@ -125,6 +125,8 @@ public:
 	bool is_conflicting_lock(const ModelAction *act) const;
 	bool could_synchronize_with(const ModelAction *act) const;
 
+	Thread * get_thread_operand() const;
+
 	void create_cv(const ModelAction *parent = NULL);
 	ClockVector * get_cv() const { return cv; }
 	bool synchronize_with(const ModelAction *act);

@@ -43,7 +43,7 @@ int user_main(int argc, char **argv)
 
 	atomic_init(&x, 0);
 
-	printf("Thread %d: creating 4 threads\n", thrd_current());
+	printf("Main thread: creating 4 threads\n");
 	thrd_create(&t1, (thrd_start_t)&a, NULL);
 	thrd_create(&t2, (thrd_start_t)&b, NULL);
 	thrd_create(&t3, (thrd_start_t)&b, NULL);
@@ -53,7 +53,7 @@ int user_main(int argc, char **argv)
 	thrd_join(t2);
 	thrd_join(t3);
 	thrd_join(t4);
-	printf("Thread %d is finished\n", thrd_current());
+	printf("Main thread is finished\n");
 
 	return 0;
 }

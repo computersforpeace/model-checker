@@ -97,11 +97,11 @@ bool ModelAction::is_wait() const {
 }
 
 bool ModelAction::is_notify() const {
-	return type==ATOMIC_NOTIFY_ONE || type==ATOMIC_NOTIFY_ALL;
+	return type == ATOMIC_NOTIFY_ONE || type == ATOMIC_NOTIFY_ALL;
 }
 
 bool ModelAction::is_notify_one() const {
-	return type==ATOMIC_NOTIFY_ONE;
+	return type == ATOMIC_NOTIFY_ONE;
 }
 
 bool ModelAction::is_unlock() const
@@ -165,7 +165,7 @@ bool ModelAction::is_rmwc() const
 	return type == ATOMIC_RMWC;
 }
 
-bool ModelAction::is_fence() const 
+bool ModelAction::is_fence() const
 {
 	return type == ATOMIC_FENCE;
 }
@@ -206,20 +206,20 @@ bool ModelAction::is_release() const
 
 bool ModelAction::is_seqcst() const
 {
-	return order==std::memory_order_seq_cst;
+	return order == std::memory_order_seq_cst;
 }
 
 bool ModelAction::same_var(const ModelAction *act) const
 {
-	if ( act->is_wait() || is_wait() ) {
-		if ( act->is_wait() && is_wait() ) {
-			if ( ((void *)value) == ((void *)act->value) )
+	if (act->is_wait() || is_wait()) {
+		if (act->is_wait() && is_wait()) {
+			if (((void *)value) == ((void *)act->value))
 				return true;
-		} else if ( is_wait() ) {
-			if ( ((void *)value) == act->location )
+		} else if (is_wait()) {
+			if (((void *)value) == act->location)
 				return true;
-		} else if ( act->is_wait() ) {
-			if ( location == ((void *)act->value) )
+		} else if (act->is_wait()) {
+			if (location == ((void *)act->value))
 				return true;
 		}
 	}
@@ -232,7 +232,8 @@ bool ModelAction::same_thread(const ModelAction *act) const
 	return tid == act->tid;
 }
 
-void ModelAction::copy_typeandorder(ModelAction * act) {
+void ModelAction::copy_typeandorder(ModelAction * act)
+{
 	this->type = act->type;
 	this->order = act->order;
 }
@@ -243,13 +244,14 @@ void ModelAction::copy_typeandorder(ModelAction * act) {
  * @todo  If the memory_order changes, we may potentially need to update our
  * clock vector.
  */
-void ModelAction::process_rmw(ModelAction * act) {
-	this->order=act->order;
+void ModelAction::process_rmw(ModelAction *act)
+{
+	this->order = act->order;
 	if (act->is_rmwc())
-		this->type=ATOMIC_READ;
+		this->type = ATOMIC_READ;
 	else if (act->is_rmw()) {
-		this->type=ATOMIC_RMW;
-		this->value=act->value;
+		this->type = ATOMIC_RMW;
+		this->value = act->value;
 	}
 }
 
@@ -284,7 +286,7 @@ bool ModelAction::could_synchronize_with(const ModelAction *act) const
 		return true;
 
 	// lock just released...we can grab lock
-	if ((is_lock() ||is_trylock()) && (act->is_unlock()||act->is_wait()))
+	if ((is_lock() || is_trylock()) && (act->is_unlock() || act->is_wait()))
 		return true;
 
 	// lock just acquired...we can fail to grab lock
@@ -292,16 +294,16 @@ bool ModelAction::could_synchronize_with(const ModelAction *act) const
 		return true;
 
 	// other thread stalling on lock...we can release lock
-	if (is_unlock() && (act->is_trylock()||act->is_lock()))
+	if (is_unlock() && (act->is_trylock() || act->is_lock()))
 		return true;
 
-	if (is_trylock() && (act->is_unlock()||act->is_wait()))
+	if (is_trylock() && (act->is_unlock() || act->is_wait()))
 		return true;
 
-	if ( is_notify() && act->is_wait() )
+	if (is_notify() && act->is_wait())
 		return true;
 
-	if ( is_wait() && act->is_notify() )
+	if (is_wait() && act->is_notify())
 		return true;
 
 	// Otherwise handle by reads_from relation
@@ -313,11 +315,11 @@ bool ModelAction::is_conflicting_lock(const ModelAction *act) const
 	// Must be different threads to reorder
 	if (same_thread(act))
 		return false;
-	
+
 	// Try to reorder a lock past a successful lock
 	if (act->is_success_lock())
 		return true;
-	
+
 	// Try to push a successful trylock past an unlock
 	if (act->is_unlock() && is_trylock() && value == VALUE_TRYSUCCESS)
 		return true;
@@ -347,9 +349,9 @@ void ModelAction::create_cv(const ModelAction *parent)
 
 void ModelAction::set_try_lock(bool obtainedlock) {
 	if (obtainedlock)
-		value=VALUE_TRYSUCCESS;
+		value = VALUE_TRYSUCCESS;
 	else
-		value=VALUE_TRYFAILED;
+		value = VALUE_TRYFAILED;
 }
 
 /** @return The Node associated with this ModelAction */
@@ -377,7 +379,8 @@ void ModelAction::set_read_from(const ModelAction *act)
  * @param act The ModelAction to synchronize with
  * @return True if this is a valid synchronization; false otherwise
  */
-bool ModelAction::synchronize_with(const ModelAction *act) {
+bool ModelAction::synchronize_with(const ModelAction *act)
+{
 	if (*this < *act && type != THREAD_JOIN && type != ATOMIC_LOCK)
 		return false;
 	model->check_promises(act->get_tid(), cv, act->cv);
@@ -518,14 +521,12 @@ void ModelAction::print() const
 /** @brief Print nicely-formatted info about this ModelAction */
 unsigned int ModelAction::hash() const
 {
-	unsigned int hash=(unsigned int) this->type;
-	hash^=((unsigned int)this->order)<<3;
-	hash^=seq_number<<5;
+	unsigned int hash = (unsigned int)this->type;
+	hash ^= ((unsigned int)this->order) << 3;
+	hash ^= seq_number << 5;
 	hash ^= id_to_int(tid) << 6;
 
-	if (is_read()) {
-		if (reads_from)
-			hash^=reads_from->get_seq_number();
-	}
+	if (is_read() && reads_from)
+		hash ^= reads_from->get_seq_number();
 	return hash;
 }

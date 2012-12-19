@@ -10,11 +10,9 @@
  */
 int thrd_create(thrd_t *t, thrd_start_t start_routine, void *arg)
 {
-	Thread *thread;
-	thread = new Thread(t, start_routine, arg);
-	model->add_thread(thread);
+	struct thread_params params = { start_routine, arg };
 	/* seq_cst is just a 'don't care' parameter */
-	model->switch_to_master(new ModelAction(THREAD_CREATE, std::memory_order_seq_cst, thread, VALUE_NONE));
+	model->switch_to_master(new ModelAction(THREAD_CREATE, std::memory_order_seq_cst, t, (uint64_t)&params));
 	return 0;
 }
 

@@ -13,6 +13,11 @@
 #include <threads.h>
 #include "modeltypes.h"
 
+struct thread_params {
+	thrd_start_t func;
+	void *arg;
+};
+
 /** @brief Represents the state of a user Thread */
 typedef enum thread_state {
 	/** Thread was just created and hasn't run yet */

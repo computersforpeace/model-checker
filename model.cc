@@ -969,7 +969,10 @@ bool ModelChecker::process_thread_action(ModelAction *curr)
 
 	switch (curr->get_type()) {
 	case THREAD_CREATE: {
-		Thread *th = curr->get_thread_operand();
+		thrd_t *thrd = (thrd_t *)curr->get_location();
+		struct thread_params *params = (struct thread_params *)curr->get_value();
+		Thread *th = new Thread(thrd, params->func, params->arg);
+		add_thread(th);
 		th->set_creation(curr);
 		/* Promises can be satisfied by children */
 		for (unsigned int i = 0; i < promises->size(); i++) {

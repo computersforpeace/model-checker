@@ -253,10 +253,11 @@ void ModelAction::copy_typeandorder(ModelAction * act)
  */
 Thread * ModelAction::get_thread_operand() const
 {
-	if (type == THREAD_CREATE)
-		/* THREAD_CREATE uses (Thread *) for location */
-		return (Thread *)get_location();
-	else if (type == THREAD_JOIN)
+	if (type == THREAD_CREATE) {
+		/* THREAD_CREATE stores its (Thread *) in a thrd_t::priv */
+		thrd_t *thrd = (thrd_t *)get_location();
+		return thrd->priv;
+	} else if (type == THREAD_JOIN)
 		/* THREAD_JOIN uses (Thread *) for location */
 		return (Thread *)get_location();
 	else

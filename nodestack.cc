@@ -556,7 +556,11 @@ ModelAction * NodeStack::explore_action(ModelAction *act, enabled_type_t *is_ena
 		if (model->params.fairwindow != 0 && head_idx > (int)model->params.fairwindow)
 			prevfairness = node_list[head_idx - model->params.fairwindow];
 	}
-	node_list.push_back(new Node(act, head, model->get_num_threads(), prevfairness));
+
+	int next_threads = model->get_num_threads();
+	if (act->get_type() == THREAD_CREATE)
+		next_threads++;
+	node_list.push_back(new Node(act, head, next_threads, prevfairness));
 	total_nodes++;
 	head_idx++;
 	return NULL;

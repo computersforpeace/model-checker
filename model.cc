@@ -174,7 +174,12 @@ unsigned int ModelChecker::get_num_threads() const
 	return priv->next_thread_id;
 }
 
-/** @return The currently executing Thread. */
+/**
+ * Must be called from user-thread context (e.g., through the global
+ * thread_current() interface)
+ *
+ * @return The currently executing Thread.
+ */
 Thread * ModelChecker::get_current_thread() const
 {
 	return scheduler->get_current_thread();
@@ -820,7 +825,7 @@ bool ModelChecker::process_mutex(ModelAction *curr)
 		if (curr->get_node()->get_misc() == 0) {
 			get_safe_ptr_action(condvar_waiters_map, curr->get_location())->push_back(curr);
 			//disable us
-			scheduler->sleep(get_current_thread());
+			scheduler->sleep(get_thread(curr));
 		}
 		break;
 	}
@@ -1203,8 +1208,8 @@ ModelAction * ModelChecker::check_current_action(ModelAction *curr)
 	if (!check_action_enabled(curr)) {
 		/* Make the execution look like we chose to run this action
 		 * much later, when a lock/join can succeed */
-		get_current_thread()->set_pending(curr);
-		scheduler->sleep(get_current_thread());
+		get_thread(curr)->set_pending(curr);
+		scheduler->sleep(get_thread(curr));
 		return NULL;
 	}
 

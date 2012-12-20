@@ -5,13 +5,18 @@
 #ifndef __THREADS_H__
 #define __THREADS_H__
 
+/* Forward declaration */
+struct Thread; /* actually, class; but this is safe */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 	typedef void (*thrd_start_t)(void *);
 
-	typedef int thrd_t;
+	typedef struct {
+		struct Thread *priv;
+	} thrd_t;
 
 	int thrd_create(thrd_t *t, thrd_start_t start_routine, void *arg);
 	int thrd_join(thrd_t);

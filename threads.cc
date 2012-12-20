@@ -161,7 +161,7 @@ Thread::Thread(thrd_t *t, void (*func)(void *), void *a) :
 		model_print("Error in create_context\n");
 
 	id = model->get_next_id();
-	*user_thread = id;
+	user_thread->priv = this;
 	parent = thread_current();
 }
 

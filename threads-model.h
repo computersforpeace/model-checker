@@ -148,7 +148,7 @@ Thread * thread_current();
 
 static inline thread_id_t thrd_to_id(thrd_t t)
 {
-	return t;
+	return t.priv->get_id();
 }
 
 /**

@@ -15,25 +15,25 @@ void initSnapshotLibrary(unsigned int numbackingpages,
 		unsigned int numheappages, VoidFuncPtr entryPoint);
 
 struct stackEntry {
-  struct stackEntry *next;
-  snapshot_id snapshotid;
-  int index;
+	struct stackEntry *next;
+	snapshot_id snapshotid;
+	int index;
 };
 
 class SnapshotStack {
  public:
-  MEMALLOC
-  SnapshotStack( );
-  ~SnapshotStack();
-  int backTrackBeforeStep(int seq_index);
-  void snapshotStep(int seq_index);
+	SnapshotStack();
+	~SnapshotStack();
+	int backTrackBeforeStep(int seq_index);
+	void snapshotStep(int seq_index);
 
+	MEMALLOC
  private:
-  struct stackEntry * stack;
+	struct stackEntry *stack;
 };
 
 /* Not sure what it even means to have more than one snapshot object,
    so let's just make a global reference to it.*/
 
-extern SnapshotStack * snapshotObject;
+extern SnapshotStack *snapshotObject;
 #endif

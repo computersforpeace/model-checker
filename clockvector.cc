@@ -43,7 +43,7 @@ void ClockVector::merge(const ClockVector *cv)
 
 	if (cv->num_threads > num_threads) {
 		clock = (modelclock_t *)snapshot_realloc(clock, cv->num_threads * sizeof(modelclock_t));
-		for (int i= num_threads; i < cv->num_threads; i++)
+		for (int i = num_threads; i < cv->num_threads; i++)
 			clock[i] = 0;
 		num_threads = cv->num_threads;
 	}

@@ -155,12 +155,12 @@ void CycleGraph::dumpNodes(FILE *file)
 void CycleGraph::dumpGraphToFile(const char *filename)
 {
 	char buffer[200];
-	sprintf(buffer, "%s.dot",filename);
+	sprintf(buffer, "%s.dot", filename);
 	FILE *file = fopen(buffer, "w");
-	fprintf(file, "digraph %s {\n",filename);
+	fprintf(file, "digraph %s {\n", filename);
 	dumpNodes(file);
-	fprintf(file,"}\n");
-	fclose(file);	
+	fprintf(file, "}\n");
+	fclose(file);
 }
 #endif
 
@@ -189,7 +189,7 @@ bool CycleGraph::checkReachable(const ModelAction *from, const ModelAction *to)
  */
 bool CycleGraph::checkReachable(CycleNode *from, CycleNode *to)
 {
-	std::vector<CycleNode *, ModelAlloc<CycleNode *> > queue;
+	std::vector< CycleNode *, ModelAlloc<CycleNode *> > queue;
 	discovered->reset();
 
 	queue.push_back(from);
@@ -203,7 +203,7 @@ bool CycleGraph::checkReachable(CycleNode *from, CycleNode *to)
 		for (unsigned int i = 0; i < node->getNumEdges(); i++) {
 			CycleNode *next = node->getEdge(i);
 			if (!discovered->contains(next)) {
-				discovered->put(next,next);
+				discovered->put(next, next);
 				queue.push_back(next);
 			}
 		}
@@ -213,7 +213,7 @@ bool CycleGraph::checkReachable(CycleNode *from, CycleNode *to)
 
 bool CycleGraph::checkPromise(const ModelAction *fromact, Promise *promise)
 {
-	std::vector<CycleNode *, ModelAlloc<CycleNode *> > queue;
+	std::vector< CycleNode *, ModelAlloc<CycleNode *> > queue;
 	discovered->reset();
 	CycleNode *from = actionToNode.get(fromact);
 
@@ -230,7 +230,7 @@ bool CycleGraph::checkPromise(const ModelAction *fromact, Promise *promise)
 		for (unsigned int i = 0; i < node->getNumEdges(); i++) {
 			CycleNode *next = node->getEdge(i);
 			if (!discovered->contains(next)) {
-				discovered->put(next,next);
+				discovered->put(next, next);
 				queue.push_back(next);
 			}
 		}

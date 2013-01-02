@@ -20,13 +20,14 @@ SnapshotStack * snapshotObject;
  *	that may contain globals and then configures the snapshotting
  *	library to snapshot them.
  */
-static void SnapshotGlobalSegments(){
+static void SnapshotGlobalSegments()
+{
 	int pid = getpid();
 	char buf[9000], execname[100];
 	FILE *map;
 
 	sprintf(execname, "vmmap -interleaved %d", pid);
-	map=popen(execname, "r");
+	map = popen(execname, "r");
 
 	if (!map) {
 		perror("popen");
@@ -49,7 +50,7 @@ static void SnapshotGlobalSegments(){
 		void *begin, *end;
 
 		//Skip out at the end of the section
-		if (buf[0]=='\n')
+		if (buf[0] == '\n')
 			break;
 
 		sscanf(buf, "%22s %p-%p [%5dK] %c%c%c/%c%c%c SM=%3s %200s\n", type, &begin, &end, &size, &r, &w, &x, &mr, &mw, &mx, smstr, regionname);
@@ -76,7 +77,8 @@ static void get_binary_name(char *buf, size_t len)
  *	that may contain globals and then configures the snapshotting
  *	library to snapshot them.
  */
-static void SnapshotGlobalSegments(){
+static void SnapshotGlobalSegments()
+{
 	char buf[9000];
 	char binary_name[800];
 	FILE *map;
@@ -104,12 +106,14 @@ static void SnapshotGlobalSegments(){
 }
 #endif
 
-SnapshotStack::SnapshotStack(){
+SnapshotStack::SnapshotStack()
+{
 	SnapshotGlobalSegments();
-	stack=NULL;
+	stack = NULL;
 }
 
-SnapshotStack::~SnapshotStack(){
+SnapshotStack::~SnapshotStack()
+{
 }
 
 
@@ -119,24 +123,26 @@ SnapshotStack::~SnapshotStack(){
  * @param seqindex is the sequence number to rollback before.
  * @return is the sequence number we actually rolled back to.
  */
-int SnapshotStack::backTrackBeforeStep(int seqindex) {
-	while(true) {
-		if (stack->index<=seqindex) {
+int SnapshotStack::backTrackBeforeStep(int seqindex)
+{
+	while (true) {
+		if (stack->index <= seqindex) {
 			//have right entry
 			rollBack(stack->snapshotid);
 			return stack->index;
 		}
-		struct stackEntry *tmp=stack;
-		stack=stack->next;
+		struct stackEntry *tmp = stack;
+		stack = stack->next;
 		model_free(tmp);
 	}
 }
 
 /** This method takes a snapshot at the given sequence number. */
-void SnapshotStack::snapshotStep(int seqindex) {
-	struct stackEntry *tmp=(struct stackEntry *)model_malloc(sizeof(struct stackEntry));
-	tmp->next=stack;
-	tmp->index=seqindex;
-	tmp->snapshotid=takeSnapshot();
-	stack=tmp;
+void SnapshotStack::snapshotStep(int seqindex)
+{
+	struct stackEntry *tmp = (struct stackEntry *)model_malloc(sizeof(struct stackEntry));
+	tmp->next = stack;
+	tmp->index = seqindex;
+	tmp->snapshotid = takeSnapshot();
+	stack = tmp;
 }

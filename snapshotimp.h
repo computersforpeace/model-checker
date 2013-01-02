@@ -25,22 +25,22 @@ struct SnapShotPage {
 
 //List the base address of the corresponding page in the backing store so we know where to copy it to
 struct BackingPageRecord {
-	void * basePtrOfPage;
+	void *basePtrOfPage;
 };
 
 //Stuct for each memory region
 struct MemoryRegion {
-	void * basePtr; //base of memory region
+	void *basePtr; //base of memory region
 	int sizeInPages; //size of memory region in pages
 };
 
 //Primary struct for snapshotting system....
 struct SnapShot {
-	struct MemoryRegion * regionsToSnapShot; //This pointer references an array of memory regions to snapshot
-	struct SnapShotPage * backingStore; //This pointer references an array of snapshotpage's that form the backing store
-	void * backingStoreBasePtr; //This pointer references an array of snapshotpage's that form the backing store
-	struct BackingPageRecord * backingRecords; //This pointer references an array of backingpagerecord's (same number of elements as backingstore
-	struct SnapShotRecord * snapShots; //This pointer references the snapshot array
+	struct MemoryRegion *regionsToSnapShot; //This pointer references an array of memory regions to snapshot
+	struct SnapShotPage *backingStore; //This pointer references an array of snapshotpage's that form the backing store
+	void *backingStoreBasePtr; //This pointer references an array of snapshotpage's that form the backing store
+	struct BackingPageRecord *backingRecords; //This pointer references an array of backingpagerecord's (same number of elements as backingstore
+	struct SnapShotRecord *snapShots; //This pointer references the snapshot array
 
 	unsigned int lastSnapShot; //Stores the next snapshot record we should use
 	unsigned int lastBackingPage; //Stores the next backingpage we should use
@@ -66,6 +66,6 @@ struct SnapShot {
 #endif
 
 //Global reference to snapshot data structure
-extern struct SnapShot * snapshotrecord;
+extern struct SnapShot *snapshotrecord;
 
 #endif /* __SNAPSHOTIMP_H__ */

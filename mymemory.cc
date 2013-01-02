@@ -12,7 +12,7 @@
 
 #define REQUESTS_BEFORE_ALLOC 1024
 
-size_t allocatedReqs[ REQUESTS_BEFORE_ALLOC ] = { 0 };
+size_t allocatedReqs[REQUESTS_BEFORE_ALLOC] = { 0 };
 int nextRequest = 0;
 int howManyFreed = 0;
 #if !USE_MPROTECT_SNAPSHOT
@@ -38,11 +38,10 @@ void *model_calloc(size_t count, size_t size)
 	ptr = callocp(count, size);
 	return ptr;
 #else
-	if (!snapshotrecord) {
+	if (!snapshotrecord)
 		createSharedMemory();
-	}
-	if (NULL == sStaticSpace)
-		sStaticSpace = create_mspace_with_base(( void *)( snapshotrecord->mSharedMemoryBase), SHARED_MEMORY_DEFAULT -sizeof(struct SnapShot), 1);
+	if (!sStaticSpace)
+		sStaticSpace = create_mspace_with_base((void *)(snapshotrecord->mSharedMemoryBase), SHARED_MEMORY_DEFAULT - sizeof(struct SnapShot), 1);
 	return mspace_calloc(sStaticSpace, count, size);
 #endif
 }
@@ -66,11 +65,10 @@ void *model_malloc(size_t size)
 	ptr = mallocp(size);
 	return ptr;
 #else
-	if (!snapshotrecord) {
+	if (!snapshotrecord)
 		createSharedMemory();
-	}
-	if (NULL == sStaticSpace)
-		sStaticSpace = create_mspace_with_base(( void *)( snapshotrecord->mSharedMemoryBase), SHARED_MEMORY_DEFAULT -sizeof(struct SnapShot), 1);
+	if (!sStaticSpace)
+		sStaticSpace = create_mspace_with_base((void *)(snapshotrecord->mSharedMemoryBase), SHARED_MEMORY_DEFAULT - sizeof(struct SnapShot), 1);
 	return mspace_malloc(sStaticSpace, size);
 #endif
 }
@@ -114,7 +112,7 @@ void model_free(void *ptr)
 
 	/* get address of libc free */
 	if (!freep) {
-		freep = ( void  ( * )( void *))dlsym(RTLD_NEXT, "free");
+		freep = (void (*)(void *))dlsym(RTLD_NEXT, "free");
 		if ((error = dlerror()) != NULL) {
 			fputs(error, stderr);
 			exit(EXIT_FAILURE);
@@ -126,9 +124,8 @@ void model_free(void *ptr)
 #endif
 }
 
-/** Bootstrap allocation.  Problem is that the dynamic linker calls
- *  require calloc to work and calloc requires the dynamic linker to
- *	work.  */
+/** Bootstrap allocation. Problem is that the dynamic linker calls require
+ *  calloc to work and calloc requires the dynamic linker to work. */
 
 #define BOOTSTRAPBYTES 4096
 char bootstrapmemory[BOOTSTRAPBYTES];
@@ -144,7 +141,7 @@ void * HandleEarlyAllocationRequest(size_t sz)
 		exit(EXIT_FAILURE);
 	}
 
-	void *pointer= (void *)&bootstrapmemory[offset];
+	void *pointer = (void *)&bootstrapmemory[offset];
 	offset += sz;
 	return pointer;
 }

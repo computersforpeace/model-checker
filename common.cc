@@ -47,7 +47,7 @@ void model_print_summary(void)
 
 void assert_hook(void)
 {
-	model_print("Add breakpoint to line %u in file %s.\n",__LINE__,__FILE__);
+	model_print("Add breakpoint to line %u in file %s.\n", __LINE__, __FILE__);
 }
 
 void model_assert(bool expr, const char *file, int line)

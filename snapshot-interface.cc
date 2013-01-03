@@ -148,7 +148,7 @@ int SnapshotStack::backTrackBeforeStep(int seqindex)
 /** This method takes a snapshot at the given sequence number. */
 void SnapshotStack::snapshotStep(int seqindex)
 {
-	stack.push_back(snapshot_entry(seqindex, take_snapshot()));
+	stack.push_back(snapshot_entry(take_snapshot(), seqindex));
 }
 
 void snapshot_stack_init()

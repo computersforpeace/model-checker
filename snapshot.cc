@@ -93,10 +93,10 @@ mprot_snapshotter::mprot_snapshotter(unsigned int backing_pages, unsigned int sn
 	snapShots = (struct SnapShotRecord *)model_malloc(sizeof(struct SnapShotRecord) * snapshots);
 }
 
-/** HandlePF is the page fault handler for mprotect based snapshotting
+/** mprot_handle_pf is the page fault handler for mprotect based snapshotting
  * algorithm.
  */
-static void HandlePF(int sig, siginfo_t *si, void *unused)
+static void mprot_handle_pf(int sig, siginfo_t *si, void *unused)
 {
 	if (si->si_code == SEGV_MAPERR) {
 		model_print("Real Fault at %p\n", si->si_addr);
@@ -138,7 +138,7 @@ static void mprot_snapshot_init(unsigned int numbackingpages,
 	struct sigaction sa;
 	sa.sa_flags = SA_SIGINFO | SA_NODEFER | SA_RESTART | SA_ONSTACK;
 	sigemptyset(&sa.sa_mask);
-	sa.sa_sigaction = HandlePF;
+	sa.sa_sigaction = mprot_handle_pf;
 #ifdef MAC
 	if (sigaction(SIGBUS, &sa, NULL) == -1) {
 		model_print("SIGACTION CANNOT BE INSTALLED\n");
@@ -152,14 +152,14 @@ static void mprot_snapshot_init(unsigned int numbackingpages,
 
 	mprot_snap = new mprot_snapshotter(numbackingpages, numsnapshots, nummemoryregions);
 
-	// EVIL HACK: We need to make sure that calls into the HandlePF method don't cause dynamic links
+	// EVIL HACK: We need to make sure that calls into the mprot_handle_pf method don't cause dynamic links
 	// The problem is that we end up protecting state in the dynamic linker...
 	// Solution is to call our signal handler before we start protecting stuff...
 
 	siginfo_t si;
 	memset(&si, 0, sizeof(si));
 	si.si_addr = ss.ss_sp;
-	HandlePF(SIGSEGV, &si, NULL);
+	mprot_handle_pf(SIGSEGV, &si, NULL);
 	mprot_snap->lastBackingPage--; //remove the fake page we copied
 
 	void *basemySpace = model_malloc((numheappages + 1) * PAGESIZE);

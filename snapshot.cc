@@ -15,12 +15,6 @@
 
 #define FAILURE(mesg) { model_print("failed in the API: %s with errno relative message: %s\n", mesg, strerror(errno)); exit(EXIT_FAILURE); }
 
-#ifdef CONFIG_SSDEBUG
-#define SSDEBUG		model_print
-#else
-#define SSDEBUG(...)	do { } while (0)
-#endif
-
 #if USE_MPROTECT_SNAPSHOT
 /* Each snapshotrecord lists the firstbackingpage that must be written to
  * revert to that snapshot */
@@ -298,7 +292,7 @@ void initSnapshotLibrary(unsigned int numbackingpages,
 			int status;
 			int retVal;
 
-			SSDEBUG("The process id of child is %d and the process id of this process is %d and snapshot id is %d\n",
+			DEBUG("The process id of child is %d and the process id of this process is %d and snapshot id is %d\n",
 			        forkedID, getpid(), snapshotid);
 
 			do {
@@ -353,7 +347,7 @@ snapshot_id takeSnapshot()
 	return snapshot;
 #else
 	swapcontext(&savedUserSnapshotContext, &savedSnapshotContext);
-	SSDEBUG("TAKESNAPSHOT RETURN\n");
+	DEBUG("TAKESNAPSHOT RETURN\n");
 	return snapshotid;
 #endif
 }
@@ -402,7 +396,7 @@ void rollBack(snapshot_id theID)
 	 */
 	if (!sTemp) {
 		sTemp = 1;
-		SSDEBUG("Invoked rollback\n");
+		DEBUG("Invoked rollback\n");
 		exit(EXIT_SUCCESS);
 	}
 	/*

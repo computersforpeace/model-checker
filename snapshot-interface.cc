@@ -58,7 +58,7 @@ static void SnapshotGlobalSegments()
 		if (w == 'w' && (strstr(regionname, MYBINARYNAME) || strstr(regionname, MYLIBRARYNAME))) {
 			size_t len = ((uintptr_t)end - (uintptr_t)begin) / PAGESIZE;
 			if (len != 0)
-				addMemoryRegionToSnapShot(begin, len);
+				snapshot_add_memory_region(begin, len);
 		}
 	}
 	pclose(map);
@@ -98,7 +98,7 @@ static void SnapshotGlobalSegments()
 		if (w == 'w' && (strstr(regionname, binary_name) || strstr(regionname, MYLIBRARYNAME))) {
 			size_t len = ((uintptr_t)end - (uintptr_t)begin) / PAGESIZE;
 			if (len != 0)
-				addMemoryRegionToSnapShot(begin, len);
+				snapshot_add_memory_region(begin, len);
 			DEBUG("%55s: %18p - %18p\t%c%c%c%c\n", regionname, begin, end, r, w, x, p);
 		}
 	}
@@ -128,7 +128,7 @@ int SnapshotStack::backTrackBeforeStep(int seqindex)
 	while (true) {
 		if (stack->index <= seqindex) {
 			//have right entry
-			rollBack(stack->snapshotid);
+			snapshot_roll_back(stack->snapshotid);
 			return stack->index;
 		}
 		struct stackEntry *tmp = stack;
@@ -143,6 +143,6 @@ void SnapshotStack::snapshotStep(int seqindex)
 	struct stackEntry *tmp = (struct stackEntry *)model_malloc(sizeof(struct stackEntry));
 	tmp->next = stack;
 	tmp->index = seqindex;
-	tmp->snapshotid = takeSnapshot();
+	tmp->snapshotid = take_snapshot();
 	stack = tmp;
 }

@@ -174,12 +174,12 @@ static void mprot_snapshot_init(unsigned int numbackingpages,
 	void *basemySpace = model_malloc((numheappages + 1) * PAGESIZE);
 	void *pagealignedbase = PageAlignAddressUpward(basemySpace);
 	user_snapshot_space = create_mspace_with_base(pagealignedbase, numheappages * PAGESIZE, 1);
-	addMemoryRegionToSnapShot(pagealignedbase, numheappages);
+	snapshot_add_memory_region(pagealignedbase, numheappages);
 
 	void *base_model_snapshot_space = model_malloc((numheappages + 1) * PAGESIZE);
 	pagealignedbase = PageAlignAddressUpward(base_model_snapshot_space);
 	model_snapshot_space = create_mspace_with_base(pagealignedbase, numheappages * PAGESIZE, 1);
-	addMemoryRegionToSnapShot(pagealignedbase, numheappages);
+	snapshot_add_memory_region(pagealignedbase, numheappages);
 
 	entryPoint();
 }
@@ -412,8 +412,8 @@ void initSnapshotLibrary(unsigned int numbackingpages,
 #endif
 }
 
-/** The addMemoryRegionToSnapShot function assumes that addr is page aligned. */
-void addMemoryRegionToSnapShot(void *addr, unsigned int numPages)
+/** Assumes that addr is page aligned. */
+void snapshot_add_memory_region(void *addr, unsigned int numPages)
 {
 #if USE_MPROTECT_SNAPSHOT
 	mprot_add_to_snapshot(addr, numPages);
@@ -422,10 +422,10 @@ void addMemoryRegionToSnapShot(void *addr, unsigned int numPages)
 #endif
 }
 
-/** The takeSnapshot function takes a snapshot.
+/** Takes a snapshot of memory.
  * @return The snapshot identifier.
  */
-snapshot_id takeSnapshot()
+snapshot_id take_snapshot()
 {
 #if USE_MPROTECT_SNAPSHOT
 	return mprot_take_snapshot();
@@ -434,10 +434,10 @@ snapshot_id takeSnapshot()
 #endif
 }
 
-/** The rollBack function rollback to the given snapshot identifier.
+/** Rolls the memory state back to the given snapshot identifier.
  *  @param theID is the snapshot identifier to rollback to.
  */
-void rollBack(snapshot_id theID)
+void snapshot_roll_back(snapshot_id theID)
 {
 #if USE_MPROTECT_SNAPSHOT
 	mprot_roll_back(theID);

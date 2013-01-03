@@ -7,13 +7,14 @@
 
 #include "snapshot-interface.h"
 #include "config.h"
+#include "mymemory.h"
 
 void addMemoryRegionToSnapShot(void *ptr, unsigned int numPages);
 snapshot_id takeSnapshot();
 void rollBack(snapshot_id theSnapShot);
 
 #if !USE_MPROTECT_SNAPSHOT
-void createSharedMemory();
+mspace create_shared_mspace();
 #endif
 
 #endif

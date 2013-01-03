@@ -112,7 +112,7 @@ static void HandlePF(int sig, siginfo_t *si, void *unused)
 #endif /* USE_MPROTECT_SNAPSHOT */
 
 #if !USE_MPROTECT_SNAPSHOT
-void createSharedMemory()
+static void createSharedMemory()
 {
 	//step 1. create shared memory.
 	void *memMapBase = mmap(0, SHARED_MEMORY_DEFAULT + STACK_SIZE_DEFAULT, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANON, -1, 0);
@@ -126,6 +126,19 @@ void createSharedMemory()
 	snapshotrecord->mStackSize = STACK_SIZE_DEFAULT;
 	snapshotrecord->mIDToRollback = -1;
 	snapshotrecord->currSnapShotID = 0;
+}
+
+/**
+ * Create a new mspace pointer for the non-snapshotting (i.e., inter-process
+ * shared) memory region. Only for fork-based snapshotting.
+ *
+ * @return The shared memory mspace
+ */
+mspace create_shared_mspace()
+{
+	if (!snapshotrecord)
+		createSharedMemory();
+	return create_mspace_with_base((void *)(snapshotrecord->mSharedMemoryBase), SHARED_MEMORY_DEFAULT - sizeof(struct SnapShot), 1);
 }
 #endif
 

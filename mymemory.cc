@@ -38,10 +38,8 @@ void *model_calloc(size_t count, size_t size)
 	ptr = callocp(count, size);
 	return ptr;
 #else
-	if (!snapshotrecord)
-		createSharedMemory();
 	if (!sStaticSpace)
-		sStaticSpace = create_mspace_with_base((void *)(snapshotrecord->mSharedMemoryBase), SHARED_MEMORY_DEFAULT - sizeof(struct SnapShot), 1);
+		sStaticSpace = create_shared_mspace();
 	return mspace_calloc(sStaticSpace, count, size);
 #endif
 }
@@ -65,10 +63,8 @@ void *model_malloc(size_t size)
 	ptr = mallocp(size);
 	return ptr;
 #else
-	if (!snapshotrecord)
-		createSharedMemory();
 	if (!sStaticSpace)
-		sStaticSpace = create_mspace_with_base((void *)(snapshotrecord->mSharedMemoryBase), SHARED_MEMORY_DEFAULT - sizeof(struct SnapShot), 1);
+		sStaticSpace = create_shared_mspace();
 	return mspace_malloc(sStaticSpace, size);
 #endif
 }

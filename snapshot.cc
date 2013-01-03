@@ -46,8 +46,18 @@ struct MemoryRegion {
 	int sizeInPages; // size of memory region in pages
 };
 
+/** ReturnPageAlignedAddress returns a page aligned address for the
+ * address being added as a side effect the numBytes are also changed.
+ */
+static void * ReturnPageAlignedAddress(void *addr)
+{
+	return (void *)(((uintptr_t)addr) & ~(PAGESIZE - 1));
+}
+
 /* Primary struct for snapshotting system */
 struct mprot_snapshotter {
+	mprot_snapshotter(unsigned int numbackingpages, unsigned int numsnapshots, unsigned int nummemoryregions);
+
 	struct MemoryRegion *regionsToSnapShot; //This pointer references an array of memory regions to snapshot
 	snapshot_page_t *backingStore; //This pointer references an array of snapshotpage's that form the backing store
 	void *backingStoreBasePtr; //This pointer references an array of snapshotpage's that form the backing store
@@ -61,36 +71,26 @@ struct mprot_snapshotter {
 	unsigned int maxRegions; //Stores the max number of memory regions we support
 	unsigned int maxBackingPages; //Stores the total number of backing pages
 	unsigned int maxSnapShots; //Stores the total number of snapshots we allow
+
+	MEMALLOC
 };
 
 static struct mprot_snapshotter *mprot_snap = NULL;
 
-/** ReturnPageAlignedAddress returns a page aligned address for the
- * address being added as a side effect the numBytes are also changed.
- */
-static void * ReturnPageAlignedAddress(void *addr)
+mprot_snapshotter::mprot_snapshotter(unsigned int backing_pages, unsigned int snapshots, unsigned int regions) :
+	lastSnapShot(0),
+	lastBackingPage(0),
+	lastRegion(0),
+	maxRegions(regions),
+	maxBackingPages(backing_pages),
+	maxSnapShots(snapshots)
 {
-	return (void *)(((uintptr_t)addr) & ~(PAGESIZE - 1));
-}
-
-/** The initSnapShotRecord method initialized the snapshotting data
- *  structures for the mprotect based snapshot.
- */
-static void initSnapShotRecord(unsigned int numbackingpages, unsigned int numsnapshots, unsigned int nummemoryregions)
-{
-	mprot_snap = (struct mprot_snapshotter *)model_malloc(sizeof(struct mprot_snapshotter));
-	mprot_snap->regionsToSnapShot = (struct MemoryRegion *)model_malloc(sizeof(struct MemoryRegion) * nummemoryregions);
-	mprot_snap->backingStoreBasePtr = (void *)model_malloc(sizeof(snapshot_page_t) * (numbackingpages + 1));
+	regionsToSnapShot = (struct MemoryRegion *)model_malloc(sizeof(struct MemoryRegion) * regions);
+	backingStoreBasePtr = (void *)model_malloc(sizeof(snapshot_page_t) * (backing_pages + 1));
 	//Page align the backingstorepages
-	mprot_snap->backingStore = (snapshot_page_t *)PageAlignAddressUpward(mprot_snap->backingStoreBasePtr);
-	mprot_snap->backingRecords = (struct BackingPageRecord *)model_malloc(sizeof(struct BackingPageRecord) * numbackingpages);
-	mprot_snap->snapShots = (struct SnapShotRecord *)model_malloc(sizeof(struct SnapShotRecord) * numsnapshots);
-	mprot_snap->lastSnapShot = 0;
-	mprot_snap->lastBackingPage = 0;
-	mprot_snap->lastRegion = 0;
-	mprot_snap->maxRegions = nummemoryregions;
-	mprot_snap->maxBackingPages = numbackingpages;
-	mprot_snap->maxSnapShots = numsnapshots;
+	backingStore = (snapshot_page_t *)PageAlignAddressUpward(backingStoreBasePtr);
+	backingRecords = (struct BackingPageRecord *)model_malloc(sizeof(struct BackingPageRecord) * backing_pages);
+	snapShots = (struct SnapShotRecord *)model_malloc(sizeof(struct SnapShotRecord) * snapshots);
 }
 
 /** HandlePF is the page fault handler for mprotect based snapshotting
@@ -150,7 +150,7 @@ static void mprot_snapshot_init(unsigned int numbackingpages,
 		exit(EXIT_FAILURE);
 	}
 
-	initSnapShotRecord(numbackingpages, numsnapshots, nummemoryregions);
+	mprot_snap = new mprot_snapshotter(numbackingpages, numsnapshots, nummemoryregions);
 
 	// EVIL HACK: We need to make sure that calls into the HandlePF method don't cause dynamic links
 	// The problem is that we end up protecting state in the dynamic linker...

@@ -15,8 +15,8 @@
 #define MYLIBRARYNAME "libmodel.so"
 #define MAPFILE "/proc/self/maps"
 
-struct stackEntry {
-	stackEntry(snapshot_id id, int idx) : snapshotid(id), index(idx) { }
+struct snapshot_entry {
+	snapshot_entry(snapshot_id id, int idx) : snapshotid(id), index(idx) { }
 	snapshot_id snapshotid;
 	int index;
 	MEMALLOC
@@ -24,17 +24,15 @@ struct stackEntry {
 
 class SnapshotStack {
  public:
-	SnapshotStack();
-	~SnapshotStack();
 	int backTrackBeforeStep(int seq_index);
 	void snapshotStep(int seq_index);
 
 	MEMALLOC
  private:
-	std::vector<struct stackEntry, ModelAlloc<struct stackEntry> > stack;
+	std::vector<struct snapshot_entry, ModelAlloc<struct snapshot_entry> > stack;
 };
 
-static SnapshotStack *snapshotObject;
+static SnapshotStack *snap_stack;
 
 #ifdef MAC
 /** The SnapshotGlobalSegments function computes the memory regions
@@ -127,15 +125,6 @@ static void SnapshotGlobalSegments()
 }
 #endif
 
-SnapshotStack::SnapshotStack() : stack()
-{
-	SnapshotGlobalSegments();
-}
-
-SnapshotStack::~SnapshotStack()
-{
-}
-
 /** This method returns to the last snapshot before the inputted
  * sequence number.  This function must be called from the model
  * checking thread and not from a snapshotted stack.
@@ -159,20 +148,21 @@ int SnapshotStack::backTrackBeforeStep(int seqindex)
 /** This method takes a snapshot at the given sequence number. */
 void SnapshotStack::snapshotStep(int seqindex)
 {
-	stack.push_back(stackEntry(seqindex, take_snapshot()));
+	stack.push_back(snapshot_entry(seqindex, take_snapshot()));
 }
 
 void snapshot_stack_init()
 {
-	snapshotObject = new SnapshotStack();
+	snap_stack = new SnapshotStack();
+	SnapshotGlobalSegments();
 }
 
 void snapshot_record(int seq_index)
 {
-	snapshotObject->snapshotStep(seq_index);
+	snap_stack->snapshotStep(seq_index);
 }
 
 int snapshot_backtrack_before(int seq_index)
 {
-	return snapshotObject->backTrackBeforeStep(seq_index);
+	return snap_stack->backTrackBeforeStep(seq_index);
 }

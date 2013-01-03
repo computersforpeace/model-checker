@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <cstring>
 #include <inttypes.h>
+#include <vector>
 
 #include "snapshot-interface.h"
 #include "snapshot.h"
@@ -15,9 +16,10 @@
 #define MAPFILE "/proc/self/maps"
 
 struct stackEntry {
-	struct stackEntry *next;
+	stackEntry(snapshot_id id, int idx) : snapshotid(id), index(idx) { }
 	snapshot_id snapshotid;
 	int index;
+	MEMALLOC
 };
 
 class SnapshotStack {
@@ -29,7 +31,7 @@ class SnapshotStack {
 
 	MEMALLOC
  private:
-	struct stackEntry *stack;
+	std::vector<struct stackEntry, ModelAlloc<struct stackEntry> > stack;
 };
 
 static SnapshotStack *snapshotObject;
@@ -125,10 +127,9 @@ static void SnapshotGlobalSegments()
 }
 #endif
 
-SnapshotStack::SnapshotStack()
+SnapshotStack::SnapshotStack() : stack()
 {
 	SnapshotGlobalSegments();
-	stack = NULL;
 }
 
 SnapshotStack::~SnapshotStack()
@@ -143,28 +144,23 @@ SnapshotStack::~SnapshotStack()
  */
 int SnapshotStack::backTrackBeforeStep(int seqindex)
 {
-	while (true) {
-		if (stack->index <= seqindex) {
-			//have right entry
-			snapshot_roll_back(stack->snapshotid);
-			return stack->index;
-		}
-		struct stackEntry *tmp = stack;
-		stack = stack->next;
-		model_free(tmp);
-	}
+	int i;
+	for (i = (int)stack.size() - 1; i >= 0; i++)
+		if (stack[i].index <= seqindex)
+			break;
+		else
+			stack.pop_back();
+
+	ASSERT(i >= 0);
+	snapshot_roll_back(stack[i].snapshotid);
+	return stack[i].index;
 }
 
 /** This method takes a snapshot at the given sequence number. */
 void SnapshotStack::snapshotStep(int seqindex)
 {
-	struct stackEntry *tmp = (struct stackEntry *)model_malloc(sizeof(struct stackEntry));
-	tmp->next = stack;
-	tmp->index = seqindex;
-	tmp->snapshotid = take_snapshot();
-	stack = tmp;
+	stack.push_back(stackEntry(seqindex, take_snapshot()));
 }
-
 
 void snapshot_stack_init()
 {

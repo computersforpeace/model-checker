@@ -1,9 +1,13 @@
-/** @file cyclegraph.h @brief Data structure to track ordering
- *  constraints on modification order.  The idea is to see whether a
- *  total order exists that satisfies the ordering constriants.*/
+/**
+ * @file cyclegraph.h
+ * @brief Data structure to track ordering constraints on modification order
+ *
+ * Used to determine whether a total order exists that satisfies the ordering
+ * constraints.
+ */
 
-#ifndef CYCLEGRAPH_H
-#define CYCLEGRAPH_H
+#ifndef __CYCLEGRAPH_H__
+#define __CYCLEGRAPH_H__
 
 #include "hashtable.h"
 #include <vector>
@@ -21,17 +25,17 @@ class CycleGraph {
 	CycleGraph();
 	~CycleGraph();
 	void addEdge(const ModelAction *from, const ModelAction *to);
-	bool checkForCycles();
-	bool checkForRMWViolation();
+	bool checkForCycles() const;
+	bool checkForRMWViolation() const;
 	void addRMWEdge(const ModelAction *from, const ModelAction *rmw);
-	bool checkPromise(const ModelAction *from, Promise *p);
-	bool checkReachable(const ModelAction *from, const ModelAction *to);
+	bool checkPromise(const ModelAction *from, Promise *p) const;
+	bool checkReachable(const ModelAction *from, const ModelAction *to) const;
 	void startChanges();
 	void commitChanges();
 	void rollbackChanges();
 #if SUPPORT_MOD_ORDER_DUMP
-	void dumpNodes(FILE *file);
-	void dumpGraphToFile(const char *filename);
+	void dumpNodes(FILE *file) const;
+	void dumpGraphToFile(const char *filename) const;
 #endif
 
 	SNAPSHOTALLOC
@@ -45,7 +49,7 @@ class CycleGraph {
 	std::vector<CycleNode *> nodeList;
 #endif
 
-	bool checkReachable(CycleNode *from, CycleNode *to);
+	bool checkReachable(CycleNode *from, CycleNode *to) const;
 
 	/** @brief A flag: true if this graph contains cycles */
 	bool hasCycles;
@@ -61,7 +65,7 @@ class CycleGraph {
 /** @brief A node within a CycleGraph; corresponds to one ModelAction */
 class CycleNode {
  public:
-	CycleNode(const ModelAction *action);
+	CycleNode(const ModelAction *act);
 	bool addEdge(CycleNode *node);
 	CycleNode * getEdge(unsigned int i) const;
 	unsigned int getNumEdges() const;
@@ -89,4 +93,4 @@ class CycleNode {
 	CycleNode *hasRMW;
 };
 
-#endif
+#endif /* __CYCLEGRAPH_H__ */

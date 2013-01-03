@@ -135,12 +135,12 @@ void CycleGraph::addRMWEdge(const ModelAction *from, const ModelAction *rmw)
 }
 
 #if SUPPORT_MOD_ORDER_DUMP
-void CycleGraph::dumpNodes(FILE *file)
+void CycleGraph::dumpNodes(FILE *file) const
 {
 	for (unsigned int i = 0; i < nodeList.size(); i++) {
 		CycleNode *cn = nodeList[i];
 		const ModelAction *action = cn->getAction();
-		fprintf(file, "N%u [label=\"%u, T%u\"];\n",action->get_seq_number(),action->get_seq_number(), action->get_tid());
+		fprintf(file, "N%u [label=\"%u, T%u\"];\n", action->get_seq_number(), action->get_seq_number(), action->get_tid());
 		if (cn->getRMW() != NULL) {
 			fprintf(file, "N%u -> N%u[style=dotted];\n", action->get_seq_number(), cn->getRMW()->getAction()->get_seq_number());
 		}
@@ -152,7 +152,7 @@ void CycleGraph::dumpNodes(FILE *file)
 	}
 }
 
-void CycleGraph::dumpGraphToFile(const char *filename)
+void CycleGraph::dumpGraphToFile(const char *filename) const
 {
 	char buffer[200];
 	sprintf(buffer, "%s.dot", filename);
@@ -170,7 +170,7 @@ void CycleGraph::dumpGraphToFile(const char *filename)
  * @param to The ModelAction to reach
  * @return True, @a from can reach @a to; otherwise, false
  */
-bool CycleGraph::checkReachable(const ModelAction *from, const ModelAction *to)
+bool CycleGraph::checkReachable(const ModelAction *from, const ModelAction *to) const
 {
 	CycleNode *fromnode = actionToNode.get(from);
 	CycleNode *tonode = actionToNode.get(to);
@@ -187,7 +187,7 @@ bool CycleGraph::checkReachable(const ModelAction *from, const ModelAction *to)
  * @param to The CycleNode to reach
  * @return True, @a from can reach @a to; otherwise, false
  */
-bool CycleGraph::checkReachable(CycleNode *from, CycleNode *to)
+bool CycleGraph::checkReachable(CycleNode *from, CycleNode *to) const
 {
 	std::vector< CycleNode *, ModelAlloc<CycleNode *> > queue;
 	discovered->reset();
@@ -211,7 +211,7 @@ bool CycleGraph::checkReachable(CycleNode *from, CycleNode *to)
 	return false;
 }
 
-bool CycleGraph::checkPromise(const ModelAction *fromact, Promise *promise)
+bool CycleGraph::checkPromise(const ModelAction *fromact, Promise *promise) const
 {
 	std::vector< CycleNode *, ModelAlloc<CycleNode *> > queue;
 	discovered->reset();
@@ -256,7 +256,8 @@ void CycleGraph::commitChanges()
 }
 
 /** Rollback changes to the previous commit. */
-void CycleGraph::rollbackChanges() {
+void CycleGraph::rollbackChanges()
+{
 	for (unsigned int i = 0; i < rollbackvector.size(); i++) {
 		rollbackvector[i]->popEdge();
 	}
@@ -272,20 +273,22 @@ void CycleGraph::rollbackChanges() {
 }
 
 /** @returns whether a CycleGraph contains cycles. */
-bool CycleGraph::checkForCycles() {
+bool CycleGraph::checkForCycles() const
+{
 	return hasCycles;
 }
 
-bool CycleGraph::checkForRMWViolation() {
+bool CycleGraph::checkForRMWViolation() const
+{
 	return hasRMWViolation;
 }
 
 /**
- * Constructor for a CycleNode.
- * @param modelaction The ModelAction for this node
+ * @brief Constructor for a CycleNode
+ * @param act The ModelAction for this node
  */
-CycleNode::CycleNode(const ModelAction *modelaction) :
-	action(modelaction),
+CycleNode::CycleNode(const ModelAction *act) :
+	action(act),
 	hasRMW(NULL)
 {
 }

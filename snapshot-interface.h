@@ -2,10 +2,8 @@
  *  @brief C++ layer on top of snapshotting system.
  */
 
-
 #ifndef __SNAPINTERFACE_H
 #define __SNAPINTERFACE_H
-#include "mymemory.h"
 
 typedef unsigned int snapshot_id;
 
@@ -14,26 +12,8 @@ void initSnapshotLibrary(unsigned int numbackingpages,
 		unsigned int numsnapshots, unsigned int nummemoryregions,
 		unsigned int numheappages, VoidFuncPtr entryPoint);
 
-struct stackEntry {
-	struct stackEntry *next;
-	snapshot_id snapshotid;
-	int index;
-};
+void snapshot_stack_init();
+void snapshot_record(int seq_index);
+int snapshot_backtrack_before(int seq_index);
 
-class SnapshotStack {
- public:
-	SnapshotStack();
-	~SnapshotStack();
-	int backTrackBeforeStep(int seq_index);
-	void snapshotStep(int seq_index);
-
-	MEMALLOC
- private:
-	struct stackEntry *stack;
-};
-
-/* Not sure what it even means to have more than one snapshot object,
-   so let's just make a global reference to it.*/
-
-extern SnapshotStack *snapshotObject;
 #endif

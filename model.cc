@@ -159,7 +159,7 @@ void ModelChecker::reset_to_initial_state()
 	/* Print all model-checker output before rollback */
 	fflush(model_out);
 
-	snapshotObject->backTrackBeforeStep(0);
+	snapshot_backtrack_before(0);
 }
 
 /** @return a thread ID for a new Thread */

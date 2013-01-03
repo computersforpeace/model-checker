@@ -6,6 +6,7 @@
 #include "snapshot-interface.h"
 #include "snapshot.h"
 #include "common.h"
+#include "mymemory.h"
 
 /* MYBINARYNAME only works because our pathname usually includes 'model' (e.g.,
  * /.../model-checker/test/userprog.o) */
@@ -13,7 +14,25 @@
 #define MYLIBRARYNAME "libmodel.so"
 #define MAPFILE "/proc/self/maps"
 
-SnapshotStack *snapshotObject;
+struct stackEntry {
+	struct stackEntry *next;
+	snapshot_id snapshotid;
+	int index;
+};
+
+class SnapshotStack {
+ public:
+	SnapshotStack();
+	~SnapshotStack();
+	int backTrackBeforeStep(int seq_index);
+	void snapshotStep(int seq_index);
+
+	MEMALLOC
+ private:
+	struct stackEntry *stack;
+};
+
+static SnapshotStack *snapshotObject;
 
 #ifdef MAC
 /** The SnapshotGlobalSegments function computes the memory regions
@@ -144,4 +163,20 @@ void SnapshotStack::snapshotStep(int seqindex)
 	tmp->index = seqindex;
 	tmp->snapshotid = take_snapshot();
 	stack = tmp;
+}
+
+
+void snapshot_stack_init()
+{
+	snapshotObject = new SnapshotStack();
+}
+
+void snapshot_record(int seq_index)
+{
+	snapshotObject->snapshotStep(seq_index);
+}
+
+int snapshot_backtrack_before(int seq_index)
+{
+	return snapshotObject->backTrackBeforeStep(seq_index);
 }

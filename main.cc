@@ -123,11 +123,10 @@ static void model_main()
 	//Initialize race detector
 	initRaceDetector();
 
-	//Create the singleton SnapshotStack object
-	snapshotObject = new SnapshotStack();
+	snapshot_stack_init();
 
 	model = new ModelChecker(params);
-	snapshotObject->snapshotStep(0);
+	snapshot_record(0);
 	model->run();
 	delete model;
 

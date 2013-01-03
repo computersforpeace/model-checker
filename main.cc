@@ -13,7 +13,8 @@
 #include "model.h"
 #include "snapshot-interface.h"
 
-static void param_defaults(struct model_params * params) {
+static void param_defaults(struct model_params *params)
+{
 	params->maxreads = 0;
 	params->maxfuturedelay = 100;
 	params->fairwindow = 0;
@@ -24,7 +25,8 @@ static void param_defaults(struct model_params * params) {
 	params->verbose = 0;
 }
 
-static void print_usage(struct model_params *params) {
+static void print_usage(struct model_params *params)
+{
 	/* Reset defaults before printing */
 	param_defaults(params);
 
@@ -52,7 +54,8 @@ params->maxreads, params->maxfuturevalues, params->maxfuturedelay, params->expir
 	exit(EXIT_SUCCESS);
 }
 
-static void parse_options(struct model_params *params, int argc, char **argv) {
+static void parse_options(struct model_params *params, int argc, char **argv)
+{
 	const char *shortopts = "hm:M:s:S:f:e:b:v";
 	int opt;
 	bool error = false;
@@ -109,7 +112,8 @@ int main_argc;
 char **main_argv;
 
 /** The model_main function contains the main model checking loop. */
-static void model_main() {
+static void model_main()
+{
 	struct model_params params;
 
 	param_defaults(&params);
@@ -134,7 +138,8 @@ static void model_main() {
  * Main function.  Just initializes snapshotting library and the
  * snapshotting library calls the model_main function.
  */
-int main(int argc, char ** argv) {
+int main(int argc, char **argv)
+{
 	main_argc = argc;
 	main_argv = argv;
 

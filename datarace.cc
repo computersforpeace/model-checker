@@ -14,38 +14,41 @@ void *memory_top;
 
 
 /** This function initialized the data race detector. */
-void initRaceDetector() {
+void initRaceDetector()
+{
 	root = (struct ShadowTable *)snapshot_calloc(sizeof(struct ShadowTable), 1);
-	memory_base = snapshot_calloc(sizeof(struct ShadowBaseTable)*SHADOWBASETABLES, 1);
-	memory_top = ((char *)memory_base) + sizeof(struct ShadowBaseTable)*SHADOWBASETABLES;
+	memory_base = snapshot_calloc(sizeof(struct ShadowBaseTable) * SHADOWBASETABLES, 1);
+	memory_top = ((char *)memory_base) + sizeof(struct ShadowBaseTable) * SHADOWBASETABLES;
 }
 
-void * table_calloc(size_t size) {
-	if ((((char *)memory_base)+size)>memory_top) {
+void * table_calloc(size_t size)
+{
+	if ((((char *)memory_base) + size) > memory_top) {
 		return snapshot_calloc(size, 1);
 	} else {
-		void *tmp=memory_base;
-		memory_base=((char *)memory_base)+size;
+		void *tmp = memory_base;
+		memory_base = ((char *)memory_base) + size;
 		return tmp;
 	}
 }
 
 /** This function looks up the entry in the shadow table corresponding to a
  * given address.*/
-static uint64_t * lookupAddressEntry(const void * address) {
-	struct ShadowTable *currtable=root;
+static uint64_t * lookupAddressEntry(const void *address)
+{
+	struct ShadowTable *currtable = root;
 #if BIT48
-	currtable=(struct ShadowTable *) currtable->array[(((uintptr_t)address)>>32)&MASK16BIT];
-	if (currtable==NULL) {
-		currtable = (struct ShadowTable *)(root->array[(((uintptr_t)address)>>32)&MASK16BIT] = table_calloc(sizeof(struct ShadowTable)));
+	currtable = (struct ShadowTable *) currtable->array[(((uintptr_t)address) >> 32) & MASK16BIT];
+	if (currtable == NULL) {
+		currtable = (struct ShadowTable *)(root->array[(((uintptr_t)address) >> 32) & MASK16BIT] = table_calloc(sizeof(struct ShadowTable)));
 	}
 #endif
 
-	struct ShadowBaseTable * basetable=(struct ShadowBaseTable *) currtable->array[(((uintptr_t)address)>>16)&MASK16BIT];
-	if (basetable==NULL) {
-		basetable = (struct ShadowBaseTable *)(currtable->array[(((uintptr_t)address)>>16)&MASK16BIT] = table_calloc(sizeof(struct ShadowBaseTable)));
+	struct ShadowBaseTable *basetable = (struct ShadowBaseTable *)currtable->array[(((uintptr_t)address) >> 16) & MASK16BIT];
+	if (basetable == NULL) {
+		basetable = (struct ShadowBaseTable *)(currtable->array[(((uintptr_t)address) >> 16) & MASK16BIT] = table_calloc(sizeof(struct ShadowBaseTable)));
 	}
-	return &basetable->array[((uintptr_t)address)&MASK16BIT];
+	return &basetable->array[((uintptr_t)address) & MASK16BIT];
 }
 
 /**
@@ -67,8 +70,9 @@ static bool clock_may_race(ClockVector *clock1, thread_id_t tid1,
  * Expands a record from the compact form to the full form.  This is
  * necessary for multiple readers or for very large thread ids or time
  * stamps. */
-static void expandRecord(uint64_t * shadow) {
-	uint64_t shadowval=*shadow;
+static void expandRecord(uint64_t *shadow)
+{
+	uint64_t shadowval = *shadow;
 
 	modelclock_t readClock = READVECTOR(shadowval);
 	thread_id_t readThread = int_to_id(RDTHREADID(shadowval));
@@ -76,29 +80,30 @@ static void expandRecord(uint64_t * shadow) {
 	thread_id_t writeThread = int_to_id(WRTHREADID(shadowval));
 
 	struct RaceRecord *record = (struct RaceRecord *)snapshot_calloc(1, sizeof(struct RaceRecord));
-	record->writeThread=writeThread;
-	record->writeClock=writeClock;
+	record->writeThread = writeThread;
+	record->writeClock = writeClock;
 
-	if (readClock!=0) {
-		record->capacity=INITCAPACITY;
-		record->thread = (thread_id_t *)snapshot_malloc(sizeof(thread_id_t)*record->capacity);
-		record->readClock = (modelclock_t *)snapshot_malloc(sizeof(modelclock_t)*record->capacity);
-		record->numReads=1;
-		record->thread[0]=readThread;
-		record->readClock[0]=readClock;
+	if (readClock != 0) {
+		record->capacity = INITCAPACITY;
+		record->thread = (thread_id_t *)snapshot_malloc(sizeof(thread_id_t) * record->capacity);
+		record->readClock = (modelclock_t *)snapshot_malloc(sizeof(modelclock_t) * record->capacity);
+		record->numReads = 1;
+		record->thread[0] = readThread;
+		record->readClock[0] = readClock;
 	}
-	*shadow=(uint64_t) record;
+	*shadow = (uint64_t) record;
 }
 
 /** This function is called when we detect a data race.*/
-static void reportDataRace(thread_id_t oldthread, modelclock_t oldclock, bool isoldwrite, ModelAction *newaction, bool isnewwrite, const void *address) {
+static void reportDataRace(thread_id_t oldthread, modelclock_t oldclock, bool isoldwrite, ModelAction *newaction, bool isnewwrite, const void *address)
+{
 	struct DataRace *race = (struct DataRace *)snapshot_malloc(sizeof(struct DataRace));
-	race->oldthread=oldthread;
-	race->oldclock=oldclock;
-	race->isoldwrite=isoldwrite;
-	race->newaction=newaction;
-	race->isnewwrite=isnewwrite;
-	race->address=address;
+	race->oldthread = oldthread;
+	race->oldclock = oldclock;
+	race->isoldwrite = isoldwrite;
+	race->newaction = newaction;
+	race->isnewwrite = isnewwrite;
+	race->address = address;
 	unrealizedraces.push_back(race);
 
 	/* If the race is realized, bail out now. */
@@ -115,7 +120,8 @@ static void reportDataRace(thread_id_t oldthread, modelclock_t oldclock, bool is
  *
  * @return True if any data races were realized
  */
-bool checkDataRaces() {
+bool checkDataRaces()
+{
 	if (model->isfeasibleprefix()) {
 		bool race_asserted = false;
 		/* Prune the non-racing unrealized dataraces */
@@ -156,12 +162,13 @@ void assert_race(struct DataRace *race)
 }
 
 /** This function does race detection for a write on an expanded record. */
-void fullRaceCheckWrite(thread_id_t thread, void *location, uint64_t * shadow, ClockVector *currClock) {
-	struct RaceRecord * record=(struct RaceRecord *) (*shadow);
+void fullRaceCheckWrite(thread_id_t thread, void *location, uint64_t *shadow, ClockVector *currClock)
+{
+	struct RaceRecord *record = (struct RaceRecord *)(*shadow);
 
 	/* Check for datarace against last read. */
 
-	for(int i=0;i<record->numReads;i++) {
+	for (int i = 0; i < record->numReads; i++) {
 		modelclock_t readClock = record->readClock[i];
 		thread_id_t readThread = record->thread[i];
 
@@ -184,19 +191,20 @@ void fullRaceCheckWrite(thread_id_t thread, void *location, uint64_t * shadow, C
 		reportDataRace(writeThread, writeClock, true, model->get_parent_action(thread), true, location);
 	}
 
-	record->numReads=0;
-	record->writeThread=thread;
+	record->numReads = 0;
+	record->writeThread = thread;
 	modelclock_t ourClock = currClock->getClock(thread);
-	record->writeClock=ourClock;
+	record->writeClock = ourClock;
 }
 
 /** This function does race detection on a write. */
-void raceCheckWrite(thread_id_t thread, void *location, ClockVector *currClock) {
-	uint64_t * shadow=lookupAddressEntry(location);
-	uint64_t shadowval=*shadow;
+void raceCheckWrite(thread_id_t thread, void *location, ClockVector *currClock)
+{
+	uint64_t *shadow = lookupAddressEntry(location);
+	uint64_t shadowval = *shadow;
 
 	/* Do full record */
-	if (shadowval!=0&&!ISSHORTRECORD(shadowval)) {
+	if (shadowval != 0 && !ISSHORTRECORD(shadowval)) {
 		fullRaceCheckWrite(thread, location, shadow, currClock);
 		return;
 	}
@@ -234,8 +242,9 @@ void raceCheckWrite(thread_id_t thread, void *location, ClockVector *currClock) 
 }
 
 /** This function does race detection on a read for an expanded record. */
-void fullRaceCheckRead(thread_id_t thread, const void *location, uint64_t * shadow, ClockVector *currClock) {
-	struct RaceRecord * record=(struct RaceRecord *) (*shadow);
+void fullRaceCheckRead(thread_id_t thread, const void *location, uint64_t *shadow, ClockVector *currClock)
+{
+	struct RaceRecord *record = (struct RaceRecord *) (*shadow);
 
 	/* Check for datarace against last write. */
 
@@ -249,9 +258,9 @@ void fullRaceCheckRead(thread_id_t thread, const void *location, uint64_t * shad
 
 	/* Shorten vector when possible */
 
-	int copytoindex=0;
+	int copytoindex = 0;
 
-	for(int i=0;i<record->numReads;i++) {
+	for (int i = 0; i < record->numReads; i++) {
 		modelclock_t readClock = record->readClock[i];
 		thread_id_t readThread = record->thread[i];
 
@@ -263,41 +272,42 @@ void fullRaceCheckRead(thread_id_t thread, const void *location, uint64_t * shad
 
 		if (clock_may_race(currClock, thread, readClock, readThread)) {
 			/* Still need this read in vector */
-			if (copytoindex!=i) {
-				record->readClock[copytoindex]=record->readClock[i];
-				record->thread[copytoindex]=record->thread[i];
+			if (copytoindex != i) {
+				record->readClock[copytoindex] = record->readClock[i];
+				record->thread[copytoindex] = record->thread[i];
 			}
 			copytoindex++;
 		}
 	}
 
-	if (copytoindex>=record->capacity) {
-		int newCapacity=record->capacity*2;
-		thread_id_t *newthread = (thread_id_t *)snapshot_malloc(sizeof(thread_id_t)*newCapacity);
-		modelclock_t *newreadClock =( modelclock_t *)snapshot_malloc(sizeof(modelclock_t)*newCapacity);
-		std::memcpy(newthread, record->thread, record->capacity*sizeof(thread_id_t));
-		std::memcpy(newreadClock, record->readClock, record->capacity*sizeof(modelclock_t));
+	if (copytoindex >= record->capacity) {
+		int newCapacity = record->capacity * 2;
+		thread_id_t *newthread = (thread_id_t *)snapshot_malloc(sizeof(thread_id_t) * newCapacity);
+		modelclock_t *newreadClock = (modelclock_t *)snapshot_malloc(sizeof(modelclock_t) * newCapacity);
+		std::memcpy(newthread, record->thread, record->capacity * sizeof(thread_id_t));
+		std::memcpy(newreadClock, record->readClock, record->capacity * sizeof(modelclock_t));
 		snapshot_free(record->readClock);
 		snapshot_free(record->thread);
-		record->readClock=newreadClock;
-		record->thread=newthread;
-		record->capacity=newCapacity;
+		record->readClock = newreadClock;
+		record->thread = newthread;
+		record->capacity = newCapacity;
 	}
 
 	modelclock_t ourClock = currClock->getClock(thread);
 
-	record->thread[copytoindex]=thread;
-	record->readClock[copytoindex]=ourClock;
-	record->numReads=copytoindex+1;
+	record->thread[copytoindex] = thread;
+	record->readClock[copytoindex] = ourClock;
+	record->numReads = copytoindex + 1;
 }
 
 /** This function does race detection on a read. */
-void raceCheckRead(thread_id_t thread, const void *location, ClockVector *currClock) {
-	uint64_t * shadow=lookupAddressEntry(location);
-	uint64_t shadowval=*shadow;
+void raceCheckRead(thread_id_t thread, const void *location, ClockVector *currClock)
+{
+	uint64_t *shadow = lookupAddressEntry(location);
+	uint64_t shadowval = *shadow;
 
 	/* Do full record */
-	if (shadowval!=0&&!ISSHORTRECORD(shadowval)) {
+	if (shadowval != 0 && !ISSHORTRECORD(shadowval)) {
 		fullRaceCheckRead(thread, location, shadow, currClock);
 		return;
 	}

@@ -13,7 +13,7 @@
 #define MYLIBRARYNAME "libmodel.so"
 #define MAPFILE "/proc/self/maps"
 
-SnapshotStack * snapshotObject;
+SnapshotStack *snapshotObject;
 
 #ifdef MAC
 /** The SnapshotGlobalSegments function computes the memory regions
@@ -115,7 +115,6 @@ SnapshotStack::SnapshotStack()
 SnapshotStack::~SnapshotStack()
 {
 }
-
 
 /** This method returns to the last snapshot before the inputted
  * sequence number.  This function must be called from the model

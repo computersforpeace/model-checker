@@ -25,7 +25,7 @@ static void * PageAlignAddressUpward(void *addr)
 
 #if USE_MPROTECT_SNAPSHOT
 
-/* Each snapshotrecord lists the firstbackingpage that must be written to
+/* Each SnapShotRecord lists the firstbackingpage that must be written to
  * revert to that snapshot */
 struct SnapShotRecord {
 	unsigned int firstBackingPage;

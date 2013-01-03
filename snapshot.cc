@@ -57,6 +57,7 @@ static void * ReturnPageAlignedAddress(void *addr)
 /* Primary struct for snapshotting system */
 struct mprot_snapshotter {
 	mprot_snapshotter(unsigned int numbackingpages, unsigned int numsnapshots, unsigned int nummemoryregions);
+	~mprot_snapshotter();
 
 	struct MemoryRegion *regionsToSnapShot; //This pointer references an array of memory regions to snapshot
 	snapshot_page_t *backingStore; //This pointer references an array of snapshotpage's that form the backing store
@@ -91,6 +92,14 @@ mprot_snapshotter::mprot_snapshotter(unsigned int backing_pages, unsigned int sn
 	backingStore = (snapshot_page_t *)PageAlignAddressUpward(backingStoreBasePtr);
 	backingRecords = (struct BackingPageRecord *)model_malloc(sizeof(struct BackingPageRecord) * backing_pages);
 	snapShots = (struct SnapShotRecord *)model_malloc(sizeof(struct SnapShotRecord) * snapshots);
+}
+
+mprot_snapshotter::~mprot_snapshotter()
+{
+	model_free(regionsToSnapShot);
+	model_free(backingStoreBasePtr);
+	model_free(backingRecords);
+	model_free(snapShots);
 }
 
 /** mprot_handle_pf is the page fault handler for mprotect based snapshotting

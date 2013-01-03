@@ -124,7 +124,7 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift = 0, void * 
 	}
 
 	/** Lookup the corresponding value for the given key. */
-	_Val get(_Key key) {
+	_Val get(_Key key) const {
 		struct hashlistnode<_Key, _Val> *search;
 
 		unsigned int index = ((_KeyInt)key) >> _Shift;
@@ -140,7 +140,7 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift = 0, void * 
 	}
 
 	/** Check whether the table contains a value for the given key. */
-	bool contains(_Key key) {
+	bool contains(_Key key) const {
 		struct hashlistnode<_Key, _Val> *search;
 
 		unsigned int index = ((_KeyInt)key) >> _Shift;

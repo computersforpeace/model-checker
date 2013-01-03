@@ -66,9 +66,9 @@ static void initSnapShotRecord(unsigned int numbackingpages, unsigned int numsna
 {
 	snapshotrecord = (struct SnapShot *)model_malloc(sizeof(struct SnapShot));
 	snapshotrecord->regionsToSnapShot = (struct MemoryRegion *)model_malloc(sizeof(struct MemoryRegion) * nummemoryregions);
-	snapshotrecord->backingStoreBasePtr = (struct SnapShotPage *)model_malloc(sizeof(struct SnapShotPage) * (numbackingpages + 1));
+	snapshotrecord->backingStoreBasePtr = (void *)model_malloc(sizeof(snapshot_page_t) * (numbackingpages + 1));
 	//Page align the backingstorepages
-	snapshotrecord->backingStore = (struct SnapShotPage *)PageAlignAddressUpward(snapshotrecord->backingStoreBasePtr);
+	snapshotrecord->backingStore = (snapshot_page_t *)PageAlignAddressUpward(snapshotrecord->backingStoreBasePtr);
 	snapshotrecord->backingRecords = (struct BackingPageRecord *)model_malloc(sizeof(struct BackingPageRecord) * numbackingpages);
 	snapshotrecord->snapShots = (struct SnapShotRecord *)model_malloc(sizeof(struct SnapShotRecord) * numsnapshots);
 	snapshotrecord->lastSnapShot = 0;
@@ -100,11 +100,11 @@ static void HandlePF(int sig, siginfo_t *si, void *unused)
 	}
 
 	//copy page
-	memcpy(&(snapshotrecord->backingStore[backingpage]), addr, sizeof(struct SnapShotPage));
+	memcpy(&(snapshotrecord->backingStore[backingpage]), addr, sizeof(snapshot_page_t));
 	//remember where to copy page back to
 	snapshotrecord->backingRecords[backingpage].basePtrOfPage = addr;
 	//set protection to read/write
-	if (mprotect(addr, sizeof(struct SnapShotPage), PROT_READ | PROT_WRITE)) {
+	if (mprotect(addr, sizeof(snapshot_page_t), PROT_READ | PROT_WRITE)) {
 		perror("mprotect");
 		// Handle error by quitting?
 	}
@@ -270,7 +270,7 @@ snapshot_id takeSnapshot()
 {
 #if USE_MPROTECT_SNAPSHOT
 	for (unsigned int region = 0; region < snapshotrecord->lastRegion; region++) {
-		if (mprotect(snapshotrecord->regionsToSnapShot[region].basePtr, snapshotrecord->regionsToSnapShot[region].sizeInPages * sizeof(struct SnapShotPage), PROT_READ) == -1) {
+		if (mprotect(snapshotrecord->regionsToSnapShot[region].basePtr, snapshotrecord->regionsToSnapShot[region].sizeInPages * sizeof(snapshot_page_t), PROT_READ) == -1) {
 			perror("mprotect");
 			model_print("Failed to mprotect inside of takeSnapShot\n");
 			exit(EXIT_FAILURE);
@@ -299,7 +299,7 @@ void rollBack(snapshot_id theID)
 #if USE_MPROTECT_SNAPSHOT == 2
 	if (snapshotrecord->lastSnapShot == (theID + 1)) {
 		for (unsigned int page = snapshotrecord->snapShots[theID].firstBackingPage; page < snapshotrecord->lastBackingPage; page++) {
-			memcpy(snapshotrecord->backingRecords[page].basePtrOfPage, &snapshotrecord->backingStore[page], sizeof(struct SnapShotPage));
+			memcpy(snapshotrecord->backingRecords[page].basePtrOfPage, &snapshotrecord->backingStore[page], sizeof(snapshot_page_t));
 		}
 		return;
 	}
@@ -308,7 +308,7 @@ void rollBack(snapshot_id theID)
 #if USE_MPROTECT_SNAPSHOT
 	HashTable< void *, bool, uintptr_t, 4, model_malloc, model_calloc, model_free> duplicateMap;
 	for (unsigned int region = 0; region < snapshotrecord->lastRegion; region++) {
-		if (mprotect(snapshotrecord->regionsToSnapShot[region].basePtr, snapshotrecord->regionsToSnapShot[region].sizeInPages * sizeof(struct SnapShotPage), PROT_READ | PROT_WRITE) == -1) {
+		if (mprotect(snapshotrecord->regionsToSnapShot[region].basePtr, snapshotrecord->regionsToSnapShot[region].sizeInPages * sizeof(snapshot_page_t), PROT_READ | PROT_WRITE) == -1) {
 			perror("mprotect");
 			model_print("Failed to mprotect inside of takeSnapShot\n");
 			exit(EXIT_FAILURE);
@@ -317,7 +317,7 @@ void rollBack(snapshot_id theID)
 	for (unsigned int page = snapshotrecord->snapShots[theID].firstBackingPage; page < snapshotrecord->lastBackingPage; page++) {
 		if (!duplicateMap.contains(snapshotrecord->backingRecords[page].basePtrOfPage)) {
 			duplicateMap.put(snapshotrecord->backingRecords[page].basePtrOfPage, true);
-			memcpy(snapshotrecord->backingRecords[page].basePtrOfPage, &snapshotrecord->backingStore[page], sizeof(struct SnapShotPage));
+			memcpy(snapshotrecord->backingRecords[page].basePtrOfPage, &snapshotrecord->backingStore[page], sizeof(snapshot_page_t));
 		}
 	}
 	snapshotrecord->lastSnapShot = theID;

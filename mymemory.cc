@@ -7,7 +7,6 @@
 
 #include "mymemory.h"
 #include "snapshot.h"
-#include "snapshotimp.h"
 #include "common.h"
 
 #define REQUESTS_BEFORE_ALLOC 1024

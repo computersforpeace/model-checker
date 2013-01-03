@@ -146,5 +146,5 @@ int main(int argc, char **argv)
 	redirect_output();
 
 	/* Let's jump in quickly and start running stuff */
-	initSnapshotLibrary(10000, 1024, 1024, 4000, &model_main);
+	snapshot_system_init(10000, 1024, 1024, 4000, &model_main);
 }

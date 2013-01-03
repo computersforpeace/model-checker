@@ -1,5 +1,6 @@
-/** @file snapshot-interface.h
- *  @brief C++ layer on top of snapshotting system.
+/**
+ * @file snapshot-interface.h
+ * @brief C interface layer on top of snapshotting system
  */
 
 #ifndef __SNAPINTERFACE_H
@@ -8,7 +9,7 @@
 typedef unsigned int snapshot_id;
 
 typedef void (*VoidFuncPtr)();
-void initSnapshotLibrary(unsigned int numbackingpages,
+void snapshot_system_init(unsigned int numbackingpages,
 		unsigned int numsnapshots, unsigned int nummemoryregions,
 		unsigned int numheappages, VoidFuncPtr entryPoint);
 

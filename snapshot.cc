@@ -398,10 +398,11 @@ static void fork_roll_back(snapshot_id theID)
 
 #endif /* !USE_MPROTECT_SNAPSHOT */
 
-/** The initSnapshotLibrary function initializes the snapshot library.
- *  @param entryPoint the function that should run the program.
+/**
+ * @brief Initializes the snapshot system
+ * @param entryPoint the function that should run the program.
  */
-void initSnapshotLibrary(unsigned int numbackingpages,
+void snapshot_system_init(unsigned int numbackingpages,
 		unsigned int numsnapshots, unsigned int nummemoryregions,
 		unsigned int numheappages, VoidFuncPtr entryPoint)
 {

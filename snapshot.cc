@@ -15,7 +15,16 @@
 
 #define FAILURE(mesg) { model_print("failed in the API: %s with errno relative message: %s\n", mesg, strerror(errno)); exit(EXIT_FAILURE); }
 
+/** PageAlignedAdressUpdate return a page aligned address for the
+ * address being added as a side effect the numBytes are also changed.
+ */
+static void * PageAlignAddressUpward(void *addr)
+{
+	return (void *)((((uintptr_t)addr) + PAGESIZE - 1) & ~(PAGESIZE - 1));
+}
+
 #if USE_MPROTECT_SNAPSHOT
+
 /* Each snapshotrecord lists the firstbackingpage that must be written to
  * revert to that snapshot */
 struct SnapShotRecord {
@@ -54,50 +63,7 @@ struct SnapShot {
 	unsigned int maxSnapShots; //Stores the total number of snapshots we allow
 };
 
-#else
-
-#include <ucontext.h>
-
-#define SHARED_MEMORY_DEFAULT  (100 * ((size_t)1 << 20)) // 100mb for the shared memory
-#define STACK_SIZE_DEFAULT      (((size_t)1 << 20) * 20)  // 20 mb out of the above 100 mb for my stack
-
-struct SnapShot {
-	void *mSharedMemoryBase;
-	void *mStackBase;
-	size_t mStackSize;
-	volatile snapshot_id mIDToRollback;
-	ucontext_t mContextToRollback;
-	snapshot_id currSnapShotID;
-};
-#endif
-
 static struct SnapShot *snapshotrecord = NULL;
-
-/** PageAlignedAdressUpdate return a page aligned address for the
- * address being added as a side effect the numBytes are also changed.
- */
-static void * PageAlignAddressUpward(void *addr)
-{
-	return (void *)((((uintptr_t)addr) + PAGESIZE - 1) & ~(PAGESIZE - 1));
-}
-
-#if !USE_MPROTECT_SNAPSHOT
-/** @statics
-*   These variables are necessary because the stack is shared region and
-*   there exists a race between all processes executing the same function.
-*   To avoid the problem above, we require variables allocated in 'safe' regions.
-*   The bug was actually observed with the forkID, these variables below are
-*   used to indicate the various contexts to which to switch to.
-*
-*   @savedSnapshotContext: contains the point to which takesnapshot() call should switch to.
-*   @savedUserSnapshotContext: contains the point to which the process whose snapshotid is equal to the rollbackid should switch to
-*   @snapshotid: it is a running counter for the various forked processes snapshotid. it is incremented and set in a persistently shared record
-*/
-static ucontext_t savedSnapshotContext;
-static ucontext_t savedUserSnapshotContext;
-static snapshot_id snapshotid = 0;
-
-#else /* USE_MPROTECT_SNAPSHOT */
 
 /** ReturnPageAlignedAddress returns a page aligned address for the
  * address being added as a side effect the numBytes are also changed.
@@ -157,45 +123,10 @@ static void HandlePF(int sig, siginfo_t *si, void *unused)
 		// Handle error by quitting?
 	}
 }
-#endif /* USE_MPROTECT_SNAPSHOT */
-
-#if !USE_MPROTECT_SNAPSHOT
-static void createSharedMemory()
-{
-	//step 1. create shared memory.
-	void *memMapBase = mmap(0, SHARED_MEMORY_DEFAULT + STACK_SIZE_DEFAULT, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANON, -1, 0);
-	if (MAP_FAILED == memMapBase)
-		FAILURE("mmap");
-
-	//Setup snapshot record at top of free region
-	snapshotrecord = (struct SnapShot *)memMapBase;
-	snapshotrecord->mSharedMemoryBase = (void *)((uintptr_t)memMapBase + sizeof(struct SnapShot));
-	snapshotrecord->mStackBase = (void *)((uintptr_t)memMapBase + SHARED_MEMORY_DEFAULT);
-	snapshotrecord->mStackSize = STACK_SIZE_DEFAULT;
-	snapshotrecord->mIDToRollback = -1;
-	snapshotrecord->currSnapShotID = 0;
-}
-
-/**
- * Create a new mspace pointer for the non-snapshotting (i.e., inter-process
- * shared) memory region. Only for fork-based snapshotting.
- *
- * @return The shared memory mspace
- */
-mspace create_shared_mspace()
-{
-	if (!snapshotrecord)
-		createSharedMemory();
-	return create_mspace_with_base((void *)(snapshotrecord->mSharedMemoryBase), SHARED_MEMORY_DEFAULT - sizeof(struct SnapShot), 1);
-}
-#endif
-
 
 /** The initSnapshotLibrary function initializes the snapshot library.
  *  @param entryPoint the function that should run the program.
  */
-#if USE_MPROTECT_SNAPSHOT
-
 void initSnapshotLibrary(unsigned int numbackingpages,
 		unsigned int numsnapshots, unsigned int nummemoryregions,
 		unsigned int numheappages, VoidFuncPtr entryPoint)
@@ -246,7 +177,137 @@ void initSnapshotLibrary(unsigned int numbackingpages,
 
 	entryPoint();
 }
-#else
+
+/** The addMemoryRegionToSnapShot function assumes that addr is page aligned. */
+void addMemoryRegionToSnapShot(void *addr, unsigned int numPages)
+{
+	unsigned int memoryregion = snapshotrecord->lastRegion++;
+	if (memoryregion == snapshotrecord->maxRegions) {
+		model_print("Exceeded supported number of memory regions!\n");
+		exit(EXIT_FAILURE);
+	}
+
+	snapshotrecord->regionsToSnapShot[memoryregion].basePtr = addr;
+	snapshotrecord->regionsToSnapShot[memoryregion].sizeInPages = numPages;
+}
+
+/** The takeSnapshot function takes a snapshot.
+ * @return The snapshot identifier.
+ */
+snapshot_id takeSnapshot()
+{
+	for (unsigned int region = 0; region < snapshotrecord->lastRegion; region++) {
+		if (mprotect(snapshotrecord->regionsToSnapShot[region].basePtr, snapshotrecord->regionsToSnapShot[region].sizeInPages * sizeof(snapshot_page_t), PROT_READ) == -1) {
+			perror("mprotect");
+			model_print("Failed to mprotect inside of takeSnapShot\n");
+			exit(EXIT_FAILURE);
+		}
+	}
+	unsigned int snapshot = snapshotrecord->lastSnapShot++;
+	if (snapshot == snapshotrecord->maxSnapShots) {
+		model_print("Out of snapshots\n");
+		exit(EXIT_FAILURE);
+	}
+	snapshotrecord->snapShots[snapshot].firstBackingPage = snapshotrecord->lastBackingPage;
+
+	return snapshot;
+}
+
+/** The rollBack function rollback to the given snapshot identifier.
+ *  @param theID is the snapshot identifier to rollback to.
+ */
+void rollBack(snapshot_id theID)
+{
+#if USE_MPROTECT_SNAPSHOT == 2
+	if (snapshotrecord->lastSnapShot == (theID + 1)) {
+		for (unsigned int page = snapshotrecord->snapShots[theID].firstBackingPage; page < snapshotrecord->lastBackingPage; page++) {
+			memcpy(snapshotrecord->backingRecords[page].basePtrOfPage, &snapshotrecord->backingStore[page], sizeof(snapshot_page_t));
+		}
+		return;
+	}
+#endif
+
+	HashTable< void *, bool, uintptr_t, 4, model_malloc, model_calloc, model_free> duplicateMap;
+	for (unsigned int region = 0; region < snapshotrecord->lastRegion; region++) {
+		if (mprotect(snapshotrecord->regionsToSnapShot[region].basePtr, snapshotrecord->regionsToSnapShot[region].sizeInPages * sizeof(snapshot_page_t), PROT_READ | PROT_WRITE) == -1) {
+			perror("mprotect");
+			model_print("Failed to mprotect inside of takeSnapShot\n");
+			exit(EXIT_FAILURE);
+		}
+	}
+	for (unsigned int page = snapshotrecord->snapShots[theID].firstBackingPage; page < snapshotrecord->lastBackingPage; page++) {
+		if (!duplicateMap.contains(snapshotrecord->backingRecords[page].basePtrOfPage)) {
+			duplicateMap.put(snapshotrecord->backingRecords[page].basePtrOfPage, true);
+			memcpy(snapshotrecord->backingRecords[page].basePtrOfPage, &snapshotrecord->backingStore[page], sizeof(snapshot_page_t));
+		}
+	}
+	snapshotrecord->lastSnapShot = theID;
+	snapshotrecord->lastBackingPage = snapshotrecord->snapShots[theID].firstBackingPage;
+	takeSnapshot(); //Make sure current snapshot is still good...All later ones are cleared
+}
+
+#else /* !USE_MPROTECT_SNAPSHOT */
+
+#include <ucontext.h>
+
+#define SHARED_MEMORY_DEFAULT  (100 * ((size_t)1 << 20)) // 100mb for the shared memory
+#define STACK_SIZE_DEFAULT      (((size_t)1 << 20) * 20)  // 20 mb out of the above 100 mb for my stack
+
+struct SnapShot {
+	void *mSharedMemoryBase;
+	void *mStackBase;
+	size_t mStackSize;
+	volatile snapshot_id mIDToRollback;
+	ucontext_t mContextToRollback;
+	snapshot_id currSnapShotID;
+};
+
+static struct SnapShot *snapshotrecord = NULL;
+
+/** @statics
+*   These variables are necessary because the stack is shared region and
+*   there exists a race between all processes executing the same function.
+*   To avoid the problem above, we require variables allocated in 'safe' regions.
+*   The bug was actually observed with the forkID, these variables below are
+*   used to indicate the various contexts to which to switch to.
+*
+*   @savedSnapshotContext: contains the point to which takesnapshot() call should switch to.
+*   @savedUserSnapshotContext: contains the point to which the process whose snapshotid is equal to the rollbackid should switch to
+*   @snapshotid: it is a running counter for the various forked processes snapshotid. it is incremented and set in a persistently shared record
+*/
+static ucontext_t savedSnapshotContext;
+static ucontext_t savedUserSnapshotContext;
+static snapshot_id snapshotid = 0;
+
+static void createSharedMemory()
+{
+	//step 1. create shared memory.
+	void *memMapBase = mmap(0, SHARED_MEMORY_DEFAULT + STACK_SIZE_DEFAULT, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANON, -1, 0);
+	if (MAP_FAILED == memMapBase)
+		FAILURE("mmap");
+
+	//Setup snapshot record at top of free region
+	snapshotrecord = (struct SnapShot *)memMapBase;
+	snapshotrecord->mSharedMemoryBase = (void *)((uintptr_t)memMapBase + sizeof(struct SnapShot));
+	snapshotrecord->mStackBase = (void *)((uintptr_t)memMapBase + SHARED_MEMORY_DEFAULT);
+	snapshotrecord->mStackSize = STACK_SIZE_DEFAULT;
+	snapshotrecord->mIDToRollback = -1;
+	snapshotrecord->currSnapShotID = 0;
+}
+
+/**
+ * Create a new mspace pointer for the non-snapshotting (i.e., inter-process
+ * shared) memory region. Only for fork-based snapshotting.
+ *
+ * @return The shared memory mspace
+ */
+mspace create_shared_mspace()
+{
+	if (!snapshotrecord)
+		createSharedMemory();
+	return create_mspace_with_base((void *)(snapshotrecord->mSharedMemoryBase), SHARED_MEMORY_DEFAULT - sizeof(struct SnapShot), 1);
+}
+
 void initSnapshotLibrary(unsigned int numbackingpages,
 		unsigned int numsnapshots, unsigned int nummemoryregions,
 		unsigned int numheappages, VoidFuncPtr entryPoint)
@@ -306,85 +367,21 @@ void initSnapshotLibrary(unsigned int numbackingpages,
 		}
 	}
 }
-#endif
 
-/** The addMemoryRegionToSnapShot function assumes that addr is page aligned.
- */
 void addMemoryRegionToSnapShot(void *addr, unsigned int numPages)
 {
-#if USE_MPROTECT_SNAPSHOT
-	unsigned int memoryregion = snapshotrecord->lastRegion++;
-	if (memoryregion == snapshotrecord->maxRegions) {
-		model_print("Exceeded supported number of memory regions!\n");
-		exit(EXIT_FAILURE);
-	}
-
-	snapshotrecord->regionsToSnapShot[memoryregion].basePtr = addr;
-	snapshotrecord->regionsToSnapShot[memoryregion].sizeInPages = numPages;
-#endif //NOT REQUIRED IN THE CASE OF FORK BASED SNAPSHOTS.
+	/* not needed for fork-based snapshotting */
 }
 
-/** The takeSnapshot function takes a snapshot.
- * @return The snapshot identifier.
- */
 snapshot_id takeSnapshot()
 {
-#if USE_MPROTECT_SNAPSHOT
-	for (unsigned int region = 0; region < snapshotrecord->lastRegion; region++) {
-		if (mprotect(snapshotrecord->regionsToSnapShot[region].basePtr, snapshotrecord->regionsToSnapShot[region].sizeInPages * sizeof(snapshot_page_t), PROT_READ) == -1) {
-			perror("mprotect");
-			model_print("Failed to mprotect inside of takeSnapShot\n");
-			exit(EXIT_FAILURE);
-		}
-	}
-	unsigned int snapshot = snapshotrecord->lastSnapShot++;
-	if (snapshot == snapshotrecord->maxSnapShots) {
-		model_print("Out of snapshots\n");
-		exit(EXIT_FAILURE);
-	}
-	snapshotrecord->snapShots[snapshot].firstBackingPage = snapshotrecord->lastBackingPage;
-
-	return snapshot;
-#else
 	swapcontext(&savedUserSnapshotContext, &savedSnapshotContext);
 	DEBUG("TAKESNAPSHOT RETURN\n");
 	return snapshotid;
-#endif
 }
 
-/** The rollBack function rollback to the given snapshot identifier.
- *  @param theID is the snapshot identifier to rollback to.
- */
 void rollBack(snapshot_id theID)
 {
-#if USE_MPROTECT_SNAPSHOT == 2
-	if (snapshotrecord->lastSnapShot == (theID + 1)) {
-		for (unsigned int page = snapshotrecord->snapShots[theID].firstBackingPage; page < snapshotrecord->lastBackingPage; page++) {
-			memcpy(snapshotrecord->backingRecords[page].basePtrOfPage, &snapshotrecord->backingStore[page], sizeof(snapshot_page_t));
-		}
-		return;
-	}
-#endif
-
-#if USE_MPROTECT_SNAPSHOT
-	HashTable< void *, bool, uintptr_t, 4, model_malloc, model_calloc, model_free> duplicateMap;
-	for (unsigned int region = 0; region < snapshotrecord->lastRegion; region++) {
-		if (mprotect(snapshotrecord->regionsToSnapShot[region].basePtr, snapshotrecord->regionsToSnapShot[region].sizeInPages * sizeof(snapshot_page_t), PROT_READ | PROT_WRITE) == -1) {
-			perror("mprotect");
-			model_print("Failed to mprotect inside of takeSnapShot\n");
-			exit(EXIT_FAILURE);
-		}
-	}
-	for (unsigned int page = snapshotrecord->snapShots[theID].firstBackingPage; page < snapshotrecord->lastBackingPage; page++) {
-		if (!duplicateMap.contains(snapshotrecord->backingRecords[page].basePtrOfPage)) {
-			duplicateMap.put(snapshotrecord->backingRecords[page].basePtrOfPage, true);
-			memcpy(snapshotrecord->backingRecords[page].basePtrOfPage, &snapshotrecord->backingStore[page], sizeof(snapshot_page_t));
-		}
-	}
-	snapshotrecord->lastSnapShot = theID;
-	snapshotrecord->lastBackingPage = snapshotrecord->snapShots[theID].firstBackingPage;
-	takeSnapshot(); //Make sure current snapshot is still good...All later ones are cleared
-#else
 	snapshotrecord->mIDToRollback = theID;
 	volatile int sTemp = 0;
 	getcontext(&snapshotrecord->mContextToRollback);
@@ -403,5 +400,6 @@ void rollBack(snapshot_id theID)
 	 * This fix obviates the need for a finalize call. hence less dependences for model-checker....
 	 */
 	snapshotrecord->mIDToRollback = -1;
-#endif
 }
+
+#endif /* !USE_MPROTECT_SNAPSHOT */

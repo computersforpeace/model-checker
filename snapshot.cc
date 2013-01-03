@@ -124,10 +124,7 @@ static void HandlePF(int sig, siginfo_t *si, void *unused)
 	}
 }
 
-/** The initSnapshotLibrary function initializes the snapshot library.
- *  @param entryPoint the function that should run the program.
- */
-void initSnapshotLibrary(unsigned int numbackingpages,
+static void mprot_snapshot_init(unsigned int numbackingpages,
 		unsigned int numsnapshots, unsigned int nummemoryregions,
 		unsigned int numheappages, VoidFuncPtr entryPoint)
 {
@@ -178,8 +175,7 @@ void initSnapshotLibrary(unsigned int numbackingpages,
 	entryPoint();
 }
 
-/** The addMemoryRegionToSnapShot function assumes that addr is page aligned. */
-void addMemoryRegionToSnapShot(void *addr, unsigned int numPages)
+static void mprot_add_to_snapshot(void *addr, unsigned int numPages)
 {
 	unsigned int memoryregion = snapshotrecord->lastRegion++;
 	if (memoryregion == snapshotrecord->maxRegions) {
@@ -191,10 +187,7 @@ void addMemoryRegionToSnapShot(void *addr, unsigned int numPages)
 	snapshotrecord->regionsToSnapShot[memoryregion].sizeInPages = numPages;
 }
 
-/** The takeSnapshot function takes a snapshot.
- * @return The snapshot identifier.
- */
-snapshot_id takeSnapshot()
+static snapshot_id mprot_take_snapshot()
 {
 	for (unsigned int region = 0; region < snapshotrecord->lastRegion; region++) {
 		if (mprotect(snapshotrecord->regionsToSnapShot[region].basePtr, snapshotrecord->regionsToSnapShot[region].sizeInPages * sizeof(snapshot_page_t), PROT_READ) == -1) {
@@ -213,10 +206,7 @@ snapshot_id takeSnapshot()
 	return snapshot;
 }
 
-/** The rollBack function rollback to the given snapshot identifier.
- *  @param theID is the snapshot identifier to rollback to.
- */
-void rollBack(snapshot_id theID)
+static void mprot_roll_back(snapshot_id theID)
 {
 #if USE_MPROTECT_SNAPSHOT == 2
 	if (snapshotrecord->lastSnapShot == (theID + 1)) {
@@ -243,7 +233,7 @@ void rollBack(snapshot_id theID)
 	}
 	snapshotrecord->lastSnapShot = theID;
 	snapshotrecord->lastBackingPage = snapshotrecord->snapShots[theID].firstBackingPage;
-	takeSnapshot(); //Make sure current snapshot is still good...All later ones are cleared
+	mprot_take_snapshot(); //Make sure current snapshot is still good...All later ones are cleared
 }
 
 #else /* !USE_MPROTECT_SNAPSHOT */
@@ -308,7 +298,7 @@ mspace create_shared_mspace()
 	return create_mspace_with_base((void *)(snapshotrecord->mSharedMemoryBase), SHARED_MEMORY_DEFAULT - sizeof(struct SnapShot), 1);
 }
 
-void initSnapshotLibrary(unsigned int numbackingpages,
+static void fork_snapshot_init(unsigned int numbackingpages,
 		unsigned int numsnapshots, unsigned int nummemoryregions,
 		unsigned int numheappages, VoidFuncPtr entryPoint)
 {
@@ -368,19 +358,14 @@ void initSnapshotLibrary(unsigned int numbackingpages,
 	}
 }
 
-void addMemoryRegionToSnapShot(void *addr, unsigned int numPages)
-{
-	/* not needed for fork-based snapshotting */
-}
-
-snapshot_id takeSnapshot()
+static snapshot_id fork_take_snapshot()
 {
 	swapcontext(&savedUserSnapshotContext, &savedSnapshotContext);
 	DEBUG("TAKESNAPSHOT RETURN\n");
 	return snapshotid;
 }
 
-void rollBack(snapshot_id theID)
+static void fork_roll_back(snapshot_id theID)
 {
 	snapshotrecord->mIDToRollback = theID;
 	volatile int sTemp = 0;
@@ -403,3 +388,51 @@ void rollBack(snapshot_id theID)
 }
 
 #endif /* !USE_MPROTECT_SNAPSHOT */
+
+/** The initSnapshotLibrary function initializes the snapshot library.
+ *  @param entryPoint the function that should run the program.
+ */
+void initSnapshotLibrary(unsigned int numbackingpages,
+		unsigned int numsnapshots, unsigned int nummemoryregions,
+		unsigned int numheappages, VoidFuncPtr entryPoint)
+{
+#if USE_MPROTECT_SNAPSHOT
+	mprot_snapshot_init(numbackingpages, numsnapshots, nummemoryregions, numheappages, entryPoint);
+#else
+	fork_snapshot_init(numbackingpages, numsnapshots, nummemoryregions, numheappages, entryPoint);
+#endif
+}
+
+/** The addMemoryRegionToSnapShot function assumes that addr is page aligned. */
+void addMemoryRegionToSnapShot(void *addr, unsigned int numPages)
+{
+#if USE_MPROTECT_SNAPSHOT
+	mprot_add_to_snapshot(addr, numPages);
+#else
+	/* not needed for fork-based snapshotting */
+#endif
+}
+
+/** The takeSnapshot function takes a snapshot.
+ * @return The snapshot identifier.
+ */
+snapshot_id takeSnapshot()
+{
+#if USE_MPROTECT_SNAPSHOT
+	return mprot_take_snapshot();
+#else
+	return fork_take_snapshot();
+#endif
+}
+
+/** The rollBack function rollback to the given snapshot identifier.
+ *  @param theID is the snapshot identifier to rollback to.
+ */
+void rollBack(snapshot_id theID)
+{
+#if USE_MPROTECT_SNAPSHOT
+	mprot_roll_back(theID);
+#else
+	fork_roll_back(theID);
+#endif
+}

@@ -135,7 +135,7 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift = 0, void * 
 				return search->val;
 			index++;
 		} while (search->key);
-		return (_Val) 0;
+		return (_Val)0;
 	}
 
 	/** Check whether the table contains a value for the given key. */
@@ -159,16 +159,16 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift = 0, void * 
 		struct hashlistnode<_Key, _Val> *newtable;
 		unsigned int oldcapacity = capacity;
 
-		if ((newtable = (struct hashlistnode<_Key, _Val> *) _calloc(newsize, sizeof(struct hashlistnode<_Key, _Val>))) == NULL) {
+		if ((newtable = (struct hashlistnode<_Key, _Val> *)_calloc(newsize, sizeof(struct hashlistnode<_Key, _Val>))) == NULL) {
 			model_print("calloc error %s %d\n", __FILE__, __LINE__);
 			exit(EXIT_FAILURE);
 		}
 
-		table = newtable;          //Update the global hashtable upon resize()
+		table = newtable;          // Update the global hashtable upon resize()
 		capacity = newsize;
 		capacitymask = newsize - 1;
 
-		threshold = (unsigned int) (newsize * loadfactor);
+		threshold = (unsigned int)(newsize * loadfactor);
 
 		struct hashlistnode<_Key, _Val> *bin = &oldtable[0];
 		struct hashlistnode<_Key, _Val> *lastbin = &oldtable[oldcapacity];
@@ -188,7 +188,7 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift = 0, void * 
 			search->val = bin->val;
 		}
 
-		_free(oldtable);            //Free the memory of the old hash table
+		_free(oldtable);            // Free the memory of the old hash table
 	}
 
  private:

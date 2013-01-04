@@ -16,18 +16,17 @@ class Promise {
  public:
  Promise(ModelAction *act, uint64_t value, modelclock_t expiration) :
 	value(value), expiration(expiration), read(act), write(NULL)
-	{ 
+	{
 		increment_threads(act->get_tid());
 	}
-	modelclock_t get_expiration() const {return expiration;}
+	modelclock_t get_expiration() const { return expiration; }
 	ModelAction * get_action() const { return read; }
 	bool increment_threads(thread_id_t tid);
 
-	bool has_sync_thread(thread_id_t tid) { 
-		unsigned int id=id_to_int(tid); 
-		if (id>=synced_thread.size()) {
+	bool has_sync_thread(thread_id_t tid) {
+		unsigned int id = id_to_int(tid);
+		if (id >= synced_thread.size())
 			return false;
-		}
 		return synced_thread[id];
 	}
 

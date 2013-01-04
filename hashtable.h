@@ -109,7 +109,7 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift = 0, void * 
 
 		unsigned int index = ((_KeyInt)key) >> _Shift;
 		do {
-			index = index & capacitymask;
+			index &= capacitymask;
 			search = &table[index];
 			if (search->key == key) {
 				search->val = val;
@@ -129,11 +129,10 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift = 0, void * 
 
 		unsigned int index = ((_KeyInt)key) >> _Shift;
 		do {
-			index = index&capacitymask;
+			index &= capacitymask;
 			search = &table[index];
-			if (search->key == key) {
+			if (search->key == key)
 				return search->val;
-			}
 			index++;
 		} while (search->key);
 		return (_Val) 0;
@@ -145,11 +144,10 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift = 0, void * 
 
 		unsigned int index = ((_KeyInt)key) >> _Shift;
 		do {
-			index = index & capacitymask;
+			index &= capacitymask;
 			search = &table[index];
-			if (search->key == key) {
+			if (search->key == key)
 				return true;
-			}
 			index++;
 		} while (search->key);
 		return false;
@@ -162,8 +160,8 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift = 0, void * 
 		unsigned int oldcapacity = capacity;
 
 		if ((newtable = (struct hashlistnode<_Key, _Val> *) _calloc(newsize, sizeof(struct hashlistnode<_Key, _Val>))) == NULL) {
-			model_print("Calloc error %s %d\n", __FILE__, __LINE__);
-			exit(-1);
+			model_print("calloc error %s %d\n", __FILE__, __LINE__);
+			exit(EXIT_FAILURE);
 		}
 
 		table = newtable;          //Update the global hashtable upon resize()
@@ -181,7 +179,7 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift = 0, void * 
 
 			unsigned int index = ((_KeyInt)key) >> _Shift;
 			do {
-				index = index & capacitymask;
+				index &= capacitymask;
 				search = &table[index];
 				index++;
 			} while (search->key);

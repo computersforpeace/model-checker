@@ -17,6 +17,7 @@ CycleGraph::CycleGraph() :
 /** CycleGraph destructor */
 CycleGraph::~CycleGraph()
 {
+	delete discovered;
 }
 
 /**

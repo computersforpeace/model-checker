@@ -21,6 +21,19 @@ CycleGraph::~CycleGraph()
 }
 
 /**
+ * Add a CycleNode to the graph, corresponding to a store ModelAction
+ * @param act The write action that should be added
+ * @param node The CycleNode that corresponds to the store
+ */
+void CycleGraph::putNode(const ModelAction *act, CycleNode *node)
+{
+	actionToNode.put(act, node);
+#if SUPPORT_MOD_ORDER_DUMP
+	nodeList.push_back(node);
+#endif
+}
+
+/**
  * @brief Returns the CycleNode corresponding to a given ModelAction
  * @param action The ModelAction to find a node for
  * @return The CycleNode paired with this action
@@ -30,10 +43,7 @@ CycleNode * CycleGraph::getNode(const ModelAction *action)
 	CycleNode *node = actionToNode.get(action);
 	if (node == NULL) {
 		node = new CycleNode(action);
-		actionToNode.put(action, node);
-#if SUPPORT_MOD_ORDER_DUMP
-		nodeList.push_back(node);
-#endif
+		putNode(action, node);
 	}
 	return node;
 }

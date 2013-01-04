@@ -40,6 +40,7 @@ class CycleGraph {
 
 	SNAPSHOTALLOC
  private:
+	void putNode(const ModelAction *act, CycleNode *node);
 	CycleNode * getNode(const ModelAction *);
 	HashTable<CycleNode *, CycleNode *, uintptr_t, 4, model_malloc, model_calloc, model_free> *discovered;
 

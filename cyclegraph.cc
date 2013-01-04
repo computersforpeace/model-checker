@@ -319,6 +319,16 @@ unsigned int CycleNode::getNumEdges() const
 	return edges.size();
 }
 
+CycleNode * CycleNode::getBackEdge(unsigned int i) const
+{
+	return back_edges[i];
+}
+
+unsigned int CycleNode::getNumBackEdges() const
+{
+	return back_edges.size();
+}
+
 /**
  * Adds an edge from this CycleNode to another CycleNode.
  * @param node The node to which we add a directed edge
@@ -329,6 +339,7 @@ bool CycleNode::addEdge(CycleNode *node)
 		if (edges[i] == node)
 			return false;
 	edges.push_back(node);
+	node->back_edges.push_back(this);
 	return true;
 }
 

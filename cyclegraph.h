@@ -70,6 +70,8 @@ class CycleNode {
 	bool addEdge(CycleNode *node);
 	CycleNode * getEdge(unsigned int i) const;
 	unsigned int getNumEdges() const;
+	CycleNode * getBackEdge(unsigned int i) const;
+	unsigned int getNumBackEdges() const;
 	bool setRMW(CycleNode *);
 	CycleNode * getRMW() const;
 	const ModelAction * getAction() const { return action; }
@@ -88,6 +90,9 @@ class CycleNode {
 
 	/** @brief The edges leading out from this node */
 	std::vector< CycleNode *, SnapshotAlloc<CycleNode *> > edges;
+
+	/** @brief The edges leading into this node */
+	std::vector< CycleNode *, SnapshotAlloc<CycleNode *> > back_edges;
 
 	/** Pointer to a RMW node that reads from this node, or NULL, if none
 	 * exists */

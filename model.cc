@@ -853,6 +853,15 @@ bool ModelChecker::process_mutex(ModelAction *curr)
 	return false;
 }
 
+void ModelChecker::add_future_value(const ModelAction *writer, ModelAction *reader)
+{
+	/* Do more ambitious checks now that mo is more complete */
+	if (mo_may_allow(writer, reader) &&
+			reader->get_node()->add_future_value(writer->get_value(),
+				writer->get_seq_number() + params.maxfuturedelay))
+		set_latest_backtrack(reader);
+}
+
 /**
  * Process a write ModelAction
  * @param curr The ModelAction to process
@@ -866,10 +875,7 @@ bool ModelChecker::process_write(ModelAction *curr)
 	if (promises->size() == 0) {
 		for (unsigned int i = 0; i < futurevalues->size(); i++) {
 			struct PendingFutureValue pfv = (*futurevalues)[i];
-			//Do more ambitious checks now that mo is more complete
-			if (mo_may_allow(pfv.writer, pfv.act) &&
-					pfv.act->get_node()->add_future_value(pfv.writer->get_value(), pfv.writer->get_seq_number() + params.maxfuturedelay))
-				set_latest_backtrack(pfv.act);
+			add_future_value(pfv.writer, pfv.act);
 		}
 		futurevalues->clear();
 	}

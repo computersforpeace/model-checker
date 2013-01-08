@@ -871,7 +871,7 @@ bool ModelChecker::process_write(ModelAction *curr)
 					pfv.act->get_node()->add_future_value(pfv.writer->get_value(), pfv.writer->get_seq_number() + params.maxfuturedelay))
 				set_latest_backtrack(pfv.act);
 		}
-		futurevalues->resize(0);
+		futurevalues->clear();
 	}
 
 	mo_graph->commitChanges();
@@ -1773,8 +1773,7 @@ bool ModelChecker::w_modification_order(ModelAction *curr)
 				if (thin_air_constraint_may_allow(curr, act)) {
 					if (!is_infeasible() ||
 							(curr->is_rmw() && act->is_rmw() && curr->get_reads_from() == act->get_reads_from() && !is_infeasible_ignoreRMW())) {
-						struct PendingFutureValue pfv = {curr, act};
-						futurevalues->push_back(pfv);
+						futurevalues->push_back(PendingFutureValue(curr, act));
 					}
 				}
 			}

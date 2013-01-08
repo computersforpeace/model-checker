@@ -67,7 +67,8 @@ struct execution_stats {
 };
 
 struct PendingFutureValue {
-	ModelAction *writer;
+	PendingFutureValue(ModelAction *writer, ModelAction *act) : writer(writer), act(act) { }
+	const ModelAction *writer;
 	ModelAction *act;
 };
 

@@ -42,7 +42,7 @@ class CycleGraph {
  private:
 	void putNode(const ModelAction *act, CycleNode *node);
 	CycleNode * getNode(const ModelAction *);
-	HashTable<CycleNode *, CycleNode *, uintptr_t, 4, model_malloc, model_calloc, model_free> *discovered;
+	HashTable<const CycleNode *, const CycleNode *, uintptr_t, 4, model_malloc, model_calloc, model_free> *discovered;
 
 	/** @brief A table for mapping ModelActions to CycleNodes */
 	HashTable<const ModelAction *, CycleNode *, uintptr_t, 4> actionToNode;
@@ -50,7 +50,7 @@ class CycleGraph {
 	std::vector<CycleNode *> nodeList;
 #endif
 
-	bool checkReachable(CycleNode *from, CycleNode *to) const;
+	bool checkReachable(const CycleNode *from, const CycleNode *to) const;
 
 	/** @brief A flag: true if this graph contains cycles */
 	bool hasCycles;

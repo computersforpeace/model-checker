@@ -6,7 +6,7 @@
 
 /** Initializes a CycleGraph object. */
 CycleGraph::CycleGraph() :
-	discovered(new HashTable<CycleNode *, CycleNode *, uintptr_t, 4, model_malloc, model_calloc, model_free>(16)),
+	discovered(new HashTable<const CycleNode *, const CycleNode *, uintptr_t, 4, model_malloc, model_calloc, model_free>(16)),
 	hasCycles(false),
 	oldCycles(false),
 	hasRMWViolation(false),
@@ -198,15 +198,15 @@ bool CycleGraph::checkReachable(const ModelAction *from, const ModelAction *to) 
  * @param to The CycleNode to reach
  * @return True, @a from can reach @a to; otherwise, false
  */
-bool CycleGraph::checkReachable(CycleNode *from, CycleNode *to) const
+bool CycleGraph::checkReachable(const CycleNode *from, const CycleNode *to) const
 {
-	std::vector< CycleNode *, ModelAlloc<CycleNode *> > queue;
+	std::vector< const CycleNode *, ModelAlloc<const CycleNode *> > queue;
 	discovered->reset();
 
 	queue.push_back(from);
 	discovered->put(from, from);
 	while (!queue.empty()) {
-		CycleNode *node = queue.back();
+		const CycleNode *node = queue.back();
 		queue.pop_back();
 		if (node == to)
 			return true;

@@ -1340,14 +1340,38 @@ bool ModelChecker::isfeasibleprefix() const
 }
 
 /**
+ * Print disagnostic information about an infeasible execution
+ * @param prefix A string to prefix the output with; if NULL, then a default
+ * message prefix will be provided
+ */
+void ModelChecker::print_infeasibility(const char *prefix) const
+{
+	char buf[100];
+	char *ptr = buf;
+	if (mo_graph->checkForRMWViolation())
+		ptr += sprintf(ptr, "[RMW atomicity]");
+	if (mo_graph->checkForCycles())
+		ptr += sprintf(ptr, "[mo cycle]");
+	if (priv->failed_promise)
+		ptr += sprintf(ptr, "[failed promise]");
+	if (priv->too_many_reads)
+		ptr += sprintf(ptr, "[too many reads]");
+	if (priv->bad_synchronization)
+		ptr += sprintf(ptr, "[bad sw ordering]");
+	if (promises_expired())
+		ptr += sprintf(ptr, "[promise expired]");
+	if (promises->size() != 0)
+		ptr += sprintf(ptr, "[unrevolved promise]");
+	if (ptr != buf)
+		model_print("%s: %s\n", prefix ? prefix : "Infeasible", buf);
+}
+
+/**
  * Returns whether the current completed trace is feasible, except for pending
  * release sequences.
  */
 bool ModelChecker::is_feasible_prefix_ignore_relseq() const
 {
-	if (DBG_ENABLED() && promises->size() != 0)
-		DEBUG("Infeasible: unrevolved promises\n");
-
 	return !is_infeasible() && promises->size() == 0;
 }
 
@@ -1359,9 +1383,6 @@ bool ModelChecker::is_feasible_prefix_ignore_relseq() const
  */
 bool ModelChecker::is_infeasible() const
 {
-	if (DBG_ENABLED() && mo_graph->checkForRMWViolation())
-		DEBUG("Infeasible: RMW violation\n");
-
 	return mo_graph->checkForRMWViolation() || is_infeasible_ignoreRMW();
 }
 
@@ -1375,18 +1396,6 @@ bool ModelChecker::is_infeasible() const
  * */
 bool ModelChecker::is_infeasible_ignoreRMW() const
 {
-	if (DBG_ENABLED()) {
-		if (mo_graph->checkForCycles())
-			DEBUG("Infeasible: modification order cycles\n");
-		if (priv->failed_promise)
-			DEBUG("Infeasible: failed promise\n");
-		if (priv->too_many_reads)
-			DEBUG("Infeasible: too many reads\n");
-		if (priv->bad_synchronization)
-			DEBUG("Infeasible: bad synchronization ordering\n");
-		if (promises_expired())
-			DEBUG("Infeasible: promises expired\n");
-	}
 	return mo_graph->checkForCycles() || priv->failed_promise ||
 		priv->too_many_reads || priv->bad_synchronization ||
 		promises_expired();
@@ -2627,7 +2636,7 @@ void ModelChecker::print_summary() const
 #endif
 
 	if (!isfeasibleprefix())
-		model_print("INFEASIBLE EXECUTION!\n");
+		print_infeasibility("INFEASIBLE EXECUTION");
 	print_list(action_trace, stats.num_total);
 	model_print("\n");
 }

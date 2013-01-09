@@ -255,6 +255,7 @@ private:
 	struct execution_stats stats;
 	void record_stats();
 
+	void print_infeasibility(const char *prefix) const;
 	bool is_feasible_prefix_ignore_relseq() const;
 	bool is_infeasible_ignoreRMW() const;
 	bool is_infeasible() const;

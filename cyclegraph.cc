@@ -63,7 +63,7 @@ void CycleGraph::addEdge(const ModelAction *from, const ModelAction *to)
 	CycleNode *tonode = getNode(to);
 
 	if (!hasCycles)
-		hasCycles = edgeCreatesCycle(fromnode, tonode);
+		hasCycles = checkReachable(tonode, fromnode);
 
 	if (fromnode->addEdge(tonode))
 		rollbackvector.push_back(fromnode);
@@ -81,7 +81,7 @@ void CycleGraph::addEdge(const ModelAction *from, const ModelAction *to)
 	 */
 	if (rmwnode != NULL && !to->is_rmw()) {
 		if (!hasCycles)
-			hasCycles = edgeCreatesCycle(rmwnode, tonode);
+			hasCycles = checkReachable(tonode, rmwnode);
 
 		if (rmwnode->addEdge(tonode))
 			rollbackvector.push_back(rmwnode);
@@ -124,7 +124,7 @@ void CycleGraph::addRMWEdge(const ModelAction *from, const ModelAction *rmw)
 	}
 
 	if (!hasCycles)
-		hasCycles = edgeCreatesCycle(fromnode, rmwnode);
+		hasCycles = checkReachable(rmwnode, fromnode);
 
 	if (fromnode->addEdge(rmwnode))
 		rollbackvector.push_back(fromnode);
@@ -159,18 +159,6 @@ void CycleGraph::dumpGraphToFile(const char *filename) const
 	fclose(file);
 }
 #endif
-
-/**
- * Checks whether the addition of an edge between these two nodes would create
- * a cycle in the graph.
- * @param from The CycleNode from which the edge would start
- * @param to The CycleNode to which the edge would point
- * @return True if this edge would create a cycle; false otherwise
- */
-bool CycleGraph::edgeCreatesCycle(const CycleNode *from, const CycleNode *to) const
-{
-	return (from == to) || checkReachable(to, from);
-}
 
 /**
  * Checks whether one ModelAction can reach another.

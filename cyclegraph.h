@@ -52,8 +52,6 @@ class CycleGraph {
 
 	bool checkReachable(const CycleNode *from, const CycleNode *to) const;
 
-	bool edgeCreatesCycle(const CycleNode *from, const CycleNode *to) const;
-
 	/** @brief A flag: true if this graph contains cycles */
 	bool hasCycles;
 	bool oldCycles;

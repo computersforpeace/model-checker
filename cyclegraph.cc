@@ -62,14 +62,8 @@ void CycleGraph::addEdge(const ModelAction *from, const ModelAction *to)
 	CycleNode *fromnode = getNode(from);
 	CycleNode *tonode = getNode(to);
 
-	if (!hasCycles) {
-		// Reflexive edges are cycles
-		hasCycles = (from == to);
-	}
-	if (!hasCycles) {
-		// Check for Cycles
-		hasCycles = checkReachable(tonode, fromnode);
-	}
+	if (!hasCycles)
+		hasCycles = edgeCreatesCycle(fromnode, tonode);
 
 	if (fromnode->addEdge(tonode))
 		rollbackvector.push_back(fromnode);
@@ -86,10 +80,8 @@ void CycleGraph::addEdge(const ModelAction *from, const ModelAction *to)
 	 * for the possibility of sending to's write value to rmwnode
 	 */
 	if (rmwnode != NULL && !to->is_rmw()) {
-		if (!hasCycles) {
-			// Check for Cycles
-			hasCycles = checkReachable(tonode, rmwnode);
-		}
+		if (!hasCycles)
+			hasCycles = edgeCreatesCycle(rmwnode, tonode);
 
 		if (rmwnode->addEdge(tonode))
 			rollbackvector.push_back(rmwnode);
@@ -131,16 +123,9 @@ void CycleGraph::addRMWEdge(const ModelAction *from, const ModelAction *rmw)
 		}
 	}
 
+	if (!hasCycles)
+		hasCycles = edgeCreatesCycle(fromnode, rmwnode);
 
-	if (!hasCycles) {
-		// Reflexive edges are cycles
-		hasCycles = (from == rmw);
-	}
-	if (!hasCycles) {
-		// With promises we could be setting up a cycle here if we aren't
-		// careful...avoid it..
-		hasCycles = checkReachable(rmwnode, fromnode);
-	}
 	if (fromnode->addEdge(rmwnode))
 		rollbackvector.push_back(fromnode);
 }
@@ -174,6 +159,18 @@ void CycleGraph::dumpGraphToFile(const char *filename) const
 	fclose(file);
 }
 #endif
+
+/**
+ * Checks whether the addition of an edge between these two nodes would create
+ * a cycle in the graph.
+ * @param from The CycleNode from which the edge would start
+ * @param to The CycleNode to which the edge would point
+ * @return True if this edge would create a cycle; false otherwise
+ */
+bool CycleGraph::edgeCreatesCycle(const CycleNode *from, const CycleNode *to) const
+{
+	return (from == to) || checkReachable(to, from);
+}
 
 /**
  * Checks whether one ModelAction can reach another.

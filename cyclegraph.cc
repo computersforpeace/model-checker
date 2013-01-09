@@ -317,6 +317,7 @@ unsigned int CycleNode::getNumBackEdges() const
 /**
  * Adds an edge from this CycleNode to another CycleNode.
  * @param node The node to which we add a directed edge
+ * @return True if this edge is a new edge; false otherwise
  */
 bool CycleNode::addEdge(CycleNode *node)
 {

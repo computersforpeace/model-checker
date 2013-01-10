@@ -1361,7 +1361,7 @@ void ModelChecker::print_infeasibility(const char *prefix) const
 	if (promises_expired())
 		ptr += sprintf(ptr, "[promise expired]");
 	if (promises->size() != 0)
-		ptr += sprintf(ptr, "[unrevolved promise]");
+		ptr += sprintf(ptr, "[unresolved promise]");
 	if (ptr != buf)
 		model_print("%s: %s\n", prefix ? prefix : "Infeasible", buf);
 }

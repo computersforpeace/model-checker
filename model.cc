@@ -721,7 +721,6 @@ bool ModelChecker::process_read(ModelAction *curr, bool second_part_of_rmw)
 				r_status = r_modification_order(curr, reads_from);
 			}
 
-
 			if (!second_part_of_rmw && is_infeasible() && (curr->get_node()->increment_read_from() || curr->get_node()->increment_future_value())) {
 				mo_graph->rollbackChanges();
 				priv->too_many_reads = false;
@@ -1811,10 +1810,10 @@ bool ModelChecker::w_modification_order(ModelAction *curr)
 
 				 */
 				if (thin_air_constraint_may_allow(curr, act)) {
-					if (!is_infeasible() ||
-							(curr->is_rmw() && act->is_rmw() && curr->get_reads_from() == act->get_reads_from() && !is_infeasible_ignoreRMW())) {
+					if (!is_infeasible())
 						futurevalues->push_back(PendingFutureValue(curr, act));
-					}
+					else if (curr->is_rmw() && act->is_rmw() && curr->get_reads_from() && curr->get_reads_from() == act->get_reads_from())
+						add_future_value(curr, act);
 				}
 			}
 		}

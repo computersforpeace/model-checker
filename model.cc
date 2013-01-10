@@ -2576,13 +2576,11 @@ ModelAction * ModelChecker::new_uninitialized_action(void *location) const
 	return act;
 }
 
-static void print_list(action_list_t *list, int exec_num = -1)
+static void print_list(action_list_t *list)
 {
 	action_list_t::iterator it;
 
 	model_print("---------------------------------------------------------------------\n");
-	if (exec_num >= 0)
-		model_print("Execution %d:\n", exec_num);
 
 	unsigned int hash = 0;
 
@@ -2635,9 +2633,12 @@ void ModelChecker::print_summary() const
 	dumpGraph(buffername);
 #endif
 
-	if (!isfeasibleprefix())
-		print_infeasibility("INFEASIBLE EXECUTION");
-	print_list(action_trace, stats.num_total);
+	model_print("Execution %d:", stats.num_total);
+	if (isfeasibleprefix())
+		model_print("\n");
+	else
+		print_infeasibility(" INFEASIBLE");
+	print_list(action_trace);
 	model_print("\n");
 }
 

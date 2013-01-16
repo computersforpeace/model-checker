@@ -5,31 +5,38 @@
 std::atomic_int x;
 std::atomic_int y;
 
+std::memory_order store_mo = std::memory_order_release;
+std::memory_order load_mo = std::memory_order_acquire;
+
 static void a(void *obj)
 {
-	x.store(1, std::memory_order_release);
+	x.store(1, store_mo);
 }
 
 static void b(void *obj)
 {
-	y.store(1, std::memory_order_release);
+	y.store(1, store_mo);
 }
 
 static void c(void *obj)
 {
-	printf("x1: %d\n", x.load(std::memory_order_acquire));
-	printf("y1: %d\n", y.load(std::memory_order_acquire));
+	printf("x1: %d\n", x.load(load_mo));
+	printf("y1: %d\n", y.load(load_mo));
 }
 
 static void d(void *obj)
 {
-	printf("y2: %d\n", y.load(std::memory_order_acquire));
-	printf("x2: %d\n", x.load(std::memory_order_acquire));
+	printf("y2: %d\n", y.load(load_mo));
+	printf("x2: %d\n", x.load(load_mo));
 }
 
 int user_main(int argc, char **argv)
 {
 	thrd_t t1, t2, t3, t4;
+
+	/* Command-line argument 's' enables seq_cst test */
+	if (argc > 1 && *argv[1] == 's')
+		store_mo = load_mo = std::memory_order_seq_cst;
 
 	atomic_init(&x, 0);
 	atomic_init(&y, 0);

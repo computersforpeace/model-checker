@@ -17,14 +17,14 @@ static void b(void *obj)
 
 static void c(void *obj)
 {
-	printf("x1: %d\n", x.load(std::memory_order_relaxed));
-	printf("y1: %d\n", y.load(std::memory_order_relaxed));
+	printf("x1: %d\n", x.load(std::memory_order_acquire));
+	printf("y1: %d\n", y.load(std::memory_order_acquire));
 }
 
 static void d(void *obj)
 {
-	printf("y2: %d\n", y.load(std::memory_order_relaxed));
-	printf("x2: %d\n", x.load(std::memory_order_relaxed));
+	printf("y2: %d\n", y.load(std::memory_order_acquire));
+	printf("x2: %d\n", x.load(std::memory_order_acquire));
 }
 
 int user_main(int argc, char **argv)

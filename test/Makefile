@@ -8,7 +8,10 @@ SRCS = $(wildcard *.c)
 CPSRCS = $(wildcard *.cc)
 OBJS = $(patsubst %.c,%.o,$(SRCS)) $(patsubst %.cc,%.o,$(CPSRCS))
 
-all: $(OBJS)
+all: $(OBJS) litmus-tests
+
+litmus-tests::
+	$(MAKE) -C litmus
 
 %.o: %.c
 	$(CC) -o $@ $< $(CPPFLAGS) -L$(BASE) -l$(LIB_NAME)
@@ -18,3 +21,4 @@ all: $(OBJS)
 
 clean::
 	rm -f *.o
+	$(MAKE) -C litmus clean

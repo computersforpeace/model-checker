@@ -614,7 +614,7 @@ void ModelChecker::set_backtracking(ModelAction *act)
 	Node *node = prev->get_node()->get_parent();
 
 	int low_tid, high_tid;
-	if (node->is_enabled(t)) {
+	if (node->enabled_status(t->get_id()) == THREAD_ENABLED) {
 		low_tid = id_to_int(act->get_tid());
 		high_tid = low_tid + 1;
 	} else {

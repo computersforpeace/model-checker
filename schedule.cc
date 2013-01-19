@@ -7,6 +7,32 @@
 #include "model.h"
 #include "nodestack.h"
 
+/**
+ * Format an "enabled_type_t" for printing
+ * @param e The type to format
+ * @param str The output character array
+ */
+static void enabled_type_to_string(enabled_type_t e, char *str)
+{
+	const char *res;
+	switch (e) {
+	case THREAD_DISABLED:
+		res = "disabled";
+		break;
+	case THREAD_ENABLED:
+		res = "enabled";
+		break;
+	case THREAD_SLEEP_SET:
+		res = "sleep";
+		break;
+	default:
+		ASSERT(0);
+		res = NULL;
+		break;
+	}
+	strcpy(str, res);
+}
+
 /** Constructor */
 Scheduler::Scheduler() :
 	enabled(NULL),
@@ -217,8 +243,13 @@ Thread * Scheduler::get_current_thread() const
  */
 void Scheduler::print() const
 {
-	if (current)
-		model_print("Current thread: %d\n", id_to_int(current->get_id()));
-	else
-		model_print("No current thread\n");
+	int curr_id = current ? id_to_int(current->get_id()) : -1;
+
+	model_print("Scheduler: ");
+	for (int i = 0; i < enabled_len; i++) {
+		char str[20];
+		enabled_type_to_string(enabled[i], str);
+		model_print("[%i: %s%s]", i, i == curr_id ? "current, " : "", str);
+	}
+	model_print("\n");
 }

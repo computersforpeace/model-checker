@@ -89,7 +89,11 @@ Node::~Node()
 void Node::print()
 {
 	action->print();
-	model_print("          backtrack: %s\n", backtrack_empty() ? "empty" : "non-empty");
+	model_print("          backtrack: %s", backtrack_empty() ? "empty" : "non-empty");
+	for (int i = 0; i < (int)backtrack.size(); i++)
+		if (backtrack[i] == true)
+			model_print("[%d]", i);
+	model_print("\n");
 	model_print("          future values: %s\n", future_value_empty() ? "empty" : "non-empty");
 	model_print("          read-from: %s\n", read_from_empty() ? "empty" : "non-empty");
 	model_print("          promises: %s\n", promise_empty() ? "empty" : "non-empty");

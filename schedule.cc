@@ -184,7 +184,8 @@ Thread * Scheduler::next_thread(Thread *t)
 				break;
 			}
 			if (curr_thread_index == old_curr_thread) {
-				print();
+				if (DBG_ENABLED())
+					print();
 				return NULL;
 			}
 		}
@@ -196,7 +197,8 @@ Thread * Scheduler::next_thread(Thread *t)
 	}
 
 	current = t;
-	print();
+	if (DBG_ENABLED())
+		print();
 	return t;
 }
 
@@ -216,7 +218,7 @@ Thread * Scheduler::get_current_thread() const
 void Scheduler::print() const
 {
 	if (current)
-		DEBUG("Current thread: %d\n", id_to_int(current->get_id()));
+		model_print("Current thread: %d\n", id_to_int(current->get_id()));
 	else
-		DEBUG("No current thread\n");
+		model_print("No current thread\n");
 }

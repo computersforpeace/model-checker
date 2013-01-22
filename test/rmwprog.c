@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <stdio.h>
 #include <threads.h>
 #include <stdatomic.h>
@@ -5,16 +6,21 @@
 #include "librace.h"
 
 atomic_int x;
+static int N = 2;
 
 static void a(void *obj)
 {
-	atomic_fetch_add_explicit(&x, 1, memory_order_relaxed);
-	atomic_fetch_add_explicit(&x, 1, memory_order_relaxed);
+	int i;
+	for (i = 0; i < N; i++)
+		atomic_fetch_add_explicit(&x, 1, memory_order_relaxed);
 }
 
 int user_main(int argc, char **argv)
 {
 	thrd_t t1, t2;
+
+	if (argc > 1)
+		N = atoi(argv[1]);
 
 	atomic_init(&x, 0);
 	thrd_create(&t1, (thrd_start_t)&a, NULL);

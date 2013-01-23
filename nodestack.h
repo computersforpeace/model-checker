@@ -77,8 +77,7 @@ public:
 	Node * get_parent() const { return parent; }
 
 	bool add_future_value(uint64_t value, modelclock_t expiration);
-	uint64_t get_future_value() const;
-	modelclock_t get_future_value_expiration() const;
+	struct future_value get_future_value() const;
 	bool increment_future_value();
 	bool future_value_empty() const;
 

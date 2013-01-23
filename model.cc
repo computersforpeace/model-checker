@@ -735,10 +735,10 @@ bool ModelChecker::process_read(ModelAction *curr, bool second_part_of_rmw)
 			updated |= r_status;
 		} else if (!second_part_of_rmw) {
 			/* Read from future value */
-			value = curr->get_node()->get_future_value();
-			modelclock_t expiration = curr->get_node()->get_future_value_expiration();
+			struct future_value fv = curr->get_node()->get_future_value();
+			value = fv.value;
 			curr->set_read_from(NULL);
-			Promise *valuepromise = new Promise(curr, value, expiration);
+			Promise *valuepromise = new Promise(curr, value, fv.expiration);
 			promises->push_back(valuepromise);
 		}
 		get_thread(curr)->set_return_value(value);

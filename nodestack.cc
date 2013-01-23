@@ -381,20 +381,14 @@ void Node::add_read_from(const ModelAction *act)
 }
 
 /**
- * Gets the next 'future_value' value from this Node. Only valid for a node
- * where this->action is a 'read'.
+ * Gets the next 'future_value' from this Node. Only valid for a node where
+ * this->action is a 'read'.
  * @return The first element in future_values
  */
-uint64_t Node::get_future_value() const
+struct future_value Node::get_future_value() const
 {
 	ASSERT(future_index >= 0 && future_index < ((int)future_values.size()));
-	return future_values[future_index].value;
-}
-
-modelclock_t Node::get_future_value_expiration() const
-{
-	ASSERT(future_index >= 0 && future_index < ((int)future_values.size()));
-	return future_values[future_index].expiration;
+	return future_values[future_index];
 }
 
 int Node::get_read_from_size() const

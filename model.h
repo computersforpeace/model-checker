@@ -121,7 +121,7 @@ public:
 	ClockVector * get_cv(thread_id_t tid) const;
 	ModelAction * get_parent_action(thread_id_t tid) const;
 	void check_promises_thread_disabled();
-	void mo_check_promises(thread_id_t tid, const ModelAction *write);
+	void mo_check_promises(thread_id_t tid, const ModelAction *write, const ModelAction * read);
 	void check_promises(thread_id_t tid, ClockVector *old_cv, ClockVector *merge_cv);
 	bool isfeasibleprefix() const;
 

@@ -730,7 +730,7 @@ bool ModelChecker::process_read(ModelAction *curr, bool second_part_of_rmw)
 
 			read_from(curr, reads_from);
 			mo_graph->commitChanges();
-			mo_check_promises(curr->get_tid(), reads_from);
+			mo_check_promises(curr->get_tid(), reads_from, NULL);
 
 			updated |= r_status;
 		} else if (!second_part_of_rmw) {
@@ -881,7 +881,7 @@ bool ModelChecker::process_write(ModelAction *curr)
 	}
 
 	mo_graph->commitChanges();
-	mo_check_promises(curr->get_tid(), curr);
+	mo_check_promises(curr->get_tid(), curr, NULL);
 
 	get_thread(curr)->set_return_value(VALUE_NONE);
 	return updated_mod_order || updated_promises;
@@ -2310,7 +2310,7 @@ ClockVector * ModelChecker::get_cv(thread_id_t tid) const
 bool ModelChecker::resolve_promises(ModelAction *write)
 {
 	bool resolved = false;
-	std::vector< thread_id_t, ModelAlloc<thread_id_t> > threads_to_check;
+	std::vector< ModelAction *, ModelAlloc<ModelAction *> > actions_to_check;
 
 	for (unsigned int i = 0, promise_index = 0; promise_index < promises->size(); i++) {
 		Promise *promise = (*promises)[promise_index];
@@ -2331,7 +2331,7 @@ bool ModelChecker::resolve_promises(ModelAction *write)
 			delete(promise);
 
 			promises->erase(promises->begin() + promise_index);
-			threads_to_check.push_back(read->get_tid());
+			actions_to_check.push_back(read);
 
 			resolved = true;
 		} else
@@ -2341,8 +2341,10 @@ bool ModelChecker::resolve_promises(ModelAction *write)
 	//Check whether reading these writes has made threads unable to
 	//resolve promises
 
-	for (unsigned int i = 0; i < threads_to_check.size(); i++)
-		mo_check_promises(threads_to_check[i], write);
+	for (unsigned int i = 0; i < actions_to_check.size(); i++) {
+		ModelAction *read=actions_to_check[i];
+		mo_check_promises(read->get_tid(), write, read);
+	}
 
 	return resolved;
 }
@@ -2421,8 +2423,9 @@ void ModelChecker::check_promises_thread_disabled() {
  *	write, or actually did the model action write.
  *
  *	@param write The ModelAction representing the relevant write.
+ *  @param read  The ModelAction that reads a promised write, or NULL otherwise.
  */
-void ModelChecker::mo_check_promises(thread_id_t tid, const ModelAction *write)
+void ModelChecker::mo_check_promises(thread_id_t tid, const ModelAction *write, const ModelAction *read)
 {
 	void *location = write->get_location();
 	for (unsigned int i = 0; i < promises->size(); i++) {
@@ -2435,19 +2438,22 @@ void ModelChecker::mo_check_promises(thread_id_t tid, const ModelAction *write)
 
 		//same thread as the promise
 		if (act->get_tid() == tid) {
-
-			//do we have a pwrite for the promise, if not, set it
-			if (promise->get_write() == NULL) {
-				promise->set_write(write);
-				//The pwrite cannot happen before the promise
-				if (write->happens_before(act) && (write != act)) {
+			//make sure that the reader of this write happens after the promise
+			if (( read == NULL ) || ( promise->get_action() -> happens_before(read))) {
+				//do we have a pwrite for the promise, if not, set it
+				if (promise->get_write() == NULL) {
+					promise->set_write(write);
+					//The pwrite cannot happen before the promise
+					if (write->happens_before(act) && (write != act)) {
+						priv->failed_promise = true;
+						return;
+					}
+				}
+			
+				if (mo_graph->checkPromise(write, promise)) {
 					priv->failed_promise = true;
 					return;
 				}
-			}
-			if (mo_graph->checkPromise(write, promise)) {
-				priv->failed_promise = true;
-				return;
 			}
 		}
 

@@ -31,21 +31,7 @@ class Promise {
 	modelclock_t get_expiration() const { return expiration; }
 	ModelAction * get_action() const { return read; }
 	bool eliminate_thread(thread_id_t tid);
-
-	/**
-	 * Check if a thread has already been eliminated from resolving this
-	 * promise
-	 * @param tid Thread ID of the thread to check
-	 * @return True if the thread is already eliminated; false otherwise
-	 */
-	bool thread_is_eliminated(thread_id_t tid) const
-	{
-		unsigned int id = id_to_int(tid);
-		if (id >= eliminated_thread.size())
-			return false;
-		return eliminated_thread[id];
-	}
-
+	bool thread_is_eliminated(thread_id_t tid) const;
 	bool has_failed() const;
 	uint64_t get_value() const { return value; }
 	void set_write(const ModelAction *act) { write = act; }

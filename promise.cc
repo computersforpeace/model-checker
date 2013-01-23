@@ -23,6 +23,20 @@ bool Promise::eliminate_thread(thread_id_t tid)
 }
 
 /**
+ * Check if a thread has already been eliminated from resolving this
+ * promise
+ * @param tid Thread ID of the thread to check
+ * @return True if the thread is already eliminated; false otherwise
+ */
+bool Promise::thread_is_eliminated(thread_id_t tid) const
+{
+	unsigned int id = id_to_int(tid);
+	if (id >= eliminated_thread.size())
+		return false;
+	return eliminated_thread[id];
+}
+
+/**
  * Check if this promise has failed. A promise can fail when all threads which
  * could possibly satisfy the promise have been eliminated.
  *

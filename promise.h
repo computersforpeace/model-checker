@@ -30,7 +30,7 @@ class Promise {
 		return synced_thread[id];
 	}
 
-	bool check_promise();
+	bool check_promise() const;
 	uint64_t get_value() const { return value; }
 	void set_write(const ModelAction *act) { write = act; }
 	const ModelAction * get_write() { return write; }
@@ -41,7 +41,7 @@ class Promise {
 	const uint64_t value;
 	const modelclock_t expiration;
 	ModelAction * const read;
-	const ModelAction * write;
+	const ModelAction *write;
 };
 
 #endif

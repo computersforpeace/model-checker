@@ -43,7 +43,6 @@ struct fairness_info {
 	bool priority;
 };
 
-
 /**
  * @brief A single node in a NodeStack
  *

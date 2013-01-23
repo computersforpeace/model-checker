@@ -195,7 +195,6 @@ bool Node::promise_empty() const
 	return true;
 }
 
-
 void Node::set_misc_max(int i)
 {
 	misc_max = i;
@@ -215,7 +214,6 @@ bool Node::misc_empty() const
 {
 	return (misc_index + 1) >= misc_max;
 }
-
 
 /**
  * Adds a value from a weakly ordered future write to backtrack to. This
@@ -398,7 +396,6 @@ modelclock_t Node::get_future_value_expiration() const
 	ASSERT(future_index >= 0 && future_index < ((int)future_values.size()));
 	return future_values[future_index].expiration;
 }
-
 
 int Node::get_read_from_size() const
 {

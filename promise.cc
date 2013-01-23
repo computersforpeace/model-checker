@@ -44,12 +44,10 @@ bool Promise::thread_is_eliminated(thread_id_t tid) const
  */
 bool Promise::has_failed() const
 {
-	unsigned int size = eliminated_thread.size();
-	int promise_tid = id_to_int(read->get_tid());
 	for (unsigned int i = 1; i < model->get_num_threads(); i++) {
-		if ((i >= size || !eliminated_thread[i]) && ((int)i != promise_tid) && model->is_enabled(int_to_id(i))) {
+		thread_id_t tid = int_to_id(i);
+		if (!thread_is_eliminated(tid) && model->is_enabled(tid))
 			return false;
-		}
 	}
 	return true;
 }

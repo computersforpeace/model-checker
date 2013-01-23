@@ -20,8 +20,11 @@ struct future_value {
 
 class Promise {
  public:
- Promise(ModelAction *act, uint64_t value, modelclock_t expiration) :
-	value(value), expiration(expiration), read(act), write(NULL)
+	Promise(ModelAction *act, struct future_value fv) :
+		value(fv.value),
+		expiration(fv.expiration),
+		read(act),
+		write(NULL)
 	{
 		increment_threads(act->get_tid());
 	}

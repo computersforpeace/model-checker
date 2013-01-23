@@ -219,7 +219,7 @@ bool CycleGraph::checkPromise(const ModelAction *fromact, Promise *promise) cons
 		CycleNode *node = queue.back();
 		queue.pop_back();
 
-		if (promise->increment_threads(node->getAction()->get_tid())) {
+		if (promise->eliminate_thread(node->getAction()->get_tid())) {
 			return true;
 		}
 

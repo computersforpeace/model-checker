@@ -2,7 +2,15 @@
 #include "model.h"
 #include "schedule.h"
 
-bool Promise::increment_threads(thread_id_t tid)
+/**
+ * Eliminate a thread which no longer can satisfy this promise. Once all
+ * enabled threads have been eliminated, this promise is unresolvable.
+ *
+ * @param tid The thread ID of the thread to eliminate
+ * @return True, if this elimination has invalidated the promise; false
+ * otherwise
+ */
+bool Promise::eliminate_thread(thread_id_t tid)
 {
 	unsigned int id = id_to_int(tid);
 	if (id >= synced_thread.size())

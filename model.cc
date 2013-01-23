@@ -2379,7 +2379,7 @@ void ModelChecker::check_promises(thread_id_t tid, ClockVector *old_cv, ClockVec
 		const ModelAction *act = promise->get_action();
 		if ((old_cv == NULL || !old_cv->synchronized_since(act)) &&
 				merge_cv->synchronized_since(act)) {
-			if (promise->increment_threads(tid)) {
+			if (promise->eliminate_thread(tid)) {
 				//Promise has failed
 				priv->failed_promise = true;
 				return;
@@ -2462,7 +2462,7 @@ void ModelChecker::mo_check_promises(thread_id_t tid, const ModelAction *write, 
 			continue;
 
 		if (promise->get_write() && mo_graph->checkReachable(promise->get_write(), write)) {
-			if (promise->increment_threads(tid)) {
+			if (promise->eliminate_thread(tid)) {
 				priv->failed_promise = true;
 				return;
 			}

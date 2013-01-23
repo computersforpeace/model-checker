@@ -2388,10 +2388,11 @@ void ModelChecker::check_promises(thread_id_t tid, ClockVector *old_cv, ClockVec
 	}
 }
 
-void ModelChecker::check_promises_thread_disabled() {
+void ModelChecker::check_promises_thread_disabled()
+{
 	for (unsigned int i = 0; i < promises->size(); i++) {
 		Promise *promise = (*promises)[i];
-		if (promise->check_promise()) {
+		if (promise->has_failed()) {
 			priv->failed_promise = true;
 			return;
 		}

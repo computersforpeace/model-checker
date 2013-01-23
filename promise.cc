@@ -19,10 +19,16 @@ bool Promise::eliminate_thread(thread_id_t tid)
 		return false;
 
 	synced_thread[id] = true;
-	return check_promise();
+	return has_failed();
 }
 
-bool Promise::check_promise() const
+/**
+ * Check if this promise has failed. A promise can fail when all threads which
+ * could possibly satisfy the promise have been eliminated.
+ *
+ * @return True, if this promise has failed; false otherwise
+ */
+bool Promise::has_failed() const
 {
 	unsigned int sync_size = synced_thread.size();
 	int promise_tid = id_to_int(read->get_tid());

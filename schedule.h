@@ -5,7 +5,6 @@
 #ifndef __SCHEDULE_H__
 #define __SCHEDULE_H__
 
-#include <list>
 #include "mymemory.h"
 
 /* Forward declaration */

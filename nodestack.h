@@ -5,7 +5,6 @@
 #ifndef __NODESTACK_H__
 #define __NODESTACK_H__
 
-#include <list>
 #include <vector>
 #include <cstddef>
 #include <inttypes.h>

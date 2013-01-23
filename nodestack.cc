@@ -225,8 +225,9 @@ bool Node::misc_empty() const
  * @param value is the value to backtrack to.
  * @return True if the future value was successully added; false otherwise
  */
-bool Node::add_future_value(uint64_t value, modelclock_t expiration)
+bool Node::add_future_value(const ModelAction *writer, modelclock_t expiration)
 {
+	uint64_t value = writer->get_value();
 	int idx = -1; /* Highest index where value is found */
 	for (unsigned int i = 0; i < future_values.size(); i++) {
 		if (future_values[i].value == value) {

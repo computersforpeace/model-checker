@@ -857,7 +857,7 @@ void ModelChecker::add_future_value(const ModelAction *writer, ModelAction *read
 {
 	/* Do more ambitious checks now that mo is more complete */
 	if (mo_may_allow(writer, reader) &&
-			reader->get_node()->add_future_value(writer->get_value(),
+			reader->get_node()->add_future_value(writer,
 				writer->get_seq_number() + params.maxfuturedelay))
 		set_latest_backtrack(reader);
 }

@@ -76,7 +76,7 @@ public:
 	 * occurred previously in the stack. */
 	Node * get_parent() const { return parent; }
 
-	bool add_future_value(uint64_t value, modelclock_t expiration);
+	bool add_future_value(const ModelAction *writer, modelclock_t expiration);
 	struct future_value get_future_value() const;
 	bool increment_future_value();
 	bool future_value_empty() const;

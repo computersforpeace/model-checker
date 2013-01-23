@@ -8,6 +8,7 @@
 #include "common.h"
 #include "model.h"
 #include "threads-model.h"
+#include "modeltypes.h"
 
 /**
  * @brief Node constructor

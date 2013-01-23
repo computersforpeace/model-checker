@@ -6,6 +6,7 @@
 #define __SCHEDULE_H__
 
 #include "mymemory.h"
+#include "modeltypes.h"
 
 /* Forward declaration */
 class Thread;

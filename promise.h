@@ -11,6 +11,12 @@
 #include "threads-model.h"
 
 #include "model.h"
+#include "modeltypes.h"
+
+struct future_value {
+	uint64_t value;
+	modelclock_t expiration;
+};
 
 class Promise {
  public:

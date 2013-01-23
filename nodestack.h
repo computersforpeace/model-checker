@@ -10,8 +10,8 @@
 #include <inttypes.h>
 
 #include "mymemory.h"
-#include "modeltypes.h"
 #include "schedule.h"
+#include "promise.h"
 
 class ModelAction;
 class Thread;
@@ -31,11 +31,6 @@ class Thread;
 #define PROMISE_RMW 0x10
 
 typedef int promise_t;
-
-struct future_value {
-	uint64_t value;
-	modelclock_t expiration;
-};
 
 struct fairness_info {
 	unsigned int enabled_count;

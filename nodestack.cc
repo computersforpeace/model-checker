@@ -1,3 +1,6 @@
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
+
 #include <string.h>
 
 #include "nodestack.h"
@@ -89,13 +92,21 @@ Node::~Node()
 void Node::print()
 {
 	action->print();
-	model_print("          backtrack: %s", backtrack_empty() ? "empty" : "non-empty");
+	model_print("          backtrack: %s", backtrack_empty() ? "empty" : "non-empty ");
 	for (int i = 0; i < (int)backtrack.size(); i++)
 		if (backtrack[i] == true)
 			model_print("[%d]", i);
 	model_print("\n");
-	model_print("          future values: %s\n", future_value_empty() ? "empty" : "non-empty");
-	model_print("          read-from: %s\n", read_from_empty() ? "empty" : "non-empty");
+	model_print("          future values: %s", future_value_empty() ? "empty" : "non-empty ");
+	for (int i = future_index + 1; i < (int)future_values.size(); i++)
+		model_print("[%#" PRIx64 "]", future_values[i].value);
+	model_print("\n");
+
+	model_print("          read-from: %s", read_from_empty() ? "empty" : "non-empty ");
+	for (int i = read_from_index + 1; i < (int)may_read_from.size(); i++)
+		model_print("[%d]", may_read_from[i]->get_seq_number());
+	model_print("\n");
+
 	model_print("          promises: %s\n", promise_empty() ? "empty" : "non-empty");
 	model_print("          misc: %s\n", misc_empty() ? "empty" : "non-empty");
 	model_print("          rel seq break: %s\n", relseq_break_empty() ? "empty" : "non-empty");

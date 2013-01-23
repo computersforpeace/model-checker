@@ -39,7 +39,7 @@ class Promise {
 
 	SNAPSHOTALLOC
  private:
-	std::vector<bool> eliminated_thread;
+	std::vector< bool, SnapshotAlloc<bool> > eliminated_thread;
 	const uint64_t value;
 	const modelclock_t expiration;
 	ModelAction * const read;

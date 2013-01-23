@@ -90,7 +90,7 @@ Node::~Node()
 }
 
 /** Prints debugging info for the ModelAction associated with this Node */
-void Node::print()
+void Node::print() const
 {
 	action->print();
 	model_print("          backtrack: %s", backtrack_empty() ? "empty" : "non-empty ");

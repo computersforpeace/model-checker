@@ -99,7 +99,7 @@ public:
 	bool increment_relseq_break();
 	bool relseq_break_empty() const;
 
-	void print();
+	void print() const;
 	void print_may_read_from();
 
 	MEMALLOC

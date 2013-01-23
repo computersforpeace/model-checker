@@ -13,12 +13,12 @@
 bool Promise::eliminate_thread(thread_id_t tid)
 {
 	unsigned int id = id_to_int(tid);
-	if (id >= synced_thread.size())
-		synced_thread.resize(id + 1, false);
-	if (synced_thread[id])
+	if (id >= eliminated_thread.size())
+		eliminated_thread.resize(id + 1, false);
+	if (eliminated_thread[id])
 		return false;
 
-	synced_thread[id] = true;
+	eliminated_thread[id] = true;
 	return has_failed();
 }
 
@@ -30,10 +30,10 @@ bool Promise::eliminate_thread(thread_id_t tid)
  */
 bool Promise::has_failed() const
 {
-	unsigned int sync_size = synced_thread.size();
+	unsigned int size = eliminated_thread.size();
 	int promise_tid = id_to_int(read->get_tid());
 	for (unsigned int i = 1; i < model->get_num_threads(); i++) {
-		if ((i >= sync_size || !synced_thread[i]) && ((int)i != promise_tid) && model->is_enabled(int_to_id(i))) {
+		if ((i >= size || !eliminated_thread[i]) && ((int)i != promise_tid) && model->is_enabled(int_to_id(i))) {
 			return false;
 		}
 	}

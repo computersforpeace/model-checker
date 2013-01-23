@@ -32,11 +32,18 @@ class Promise {
 	ModelAction * get_action() const { return read; }
 	bool eliminate_thread(thread_id_t tid);
 
-	bool has_sync_thread(thread_id_t tid) {
+	/**
+	 * Check if a thread has already been eliminated from resolving this
+	 * promise
+	 * @param tid Thread ID of the thread to check
+	 * @return True if the thread is already eliminated; false otherwise
+	 */
+	bool thread_is_eliminated(thread_id_t tid) const
+	{
 		unsigned int id = id_to_int(tid);
-		if (id >= synced_thread.size())
+		if (id >= eliminated_thread.size())
 			return false;
-		return synced_thread[id];
+		return eliminated_thread[id];
 	}
 
 	bool has_failed() const;
@@ -46,7 +53,7 @@ class Promise {
 
 	SNAPSHOTALLOC
  private:
-	std::vector<bool> synced_thread;
+	std::vector<bool> eliminated_thread;
 	const uint64_t value;
 	const modelclock_t expiration;
 	ModelAction * const read;

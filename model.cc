@@ -2687,7 +2687,7 @@ Thread * ModelChecker::get_thread(thread_id_t tid) const
  * @param act The ModelAction
  * @return A Thread reference
  */
-Thread * ModelChecker::get_thread(ModelAction *act) const
+Thread * ModelChecker::get_thread(const ModelAction *act) const
 {
 	return get_thread(act->get_tid());
 }

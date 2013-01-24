@@ -2398,19 +2398,23 @@ void ModelChecker::check_promises_thread_disabled()
 	}
 }
 
-/** Checks promises in response to addition to modification order for threads.
+/**
+ * @brief Checks promises in response to addition to modification order for
+ * threads.
+ *
  * Definitions:
+ *
  * pthread is the thread that performed the read that created the promise
  *
  * pread is the read that created the promise
  *
  * pwrite is either the first write to same location as pread by
- * pthread that is sequenced after pread or the value read by the
- * first read to the same lcoation as pread by pthread that is
- * sequenced after pread..
+ * pthread that is sequenced after pread or the write read by the
+ * first read to the same location as pread by pthread that is
+ * sequenced after pread.
  *
- *	1. If tid=pthread, then we check what other threads are reachable
- * through the mode order starting with pwrite.  Those threads cannot
+ * 1. If tid=pthread, then we check what other threads are reachable
+ * through the mod order starting with pwrite.  Those threads cannot
  * perform a write that will resolve the promise due to modification
  * order constraints.
  *
@@ -2419,11 +2423,11 @@ void ModelChecker::check_promises_thread_disabled()
  * cannot perform a future write that will resolve the promise due to
  * modificatin order constraints.
  *
- *	@param tid The thread that either read from the model action
- *	write, or actually did the model action write.
+ * @param tid The thread that either read from the model action write, or
+ * actually did the model action write.
  *
- *	@param write The ModelAction representing the relevant write.
- *  @param read  The ModelAction that reads a promised write, or NULL otherwise.
+ * @param write The ModelAction representing the relevant write.
+ * @param read  The ModelAction that reads a promised write, or NULL otherwise.
  */
 void ModelChecker::mo_check_promises(thread_id_t tid, const ModelAction *write, const ModelAction *read)
 {

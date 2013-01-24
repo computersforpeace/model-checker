@@ -226,9 +226,10 @@ bool Node::misc_empty() const
  * @param value is the value to backtrack to.
  * @return True if the future value was successully added; false otherwise
  */
-bool Node::add_future_value(const ModelAction *writer, modelclock_t expiration)
+bool Node::add_future_value(struct future_value& fv)
 {
-	uint64_t value = writer->get_value();
+	uint64_t value = fv.value;
+	modelclock_t expiration = fv.expiration;
 	int idx = -1; /* Highest index where value is found */
 	for (unsigned int i = 0; i < future_values.size(); i++) {
 		if (future_values[i].value == value) {
@@ -251,8 +252,7 @@ bool Node::add_future_value(const ModelAction *writer, modelclock_t expiration)
 			(int)future_values.size() >= model->params.maxfuturevalues)
 		return false;
 
-	struct future_value newfv = {value, expiration};
-	future_values.push_back(newfv);
+	future_values.push_back(fv);
 	return true;
 }
 

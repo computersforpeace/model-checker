@@ -855,10 +855,14 @@ bool ModelChecker::process_mutex(ModelAction *curr)
 void ModelChecker::add_future_value(const ModelAction *writer, ModelAction *reader)
 {
 	/* Do more ambitious checks now that mo is more complete */
-	if (mo_may_allow(writer, reader) &&
-			reader->get_node()->add_future_value(writer,
-				writer->get_seq_number() + params.maxfuturedelay))
-		set_latest_backtrack(reader);
+	if (mo_may_allow(writer, reader)) {
+		struct future_value fv = {
+			writer->get_value(),
+			writer->get_seq_number() + params.maxfuturedelay,
+		};
+		if (reader->get_node()->add_future_value(fv))
+			set_latest_backtrack(reader);
+	}
 }
 
 /**

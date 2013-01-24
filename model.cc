@@ -737,6 +737,7 @@ bool ModelChecker::process_read(ModelAction *curr, bool second_part_of_rmw)
 			/* Read from future value */
 			struct future_value fv = curr->get_node()->get_future_value();
 			value = fv.value;
+			curr->set_value(fv.value);
 			curr->set_read_from(NULL);
 			promises->push_back(new Promise(curr, fv));
 		}

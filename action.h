@@ -79,6 +79,7 @@ public:
 	void * get_location() const { return location; }
 	modelclock_t get_seq_number() const { return seq_number; }
 	uint64_t get_value() const { return value; }
+	void set_value(uint64_t v) { value = v; }
 	const ModelAction * get_reads_from() const { return reads_from; }
 
 	Node * get_node() const;

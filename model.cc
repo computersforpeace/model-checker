@@ -2432,24 +2432,24 @@ void ModelChecker::mo_check_promises(thread_id_t tid, const ModelAction *write, 
 		Promise *promise = (*promises)[i];
 		const ModelAction *act = promise->get_action();
 
-		//Is this promise on the same location?
+		// Is this promise on the same location?
 		if (act->get_location() != location)
 			continue;
 
-		//same thread as the promise
+		// same thread as the promise
 		if (act->get_tid() == tid) {
-			//make sure that the reader of this write happens after the promise
-			if (( read == NULL ) || ( promise->get_action() -> happens_before(read))) {
-				//do we have a pwrite for the promise, if not, set it
+			// make sure that the reader of this write happens after the promise
+			if ((read == NULL) || (promise->get_action()->happens_before(read))) {
+				// do we have a pwrite for the promise, if not, set it
 				if (promise->get_write() == NULL) {
 					promise->set_write(write);
-					//The pwrite cannot happen before the promise
+					// The pwrite cannot happen before the promise
 					if (write->happens_before(act) && (write != act)) {
 						priv->failed_promise = true;
 						return;
 					}
 				}
-			
+
 				if (mo_graph->checkPromise(write, promise)) {
 					priv->failed_promise = true;
 					return;
@@ -2457,7 +2457,7 @@ void ModelChecker::mo_check_promises(thread_id_t tid, const ModelAction *write, 
 			}
 		}
 
-		//Don't do any lookups twice for the same thread
+		// Don't do any lookups twice for the same thread
 		if (promise->thread_is_eliminated(tid))
 			continue;
 

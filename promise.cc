@@ -74,11 +74,5 @@ void Promise::print() const
  */
 bool Promise::has_failed() const
 {
-	for (unsigned int i = 0; i < available_thread.size(); i++) {
-		thread_id_t tid = int_to_id(i);
-		if (thread_is_available(tid) && model->is_enabled(tid))
-			return false;
-	}
-	ASSERT(num_available_threads == 0);
-	return true;
+	return num_available_threads == 0;
 }

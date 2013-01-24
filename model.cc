@@ -2475,7 +2475,7 @@ void ModelChecker::mo_check_promises(thread_id_t tid, const ModelAction *write, 
 		}
 
 		// Don't do any lookups twice for the same thread
-		if (promise->thread_is_eliminated(tid))
+		if (!promise->thread_is_available(tid))
 			continue;
 
 		if (promise->get_write() && mo_graph->checkReachable(promise->get_write(), write)) {

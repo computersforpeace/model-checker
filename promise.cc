@@ -1,3 +1,6 @@
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
+
 #include "promise.h"
 #include "model.h"
 #include "schedule.h"
@@ -13,27 +16,54 @@
 bool Promise::eliminate_thread(thread_id_t tid)
 {
 	unsigned int id = id_to_int(tid);
-	if (id >= eliminated_thread.size())
-		eliminated_thread.resize(id + 1, false);
-	if (eliminated_thread[id])
+	if (!thread_is_available(tid))
 		return false;
 
-	eliminated_thread[id] = true;
+	available_thread[id] = false;
+	num_available_threads--;
 	return has_failed();
 }
 
 /**
- * Check if a thread has already been eliminated from resolving this
- * promise
- * @param tid Thread ID of the thread to check
- * @return True if the thread is already eliminated; false otherwise
+ * Add a thread which may resolve this promise
+ *
+ * @param tid The thread ID
  */
-bool Promise::thread_is_eliminated(thread_id_t tid) const
+void Promise::add_thread(thread_id_t tid)
 {
 	unsigned int id = id_to_int(tid);
-	if (id >= eliminated_thread.size())
+	if (id >= available_thread.size())
+		available_thread.resize(id + 1, false);
+	if (!available_thread[id]) {
+		available_thread[id] = true;
+		num_available_threads++;
+	}
+}
+
+/**
+ * Check if a thread is available for resolving this promise. That is, the
+ * thread must have been previously marked for resolving this promise, and it
+ * cannot have been eliminated due to synchronization, etc.
+ *
+ * @param tid Thread ID of the thread to check
+ * @return True if the thread is available; false otherwise
+ */
+bool Promise::thread_is_available(thread_id_t tid) const
+{
+	unsigned int id = id_to_int(tid);
+	if (id >= available_thread.size())
 		return false;
-	return eliminated_thread[id];
+	return available_thread[id];
+}
+
+/** @brief Print debug info about the Promise */
+void Promise::print() const
+{
+	model_print("Promised value %#" PRIx64 ", read from thread %d, available threads to resolve: ", value, read->get_tid());
+	for (unsigned int i = 0; i < available_thread.size(); i++)
+		if (available_thread[i])
+			model_print("[%d]", i);
+	model_print("\n");
 }
 
 /**
@@ -44,10 +74,11 @@ bool Promise::thread_is_eliminated(thread_id_t tid) const
  */
 bool Promise::has_failed() const
 {
-	for (unsigned int i = 1; i < model->get_num_threads(); i++) {
+	for (unsigned int i = 0; i < available_thread.size(); i++) {
 		thread_id_t tid = int_to_id(i);
-		if (!thread_is_eliminated(tid) && model->is_enabled(tid))
+		if (thread_is_available(tid) && model->is_enabled(tid))
 			return false;
 	}
+	ASSERT(num_available_threads == 0);
 	return true;
 }

@@ -22,25 +22,36 @@ struct future_value {
 class Promise {
  public:
 	Promise(ModelAction *act, struct future_value fv) :
+		num_available_threads(0),
 		value(fv.value),
 		expiration(fv.expiration),
 		read(act),
 		write(NULL)
 	{
+		add_thread(fv.tid);
 		eliminate_thread(act->get_tid());
 	}
 	modelclock_t get_expiration() const { return expiration; }
 	ModelAction * get_action() const { return read; }
 	bool eliminate_thread(thread_id_t tid);
-	bool thread_is_eliminated(thread_id_t tid) const;
+	void add_thread(thread_id_t tid);
+	bool thread_is_available(thread_id_t tid) const;
 	bool has_failed() const;
 	uint64_t get_value() const { return value; }
 	void set_write(const ModelAction *act) { write = act; }
 	const ModelAction * get_write() { return write; }
+	int get_num_available_threads() { return num_available_threads; }
+
+	void print() const;
 
 	SNAPSHOTALLOC
  private:
-	std::vector< bool, SnapshotAlloc<bool> > eliminated_thread;
+	/** @brief Thread ID(s) for thread(s) that potentially can satisfy this
+	 *  promise */
+	std::vector< bool, SnapshotAlloc<bool> > available_thread;
+
+	int num_available_threads;
+
 	const uint64_t value;
 	const modelclock_t expiration;
 	ModelAction * const read;

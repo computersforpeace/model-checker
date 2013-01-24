@@ -968,6 +968,12 @@ bool ModelChecker::process_thread_action(ModelAction *curr)
 	case THREAD_CREATE: {
 		Thread *th = curr->get_thread_operand();
 		th->set_creation(curr);
+		/* Promises can be satisfied by children */
+		for (unsigned int i = 0; i < promises->size(); i++) {
+			Promise *promise = (*promises)[i];
+			if (promise->thread_is_available(curr->get_tid()))
+				promise->add_thread(th->get_id());
+		}
 		break;
 	}
 	case THREAD_JOIN: {
@@ -984,6 +990,13 @@ bool ModelChecker::process_thread_action(ModelAction *curr)
 			scheduler->wake(get_thread(act));
 		}
 		th->complete();
+		/* Completed thread can't satisfy promises */
+		for (unsigned int i = 0; i < promises->size(); i++) {
+			Promise *promise = (*promises)[i];
+			if (promise->thread_is_available(th->get_id()))
+				if (promise->eliminate_thread(th->get_id()))
+					priv->failed_promise = true;
+		}
 		updated = true; /* trigger rel-seq checks */
 		break;
 	}

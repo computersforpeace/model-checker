@@ -230,9 +230,10 @@ bool Node::add_future_value(struct future_value& fv)
 {
 	uint64_t value = fv.value;
 	modelclock_t expiration = fv.expiration;
+	thread_id_t tid = fv.tid;
 	int idx = -1; /* Highest index where value is found */
 	for (unsigned int i = 0; i < future_values.size(); i++) {
-		if (future_values[i].value == value) {
+		if (future_values[i].value == value && future_values[i].tid == tid) {
 			if (expiration <= future_values[i].expiration)
 				return false;
 			idx = i;

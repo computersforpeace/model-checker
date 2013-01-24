@@ -856,11 +856,19 @@ void ModelChecker::add_future_value(const ModelAction *writer, ModelAction *read
 {
 	/* Do more ambitious checks now that mo is more complete */
 	if (mo_may_allow(writer, reader)) {
+		Node *node = reader->get_node();
+
+		/* Find an ancestor thread which exists at the time of the reader */
+		Thread *write_thread = get_thread(writer);
+		while (id_to_int(write_thread->get_id()) >= node->get_num_threads())
+			write_thread = write_thread->get_parent();
+
 		struct future_value fv = {
 			writer->get_value(),
 			writer->get_seq_number() + params.maxfuturedelay,
+			write_thread->get_id(),
 		};
-		if (reader->get_node()->add_future_value(fv))
+		if (node->add_future_value(fv))
 			set_latest_backtrack(reader);
 	}
 }

@@ -16,6 +16,7 @@
 struct future_value {
 	uint64_t value;
 	modelclock_t expiration;
+	thread_id_t tid;
 };
 
 class Promise {

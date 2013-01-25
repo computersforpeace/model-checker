@@ -62,6 +62,16 @@ void CycleGraph::addEdge(const ModelAction *from, const ModelAction *to)
 	CycleNode *fromnode = getNode(from);
 	CycleNode *tonode = getNode(to);
 
+	addEdge(fromnode, tonode);
+}
+
+/**
+ * Adds an edge between two CycleNodes.
+ * @param fromnode The edge comes from this CycleNode
+ * @param tonode The edge points to this CycleNode
+ */
+void CycleGraph::addEdge(CycleNode *fromnode, CycleNode *tonode)
+{
 	if (!hasCycles)
 		hasCycles = checkReachable(tonode, fromnode);
 
@@ -117,11 +127,7 @@ void CycleGraph::addRMWEdge(const ModelAction *from, const ModelAction *rmw)
 		}
 	}
 
-	if (!hasCycles)
-		hasCycles = checkReachable(rmwnode, fromnode);
-
-	if (fromnode->addEdge(rmwnode))
-		rollbackvector.push_back(fromnode);
+	addEdge(fromnode, rmwnode);
 }
 
 #if SUPPORT_MOD_ORDER_DUMP

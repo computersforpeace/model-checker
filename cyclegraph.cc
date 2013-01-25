@@ -92,10 +92,17 @@ void CycleGraph::addEdge(CycleNode *fromnode, CycleNode *tonode)
 	}
 }
 
-/** Handles special case of a RMW action.  The ModelAction rmw reads
- *  from the ModelAction from.  The key differences are: (1) no write
- *  can occur in between the rmw and the from action.  Only one RMW
- *  action can read from a given write.
+/**
+ * @brief Add an edge between a write and the RMW which reads from it
+ *
+ * Handles special case of a RMW action, where the ModelAction rmw reads from
+ * the ModelAction from. The key differences are:
+ * (1) no write can occur in between the rmw and the from action.
+ * (2) Only one RMW action can read from a given write.
+ *
+ * @param from The edge comes from this ModelAction
+ * @param rmw The edge points to this ModelAction; this action must read from
+ * ModelAction from
  */
 void CycleGraph::addRMWEdge(const ModelAction *from, const ModelAction *rmw)
 {

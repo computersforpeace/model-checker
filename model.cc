@@ -1407,21 +1407,11 @@ bool ModelChecker::is_feasible_prefix_ignore_relseq() const
  */
 bool ModelChecker::is_infeasible() const
 {
-	return mo_graph->checkForRMWViolation() || is_infeasible_ignoreRMW();
-}
-
-/**
- * Check If the current partial trace is infeasible, while ignoring
- * infeasibility related to 2 RMW's reading from the same store. It does not
- * check end-of-execution feasibility.
- * @see ModelChecker::is_infeasible
- * @return whether the current partial trace is infeasible, ignoring multiple
- * RMWs reading from the same store.
- * */
-bool ModelChecker::is_infeasible_ignoreRMW() const
-{
-	return mo_graph->checkForCycles() || priv->failed_promise ||
-		priv->too_many_reads || priv->bad_synchronization ||
+	return mo_graph->checkForRMWViolation() ||
+		mo_graph->checkForCycles() ||
+		priv->failed_promise ||
+		priv->too_many_reads ||
+		priv->bad_synchronization ||
 		promises_expired();
 }
 

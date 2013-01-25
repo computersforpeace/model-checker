@@ -257,7 +257,6 @@ private:
 
 	void print_infeasibility(const char *prefix) const;
 	bool is_feasible_prefix_ignore_relseq() const;
-	bool is_infeasible_ignoreRMW() const;
 	bool is_infeasible() const;
 	bool is_deadlocked() const;
 	bool is_complete_execution() const;

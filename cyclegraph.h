@@ -26,7 +26,6 @@ class CycleGraph {
 	~CycleGraph();
 	void addEdge(const ModelAction *from, const ModelAction *to);
 	bool checkForCycles() const;
-	bool checkForRMWViolation() const;
 	void addRMWEdge(const ModelAction *from, const ModelAction *rmw);
 	bool checkPromise(const ModelAction *from, Promise *p) const;
 	bool checkReachable(const ModelAction *from, const ModelAction *to) const;
@@ -56,9 +55,6 @@ class CycleGraph {
 	/** @brief A flag: true if this graph contains cycles */
 	bool hasCycles;
 	bool oldCycles;
-
-	bool hasRMWViolation;
-	bool oldRMWViolation;
 
 	std::vector< CycleNode *, SnapshotAlloc<CycleNode *> > rollbackvector;
 	std::vector< CycleNode *, SnapshotAlloc<CycleNode *> > rmwrollbackvector;

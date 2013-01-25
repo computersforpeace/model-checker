@@ -1372,8 +1372,6 @@ void ModelChecker::print_infeasibility(const char *prefix) const
 {
 	char buf[100];
 	char *ptr = buf;
-	if (mo_graph->checkForRMWViolation())
-		ptr += sprintf(ptr, "[RMW atomicity]");
 	if (mo_graph->checkForCycles())
 		ptr += sprintf(ptr, "[mo cycle]");
 	if (priv->failed_promise)
@@ -1407,8 +1405,7 @@ bool ModelChecker::is_feasible_prefix_ignore_relseq() const
  */
 bool ModelChecker::is_infeasible() const
 {
-	return mo_graph->checkForRMWViolation() ||
-		mo_graph->checkForCycles() ||
+	return mo_graph->checkForCycles() ||
 		priv->failed_promise ||
 		priv->too_many_reads ||
 		priv->bad_synchronization ||

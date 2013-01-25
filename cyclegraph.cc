@@ -8,9 +8,7 @@
 CycleGraph::CycleGraph() :
 	discovered(new HashTable<const CycleNode *, const CycleNode *, uintptr_t, 4, model_malloc, model_calloc, model_free>(16)),
 	hasCycles(false),
-	oldCycles(false),
-	hasRMWViolation(false),
-	oldRMWViolation(false)
+	oldCycles(false)
 {
 }
 
@@ -113,11 +111,10 @@ void CycleGraph::addRMWEdge(const ModelAction *from, const ModelAction *rmw)
 	CycleNode *rmwnode = getNode(rmw);
 
 	/* Two RMW actions cannot read from the same write. */
-	if (fromnode->setRMW(rmwnode)) {
-		hasRMWViolation = true;
-	} else {
+	if (fromnode->setRMW(rmwnode))
+		hasCycles = true;
+	else
 		rmwrollbackvector.push_back(fromnode);
-	}
 
 	/* Transfer all outgoing edges from the from node to the rmw node */
 	/* This process should not add a cycle because either:
@@ -246,7 +243,6 @@ void CycleGraph::startChanges()
 	ASSERT(rollbackvector.size() == 0);
 	ASSERT(rmwrollbackvector.size() == 0);
 	ASSERT(oldCycles == hasCycles);
-	ASSERT(oldRMWViolation == hasRMWViolation);
 }
 
 /** Commit changes to the cyclegraph. */
@@ -255,7 +251,6 @@ void CycleGraph::commitChanges()
 	rollbackvector.resize(0);
 	rmwrollbackvector.resize(0);
 	oldCycles = hasCycles;
-	oldRMWViolation = hasRMWViolation;
 }
 
 /** Rollback changes to the previous commit. */
@@ -270,7 +265,6 @@ void CycleGraph::rollbackChanges()
 	}
 
 	hasCycles = oldCycles;
-	hasRMWViolation = oldRMWViolation;
 	rollbackvector.resize(0);
 	rmwrollbackvector.resize(0);
 }
@@ -279,11 +273,6 @@ void CycleGraph::rollbackChanges()
 bool CycleGraph::checkForCycles() const
 {
 	return hasCycles;
-}
-
-bool CycleGraph::checkForRMWViolation() const
-{
-	return hasRMWViolation;
 }
 
 /**

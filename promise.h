@@ -21,15 +21,15 @@ struct future_value {
 
 class Promise {
  public:
-	Promise(ModelAction *act, struct future_value fv) :
+	Promise(ModelAction *read, struct future_value fv) :
 		num_available_threads(0),
 		value(fv.value),
 		expiration(fv.expiration),
-		read(act),
+		read(read),
 		write(NULL)
 	{
 		add_thread(fv.tid);
-		eliminate_thread(act->get_tid());
+		eliminate_thread(read->get_tid());
 	}
 	modelclock_t get_expiration() const { return expiration; }
 	ModelAction * get_action() const { return read; }
@@ -54,7 +54,10 @@ class Promise {
 
 	const uint64_t value;
 	const modelclock_t expiration;
+
+	/** @brief The action which reads a promised value */
 	ModelAction * const read;
+
 	const ModelAction *write;
 };
 

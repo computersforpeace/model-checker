@@ -73,6 +73,9 @@ class CycleNode {
 	unsigned int getNumEdges() const;
 	CycleNode * getBackEdge(unsigned int i) const;
 	unsigned int getNumBackEdges() const;
+	CycleNode * removeEdge();
+	CycleNode * removeBackEdge();
+
 	bool setRMW(CycleNode *);
 	CycleNode * getRMW() const;
 	void clearRMW() { hasRMW = NULL; }

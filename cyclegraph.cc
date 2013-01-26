@@ -321,6 +321,54 @@ unsigned int CycleNode::getNumBackEdges() const
 }
 
 /**
+ * @brief Remove an element from a vector
+ * @param v The vector
+ * @param n The element to remove
+ * @return True if the element was found; false otherwise
+ */
+template <typename T>
+static bool vector_remove_node(std::vector<T, SnapshotAlloc<T> >& v, const T n)
+{
+	for (unsigned int i = 0; i < v.size(); i++) {
+		if (v[i] == n) {
+			v.erase(v.begin() + i);
+			return true;
+		}
+	}
+	return false;
+}
+
+/**
+ * @brief Remove a (forward) edge from this CycleNode
+ * @return The CycleNode which was popped, if one exists; otherwise NULL
+ */
+CycleNode * CycleNode::removeEdge()
+{
+	if (edges.empty())
+		return NULL;
+
+	CycleNode *ret = edges.back();
+	edges.pop_back();
+	vector_remove_node(ret->back_edges, this);
+	return ret;
+}
+
+/**
+ * @brief Remove a (back) edge from this CycleNode
+ * @return The CycleNode which was popped, if one exists; otherwise NULL
+ */
+CycleNode * CycleNode::removeBackEdge()
+{
+	if (back_edges.empty())
+		return NULL;
+
+	CycleNode *ret = back_edges.back();
+	back_edges.pop_back();
+	vector_remove_node(ret->edges, this);
+	return ret;
+}
+
+/**
  * Adds an edge from this CycleNode to another CycleNode.
  * @param node The node to which we add a directed edge
  * @return True if this edge is a new edge; false otherwise

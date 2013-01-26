@@ -60,10 +60,14 @@ class CycleGraph {
 	std::vector< CycleNode *, SnapshotAlloc<CycleNode *> > rmwrollbackvector;
 };
 
-/** @brief A node within a CycleGraph; corresponds to one ModelAction */
+/**
+ * @brief A node within a CycleGraph; corresponds either to one ModelAction or
+ * to a promised future value
+ */
 class CycleNode {
  public:
 	CycleNode(const ModelAction *act);
+	CycleNode(const Promise *promise);
 	bool addEdge(CycleNode *node);
 	CycleNode * getEdge(unsigned int i) const;
 	unsigned int getNumEdges() const;
@@ -78,10 +82,16 @@ class CycleNode {
 		edges.pop_back();
 	}
 
+	bool is_promise() const { return !action; }
+
 	SNAPSHOTALLOC
  private:
 	/** @brief The ModelAction that this node represents */
 	const ModelAction *action;
+
+	/** @brief The promise represented by this node; only valid when action
+	 * is NULL */
+	const Promise *promise;
 
 	/** @brief The edges leading out from this node */
 	std::vector< CycleNode *, SnapshotAlloc<CycleNode *> > edges;

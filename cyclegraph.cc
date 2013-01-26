@@ -279,6 +279,18 @@ bool CycleGraph::checkForCycles() const
  */
 CycleNode::CycleNode(const ModelAction *act) :
 	action(act),
+	promise(NULL),
+	hasRMW(NULL)
+{
+}
+
+/**
+ * @brief Constructor for a Promise CycleNode
+ * @param promise The Promise which was generated
+ */
+CycleNode::CycleNode(const Promise *promise) :
+	action(NULL),
+	promise(promise),
 	hasRMW(NULL)
 {
 }

@@ -45,10 +45,16 @@ class CycleGraph {
 	void addNodeEdge(CycleNode *fromnode, CycleNode *tonode);
 	void putNode(const ModelAction *act, CycleNode *node);
 	CycleNode * getNode(const ModelAction *);
+	CycleNode * getNode(const Promise *promise);
+
 	HashTable<const CycleNode *, const CycleNode *, uintptr_t, 4, model_malloc, model_calloc, model_free> *discovered;
 
 	/** @brief A table for mapping ModelActions to CycleNodes */
 	HashTable<const ModelAction *, CycleNode *, uintptr_t, 4> actionToNode;
+	/** @brief A table for mapping reader ModelActions to Promise
+	 *  CycleNodes */
+	HashTable<const ModelAction *, CycleNode *, uintptr_t, 4> readerToPromiseNode;
+
 #if SUPPORT_MOD_ORDER_DUMP
 	std::vector<CycleNode *> nodeList;
 #endif

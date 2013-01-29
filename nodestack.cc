@@ -164,7 +164,7 @@ bool Node::increment_promise()
 				//sending our value to two rmws... not going to work..try next combination
 				continue;
 			}
-			promises[i] = (promises[i] & PROMISE_RMW) |PROMISE_FULFILLED;
+			promises[i] = (promises[i] & PROMISE_RMW) | PROMISE_FULFILLED;
 			while (i > 0) {
 				i--;
 				if ((promises[i] & PROMISE_MASK) == PROMISE_FULFILLED)
@@ -188,9 +188,9 @@ bool Node::promise_empty() const
 	for (int i = promises.size() - 1; i >= 0; i--) {
 		if (promises[i] == PROMISE_UNFULFILLED)
 			return false;
-		if (!fulfilledrmw && ((promises[i]&PROMISE_MASK) == PROMISE_UNFULFILLED))
+		if (!fulfilledrmw && ((promises[i] & PROMISE_MASK) == PROMISE_UNFULFILLED))
 			return false;
-		if (promises[i] == (PROMISE_FULFILLED|PROMISE_RMW))
+		if (promises[i] == (PROMISE_FULFILLED | PROMISE_RMW))
 			fulfilledrmw = true;
 	}
 	return true;

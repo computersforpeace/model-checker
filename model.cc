@@ -2339,7 +2339,7 @@ bool ModelChecker::resolve_promises(ModelAction *write)
 			post_r_modification_order(read, write);
 			//Make sure the promise's value matches the write's value
 			ASSERT(promise->get_value() == write->get_value());
-			delete(promise);
+			delete promise;
 
 			promises->erase(promises->begin() + promise_index);
 			actions_to_check.push_back(read);

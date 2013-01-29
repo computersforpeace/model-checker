@@ -24,7 +24,10 @@ class CycleGraph {
  public:
 	CycleGraph();
 	~CycleGraph();
-	void addEdge(const ModelAction *from, const ModelAction *to);
+
+	template <typename T, typename U>
+	void addEdge(const T from, const U to);
+
 	bool checkForCycles() const;
 	void addRMWEdge(const ModelAction *from, const ModelAction *rmw);
 	bool checkPromise(const ModelAction *from, Promise *p) const;

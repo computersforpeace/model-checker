@@ -47,12 +47,19 @@ CycleNode * CycleGraph::getNode(const ModelAction *action)
 }
 
 /**
- * Adds an edge between two ModelActions. The ModelAction @a to is ordered
- * after the ModelAction @a from.
- * @param to The edge points to this ModelAction
- * @param from The edge comes from this ModelAction
+ * @brief Adds an edge between objects
+ *
+ * This function will add an edge between any two objects which can be
+ * associated with a CycleNode. That is, if they have a CycleGraph::getNode
+ * implementation.
+ *
+ * The object to is ordered after the object from.
+ *
+ * @param to The edge points to this object, of type T
+ * @param from The edge comes from this object, of type U
  */
-void CycleGraph::addEdge(const ModelAction *from, const ModelAction *to)
+template <typename T, typename U>
+void CycleGraph::addEdge(const T from, const U to)
 {
 	ASSERT(from);
 	ASSERT(to);

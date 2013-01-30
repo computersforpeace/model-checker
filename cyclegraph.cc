@@ -240,33 +240,31 @@ bool CycleGraph::checkPromise(const ModelAction *fromact, Promise *promise) cons
 
 void CycleGraph::startChanges()
 {
-	ASSERT(rollbackvector.size() == 0);
-	ASSERT(rmwrollbackvector.size() == 0);
+	ASSERT(rollbackvector.empty());
+	ASSERT(rmwrollbackvector.empty());
 	ASSERT(oldCycles == hasCycles);
 }
 
 /** Commit changes to the cyclegraph. */
 void CycleGraph::commitChanges()
 {
-	rollbackvector.resize(0);
-	rmwrollbackvector.resize(0);
+	rollbackvector.clear();
+	rmwrollbackvector.clear();
 	oldCycles = hasCycles;
 }
 
 /** Rollback changes to the previous commit. */
 void CycleGraph::rollbackChanges()
 {
-	for (unsigned int i = 0; i < rollbackvector.size(); i++) {
+	for (unsigned int i = 0; i < rollbackvector.size(); i++)
 		rollbackvector[i]->popEdge();
-	}
 
-	for (unsigned int i = 0; i < rmwrollbackvector.size(); i++) {
+	for (unsigned int i = 0; i < rmwrollbackvector.size(); i++)
 		rmwrollbackvector[i]->clearRMW();
-	}
 
 	hasCycles = oldCycles;
-	rollbackvector.resize(0);
-	rmwrollbackvector.resize(0);
+	rollbackvector.clear();
+	rmwrollbackvector.clear();
 }
 
 /** @returns whether a CycleGraph contains cycles. */

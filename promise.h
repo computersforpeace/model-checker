@@ -41,6 +41,7 @@ class Promise {
 	void set_write(const ModelAction *act) { write = act; }
 	const ModelAction * get_write() { return write; }
 	int get_num_available_threads() { return num_available_threads; }
+	bool is_compatible(const ModelAction *write) const;
 
 	void print() const;
 

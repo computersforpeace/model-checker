@@ -76,3 +76,12 @@ bool Promise::has_failed() const
 {
 	return num_available_threads == 0;
 }
+
+/**
+ * @param write A store which could satisfy this Promise
+ * @return True if the store can satisfy this Promise; false otherwise
+ */
+bool Promise::is_compatible(const ModelAction *write) const
+{
+	return thread_is_available(write->get_tid());
+}

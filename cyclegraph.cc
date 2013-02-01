@@ -429,3 +429,19 @@ bool CycleNode::setRMW(CycleNode *node)
 	hasRMW = node;
 	return false;
 }
+
+/**
+ * Convert a Promise CycleNode into a concrete-valued CycleNode. Should only be
+ * used when there's no existing ModelAction CycleNode for this write.
+ *
+ * @param writer The ModelAction which wrote the future value represented by
+ * this CycleNode
+ */
+void CycleNode::resolvePromise(const ModelAction *writer)
+{
+	ASSERT(is_promise());
+	ASSERT(promise->is_compatible(writer));
+	action = writer;
+	promise = NULL;
+	ASSERT(!is_promise());
+}

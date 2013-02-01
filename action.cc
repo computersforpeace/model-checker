@@ -510,8 +510,10 @@ void ModelAction::print() const
 	}
 
 	uint64_t valuetoprint;
-	if (type == ATOMIC_READ && reads_from != NULL)
+	if (is_read() && reads_from)
 		valuetoprint = reads_from->value;
+	else if (is_read() && reads_from_promise)
+		valuetoprint = reads_from_promise->get_value();
 	else
 		valuetoprint = value;
 

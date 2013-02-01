@@ -15,6 +15,7 @@
 
 class ClockVector;
 class Thread;
+class Promise;
 
 using std::memory_order;
 using std::memory_order_relaxed;
@@ -79,13 +80,14 @@ public:
 	void * get_location() const { return location; }
 	modelclock_t get_seq_number() const { return seq_number; }
 	uint64_t get_value() const { return value; }
-	void set_value(uint64_t v) { value = v; }
 	const ModelAction * get_reads_from() const { return reads_from; }
+	const Promise * get_reads_from_promise() const { return reads_from_promise; }
 
 	Node * get_node() const;
 	void set_node(Node *n) { node = n; }
 
 	void set_read_from(const ModelAction *act);
+	void set_read_from_promise(const Promise *promise);
 
 	/** Store the most recent fence-release from the same thread
 	 *  @param fence The fence-release that occured prior to this */
@@ -169,6 +171,9 @@ private:
 
 	/** The action that this action reads from. Only valid for reads */
 	const ModelAction *reads_from;
+
+	/** The promise that this action reads from. Only valid for reads */
+	const Promise *reads_from_promise;
 
 	/** The last fence release from the same thread */
 	const ModelAction *last_fence_release;

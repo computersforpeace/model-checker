@@ -393,8 +393,20 @@ Node * ModelAction::get_node() const
 void ModelAction::set_read_from(const ModelAction *act)
 {
 	reads_from = act;
+	reads_from_promise = NULL;
 	if (act && act->is_uninitialized())
 		model->assert_bug("May read from uninitialized atomic\n");
+}
+
+/**
+ * Set this action's read-from promise
+ * @param promise The promise to read from
+ */
+void ModelAction::set_read_from_promise(const Promise *promise)
+{
+	ASSERT(is_read());
+	reads_from_promise = promise;
+	reads_from = NULL;
 }
 
 /**

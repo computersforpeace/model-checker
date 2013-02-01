@@ -19,6 +19,8 @@ class Promise;
 class CycleNode;
 class ModelAction;
 
+typedef std::vector< const Promise *, ModelAlloc<const Promise *> > promise_list_t;
+
 /** @brief A graph of Model Actions for tracking cycles. */
 class CycleGraph {
  public:
@@ -40,12 +42,17 @@ class CycleGraph {
 	void dumpGraphToFile(const char *filename) const;
 #endif
 
+	bool resolvePromise(ModelAction *reader, ModelAction *writer,
+			promise_list_t *mustResolve);
+
 	SNAPSHOTALLOC
  private:
 	void addNodeEdge(CycleNode *fromnode, CycleNode *tonode);
 	void putNode(const ModelAction *act, CycleNode *node);
 	CycleNode * getNode(const ModelAction *);
 	CycleNode * getNode(const Promise *promise);
+	bool mergeNodes(CycleNode *node1, CycleNode *node2,
+			promise_list_t *mustMerge);
 
 	HashTable<const CycleNode *, const CycleNode *, uintptr_t, 4, model_malloc, model_calloc, model_free> *discovered;
 

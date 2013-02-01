@@ -91,6 +91,89 @@ void CycleGraph::addEdge(const T from, const U to)
 }
 
 /**
+ * @return false if the resolution results in a cycle; true otherwise
+ */
+bool CycleGraph::resolvePromise(ModelAction *reader, ModelAction *writer,
+		promise_list_t *mustResolve)
+{
+	CycleNode *promise_node = readerToPromiseNode.get(reader);
+	CycleNode *w_node = actionToNode.get(writer);
+	ASSERT(promise_node);
+
+	if (w_node)
+		return mergeNodes(w_node, promise_node, mustResolve);
+	/* No existing write-node; just convert the promise-node */
+	promise_node->resolvePromise(writer);
+	readerToPromiseNode.put(reader, NULL); /* erase promise_node */
+	putNode(writer, promise_node);
+	return true;
+}
+
+/**
+ * @brief Merge two CycleNodes that represent the same write
+ *
+ * Note that this operation cannot be rolled back.
+ *
+ * @param w_node The write ModelAction node with which to merge
+ * @param p_node The Promise node to merge. Will be destroyed after this
+ * function.
+ * @param mustMerge Return (pass-by-reference) any additional Promises that
+ * must also be merged with w_node
+ *
+ * @return false if the merge results in a cycle; true otherwise
+ */
+bool CycleGraph::mergeNodes(CycleNode *w_node, CycleNode *p_node,
+		promise_list_t *mustMerge)
+{
+	ASSERT(!w_node->is_promise());
+	ASSERT(p_node->is_promise());
+	const Promise *promise = p_node->getPromise();
+	if (!promise->is_compatible(w_node->getAction())) {
+		hasCycles = true;
+		return false;
+	}
+
+	/* Transfer back edges to w_node */
+	while (p_node->getNumBackEdges() > 0) {
+		CycleNode *back = p_node->removeBackEdge();
+		if (back != w_node) {
+			if (back->is_promise()) {
+				if (checkReachable(w_node, back)) {
+					/* Edge would create cycle; merge instead */
+					mustMerge->push_back(back->getPromise());
+					if (!mergeNodes(w_node, back, mustMerge))
+						return false;
+				} else
+					back->addEdge(w_node);
+			} else
+				addNodeEdge(back, w_node);
+		}
+	}
+
+	/* Transfer forward edges to w_node */
+	while (p_node->getNumEdges() > 0) {
+		CycleNode *forward = p_node->removeEdge();
+		if (forward != w_node) {
+			if (forward->is_promise()) {
+				if (checkReachable(forward, w_node)) {
+					mustMerge->push_back(forward->getPromise());
+					if (!mergeNodes(w_node, forward, mustMerge))
+						return false;
+				} else
+					w_node->addEdge(forward);
+			} else
+				addNodeEdge(w_node, forward);
+		}
+	}
+
+	/* erase p_node */
+	readerToPromiseNode.put(promise->get_action(), NULL);
+	delete p_node;
+
+	return !hasCycles;
+}
+
+/**
  * Adds an edge between two CycleNodes.
  * @param fromnode The edge comes from this CycleNode
  * @param tonode The edge points to this CycleNode

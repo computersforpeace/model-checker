@@ -739,6 +739,9 @@ bool ModelChecker::process_read(ModelAction *curr, bool second_part_of_rmw)
 			value = fv.value;
 			curr->set_read_from_promise(promise);
 			promises->push_back(promise);
+			mo_graph->startChanges();
+			updated = r_modification_order(curr, promise);
+			mo_graph->commitChanges();
 		}
 		get_thread(curr)->set_return_value(value);
 		return updated;
@@ -1304,8 +1307,14 @@ ModelAction * ModelChecker::check_current_action(ModelAction *curr)
 
 			if (act->is_read()) {
 				const ModelAction *rf = act->get_reads_from();
-				if (rf != NULL && r_modification_order(act, rf))
-					updated = true;
+				const Promise *promise = act->get_reads_from_promise();
+				if (rf) {
+					if (r_modification_order(act, rf))
+						updated = true;
+				} else if (promise) {
+					if (r_modification_order(act, promise))
+						updated = true;
+				}
 			}
 			if (act->is_write()) {
 				if (w_modification_order(act))

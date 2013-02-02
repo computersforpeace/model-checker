@@ -151,6 +151,8 @@ public:
 	bool get_sleep_flag() { return sleep_flag; }
 	unsigned int hash() const;
 
+	bool equals(const ModelAction *x) const { return this == x; }
+	bool equals(const Promise *x) const { return false; }
 	MEMALLOC
 private:
 

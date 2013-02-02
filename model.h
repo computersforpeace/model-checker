@@ -183,7 +183,10 @@ private:
 	void build_reads_from_past(ModelAction *curr);
 	ModelAction * process_rmw(ModelAction *curr);
 	void post_r_modification_order(ModelAction *curr, const ModelAction *rf);
-	bool r_modification_order(ModelAction *curr, const ModelAction *rf);
+
+	template <typename rf_type>
+	bool r_modification_order(ModelAction *curr, const rf_type *rf);
+
 	bool w_modification_order(ModelAction *curr);
 	void get_release_seq_heads(ModelAction *acquire, ModelAction *read, rel_heads_list_t *release_heads);
 	bool release_seq_heads(const ModelAction *rf, rel_heads_list_t *release_heads, struct release_seq *pending) const;

@@ -1521,7 +1521,7 @@ void ModelChecker::check_recency(ModelAction *curr, const ModelAction *rf)
  * read.
  *
  * Basic idea is the following: Go through each other thread and find
- * the lastest action that happened before our read.  Two cases:
+ * the last action that happened before our read.  Two cases:
  *
  * (1) The action is a write => that write must either occur before
  * the write we read from or be the write we read from.
@@ -1530,10 +1530,11 @@ void ModelChecker::check_recency(ModelAction *curr, const ModelAction *rf)
  * must occur before the write we read from or be the same write.
  *
  * @param curr The current action. Must be a read.
- * @param rf The action that curr reads from. Must be a write.
+ * @param rf The ModelAction or Promise that curr reads from. Must be a write.
  * @return True if modification order edges were added; false otherwise
  */
-bool ModelChecker::r_modification_order(ModelAction *curr, const ModelAction *rf)
+template <typename rf_type>
+bool ModelChecker::r_modification_order(ModelAction *curr, const rf_type *rf)
 {
 	std::vector<action_list_t> *thrd_lists = get_safe_ptr_vect_action(obj_thrd_map, curr->get_location());
 	unsigned int i;
@@ -1561,7 +1562,7 @@ bool ModelChecker::r_modification_order(ModelAction *curr, const ModelAction *rf
 		for (rit = list->rbegin(); rit != list->rend(); rit++) {
 			ModelAction *act = *rit;
 
-			if (act->is_write() && act != rf && act != curr) {
+			if (act->is_write() && !act->equals(rf) && act != curr) {
 				/* C++, Section 29.3 statement 5 */
 				if (curr->is_seqcst() && last_sc_fence_thread_local &&
 						*act < *last_sc_fence_thread_local) {
@@ -1591,7 +1592,7 @@ bool ModelChecker::r_modification_order(ModelAction *curr, const ModelAction *rf
 			 */
 			if (act->happens_before(curr) && act != curr) {
 				if (act->is_write()) {
-					if (rf != act) {
+					if (!act->equals(rf)) {
 						mo_graph->addEdge(act, rf);
 						added = true;
 					}
@@ -1601,7 +1602,7 @@ bool ModelChecker::r_modification_order(ModelAction *curr, const ModelAction *rf
 					if (prevreadfrom == NULL)
 						continue;
 
-					if (rf != prevreadfrom) {
+					if (!prevreadfrom->equals(rf)) {
 						mo_graph->addEdge(prevreadfrom, rf);
 						added = true;
 					}

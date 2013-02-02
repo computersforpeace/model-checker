@@ -542,7 +542,7 @@ void ModelAction::print() const
 		model_print("\n");
 }
 
-/** @brief Print nicely-formatted info about this ModelAction */
+/** @brief Get a (likely) unique hash for this ModelAction */
 unsigned int ModelAction::hash() const
 {
 	unsigned int hash = (unsigned int)this->type;

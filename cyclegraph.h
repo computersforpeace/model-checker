@@ -33,7 +33,10 @@ class CycleGraph {
 	bool checkForCycles() const;
 	void addRMWEdge(const ModelAction *from, const ModelAction *rmw);
 	bool checkPromise(const ModelAction *from, Promise *p) const;
-	bool checkReachable(const ModelAction *from, const ModelAction *to) const;
+
+	template <typename T>
+	bool checkReachable(const ModelAction *from, const T *to) const;
+
 	void startChanges();
 	void commitChanges();
 	void rollbackChanges();

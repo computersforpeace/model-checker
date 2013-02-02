@@ -275,12 +275,13 @@ void CycleGraph::dumpGraphToFile(const char *filename) const
 #endif
 
 /**
- * Checks whether one ModelAction can reach another.
+ * Checks whether one ModelAction can reach another ModelAction/Promise
  * @param from The ModelAction from which to begin exploration
- * @param to The ModelAction to reach
+ * @param to The ModelAction or Promise to reach
  * @return True, @a from can reach @a to; otherwise, false
  */
-bool CycleGraph::checkReachable(const ModelAction *from, const ModelAction *to) const
+template <typename T>
+bool CycleGraph::checkReachable(const ModelAction *from, const T *to) const
 {
 	CycleNode *fromnode = actionToNode.get(from);
 	CycleNode *tonode = actionToNode.get(to);

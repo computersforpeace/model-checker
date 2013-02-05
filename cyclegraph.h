@@ -130,4 +130,28 @@ class CycleNode {
 	CycleNode *hasRMW;
 };
 
+/*
+ * @brief Adds an edge between objects
+ *
+ * This function will add an edge between any two objects which can be
+ * associated with a CycleNode. That is, if they have a CycleGraph::getNode
+ * implementation.
+ *
+ * The object to is ordered after the object from.
+ *
+ * @param to The edge points to this object, of type T
+ * @param from The edge comes from this object, of type U
+ */
+template <typename T, typename U>
+void CycleGraph::addEdge(const T from, const U to)
+{
+	ASSERT(from);
+	ASSERT(to);
+
+	CycleNode *fromnode = getNode(from);
+	CycleNode *tonode = getNode(to);
+
+	addNodeEdge(fromnode, tonode);
+}
+
 #endif /* __CYCLEGRAPH_H__ */

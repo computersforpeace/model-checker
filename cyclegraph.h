@@ -28,7 +28,7 @@ class CycleGraph {
 	~CycleGraph();
 
 	template <typename T, typename U>
-	void addEdge(const T from, const U to);
+	bool addEdge(const T from, const U to);
 
 	bool checkForCycles() const;
 	void addRMWEdge(const ModelAction *from, const ModelAction *rmw);
@@ -50,7 +50,7 @@ class CycleGraph {
 
 	SNAPSHOTALLOC
  private:
-	void addNodeEdge(CycleNode *fromnode, CycleNode *tonode);
+	bool addNodeEdge(CycleNode *fromnode, CycleNode *tonode);
 	void putNode(const ModelAction *act, CycleNode *node);
 	CycleNode * getNode(const ModelAction *act);
 	CycleNode * getNode(const Promise *promise);
@@ -141,9 +141,10 @@ class CycleNode {
  *
  * @param to The edge points to this object, of type T
  * @param from The edge comes from this object, of type U
+ * @return True, if new edge(s) are added; otherwise false
  */
 template <typename T, typename U>
-void CycleGraph::addEdge(const T from, const U to)
+bool CycleGraph::addEdge(const T from, const U to)
 {
 	ASSERT(from);
 	ASSERT(to);
@@ -151,7 +152,7 @@ void CycleGraph::addEdge(const T from, const U to)
 	CycleNode *fromnode = getNode(from);
 	CycleNode *tonode = getNode(to);
 
-	addNodeEdge(fromnode, tonode);
+	return addNodeEdge(fromnode, tonode);
 }
 
 /**

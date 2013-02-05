@@ -168,13 +168,16 @@ bool CycleGraph::mergeNodes(CycleNode *w_node, CycleNode *p_node,
  * Adds an edge between two CycleNodes.
  * @param fromnode The edge comes from this CycleNode
  * @param tonode The edge points to this CycleNode
+ * @return True, if new edge(s) are added; otherwise false
  */
-void CycleGraph::addNodeEdge(CycleNode *fromnode, CycleNode *tonode)
+bool CycleGraph::addNodeEdge(CycleNode *fromnode, CycleNode *tonode)
 {
+	bool added;
+
 	if (!hasCycles)
 		hasCycles = checkReachable(tonode, fromnode);
 
-	if (fromnode->addEdge(tonode))
+	if ((added = fromnode->addEdge(tonode)))
 		rollbackvector.push_back(fromnode);
 
 	/*
@@ -186,9 +189,12 @@ void CycleGraph::addNodeEdge(CycleNode *fromnode, CycleNode *tonode)
 		if (!hasCycles)
 			hasCycles = checkReachable(tonode, rmwnode);
 
-		if (rmwnode->addEdge(tonode))
+		if (rmwnode->addEdge(tonode)) {
 			rollbackvector.push_back(rmwnode);
+			added = true;
+		}
 	}
+	return added;
 }
 
 /**

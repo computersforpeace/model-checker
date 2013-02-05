@@ -102,11 +102,6 @@ class CycleNode {
 	void clearRMW() { hasRMW = NULL; }
 	const ModelAction * getAction() const { return action; }
 	const Promise * getPromise() const { return promise; }
-
-	void popEdge() {
-		edges.pop_back();
-	}
-
 	bool is_promise() const { return !action; }
 	void resolvePromise(const ModelAction *writer);
 

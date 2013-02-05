@@ -348,7 +348,7 @@ void CycleGraph::commitChanges()
 void CycleGraph::rollbackChanges()
 {
 	for (unsigned int i = 0; i < rollbackvector.size(); i++)
-		rollbackvector[i]->popEdge();
+		rollbackvector[i]->removeEdge();
 
 	for (unsigned int i = 0; i < rmwrollbackvector.size(); i++)
 		rmwrollbackvector[i]->clearRMW();

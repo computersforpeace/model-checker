@@ -1575,22 +1575,19 @@ bool ModelChecker::r_modification_order(ModelAction *curr, const rf_type *rf)
 				/* C++, Section 29.3 statement 5 */
 				if (curr->is_seqcst() && last_sc_fence_thread_local &&
 						*act < *last_sc_fence_thread_local) {
-					mo_graph->addEdge(act, rf);
-					added = true;
+					added = mo_graph->addEdge(act, rf) || added;
 					break;
 				}
 				/* C++, Section 29.3 statement 4 */
 				else if (act->is_seqcst() && last_sc_fence_local &&
 						*act < *last_sc_fence_local) {
-					mo_graph->addEdge(act, rf);
-					added = true;
+					added = mo_graph->addEdge(act, rf) || added;
 					break;
 				}
 				/* C++, Section 29.3 statement 6 */
 				else if (last_sc_fence_thread_before &&
 						*act < *last_sc_fence_thread_before) {
-					mo_graph->addEdge(act, rf);
-					added = true;
+					added = mo_graph->addEdge(act, rf) || added;
 					break;
 				}
 			}
@@ -1602,8 +1599,7 @@ bool ModelChecker::r_modification_order(ModelAction *curr, const rf_type *rf)
 			if (act->happens_before(curr) && act != curr) {
 				if (act->is_write()) {
 					if (!act->equals(rf)) {
-						mo_graph->addEdge(act, rf);
-						added = true;
+						added = mo_graph->addEdge(act, rf) || added;
 					}
 				} else {
 					const ModelAction *prevreadfrom = act->get_reads_from();
@@ -1612,8 +1608,7 @@ bool ModelChecker::r_modification_order(ModelAction *curr, const rf_type *rf)
 						continue;
 
 					if (!prevreadfrom->equals(rf)) {
-						mo_graph->addEdge(prevreadfrom, rf);
-						added = true;
+						added = mo_graph->addEdge(prevreadfrom, rf) || added;
 					}
 				}
 				break;
@@ -1722,8 +1717,7 @@ bool ModelChecker::w_modification_order(ModelAction *curr)
 			 so we are initialized. */
 		ModelAction *last_seq_cst = get_last_seq_cst_write(curr);
 		if (last_seq_cst != NULL) {
-			mo_graph->addEdge(last_seq_cst, curr);
-			added = true;
+			added = mo_graph->addEdge(last_seq_cst, curr) || added;
 		}
 	}
 
@@ -1766,8 +1760,7 @@ bool ModelChecker::w_modification_order(ModelAction *curr)
 			/* C++, Section 29.3 statement 7 */
 			if (last_sc_fence_thread_before && act->is_write() &&
 					*act < *last_sc_fence_thread_before) {
-				mo_graph->addEdge(act, curr);
-				added = true;
+				added = mo_graph->addEdge(act, curr) || added;
 				break;
 			}
 
@@ -1783,14 +1776,13 @@ bool ModelChecker::w_modification_order(ModelAction *curr)
 				 *   readfrom(act) --mo--> act
 				 */
 				if (act->is_write())
-					mo_graph->addEdge(act, curr);
+					added = mo_graph->addEdge(act, curr) || added;
 				else if (act->is_read()) {
 					//if previous read accessed a null, just keep going
 					if (act->get_reads_from() == NULL)
 						continue;
-					mo_graph->addEdge(act->get_reads_from(), curr);
+					added = mo_graph->addEdge(act->get_reads_from(), curr) || added;
 				}
-				added = true;
 				break;
 			} else if (act->is_read() && !act->could_synchronize_with(curr) &&
 			                             !act->same_thread(curr)) {

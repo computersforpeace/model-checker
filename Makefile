@@ -35,6 +35,9 @@ malloc.o: malloc.c
 %.o: %.cc
 	$(CXX) -MMD -MF .$@.d -fPIC -c $< $(CPPFLAGS)
 
+%.pdf: %.dot
+	dot -Tpdf $< -o $@
+
 -include $(OBJECTS:%=.%.d)
 
 PHONY += clean
@@ -65,5 +68,8 @@ benchmarks: $(LIB_SO)
 		exit 1; \
 	fi
 	$(MAKE) -C $(BENCH_DIR)
+
+PHONY += pdfs
+pdfs: $(patsubst %.dot,%.pdf,$(wildcard *.dot))
 
 .PHONY: $(PHONY)

@@ -83,5 +83,16 @@ bool Promise::has_failed() const
  */
 bool Promise::is_compatible(const ModelAction *write) const
 {
-	return thread_is_available(write->get_tid());
+	return thread_is_available(write->get_tid()) && read->same_var(write);
+}
+
+/**
+ * @brief Check if a promise is compatible with a store and is exclusive to its
+ * thread
+ * @param write The store to check against
+ * @return True if we are compatible and exclusive; false otherwise
+ */
+bool Promise::is_compatible_exclusive(const ModelAction *write) const
+{
+	return get_num_available_threads() == 1 && is_compatible(write);
 }

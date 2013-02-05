@@ -52,8 +52,10 @@ class CycleGraph {
  private:
 	void addNodeEdge(CycleNode *fromnode, CycleNode *tonode);
 	void putNode(const ModelAction *act, CycleNode *node);
-	CycleNode * getNode(const ModelAction *);
+	CycleNode * getNode(const ModelAction *act);
 	CycleNode * getNode(const Promise *promise);
+	CycleNode * getNode_noCreate(const ModelAction *act) const;
+	CycleNode * getNode_noCreate(const Promise *promise) const;
 	bool mergeNodes(CycleNode *node1, CycleNode *node2,
 			promise_list_t *mustMerge);
 

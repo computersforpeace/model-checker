@@ -31,14 +31,29 @@ void CycleGraph::putNode(const ModelAction *act, CycleNode *node)
 #endif
 }
 
+/** @return The corresponding CycleNode, if exists; otherwise NULL */
+CycleNode * CycleGraph::getNode_noCreate(const ModelAction *act) const
+{
+	return actionToNode.get(act);
+}
+
+/** @return The corresponding CycleNode, if exists; otherwise NULL */
+CycleNode * CycleGraph::getNode_noCreate(const Promise *promise) const
+{
+	return readerToPromiseNode.get(promise->get_action());
+}
+
 /**
  * @brief Returns the CycleNode corresponding to a given ModelAction
+ *
+ * Gets (or creates, if none exist) a CycleNode corresponding to a ModelAction
+ *
  * @param action The ModelAction to find a node for
  * @return The CycleNode paired with this action
  */
 CycleNode * CycleGraph::getNode(const ModelAction *action)
 {
-	CycleNode *node = actionToNode.get(action);
+	CycleNode *node = getNode_noCreate(action);
 	if (node == NULL) {
 		node = new CycleNode(action);
 		putNode(action, node);
@@ -58,7 +73,7 @@ CycleNode * CycleGraph::getNode(const ModelAction *action)
 CycleNode * CycleGraph::getNode(const Promise *promise)
 {
 	const ModelAction *reader = promise->get_action();
-	CycleNode *node = readerToPromiseNode.get(reader);
+	CycleNode *node = getNode_noCreate(promise);
 	if (node == NULL) {
 		node = new CycleNode(promise);
 		readerToPromiseNode.put(reader, node);

@@ -1808,6 +1808,15 @@ bool ModelChecker::w_modification_order(ModelAction *curr)
 		}
 	}
 
+	/*
+	 * All compatible, thread-exclusive promises must be ordered after any
+	 * concrete stores to the same thread, or else they can be merged with
+	 * this store later
+	 */
+	for (unsigned int i = 0; i < promises->size(); i++)
+		if ((*promises)[i]->is_compatible_exclusive(curr))
+			added = mo_graph->addEdge(curr, (*promises)[i]) || added;
+
 	return added;
 }
 

@@ -295,6 +295,7 @@ bool CycleGraph::checkReachable(const CycleNode *from, const CycleNode *to) cons
 	return false;
 }
 
+/** @return True, if the promise has failed; false otherwise */
 bool CycleGraph::checkPromise(const ModelAction *fromact, Promise *promise) const
 {
 	std::vector< CycleNode *, ModelAlloc<CycleNode *> > queue;

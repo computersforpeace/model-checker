@@ -154,4 +154,22 @@ void CycleGraph::addEdge(const T from, const U to)
 	addNodeEdge(fromnode, tonode);
 }
 
+/**
+ * Checks whether one ModelAction can reach another ModelAction/Promise
+ * @param from The ModelAction from which to begin exploration
+ * @param to The ModelAction or Promise to reach
+ * @return True, @a from can reach @a to; otherwise, false
+ */
+template <typename T>
+bool CycleGraph::checkReachable(const ModelAction *from, const T *to) const
+{
+	CycleNode *fromnode = getNode_noCreate(from);
+	CycleNode *tonode = getNode_noCreate(to);
+
+	if (!fromnode || !tonode)
+		return false;
+
+	return checkReachable(fromnode, tonode);
+}
+
 #endif /* __CYCLEGRAPH_H__ */

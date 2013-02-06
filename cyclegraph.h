@@ -54,6 +54,8 @@ class CycleGraph {
  private:
 	bool addNodeEdge(CycleNode *fromnode, CycleNode *tonode);
 	void putNode(const ModelAction *act, CycleNode *node);
+	void putNode(const Promise *promise, CycleNode *node);
+	void erasePromiseNode(const Promise *promise);
 	CycleNode * getNode(const ModelAction *act);
 	CycleNode * getNode(const Promise *promise);
 	CycleNode * getNode_noCreate(const ModelAction *act) const;

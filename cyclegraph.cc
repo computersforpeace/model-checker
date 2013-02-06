@@ -31,6 +31,27 @@ void CycleGraph::putNode(const ModelAction *act, CycleNode *node)
 #endif
 }
 
+/**
+ * Add a CycleNode to the graph, corresponding to a Promise
+ * @param promise The Promise that should be added
+ * @param node The CycleNode that corresponds to the Promise
+ */
+void CycleGraph::putNode(const Promise *promise, CycleNode *node)
+{
+	const ModelAction *reader = promise->get_action();
+	readerToPromiseNode.put(reader, node);
+}
+
+/**
+ * @brief Remove the Promise node from the graph
+ * @param promise The promise to remove from the graph
+ */
+void CycleGraph::erasePromiseNode(const Promise *promise)
+{
+	const ModelAction *reader = promise->get_action();
+	readerToPromiseNode.put(reader, NULL);
+}
+
 /** @return The corresponding CycleNode, if exists; otherwise NULL */
 CycleNode * CycleGraph::getNode_noCreate(const ModelAction *act) const
 {
@@ -72,11 +93,10 @@ CycleNode * CycleGraph::getNode(const ModelAction *action)
  */
 CycleNode * CycleGraph::getNode(const Promise *promise)
 {
-	const ModelAction *reader = promise->get_action();
 	CycleNode *node = getNode_noCreate(promise);
 	if (node == NULL) {
 		node = new CycleNode(promise);
-		readerToPromiseNode.put(reader, node);
+		putNode(promise, node);
 	}
 	return node;
 }
@@ -95,7 +115,7 @@ bool CycleGraph::resolvePromise(ModelAction *reader, ModelAction *writer,
 		return mergeNodes(w_node, promise_node, mustResolve);
 	/* No existing write-node; just convert the promise-node */
 	promise_node->resolvePromise(writer);
-	readerToPromiseNode.put(reader, NULL); /* erase promise_node */
+	erasePromiseNode(promise_node->getPromise());
 	putNode(writer, promise_node);
 	return true;
 }
@@ -163,8 +183,7 @@ bool CycleGraph::mergeNodes(CycleNode *w_node, CycleNode *p_node,
 		}
 	}
 
-	/* erase p_node */
-	readerToPromiseNode.put(promise->get_action(), NULL);
+	erasePromiseNode(promise);
 	delete p_node;
 
 	return !hasCycles;

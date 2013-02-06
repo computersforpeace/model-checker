@@ -147,8 +147,10 @@ bool CycleGraph::mergeNodes(CycleNode *w_node, CycleNode *p_node,
 
 	/* Transfer the RMW */
 	CycleNode *promise_rmw = p_node->getRMW();
-	if (promise_rmw && promise_rmw != w_node->getRMW() && w_node->setRMW(promise_rmw))
+	if (promise_rmw && promise_rmw != w_node->getRMW() && w_node->setRMW(promise_rmw)) {
 		hasCycles = true;
+		return false;
+	}
 
 	/* Transfer back edges to w_node */
 	while (p_node->getNumBackEdges() > 0) {

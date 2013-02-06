@@ -42,7 +42,7 @@ malloc.o: malloc.c
 
 PHONY += clean
 clean:
-	rm -f *.o *.so .*.d
+	rm -f *.o *.so .*.d *.pdf *.dot
 	$(MAKE) -C $(TESTS_DIR) clean
 
 PHONY += mrclean

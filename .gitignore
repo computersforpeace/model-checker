@@ -6,6 +6,7 @@
 *~
 *.dot
 .*.d
+*.pdf
 
 # files in this directory
 /tags

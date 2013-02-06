@@ -153,34 +153,34 @@ bool CycleGraph::mergeNodes(CycleNode *w_node, CycleNode *p_node,
 	/* Transfer back edges to w_node */
 	while (p_node->getNumBackEdges() > 0) {
 		CycleNode *back = p_node->removeBackEdge();
-		if (back != w_node) {
-			if (back->is_promise()) {
-				if (checkReachable(w_node, back)) {
-					/* Edge would create cycle; merge instead */
-					mustMerge->push_back(back->getPromise());
-					if (!mergeNodes(w_node, back, mustMerge))
-						return false;
-				} else
-					back->addEdge(w_node);
+		if (back == w_node)
+			continue;
+		if (back->is_promise()) {
+			if (checkReachable(w_node, back)) {
+				/* Edge would create cycle; merge instead */
+				mustMerge->push_back(back->getPromise());
+				if (!mergeNodes(w_node, back, mustMerge))
+					return false;
 			} else
-				addNodeEdge(back, w_node);
-		}
+				back->addEdge(w_node);
+		} else
+			addNodeEdge(back, w_node);
 	}
 
 	/* Transfer forward edges to w_node */
 	while (p_node->getNumEdges() > 0) {
 		CycleNode *forward = p_node->removeEdge();
-		if (forward != w_node) {
-			if (forward->is_promise()) {
-				if (checkReachable(forward, w_node)) {
-					mustMerge->push_back(forward->getPromise());
-					if (!mergeNodes(w_node, forward, mustMerge))
-						return false;
-				} else
-					w_node->addEdge(forward);
+		if (forward == w_node)
+			continue;
+		if (forward->is_promise()) {
+			if (checkReachable(forward, w_node)) {
+				mustMerge->push_back(forward->getPromise());
+				if (!mergeNodes(w_node, forward, mustMerge))
+					return false;
 			} else
-				addNodeEdge(w_node, forward);
-		}
+				w_node->addEdge(forward);
+		} else
+			addNodeEdge(w_node, forward);
 	}
 
 	erasePromiseNode(promise);

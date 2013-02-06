@@ -40,6 +40,9 @@ void CycleGraph::putNode(const Promise *promise, CycleNode *node)
 {
 	const ModelAction *reader = promise->get_action();
 	readerToPromiseNode.put(reader, node);
+#if SUPPORT_MOD_ORDER_DUMP
+	nodeList.push_back(node);
+#endif
 }
 
 /**
@@ -50,6 +53,15 @@ void CycleGraph::erasePromiseNode(const Promise *promise)
 {
 	const ModelAction *reader = promise->get_action();
 	readerToPromiseNode.put(reader, NULL);
+#if SUPPORT_MOD_ORDER_DUMP
+	/* Remove the promise node from nodeList */
+	CycleNode *node = getNode_noCreate(promise);
+	for (unsigned int i = 0; i < nodeList.size(); )
+		if (nodeList[i] == node)
+			nodeList.erase(nodeList.begin() + i);
+		else
+			i++;
+#endif
 }
 
 /** @return The corresponding CycleNode, if exists; otherwise NULL */
@@ -302,19 +314,50 @@ template bool CycleGraph::addEdge(const ModelAction *from, const Promise *to);
 template bool CycleGraph::addEdge(const Promise *from, const ModelAction *to);
 
 #if SUPPORT_MOD_ORDER_DUMP
+
+static void print_node(const CycleNode *node, FILE *file, int label)
+{
+	modelclock_t idx;
+	if (node->is_promise()) {
+		const Promise *promise = node->getPromise();
+		idx = promise->get_action()->get_seq_number();
+		fprintf(file, "P%u", idx);
+		if (label) {
+			int first = 1;
+			fprintf(file, " [label=\"P%u, T", idx);
+			for (unsigned int i = 0 ; i < model->get_num_threads(); i++)
+				if (promise->thread_is_available(int_to_id(i))) {
+					fprintf(file, "%s%u", first ? "": ",", i);
+					first = 0;
+				}
+			fprintf(file, "\"]");
+		}
+	} else {
+		const ModelAction *act = node->getAction();
+		idx = act->get_seq_number();
+		fprintf(file, "N%u", idx);
+		if (label)
+			fprintf(file, " [label=\"N%u, T%u\"]", idx, act->get_tid());
+	}
+}
+
 void CycleGraph::dumpNodes(FILE *file) const
 {
 	for (unsigned int i = 0; i < nodeList.size(); i++) {
-		CycleNode *cn = nodeList[i];
-		const ModelAction *action = cn->getAction();
-		fprintf(file, "N%u [label=\"%u, T%u\"];\n", action->get_seq_number(), action->get_seq_number(), action->get_tid());
-		if (cn->getRMW() != NULL) {
-			fprintf(file, "N%u -> N%u[style=dotted];\n", action->get_seq_number(), cn->getRMW()->getAction()->get_seq_number());
+		CycleNode *n = nodeList[i];
+		print_node(n, file, 1);
+		fprintf(file, ";\n");
+		if (n->getRMW() != NULL) {
+			print_node(n, file, 0);
+			fprintf(file, " -> ");
+			print_node(n->getRMW(), file, 0);
+			fprintf(file, "[style=dotted];\n");
 		}
-		for (unsigned int j = 0; j < cn->getNumEdges(); j++) {
-			CycleNode *dst = cn->getEdge(j);
-			const ModelAction *dstaction = dst->getAction();
-			fprintf(file, "N%u -> N%u;\n", action->get_seq_number(), dstaction->get_seq_number());
+		for (unsigned int j = 0; j < n->getNumEdges(); j++) {
+			print_node(n, file, 0);
+			fprintf(file, " -> ");
+			print_node(n->getEdge(j), file, 0);
+			fprintf(file, ";\n");
 		}
 	}
 }

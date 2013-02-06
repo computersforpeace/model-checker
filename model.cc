@@ -2577,7 +2577,7 @@ void ModelChecker::dumpGraph(char *filename) const
 	for (action_list_t::iterator it = action_trace->begin(); it != action_trace->end(); it++) {
 		ModelAction *action = *it;
 		if (action->is_read()) {
-			fprintf(file, "N%u [label=\"%u, T%u\"];\n", action->get_seq_number(), action->get_seq_number(), action->get_tid());
+			fprintf(file, "N%u [label=\"N%u, T%u\"];\n", action->get_seq_number(), action->get_seq_number(), action->get_tid());
 			if (action->get_reads_from() != NULL)
 				fprintf(file, "N%u -> N%u[label=\"rf\", color=red];\n", action->get_seq_number(), action->get_reads_from()->get_seq_number());
 		}

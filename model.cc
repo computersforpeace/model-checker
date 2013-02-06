@@ -1425,8 +1425,11 @@ bool ModelChecker::is_infeasible() const
 ModelAction * ModelChecker::process_rmw(ModelAction *act) {
 	ModelAction *lastread = get_last_action(act->get_tid());
 	lastread->process_rmw(act);
-	if (act->is_rmw() && lastread->get_reads_from() != NULL) {
-		mo_graph->addRMWEdge(lastread->get_reads_from(), lastread);
+	if (act->is_rmw()) {
+		if (lastread->get_reads_from())
+			mo_graph->addRMWEdge(lastread->get_reads_from(), lastread);
+		else
+			mo_graph->addRMWEdge(lastread->get_reads_from_promise(), lastread);
 		mo_graph->commitChanges();
 	}
 	return lastread;
@@ -1617,70 +1620,6 @@ bool ModelChecker::r_modification_order(ModelAction *curr, const rf_type *rf)
 	}
 
 	return added;
-}
-
-/** This method fixes up the modification order when we resolve a
- *  promises.  The basic problem is that actions that occur after the
- *  read curr could not property add items to the modification order
- *  for our read.
- *
- *  So for each thread, we find the earliest item that happens after
- *  the read curr.  This is the item we have to fix up with additional
- *  constraints.  If that action is write, we add a MO edge between
- *  the Action rf and that action.  If the action is a read, we add a
- *  MO edge between the Action rf, and whatever the read accessed.
- *
- * @param curr is the read ModelAction that we are fixing up MO edges for.
- * @param rf is the write ModelAction that curr reads from.
- *
- */
-void ModelChecker::post_r_modification_order(ModelAction *curr, const ModelAction *rf)
-{
-	std::vector<action_list_t> *thrd_lists = get_safe_ptr_vect_action(obj_thrd_map, curr->get_location());
-	unsigned int i;
-	ASSERT(curr->is_read());
-
-	/* Iterate over all threads */
-	for (i = 0; i < thrd_lists->size(); i++) {
-		/* Iterate over actions in thread, starting from most recent */
-		action_list_t *list = &(*thrd_lists)[i];
-		action_list_t::reverse_iterator rit;
-		ModelAction *lastact = NULL;
-
-		/* Find last action that happens after curr that is either not curr or a rmw */
-		for (rit = list->rbegin(); rit != list->rend(); rit++) {
-			ModelAction *act = *rit;
-			if (curr->happens_before(act) && (curr != act || curr->is_rmw())) {
-				lastact = act;
-			} else
-				break;
-		}
-
-			/* Include at most one act per-thread that "happens before" curr */
-		if (lastact != NULL) {
-			if (lastact == curr) {
-				//Case 1: The resolved read is a RMW, and we need to make sure
-				//that the write portion of the RMW mod order after rf
-
-				mo_graph->addEdge(rf, lastact);
-			} else if (lastact->is_read()) {
-				//Case 2: The resolved read is a normal read and the next
-				//operation is a read, and we need to make sure the value read
-				//is mod ordered after rf
-
-				const ModelAction *postreadfrom = lastact->get_reads_from();
-				if (postreadfrom != NULL && rf != postreadfrom)
-					mo_graph->addEdge(rf, postreadfrom);
-			} else {
-				//Case 3: The resolved read is a normal read and the next
-				//operation is a write, and we need to make sure that the
-				//write is mod ordered after rf
-				if (lastact != rf)
-					mo_graph->addEdge(rf, lastact);
-			}
-			break;
-		}
-	}
 }
 
 /**
@@ -2333,25 +2272,18 @@ bool ModelChecker::resolve_promises(ModelAction *write)
 {
 	bool haveResolved = false;
 	std::vector< ModelAction *, ModelAlloc<ModelAction *> > actions_to_check;
+	promise_list_t mustResolve, resolved;
 
 	for (unsigned int i = 0, promise_index = 0; promise_index < promises->size(); i++) {
 		Promise *promise = (*promises)[promise_index];
 		if (write->get_node()->get_promise(i)) {
 			ModelAction *read = promise->get_action();
-			if (read->is_rmw()) {
-				mo_graph->addRMWEdge(write, read);
-			}
 			read_from(read, write);
-			//First fix up the modification order for actions that happened
-			//before the read
-			r_modification_order(read, write);
-			//Next fix up the modification order for actions that happened
-			//after the read.
-			post_r_modification_order(read, write);
 			//Make sure the promise's value matches the write's value
 			ASSERT(promise->is_compatible(write));
-			delete promise;
+			mo_graph->resolvePromise(read, write, &mustResolve);
 
+			resolved.push_back(promise);
 			promises->erase(promises->begin() + promise_index);
 			actions_to_check.push_back(read);
 
@@ -2360,6 +2292,13 @@ bool ModelChecker::resolve_promises(ModelAction *write)
 			promise_index++;
 	}
 
+	for (unsigned int i = 0; i < mustResolve.size(); i++) {
+		if (std::find(resolved.begin(), resolved.end(), mustResolve[i])
+				== resolved.end())
+			priv->failed_promise = true;
+	}
+	for (unsigned int i = 0; i < resolved.size(); i++)
+		delete resolved[i];
 	//Check whether reading these writes has made threads unable to
 	//resolve promises
 

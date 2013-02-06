@@ -182,7 +182,6 @@ private:
 	ModelAction * get_last_unlock(ModelAction *curr) const;
 	void build_reads_from_past(ModelAction *curr);
 	ModelAction * process_rmw(ModelAction *curr);
-	void post_r_modification_order(ModelAction *curr, const ModelAction *rf);
 
 	template <typename rf_type>
 	bool r_modification_order(ModelAction *curr, const rf_type *rf);

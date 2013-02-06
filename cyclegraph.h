@@ -71,13 +71,11 @@ class CycleNode {
 	unsigned int getNumBackEdges() const;
 	bool setRMW(CycleNode *);
 	CycleNode * getRMW() const;
+	void clearRMW() { hasRMW = NULL; }
 	const ModelAction * getAction() const { return action; }
 
 	void popEdge() {
 		edges.pop_back();
-	}
-	void clearRMW() {
-		hasRMW = NULL;
 	}
 
 	SNAPSHOTALLOC

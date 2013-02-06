@@ -2647,7 +2647,6 @@ void ModelChecker::dumpGraph(char *filename) const
 void ModelChecker::print_summary() const
 {
 #if SUPPORT_MOD_ORDER_DUMP
-	scheduler->print();
 	char buffername[100];
 	sprintf(buffername, "exec%04u", stats.num_total);
 	mo_graph->dumpGraphToFile(buffername);

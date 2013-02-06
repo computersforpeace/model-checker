@@ -198,7 +198,7 @@ bool CycleGraph::mergeNodes(CycleNode *w_node, CycleNode *p_node,
 	}
 
 	erasePromiseNode(promise);
-	delete p_node;
+	/* Not deleting p_node, to maintain consistency if mergeNodes() fails */
 
 	return !hasCycles;
 }

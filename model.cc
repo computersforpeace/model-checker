@@ -2393,13 +2393,12 @@ void ModelChecker::check_promises_thread_disabled()
  */
 void ModelChecker::mo_check_promises(thread_id_t tid, const ModelAction *write, const ModelAction *read)
 {
-	void *location = write->get_location();
 	for (unsigned int i = 0; i < promises->size(); i++) {
 		Promise *promise = (*promises)[i];
 		const ModelAction *act = promise->get_action();
 
 		// Is this promise on the same location?
-		if (act->get_location() != location)
+		if (!act->same_var(write))
 			continue;
 
 		// same thread as the promise

@@ -28,7 +28,7 @@ class CycleGraph {
 	~CycleGraph();
 
 	template <typename T, typename U>
-	bool addEdge(const T from, const U to);
+	bool addEdge(const T *from, const U *to);
 
 	template <typename T>
 	void addRMWEdge(const T *from, const ModelAction *rmw);
@@ -126,48 +126,5 @@ class CycleNode {
 	 * exists */
 	CycleNode *hasRMW;
 };
-
-/*
- * @brief Adds an edge between objects
- *
- * This function will add an edge between any two objects which can be
- * associated with a CycleNode. That is, if they have a CycleGraph::getNode
- * implementation.
- *
- * The object to is ordered after the object from.
- *
- * @param to The edge points to this object, of type T
- * @param from The edge comes from this object, of type U
- * @return True, if new edge(s) are added; otherwise false
- */
-template <typename T, typename U>
-bool CycleGraph::addEdge(const T from, const U to)
-{
-	ASSERT(from);
-	ASSERT(to);
-
-	CycleNode *fromnode = getNode(from);
-	CycleNode *tonode = getNode(to);
-
-	return addNodeEdge(fromnode, tonode);
-}
-
-/**
- * Checks whether one ModelAction can reach another ModelAction/Promise
- * @param from The ModelAction from which to begin exploration
- * @param to The ModelAction or Promise to reach
- * @return True, @a from can reach @a to; otherwise, false
- */
-template <typename T>
-bool CycleGraph::checkReachable(const ModelAction *from, const T *to) const
-{
-	CycleNode *fromnode = getNode_noCreate(from);
-	CycleNode *tonode = getNode_noCreate(to);
-
-	if (!fromnode || !tonode)
-		return false;
-
-	return checkReachable(fromnode, tonode);
-}
 
 #endif /* __CYCLEGRAPH_H__ */

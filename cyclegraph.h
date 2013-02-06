@@ -30,8 +30,10 @@ class CycleGraph {
 	template <typename T, typename U>
 	bool addEdge(const T from, const U to);
 
+	template <typename T>
+	void addRMWEdge(const T *from, const ModelAction *rmw);
+
 	bool checkForCycles() const;
-	void addRMWEdge(const ModelAction *from, const ModelAction *rmw);
 	bool checkPromise(const ModelAction *from, Promise *p) const;
 
 	template <typename T>

@@ -118,11 +118,17 @@ bool CycleGraph::mergeNodes(CycleNode *w_node, CycleNode *p_node,
 {
 	ASSERT(!w_node->is_promise());
 	ASSERT(p_node->is_promise());
+
 	const Promise *promise = p_node->getPromise();
 	if (!promise->is_compatible(w_node->getAction())) {
 		hasCycles = true;
 		return false;
 	}
+
+	/* Transfer the RMW */
+	CycleNode *promise_rmw = p_node->getRMW();
+	if (promise_rmw && promise_rmw != w_node->getRMW() && w_node->setRMW(promise_rmw))
+		hasCycles = true;
 
 	/* Transfer back edges to w_node */
 	while (p_node->getNumBackEdges() > 0) {
@@ -201,15 +207,16 @@ bool CycleGraph::addNodeEdge(CycleNode *fromnode, CycleNode *tonode)
  * @brief Add an edge between a write and the RMW which reads from it
  *
  * Handles special case of a RMW action, where the ModelAction rmw reads from
- * the ModelAction from. The key differences are:
+ * the ModelAction/Promise from. The key differences are:
  * (1) no write can occur in between the rmw and the from action.
  * (2) Only one RMW action can read from a given write.
  *
- * @param from The edge comes from this ModelAction
+ * @param from The edge comes from this ModelAction/Promise
  * @param rmw The edge points to this ModelAction; this action must read from
- * ModelAction from
+ * the ModelAction/Promise from
  */
-void CycleGraph::addRMWEdge(const ModelAction *from, const ModelAction *rmw)
+template <typename T>
+void CycleGraph::addRMWEdge(const T *from, const ModelAction *rmw)
 {
 	ASSERT(from);
 	ASSERT(rmw);
@@ -240,6 +247,9 @@ void CycleGraph::addRMWEdge(const ModelAction *from, const ModelAction *rmw)
 
 	addNodeEdge(fromnode, rmwnode);
 }
+/* Instantiate two forms of CycleGraph::addRMWEdge */
+template void CycleGraph::addRMWEdge(const ModelAction *from, const ModelAction *rmw);
+template void CycleGraph::addRMWEdge(const Promise *from, const ModelAction *rmw);
 
 #if SUPPORT_MOD_ORDER_DUMP
 void CycleGraph::dumpNodes(FILE *file) const

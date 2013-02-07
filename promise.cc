@@ -78,21 +78,23 @@ bool Promise::has_failed() const
 }
 
 /**
- * @param write A store which could satisfy this Promise
- * @return True if the store can satisfy this Promise; false otherwise
+ * @brief Check if an action's thread and location are compatible for resolving
+ * this promise
+ * @param act The action to check against
+ * @return True if we are compatible; false otherwise
  */
-bool Promise::is_compatible(const ModelAction *write) const
+bool Promise::is_compatible(const ModelAction *act) const
 {
-	return thread_is_available(write->get_tid()) && read->same_var(write);
+	return thread_is_available(act->get_tid()) && read->same_var(act);
 }
 
 /**
- * @brief Check if a promise is compatible with a store and is exclusive to its
- * thread
- * @param write The store to check against
+ * @brief Check if an action's thread and location are compatible for resolving
+ * this promise, and that the promise is thread-exclusive
+ * @param act The action to check against
  * @return True if we are compatible and exclusive; false otherwise
  */
-bool Promise::is_compatible_exclusive(const ModelAction *write) const
+bool Promise::is_compatible_exclusive(const ModelAction *act) const
 {
-	return get_num_available_threads() == 1 && is_compatible(write);
+	return get_num_available_threads() == 1 && is_compatible(act);
 }

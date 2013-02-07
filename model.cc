@@ -1619,6 +1619,14 @@ bool ModelChecker::r_modification_order(ModelAction *curr, const rf_type *rf)
 		}
 	}
 
+	/*
+	 * All compatible, thread-exclusive promises must be ordered after any
+	 * concrete loads from the same thread
+	 */
+	for (unsigned int i = 0; i < promises->size(); i++)
+		if ((*promises)[i]->is_compatible_exclusive(curr))
+			added = mo_graph->addEdge(rf, (*promises)[i]) || added;
+
 	return added;
 }
 

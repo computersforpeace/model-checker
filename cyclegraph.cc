@@ -308,10 +308,11 @@ bool CycleGraph::addEdge(const T *from, const U *to)
 
 	return addNodeEdge(fromnode, tonode);
 }
-/* Instantiate three forms of CycleGraph::addEdge */
+/* Instantiate four forms of CycleGraph::addEdge */
 template bool CycleGraph::addEdge(const ModelAction *from, const ModelAction *to);
 template bool CycleGraph::addEdge(const ModelAction *from, const Promise *to);
 template bool CycleGraph::addEdge(const Promise *from, const ModelAction *to);
+template bool CycleGraph::addEdge(const Promise *from, const Promise *to);
 
 #if SUPPORT_MOD_ORDER_DUMP
 
@@ -405,13 +406,13 @@ bool CycleGraph::checkReachable(const CycleNode *from, const CycleNode *to) cons
 }
 
 /**
- * Checks whether one ModelAction can reach another ModelAction/Promise
- * @param from The ModelAction from which to begin exploration
+ * Checks whether one ModelAction/Promise can reach another ModelAction/Promise
+ * @param from The ModelAction or Promise from which to begin exploration
  * @param to The ModelAction or Promise to reach
  * @return True, @a from can reach @a to; otherwise, false
  */
-template <typename T>
-bool CycleGraph::checkReachable(const ModelAction *from, const T *to) const
+template <typename T, typename U>
+bool CycleGraph::checkReachable(const T *from, const U *to) const
 {
 	CycleNode *fromnode = getNode_noCreate(from);
 	CycleNode *tonode = getNode_noCreate(to);
@@ -421,11 +422,13 @@ bool CycleGraph::checkReachable(const ModelAction *from, const T *to) const
 
 	return checkReachable(fromnode, tonode);
 }
-/* Instantiate two forms of CycleGraph::checkReachable */
+/* Instantiate three forms of CycleGraph::checkReachable */
 template bool CycleGraph::checkReachable(const ModelAction *from,
 		const ModelAction *to) const;
 template bool CycleGraph::checkReachable(const ModelAction *from,
 		const Promise *to) const;
+template bool CycleGraph::checkReachable(const Promise *from,
+		const ModelAction *to) const;
 
 /** @return True, if the promise has failed; false otherwise */
 bool CycleGraph::checkPromise(const ModelAction *fromact, Promise *promise) const

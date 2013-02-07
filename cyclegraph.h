@@ -36,8 +36,8 @@ class CycleGraph {
 	bool checkForCycles() const;
 	bool checkPromise(const ModelAction *from, Promise *p) const;
 
-	template <typename T>
-	bool checkReachable(const ModelAction *from, const T *to) const;
+	template <typename T, typename U>
+	bool checkReachable(const T *from, const U *to) const;
 
 	void startChanges();
 	void commitChanges();

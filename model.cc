@@ -2403,21 +2403,21 @@ void ModelChecker::mo_check_promises(thread_id_t tid, const ModelAction *write, 
 {
 	for (unsigned int i = 0; i < promises->size(); i++) {
 		Promise *promise = (*promises)[i];
-		const ModelAction *act = promise->get_action();
+		const ModelAction *pread = promise->get_action();
 
 		// Is this promise on the same location?
-		if (!act->same_var(write))
+		if (!pread->same_var(write))
 			continue;
 
-		// same thread as the promise
-		if (act->get_tid() == tid) {
+		// same thread as pread
+		if (pread->get_tid() == tid) {
 			// make sure that the reader of this write happens after the promise
-			if ((read == NULL) || (promise->get_action()->happens_before(read))) {
+			if ((read == NULL) || (pread->happens_before(read))) {
 				// do we have a pwrite for the promise, if not, set it
 				if (promise->get_write() == NULL) {
 					promise->set_write(write);
-					// The pwrite cannot happen before the promise
-					if (write->happens_before(act) && (write != act)) {
+					// The pwrite cannot happen before pread
+					if (write->happens_before(pread) && (write != pread)) {
 						priv->failed_promise = true;
 						return;
 					}
@@ -2434,7 +2434,8 @@ void ModelChecker::mo_check_promises(thread_id_t tid, const ModelAction *write, 
 		if (!promise->thread_is_available(tid))
 			continue;
 
-		if (promise->get_write() && mo_graph->checkReachable(promise->get_write(), write)) {
+		const ModelAction *pwrite = promise->get_write();
+		if (pwrite && mo_graph->checkReachable(pwrite, write)) {
 			if (promise->eliminate_thread(tid)) {
 				priv->failed_promise = true;
 				return;

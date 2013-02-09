@@ -2372,36 +2372,18 @@ void ModelChecker::check_promises_thread_disabled()
  * @brief Checks promises in response to addition to modification order for
  * threads.
  *
- * Definitions:
+ * We test whether threads are still available for satisfying promises after an
+ * addition to our modification order constraints. Those that are unavailable
+ * are "eliminated". Once all threads are eliminated from satisfying a promise,
+ * that promise has failed.
  *
- * pthread is the thread that performed the read that created the promise
- *
- * pread is the read that created the promise
- *
- * pwrite is either the first write to same location as pread by
- * pthread that is sequenced after pread or the write read by the
- * first read to the same location as pread by pthread that is
- * sequenced after pread.
- *
- * 1. If tid=pthread, then we check what other threads are reachable
- * through the mod order starting with pwrite.  Those threads cannot
- * perform a write that will resolve the promise due to modification
- * order constraints.
- *
- * 2. If the tid is not pthread, we check whether pwrite can reach the
- * action write through the modification order.  If so, that thread
- * cannot perform a future write that will resolve the promise due to
- * modificatin order constraints.
- *
- * @param tid The thread that either read from the model action write, or
- * actually did the model action write.
- *
- * @param write The ModelAction representing the relevant write.
- * @param read  The ModelAction that reads a promised write, or NULL otherwise.
+ * @param act The ModelAction which updated the modification order
+ * @param is_read_check Should be true if act is a read and we must check for
+ * updates to the store from which it read (there is a distinction here for
+ * RMW's, which are both a load and a store)
  */
 void ModelChecker::mo_check_promises(const ModelAction *act, bool is_read_check)
 {
-	thread_id_t tid = act->get_tid();
 	const ModelAction *write = is_read_check ? act->get_reads_from() : act;
 
 	for (unsigned int i = 0; i < promises->size(); i++) {
@@ -2412,34 +2394,17 @@ void ModelChecker::mo_check_promises(const ModelAction *act, bool is_read_check)
 		if (!pread->same_var(write))
 			continue;
 
-		// same thread as pread
-		if (pread->get_tid() == tid) {
-			// make sure that the reader of this write happens after the promise
-			if (!is_read_check || (pread->happens_before(act))) {
-				// do we have a pwrite for the promise, if not, set it
-				if (promise->get_write() == NULL) {
-					promise->set_write(write);
-					// The pwrite cannot happen before pread
-					if (write->happens_before(pread) && (write != pread)) {
-						priv->failed_promise = true;
-						return;
-					}
-				}
-
-				if (mo_graph->checkPromise(write, promise)) {
-					priv->failed_promise = true;
-					return;
-				}
-			}
+		if (pread->happens_before(act) && mo_graph->checkPromise(write, promise)) {
+			priv->failed_promise = true;
+			return;
 		}
 
 		// Don't do any lookups twice for the same thread
-		if (!promise->thread_is_available(tid))
+		if (!promise->thread_is_available(act->get_tid()))
 			continue;
 
-		const ModelAction *pwrite = promise->get_write();
-		if (pwrite && mo_graph->checkReachable(pwrite, write)) {
-			if (promise->eliminate_thread(tid)) {
+		if (mo_graph->checkReachable(promise, write)) {
+			if (mo_graph->checkPromise(write, promise)) {
 				priv->failed_promise = true;
 				return;
 			}

@@ -443,6 +443,8 @@ bool CycleGraph::checkPromise(const ModelAction *fromact, Promise *promise) cons
 		CycleNode *node = queue.back();
 		queue.pop_back();
 
+		if (node->getPromise() == promise)
+			return true;
 		if (!node->is_promise() &&
 				promise->eliminate_thread(node->getAction()->get_tid()))
 			return true;

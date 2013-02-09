@@ -729,7 +729,7 @@ bool ModelChecker::process_read(ModelAction *curr, bool second_part_of_rmw)
 
 			read_from(curr, reads_from);
 			mo_graph->commitChanges();
-			mo_check_promises(curr->get_tid(), reads_from, NULL);
+			mo_check_promises(curr, true);
 
 			updated |= r_status;
 		} else if (!second_part_of_rmw) {
@@ -895,7 +895,7 @@ bool ModelChecker::process_write(ModelAction *curr)
 	}
 
 	mo_graph->commitChanges();
-	mo_check_promises(curr->get_tid(), curr, NULL);
+	mo_check_promises(curr, false);
 
 	get_thread(curr)->set_return_value(VALUE_NONE);
 	return updated_mod_order || updated_promises;
@@ -2312,7 +2312,7 @@ bool ModelChecker::resolve_promises(ModelAction *write)
 
 	for (unsigned int i = 0; i < actions_to_check.size(); i++) {
 		ModelAction *read = actions_to_check[i];
-		mo_check_promises(read->get_tid(), write, read);
+		mo_check_promises(read, true);
 	}
 
 	return haveResolved;
@@ -2399,8 +2399,11 @@ void ModelChecker::check_promises_thread_disabled()
  * @param write The ModelAction representing the relevant write.
  * @param read  The ModelAction that reads a promised write, or NULL otherwise.
  */
-void ModelChecker::mo_check_promises(thread_id_t tid, const ModelAction *write, const ModelAction *read)
+void ModelChecker::mo_check_promises(const ModelAction *act, bool is_read_check)
 {
+	thread_id_t tid = act->get_tid();
+	const ModelAction *write = is_read_check ? act->get_reads_from() : act;
+
 	for (unsigned int i = 0; i < promises->size(); i++) {
 		Promise *promise = (*promises)[i];
 		const ModelAction *pread = promise->get_action();
@@ -2412,7 +2415,7 @@ void ModelChecker::mo_check_promises(thread_id_t tid, const ModelAction *write, 
 		// same thread as pread
 		if (pread->get_tid() == tid) {
 			// make sure that the reader of this write happens after the promise
-			if ((read == NULL) || (pread->happens_before(read))) {
+			if (!is_read_check || (pread->happens_before(act))) {
 				// do we have a pwrite for the promise, if not, set it
 				if (promise->get_write() == NULL) {
 					promise->set_write(write);

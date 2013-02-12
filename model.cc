@@ -48,6 +48,7 @@ struct model_snapshot_members {
 		stats(),
 		failed_promise(false),
 		too_many_reads(false),
+		no_valid_reads(false),
 		bad_synchronization(false),
 		asserted(false)
 	{ }
@@ -66,6 +67,7 @@ struct model_snapshot_members {
 	struct execution_stats stats;
 	bool failed_promise;
 	bool too_many_reads;
+	bool no_valid_reads;
 	/** @brief Incorrectly-ordered synchronization was made */
 	bool bad_synchronization;
 	bool asserted;
@@ -1387,6 +1389,8 @@ void ModelChecker::print_infeasibility(const char *prefix) const
 		ptr += sprintf(ptr, "[failed promise]");
 	if (priv->too_many_reads)
 		ptr += sprintf(ptr, "[too many reads]");
+	if (priv->no_valid_reads)
+		ptr += sprintf(ptr, "[no valid reads-from]");
 	if (priv->bad_synchronization)
 		ptr += sprintf(ptr, "[bad sw ordering]");
 	if (promises_expired())
@@ -1415,6 +1419,7 @@ bool ModelChecker::is_feasible_prefix_ignore_relseq() const
 bool ModelChecker::is_infeasible() const
 {
 	return mo_graph->checkForCycles() ||
+		priv->no_valid_reads ||
 		priv->failed_promise ||
 		priv->too_many_reads ||
 		priv->bad_synchronization ||
@@ -1494,13 +1499,9 @@ void ModelChecker::check_recency(ModelAction *curr, const ModelAction *rf)
 				continue;
 
 			/* Test to see whether this is a feasible write to read from */
-			mo_graph->startChanges();
-			r_modification_order(curr, write);
-			bool feasiblereadfrom = !is_infeasible();
-			mo_graph->rollbackChanges();
+			/** NOTE: all members of read-from set should be
+			 *  feasible, so we no longer check it here **/
 
-			if (!feasiblereadfrom)
-				continue;
 			rit = ritcopy;
 
 			bool feasiblewrite = true;
@@ -2473,13 +2474,24 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 			else if (curr->get_sleep_flag() && !curr->is_seqcst() && !sleep_can_read_from(curr, act))
 				allow_read = false;
 
-			if (allow_read)
-				curr->get_node()->add_read_from(act);
+			if (allow_read) {
+				/* Only add feasible reads */
+				mo_graph->startChanges();
+				r_modification_order(curr, act);
+				if (!is_infeasible())
+					curr->get_node()->add_read_from(act);
+				mo_graph->rollbackChanges();
+			}
 
 			/* Include at most one act per-thread that "happens before" curr */
 			if (act->happens_before(curr))
 				break;
 		}
+	}
+	/* We may find no valid may-read-from only if the execution is doomed */
+	if (!curr->get_node()->get_read_from_size()) {
+		priv->no_valid_reads = true;
+		set_assert();
 	}
 
 	if (DBG_ENABLED()) {

@@ -296,7 +296,6 @@ void ModelChecker::execute_sleep_set()
 		thread_id_t tid = int_to_id(i);
 		Thread *thr = get_thread(tid);
 		if (scheduler->is_sleep_set(thr) && thr->get_pending() == NULL) {
-			thr->set_state(THREAD_RUNNING);
 			scheduler->next_thread(thr);
 			Thread::swap(&system_context, thr);
 			priv->current_action->set_sleep_flag();
@@ -2677,7 +2676,6 @@ uint64_t ModelChecker::switch_to_master(ModelAction *act)
 	DBG();
 	Thread *old = thread_current();
 	set_current_action(act);
-	old->set_state(THREAD_READY);
 	if (Thread::swap(old, &system_context) < 0) {
 		perror("swap threads");
 		exit(EXIT_FAILURE);
@@ -2745,13 +2743,10 @@ bool ModelChecker::take_step(ModelAction *curr)
 	if (!next_thrd)
 		return false;
 
-	next_thrd->set_state(THREAD_RUNNING);
-
 	if (next_thrd->get_pending() != NULL) {
 		/* restart a pending action */
 		set_current_action(next_thrd->get_pending());
 		next_thrd->set_pending(NULL);
-		next_thrd->set_state(THREAD_READY);
 		return true;
 	}
 

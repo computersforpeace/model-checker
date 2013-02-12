@@ -84,6 +84,7 @@ int Thread::create_context()
  */
 int Thread::swap(Thread *t, ucontext_t *ctxt)
 {
+	t->set_state(THREAD_READY);
 	return swapcontext(&t->context, ctxt);
 }
 
@@ -97,6 +98,7 @@ int Thread::swap(Thread *t, ucontext_t *ctxt)
  */
 int Thread::swap(ucontext_t *ctxt, Thread *t)
 {
+	t->set_state(THREAD_RUNNING);
 	return swapcontext(ctxt, &t->context);
 }
 

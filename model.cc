@@ -216,7 +216,7 @@ Thread * ModelChecker::get_next_thread(ModelAction *curr)
 	if (curr != NULL) {
 		/* Do not split atomic actions. */
 		if (curr->is_rmwr())
-			return thread_current();
+			return get_thread(curr);
 		else if (curr->get_type() == THREAD_CREATE)
 			return curr->get_thread_operand();
 	}

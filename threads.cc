@@ -23,7 +23,13 @@ static void stack_free(void *stack)
 	snapshot_free(stack);
 }
 
-/** Return the currently executing thread. */
+/**
+ * @brief Get the current Thread
+ *
+ * Must be called from a user context
+ *
+ * @return The currently executing thread
+ */
 Thread * thread_current(void)
 {
 	ASSERT(model);

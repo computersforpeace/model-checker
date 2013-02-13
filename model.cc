@@ -2681,9 +2681,6 @@ uint64_t ModelChecker::switch_to_master(ModelAction *act)
  */
 Thread * ModelChecker::take_step(ModelAction *curr)
 {
-	if (has_asserted())
-		return NULL;
-
 	Thread *curr_thrd = get_thread(curr);
 	ASSERT(curr_thrd->get_state() == THREAD_READY);
 
@@ -2753,6 +2750,11 @@ void ModelChecker::run()
 		do {
 			scheduler->next_thread(t);
 			Thread::swap(&system_context, t);
+
+			/* Catch assertions from prior take_step or from
+			 * between-ModelAction bugs (e.g., data races) */
+			if (has_asserted())
+				break;
 
 			/* Consume the next action for a Thread */
 			ModelAction *curr = t->get_pending();

@@ -148,7 +148,6 @@ private:
 	modelclock_t get_next_seq_num();
 
 	bool next_execution();
-	void set_current_action(ModelAction *act);
 	ModelAction * check_current_action(ModelAction *curr);
 	bool initialize_curr_action(ModelAction **curr);
 	bool process_read(ModelAction *curr, bool second_part_of_rmw);

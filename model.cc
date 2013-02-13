@@ -39,7 +39,6 @@ struct bug_message {
  */
 struct model_snapshot_members {
 	model_snapshot_members() :
-		current_action(NULL),
 		/* First thread created will have id INITIAL_THREAD_ID */
 		next_thread_id(INITIAL_THREAD_ID),
 		used_sequence_numbers(0),
@@ -59,7 +58,6 @@ struct model_snapshot_members {
 		bugs.clear();
 	}
 
-	ModelAction *current_action;
 	unsigned int next_thread_id;
 	modelclock_t used_sequence_numbers;
 	ModelAction *next_backtrack;
@@ -298,8 +296,7 @@ void ModelChecker::execute_sleep_set()
 		if (scheduler->is_sleep_set(thr) && thr->get_pending() == NULL) {
 			scheduler->next_thread(thr);
 			Thread::swap(&system_context, thr);
-			priv->current_action->set_sleep_flag();
-			thr->set_pending(priv->current_action);
+			thr->get_pending()->set_sleep_flag();
 		}
 	}
 }
@@ -1213,16 +1210,6 @@ bool ModelChecker::check_action_enabled(ModelAction *curr) {
 	}
 
 	return true;
-}
-
-/**
- * Stores the ModelAction for the current thread action.  Call this
- * immediately before switching from user- to system-context to pass
- * data between them.
- * @param act The ModelAction created by the user-thread action
- */
-void ModelChecker::set_current_action(ModelAction *act) {
-	priv->current_action = act;
 }
 
 /**
@@ -2678,7 +2665,7 @@ uint64_t ModelChecker::switch_to_master(ModelAction *act)
 {
 	DBG();
 	Thread *old = thread_current();
-	set_current_action(act);
+	old->set_pending(act);
 	if (Thread::swap(old, &system_context) < 0) {
 		perror("swap threads");
 		exit(EXIT_FAILURE);
@@ -2738,20 +2725,13 @@ Thread * ModelChecker::take_step(ModelAction *curr)
 		ModelAction *fixup = new ModelAction(MODEL_FIXUP_RELSEQ,
 				std::memory_order_seq_cst, NULL, VALUE_NONE,
 				model_thread);
-		set_current_action(fixup);
+		model_thread->set_pending(fixup);
 		return model_thread;
 	}
 
 	/* next_thrd == NULL -> don't take any more steps */
 	if (!next_thrd)
 		return NULL;
-
-	if (next_thrd->get_pending() != NULL) {
-		/* restart a pending action */
-		set_current_action(next_thrd->get_pending());
-		next_thrd->set_pending(NULL);
-		return next_thrd;
-	}
 
 	return next_thrd;
 }
@@ -2773,7 +2753,11 @@ void ModelChecker::run()
 		do {
 			scheduler->next_thread(t);
 			Thread::swap(&system_context, t);
-			t = take_step(priv->current_action);
+
+			/* Consume the next action for a Thread */
+			ModelAction *curr = t->get_pending();
+			t->set_pending(NULL);
+			t = take_step(curr);
 		} while (t && !t->is_model_thread());
 		/** @TODO Re-write release sequence fixups here */
 	} while (next_execution());

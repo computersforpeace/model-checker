@@ -2689,12 +2689,13 @@ uint64_t ModelChecker::switch_to_master(ModelAction *act)
 /**
  * Takes the next step in the execution, if possible.
  * @param curr The current step to take
- * @return Returns true (success) if a step was taken and false otherwise.
+ * @return Returns the next Thread to run, if any; NULL if this execution
+ * should terminate
  */
-bool ModelChecker::take_step(ModelAction *curr)
+Thread * ModelChecker::take_step(ModelAction *curr)
 {
 	if (has_asserted())
-		return false;
+		return NULL;
 
 	Thread *curr_thrd = get_thread(curr);
 	ASSERT(curr_thrd->get_state() == THREAD_READY);
@@ -2703,15 +2704,14 @@ bool ModelChecker::take_step(ModelAction *curr)
 
 	/* Infeasible -> don't take any more steps */
 	if (is_infeasible())
-		return false;
+		return NULL;
 	else if (isfeasibleprefix() && have_bug_reports()) {
 		set_assert();
-		return false;
+		return NULL;
 	}
 
-	if (params.bound != 0)
-		if (priv->used_sequence_numbers > params.bound)
-			return false;
+	if (params.bound != 0 && priv->used_sequence_numbers > params.bound)
+		return NULL;
 
 	if (curr_thrd->is_blocked() || curr_thrd->is_complete())
 		scheduler->remove_thread(curr_thrd);
@@ -2739,22 +2739,21 @@ bool ModelChecker::take_step(ModelAction *curr)
 				std::memory_order_seq_cst, NULL, VALUE_NONE,
 				model_thread);
 		set_current_action(fixup);
-		return true;
+		return model_thread;
 	}
 
 	/* next_thrd == NULL -> don't take any more steps */
 	if (!next_thrd)
-		return false;
+		return NULL;
 
 	if (next_thrd->get_pending() != NULL) {
 		/* restart a pending action */
 		set_current_action(next_thrd->get_pending());
 		next_thrd->set_pending(NULL);
-		return true;
+		return next_thrd;
 	}
 
-	/* Return false only if swap fails with an error */
-	return (Thread::swap(&system_context, next_thrd) == 0);
+	return next_thrd;
 }
 
 /** Wrapper to run the user's main function, with appropriate arguments */
@@ -2769,15 +2768,14 @@ void ModelChecker::run()
 	do {
 		thrd_t user_thread;
 		Thread *t = new Thread(&user_thread, &user_main_wrapper, NULL);
-
 		add_thread(t);
 
-		/* Run user thread up to its first action */
-		scheduler->next_thread(t);
-		Thread::swap(&system_context, t);
-
-		/* Wait for all threads to complete */
-		while (take_step(priv->current_action));
+		do {
+			scheduler->next_thread(t);
+			Thread::swap(&system_context, t);
+			t = take_step(priv->current_action);
+		} while (t && !t->is_model_thread());
+		/** @TODO Re-write release sequence fixups here */
 	} while (next_execution());
 
 	print_stats();

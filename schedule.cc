@@ -217,6 +217,7 @@ Thread * Scheduler::next_thread(Thread *t)
 		}
 	} else if (t->is_model_thread()) {
 		/* model-checker threads never run */
+		ASSERT(false);
 		t = NULL;
 	} else {
 		curr_thread_index = id_to_int(t->get_id());

@@ -27,7 +27,8 @@ public:
 	void remove_thread(Thread *t);
 	void sleep(Thread *t);
 	void wake(Thread *t);
-	Thread * next_thread(Thread *t);
+	Thread * select_next_thread();
+	void set_current_thread(Thread *t);
 	Thread * get_current_thread() const;
 	void print() const;
 	enabled_type_t * get_enabled_array() const { return enabled; };

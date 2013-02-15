@@ -177,56 +177,58 @@ void Scheduler::wake(Thread *t)
 }
 
 /**
- * Select a Thread. This implementation defaults to round-robin, if a
- * thread is not already provided.
+ * Select a Thread to run and set it as the 'current' Thread. This
+ * implementation defaults to round-robin
  *
- * @param t Thread to run, if chosen by an external entity (e.g.,
- * ModelChecker). May be NULL to indicate no external choice.
  * @return The next Thread to run
  */
-Thread * Scheduler::next_thread(Thread *t)
+Thread * Scheduler::select_next_thread()
 {
-	if (t == NULL) {
-		int old_curr_thread = curr_thread_index;
-		bool have_enabled_thread_with_priority = false;
-		Node *n = model->get_curr_node();
+	int old_curr_thread = curr_thread_index;
+	bool have_enabled_thread_with_priority = false;
+	Node *n = model->get_curr_node();
 
-		for (int i = 0; i < enabled_len; i++) {
-			thread_id_t tid = int_to_id(i);
-			if (n->has_priority(tid)) {
-				DEBUG("Node (tid %d) has priority\n", i);
-				//Have a thread with priority
-				if (enabled[i] != THREAD_DISABLED)
-					have_enabled_thread_with_priority = true;
-			}
+	for (int i = 0; i < enabled_len; i++) {
+		thread_id_t tid = int_to_id(i);
+		if (n->has_priority(tid)) {
+			DEBUG("Node (tid %d) has priority\n", i);
+			//Have a thread with priority
+			if (enabled[i] != THREAD_DISABLED)
+				have_enabled_thread_with_priority = true;
 		}
-
-		while (true) {
-			curr_thread_index = (curr_thread_index + 1) % enabled_len;
-			thread_id_t curr_tid = int_to_id(curr_thread_index);
-			if (enabled[curr_thread_index] == THREAD_ENABLED &&
-					(!have_enabled_thread_with_priority || n->has_priority(curr_tid))) {
-				t = model->get_thread(curr_tid);
-				break;
-			}
-			if (curr_thread_index == old_curr_thread) {
-				if (DBG_ENABLED())
-					print();
-				return NULL;
-			}
-		}
-	} else if (t->is_model_thread()) {
-		/* model-checker threads never run */
-		ASSERT(false);
-		t = NULL;
-	} else {
-		curr_thread_index = id_to_int(t->get_id());
 	}
+
+	while (true) {
+		curr_thread_index = (curr_thread_index + 1) % enabled_len;
+		thread_id_t curr_tid = int_to_id(curr_thread_index);
+		if (enabled[curr_thread_index] == THREAD_ENABLED &&
+				(!have_enabled_thread_with_priority || n->has_priority(curr_tid))) {
+			current = model->get_thread(curr_tid);
+			if (DBG_ENABLED())
+				print();
+			return current;
+		}
+		if (curr_thread_index == old_curr_thread) {
+			if (DBG_ENABLED())
+				print();
+			return NULL;
+		}
+	}
+}
+
+/**
+ * @brief Set the current "running" Thread
+ * @param t Thread to run
+ */
+void Scheduler::set_current_thread(Thread *t)
+{
+	ASSERT(t && !t->is_model_thread());
+
+	curr_thread_index = id_to_int(t->get_id());
 
 	current = t;
 	if (DBG_ENABLED())
 		print();
-	return t;
 }
 
 /**

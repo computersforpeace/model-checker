@@ -2676,7 +2676,7 @@ bool ModelChecker::is_enabled(thread_id_t tid) const
  */
 void ModelChecker::switch_from_master(Thread *thread)
 {
-	scheduler->next_thread(thread);
+	scheduler->set_current_thread(thread);
 	Thread::swap(&system_context, thread);
 }
 
@@ -2735,7 +2735,7 @@ Thread * ModelChecker::take_step(ModelAction *curr)
 	/* Only ask for the next thread from Scheduler if we haven't chosen one
 	 * already */
 	if (!next_thrd)
-		next_thrd = scheduler->next_thread(next_thrd);
+		next_thrd = scheduler->select_next_thread();
 
 	DEBUG("(%d, %d)\n", curr_thrd ? id_to_int(curr_thrd->get_id()) : -1,
 			next_thrd ? id_to_int(next_thrd->get_id()) : -1);

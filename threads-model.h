@@ -95,8 +95,15 @@ public:
 		return wait_list[i];
 	}
 
+	/** @return The pending (next) ModelAction for this Thread
+	 *  @see Thread::pending */
 	ModelAction * get_pending() const { return pending; }
+
+	/** @brief Set the pending (next) ModelAction for this Thread
+	 *  @param act The pending ModelAction
+	 *  @see Thread::pending */
 	void set_pending(ModelAction *act) { pending = act; }
+
 	/**
 	 * Remove one ModelAction from the waiting list
 	 * @return The ModelAction that was removed from the waiting list
@@ -119,10 +126,22 @@ public:
 	 */
 private:
 	int create_context();
+
+	/** @brief The parent Thread which created this Thread */
 	Thread *parent;
+
+	/** @brief The THREAD_CREATE ModelAction which created this Thread */
 	ModelAction *creation;
 
+	/**
+	 * @brief The next ModelAction to be run by this Thread
+	 *
+	 * This action should be kept updated by the ModelChecker, so that we
+	 * always know what the next ModelAction's memory_order, action type,
+	 * and location are.
+	 */
 	ModelAction *pending;
+
 	void (*start_routine)(void *);
 	void *arg;
 	ucontext_t context;

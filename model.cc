@@ -327,11 +327,22 @@ void ModelChecker::set_bad_synchronization()
 	priv->bad_synchronization = true;
 }
 
+/**
+ * Check whether the current trace has triggered an assertion which should halt
+ * its execution.
+ *
+ * @return True, if the execution should be aborted; false otherwise
+ */
 bool ModelChecker::has_asserted() const
 {
 	return priv->asserted;
 }
 
+/**
+ * Trigger a trace assertion which should cause this execution to be halted.
+ * This can be due to a detected bug or due to an infeasibility that should
+ * halt ASAP.
+ */
 void ModelChecker::set_assert()
 {
 	priv->asserted = true;
@@ -2755,6 +2766,12 @@ void ModelChecker::run()
 		add_thread(t);
 
 		do {
+			/*
+			 * Stash next pending action(s) for thread(s). There
+			 * should only need to stash one thread's action--the
+			 * thread which just took a step--plus the first step
+			 * for any newly-created thread
+			 */
 			for (unsigned int i = 0; i < get_num_threads(); i++) {
 				thread_id_t tid = int_to_id(i);
 				Thread *thr = get_thread(tid);

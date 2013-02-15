@@ -2719,30 +2719,13 @@ Thread * ModelChecker::take_step(ModelAction *curr)
 		scheduler->remove_thread(curr_thrd);
 
 	Thread *next_thrd = get_next_thread(curr);
-	next_thrd = scheduler->next_thread(next_thrd);
+	/* Only ask for the next thread from Scheduler if we haven't chosen one
+	 * already */
+	if (!next_thrd)
+		next_thrd = scheduler->next_thread(next_thrd);
 
 	DEBUG("(%d, %d)\n", curr_thrd ? id_to_int(curr_thrd->get_id()) : -1,
 			next_thrd ? id_to_int(next_thrd->get_id()) : -1);
-
-	/*
-	 * Launch end-of-execution release sequence fixups only when there are:
-	 *
-	 * (1) no more user threads to run (or when execution replay chooses
-	 *     the 'model_thread')
-	 * (2) pending release sequences
-	 * (3) pending assertions (i.e., data races)
-	 * (4) no pending promises
-	 */
-	if (!pending_rel_seqs->empty() && (!next_thrd || next_thrd->is_model_thread()) &&
-			is_feasible_prefix_ignore_relseq() && !unrealizedraces.empty()) {
-		model_print("*** WARNING: release sequence fixup action (%zu pending release seuqences) ***\n",
-				pending_rel_seqs->size());
-		ModelAction *fixup = new ModelAction(MODEL_FIXUP_RELSEQ,
-				std::memory_order_seq_cst, NULL, VALUE_NONE,
-				model_thread);
-		model_thread->set_pending(fixup);
-		return model_thread;
-	}
 
 	return next_thrd;
 }
@@ -2787,7 +2770,27 @@ void ModelChecker::run()
 			t->set_pending(NULL);
 			t = take_step(curr);
 		} while (t && !t->is_model_thread());
-		/** @TODO Re-write release sequence fixups here */
+
+		/*
+		 * Launch end-of-execution release sequence fixups only when
+		 * the execution is otherwise feasible AND there are:
+		 *
+		 * (1) pending release sequences
+		 * (2) pending assertions that could be invalidated by a change
+		 * in clock vectors (i.e., data races)
+		 * (3) no pending promises
+		 */
+		while (!pending_rel_seqs->empty() &&
+				is_feasible_prefix_ignore_relseq() &&
+				!unrealizedraces.empty()) {
+			model_print("*** WARNING: release sequence fixup action "
+					"(%zu pending release seuqence(s)) ***\n",
+					pending_rel_seqs->size());
+			ModelAction *fixup = new ModelAction(MODEL_FIXUP_RELSEQ,
+					std::memory_order_seq_cst, NULL, VALUE_NONE,
+					model_thread);
+			take_step(fixup);
+		};
 	} while (next_execution());
 
 	print_stats();

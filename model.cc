@@ -2744,10 +2744,6 @@ Thread * ModelChecker::take_step(ModelAction *curr)
 		return model_thread;
 	}
 
-	/* next_thrd == NULL -> don't take any more steps */
-	if (!next_thrd)
-		return NULL;
-
 	return next_thrd;
 }
 

@@ -159,6 +159,14 @@ void ModelChecker::reset_to_initial_state()
 	/* Print all model-checker output before rollback */
 	fflush(model_out);
 
+	/**
+	 * FIXME: if we utilize partial rollback, we will need to free only
+	 * those pending actions which were NOT pending before the rollback
+	 * point
+	 */
+	for (unsigned int i = 0; i < get_num_threads(); i++)
+		delete get_thread(int_to_id(i))->get_pending();
+
 	snapshot_backtrack_before(0);
 }
 

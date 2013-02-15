@@ -117,6 +117,7 @@ public:
 	unsigned int get_num_threads() const;
 	Thread * get_current_thread() const;
 
+	void switch_from_master(Thread *thread);
 	uint64_t switch_to_master(ModelAction *act);
 	ClockVector * get_cv(thread_id_t tid) const;
 	ModelAction * get_parent_action(thread_id_t tid) const;

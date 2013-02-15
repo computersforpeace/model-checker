@@ -2668,6 +2668,19 @@ bool ModelChecker::is_enabled(thread_id_t tid) const
 }
 
 /**
+ * Switch from a model-checker context to a user-thread context. This is the
+ * complement of ModelChecker::switch_to_master and must be called from the
+ * model-checker context
+ *
+ * @param thread The user-thread to switch to
+ */
+void ModelChecker::switch_from_master(Thread *thread)
+{
+	scheduler->next_thread(thread);
+	Thread::swap(&system_context, thread);
+}
+
+/**
  * Switch from a user-context to the "master thread" context (a.k.a. system
  * context). This switch is made with the intention of exploring a particular
  * model-checking action (described by a ModelAction object). Must be called
@@ -2755,8 +2768,7 @@ void ModelChecker::run()
 				thread_id_t tid = int_to_id(i);
 				Thread *thr = get_thread(tid);
 				if (!thr->is_model_thread() && !thr->is_complete() && !thr->get_pending()) {
-					scheduler->next_thread(thr);
-					Thread::swap(&system_context, thr);
+					switch_from_master(thr);
 				}
 			}
 

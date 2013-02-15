@@ -177,9 +177,7 @@ void Scheduler::wake(Thread *t)
 }
 
 /**
- * Select a Thread to run and set it as the 'current' Thread. This
- * implementation defaults to round-robin
- *
+ * @brief Select a Thread to run via round-robin
  * @return The next Thread to run
  */
 Thread * Scheduler::select_next_thread()
@@ -203,16 +201,10 @@ Thread * Scheduler::select_next_thread()
 		thread_id_t curr_tid = int_to_id(curr_thread_index);
 		if (enabled[curr_thread_index] == THREAD_ENABLED &&
 				(!have_enabled_thread_with_priority || n->has_priority(curr_tid))) {
-			current = model->get_thread(curr_tid);
-			if (DBG_ENABLED())
-				print();
-			return current;
+			return model->get_thread(curr_tid);
 		}
-		if (curr_thread_index == old_curr_thread) {
-			if (DBG_ENABLED())
-				print();
+		if (curr_thread_index == old_curr_thread)
 			return NULL;
-		}
 	}
 }
 

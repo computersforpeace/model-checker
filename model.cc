@@ -211,11 +211,13 @@ Node * ModelChecker::get_curr_node() const
  * adjacency of read/write portions of a RMW action, force THREAD_CREATE to be
  * followed by a THREAD_START, or it can enforce execution replay/backtracking.
  * The model-checker may have no preference regarding the next thread (i.e.,
- * when exploring a new execution ordering), in which case this will return
- * NULL.
+ * when exploring a new execution ordering), in which case we defer to the
+ * scheduler.
+ *
  * @param curr The current ModelAction. This action might guide the choice of
  * next thread.
- * @return The next thread to run. If the model-checker has no preference, NULL.
+ * @return The next chosen thread to run, if any exist. Or else if no threads
+ * remain to be executed, return NULL.
  */
 Thread * ModelChecker::get_next_thread(ModelAction *curr)
 {
@@ -229,9 +231,12 @@ Thread * ModelChecker::get_next_thread(ModelAction *curr)
 			return curr->get_thread_operand();
 	}
 
-	/* Have we completed exploring the preselected path? */
+	/*
+	 * Have we completed exploring the preselected path? Then let the
+	 * scheduler decide
+	 */
 	if (diverge == NULL)
-		return NULL;
+		return scheduler->select_next_thread();
 
 	/* Else, we are trying to replay an execution */
 	ModelAction *next = node_stack->get_next()->get_action();
@@ -2732,10 +2737,6 @@ Thread * ModelChecker::take_step(ModelAction *curr)
 		scheduler->remove_thread(curr_thrd);
 
 	Thread *next_thrd = get_next_thread(curr);
-	/* Only ask for the next thread from Scheduler if we haven't chosen one
-	 * already */
-	if (!next_thrd)
-		next_thrd = scheduler->select_next_thread();
 
 	DEBUG("(%d, %d)\n", curr_thrd ? id_to_int(curr_thrd->get_id()) : -1,
 			next_thrd ? id_to_int(next_thrd->get_id()) : -1);

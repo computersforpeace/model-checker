@@ -2807,5 +2807,6 @@ void ModelChecker::run()
 		};
 	} while (next_execution());
 
+	model_print("******* Model-checking complete: *******\n");
 	print_stats();
 }

@@ -190,22 +190,21 @@ Thread * Scheduler::select_next_thread()
 		thread_id_t tid = int_to_id(i);
 		if (n->has_priority(tid)) {
 			DEBUG("Node (tid %d) has priority\n", i);
-			//Have a thread with priority
 			if (enabled[i] != THREAD_DISABLED)
 				have_enabled_thread_with_priority = true;
 		}
 	}
 
-	while (true) {
-		curr_thread_index = (curr_thread_index + 1) % enabled_len;
+	for (int i = 0; i < enabled_len; i++) {
+		curr_thread_index = (old_curr_thread + i + 1) % enabled_len;
 		thread_id_t curr_tid = int_to_id(curr_thread_index);
 		if (enabled[curr_thread_index] == THREAD_ENABLED &&
 				(!have_enabled_thread_with_priority || n->has_priority(curr_tid))) {
 			return model->get_thread(curr_tid);
 		}
-		if (curr_thread_index == old_curr_thread)
-			return NULL;
 	}
+	/* No thread was enabled */
+	return NULL;
 }
 
 /**

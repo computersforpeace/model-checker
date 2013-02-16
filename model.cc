@@ -214,8 +214,9 @@ Node * ModelChecker::get_curr_node() const
  * when exploring a new execution ordering), in which case we defer to the
  * scheduler.
  *
- * @param curr The current ModelAction. This action might guide the choice of
- * next thread.
+ * @param curr Optional: The current ModelAction. Only used if non-NULL and it
+ * might guide the choice of next thread (i.e., THREAD_CREATE should be
+ * followed by THREAD_START, or ATOMIC_RMWR followed by ATOMIC_{RMW,RMWC})
  * @return The next chosen thread to run, if any exist. Or else if no threads
  * remain to be executed, return NULL.
  */

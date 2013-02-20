@@ -10,7 +10,6 @@
 namespace std {
 #else
 #include <stddef.h>
-#include <stdbool.h>
 #endif
 
 

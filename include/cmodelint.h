@@ -5,6 +5,7 @@
 #ifndef CMODELINT_H
 #define CMODELINT_H
 #include <inttypes.h>
+#include "memoryorder.h"
 
 #if __cplusplus
 using std::memory_order;

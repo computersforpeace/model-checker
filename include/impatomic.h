@@ -14,6 +14,8 @@
 
 #ifdef __cplusplus
 namespace std {
+#else
+#include <stdbool.h>
 #endif
 
 #define CPP0X( feature )

@@ -545,6 +545,18 @@ bool ModelChecker::next_execution()
 	return true;
 }
 
+/**
+ * @brief Find the last fence-related backtracking conflict for a ModelAction
+ *
+ * This function performs the search for the most recent conflicting action
+ * against which we should perform backtracking, as affected by fence
+ * operations. This includes pairs of potentially-synchronizing actions which
+ * occur due to fence-acquire or fence-release, and hence should be explored in
+ * the opposite execution order.
+ *
+ * @param act The current action
+ * @return The most recent action which conflicts with act due to fences
+ */
 ModelAction * ModelChecker::get_last_fence_conflict(ModelAction *act) const
 {
 	/* Only perform release/acquire fence backtracking for stores */
@@ -600,6 +612,17 @@ ModelAction * ModelChecker::get_last_fence_conflict(ModelAction *act) const
 	return latest_backtrack;
 }
 
+/**
+ * @brief Find the last backtracking conflict for a ModelAction
+ *
+ * This function performs the search for the most recent conflicting action
+ * against which we should perform backtracking. This primary includes pairs of
+ * synchronizing actions which should be explored in the opposite execution
+ * order.
+ *
+ * @param act The current action
+ * @return The most recent action which conflicts with act
+ */
 ModelAction * ModelChecker::get_last_conflict(ModelAction *act) const
 {
 	switch (act->get_type()) {

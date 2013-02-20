@@ -21,16 +21,7 @@ struct future_value {
 
 class Promise {
  public:
-	Promise(ModelAction *read, struct future_value fv) :
-		num_available_threads(0),
-		value(fv.value),
-		expiration(fv.expiration),
-		read(read),
-		write(NULL)
-	{
-		add_thread(fv.tid);
-		eliminate_thread(read->get_tid());
-	}
+	Promise(ModelAction *read, struct future_value fv);
 	modelclock_t get_expiration() const { return expiration; }
 	ModelAction * get_action() const { return read; }
 	bool eliminate_thread(thread_id_t tid);

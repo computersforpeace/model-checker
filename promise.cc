@@ -6,6 +6,22 @@
 #include "schedule.h"
 
 /**
+ * @brief Promise constructor
+ * @param read The read which reads from a promised future value
+ * @param fv The future value that is promised
+ */
+Promise::Promise(ModelAction *read, struct future_value fv) :
+	num_available_threads(0),
+	value(fv.value),
+	expiration(fv.expiration),
+	read(read),
+	write(NULL)
+{
+	add_thread(fv.tid);
+	eliminate_thread(read->get_tid());
+}
+
+/**
  * Eliminate a thread which no longer can satisfy this promise. Once all
  * enabled threads have been eliminated, this promise is unresolvable.
  *

@@ -545,7 +545,7 @@ bool ModelChecker::next_execution()
 	return true;
 }
 
-ModelAction * ModelChecker::get_last_conflict(ModelAction *act)
+ModelAction * ModelChecker::get_last_conflict(ModelAction *act) const
 {
 	switch (act->get_type()) {
 	case ATOMIC_FENCE:

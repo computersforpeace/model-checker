@@ -139,7 +139,7 @@ public:
 	MEMALLOC
 private:
 	/** The scheduler to use: tracks the running/ready Threads */
-	Scheduler *scheduler;
+	Scheduler * const scheduler;
 
 	bool sleep_can_read_from(ModelAction *curr, const ModelAction *write);
 	bool thin_air_constraint_may_allow(const ModelAction *writer, const ModelAction *reader);
@@ -167,7 +167,7 @@ private:
 	Thread * take_step(ModelAction *curr);
 
 	void check_recency(ModelAction *curr, const ModelAction *rf);
-	ModelAction * get_last_conflict(ModelAction *act);
+	ModelAction * get_last_conflict(ModelAction *act) const;
 	void set_backtracking(ModelAction *act);
 	Thread * get_next_thread(ModelAction *curr);
 	bool set_latest_backtrack(ModelAction *act);
@@ -202,24 +202,24 @@ private:
 	ModelAction *earliest_diverge;
 
 	ucontext_t system_context;
-	action_list_t *action_trace;
-	HashTable<int, Thread *, int> *thread_map;
+	action_list_t * const action_trace;
+	HashTable<int, Thread *, int> * const thread_map;
 
 	/** Per-object list of actions. Maps an object (i.e., memory location)
 	 * to a trace of all actions performed on the object. */
-	HashTable<const void *, action_list_t *, uintptr_t, 4> *obj_map;
+	HashTable<const void *, action_list_t *, uintptr_t, 4> * const obj_map;
 
 	/** Per-object list of actions. Maps an object (i.e., memory location)
 	 * to a trace of all actions performed on the object. */
-	HashTable<const void *, action_list_t *, uintptr_t, 4> *lock_waiters_map;
+	HashTable<const void *, action_list_t *, uintptr_t, 4> * const lock_waiters_map;
 
 	/** Per-object list of actions. Maps an object (i.e., memory location)
 	 * to a trace of all actions performed on the object. */
-	HashTable<const void *, action_list_t *, uintptr_t, 4> *condvar_waiters_map;
+	HashTable<const void *, action_list_t *, uintptr_t, 4> * const condvar_waiters_map;
 
-	HashTable<void *, std::vector<action_list_t> *, uintptr_t, 4 > *obj_thrd_map;
-	std::vector< Promise *, SnapshotAlloc<Promise *> > *promises;
-	std::vector< struct PendingFutureValue, SnapshotAlloc<struct PendingFutureValue> > *futurevalues;
+	HashTable<void *, std::vector<action_list_t> *, uintptr_t, 4 > * const obj_thrd_map;
+	std::vector< Promise *, SnapshotAlloc<Promise *> > * const promises;
+	std::vector< struct PendingFutureValue, SnapshotAlloc<struct PendingFutureValue> > * const futurevalues;
 
 	/**
 	 * List of pending release sequences. Release sequences might be
@@ -227,15 +227,15 @@ private:
 	 * are established. Each entry in the list may only be partially
 	 * filled, depending on its pending status.
 	 */
-	std::vector< struct release_seq *, SnapshotAlloc<struct release_seq *> > *pending_rel_seqs;
+	std::vector< struct release_seq *, SnapshotAlloc<struct release_seq *> > * const pending_rel_seqs;
 
-	std::vector< ModelAction *, SnapshotAlloc<ModelAction *> > *thrd_last_action;
-	std::vector< ModelAction *, SnapshotAlloc<ModelAction *> > *thrd_last_fence_release;
-	NodeStack *node_stack;
+	std::vector< ModelAction *, SnapshotAlloc<ModelAction *> > * const thrd_last_action;
+	std::vector< ModelAction *, SnapshotAlloc<ModelAction *> > * const thrd_last_fence_release;
+	NodeStack * const node_stack;
 
 	/** Private data members that should be snapshotted. They are grouped
 	 * together for efficiency and maintainability. */
-	struct model_snapshot_members *priv;
+	struct model_snapshot_members * const priv;
 
 	/** A special model-checker Thread; used for associating with
 	 *  model-checker-related ModelAcitons */
@@ -255,7 +255,7 @@ private:
 	 * such that <tt>a --> b</tt> means <tt>a</tt> was ordered before
 	 * <tt>b</tt>.
 	 */
-	CycleGraph *mo_graph;
+	CycleGraph * const mo_graph;
 
 	/** @brief The cumulative execution stats */
 	struct execution_stats stats;

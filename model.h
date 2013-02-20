@@ -27,6 +27,8 @@ struct model_snapshot_members;
 /** @brief Shorthand for a list of release sequence heads */
 typedef std::vector< const ModelAction *, ModelAlloc<const ModelAction *> > rel_heads_list_t;
 
+typedef std::list< ModelAction *, SnapshotAlloc<ModelAction *> > action_list_t;
+
 /**
  * Model checker parameter structure. Holds run-time configuration options for
  * the model checker.

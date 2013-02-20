@@ -193,6 +193,4 @@ private:
 	bool sleep_flag;
 };
 
-typedef std::list< ModelAction *, SnapshotAlloc<ModelAction *> > action_list_t;
-
 #endif /* __ACTION_H__ */

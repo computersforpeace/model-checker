@@ -8,10 +8,12 @@
 #define __PROMISE_H__
 
 #include <inttypes.h>
-#include "threads-model.h"
+#include <vector>
 
-#include "model.h"
 #include "modeltypes.h"
+#include "mymemory.h"
+
+class ModelAction;
 
 struct future_value {
 	uint64_t value;

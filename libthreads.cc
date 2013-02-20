@@ -1,6 +1,7 @@
 #include <threads.h>
 #include "common.h"
 #include "threads-model.h"
+#include "action.h"
 
 /* global "model" object */
 #include "model.h"

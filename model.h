@@ -8,20 +8,22 @@
 #include <vector>
 #include <cstddef>
 #include <ucontext.h>
+#include <inttypes.h>
 
 #include "mymemory.h"
-#include "action.h"
 #include "hashtable.h"
 #include "workqueue.h"
 #include "config.h"
 #include "modeltypes.h"
 
 /* Forward declaration */
+class Node;
 class NodeStack;
 class CycleGraph;
 class Promise;
 class Scheduler;
 class Thread;
+class ClockVector;
 struct model_snapshot_members;
 
 /** @brief Shorthand for a list of release sequence heads */

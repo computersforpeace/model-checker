@@ -6,6 +6,7 @@
 #include "mymemory.h"
 #include "clockvector.h"
 #include "config.h"
+#include "action.h"
 
 struct ShadowTable *root;
 std::vector<struct DataRace *> unrealizedraces;

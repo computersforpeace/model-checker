@@ -2,6 +2,7 @@
 #include "common.h"
 #include "model.h"
 #include "threads-model.h"
+#include "action.h"
 
 namespace std {
 

@@ -4,6 +4,8 @@
 #include "promise.h"
 #include "model.h"
 #include "schedule.h"
+#include "action.h"
+#include "threads-model.h"
 
 /**
  * @brief Promise constructor

@@ -3,6 +3,7 @@
 #include "model.h"
 #include "threads-model.h"
 #include "clockvector.h"
+#include "action.h"
 
 namespace std {
 mutex::mutex() {

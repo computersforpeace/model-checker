@@ -167,6 +167,7 @@ private:
 	Thread * take_step(ModelAction *curr);
 
 	void check_recency(ModelAction *curr, const ModelAction *rf);
+	ModelAction * get_last_fence_conflict(ModelAction *act) const;
 	ModelAction * get_last_conflict(ModelAction *act) const;
 	void set_backtracking(ModelAction *act);
 	Thread * get_next_thread(ModelAction *curr);

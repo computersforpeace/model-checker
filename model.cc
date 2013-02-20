@@ -545,25 +545,89 @@ bool ModelChecker::next_execution()
 	return true;
 }
 
+ModelAction * ModelChecker::get_last_fence_conflict(ModelAction *act) const
+{
+	/* Only perform release/acquire fence backtracking for stores */
+	if (!act->is_write())
+		return NULL;
+
+	/* Find a fence-release (or, act is a release) */
+	ModelAction *last_release;
+	if (act->is_release())
+		last_release = act;
+	else
+		last_release = get_last_fence_release(act->get_tid());
+	if (!last_release)
+		return NULL;
+
+	std::vector< ModelAction *, ModelAlloc<ModelAction *> > acquire_fences(get_num_threads(), NULL);
+	std::vector< ModelAction *, ModelAlloc<ModelAction *> > prior_loads(get_num_threads(), NULL);
+	bool found_acquire_fences = false;
+	/* Find a prior:
+	 *   load-acquire
+	 * or
+	 *   load --sb-> fence-acquire */
+	action_list_t *list = action_trace;
+	action_list_t::reverse_iterator rit;
+	for (rit = list->rbegin(); rit != list->rend(); rit++) {
+		ModelAction *prev = *rit;
+		if (act->same_thread(prev))
+			continue;
+
+		int tid = id_to_int(prev->get_tid());
+
+		if (prev->is_read() && act->same_var(prev)) {
+			if (prev->is_acquire()) {
+				/* Found most recent load-acquire, don't need
+				 * to search for more fences */
+				if (!found_acquire_fences)
+					return NULL;
+			} else {
+				prior_loads[tid] = prev;
+			}
+		}
+		if (prev->is_acquire() && prev->is_fence() && !acquire_fences[tid]) {
+			found_acquire_fences = true;
+			acquire_fences[tid] = prev;
+		}
+	}
+
+	ModelAction *latest_backtrack = NULL;
+	for (unsigned int i = 0; i < acquire_fences.size(); i++)
+		if (acquire_fences[i] && prior_loads[i])
+			if (!latest_backtrack || *latest_backtrack < *acquire_fences[i])
+				latest_backtrack = acquire_fences[i];
+	return latest_backtrack;
+}
+
 ModelAction * ModelChecker::get_last_conflict(ModelAction *act) const
 {
 	switch (act->get_type()) {
-	case ATOMIC_FENCE:
+	/* case ATOMIC_FENCE: fences don't directly cause backtracking */
 	case ATOMIC_READ:
 	case ATOMIC_WRITE:
 	case ATOMIC_RMW: {
-		/* Optimization: relaxed operations don't need backtracking */
-		if (act->is_relaxed())
-			return NULL;
+		ModelAction *ret = NULL;
+
 		/* linear search: from most recent to oldest */
 		action_list_t *list = get_safe_ptr_action(obj_map, act->get_location());
 		action_list_t::reverse_iterator rit;
 		for (rit = list->rbegin(); rit != list->rend(); rit++) {
 			ModelAction *prev = *rit;
-			if (prev->could_synchronize_with(act))
-				return prev;
+			if (prev->could_synchronize_with(act)) {
+				ret = prev;
+				break;
+			}
 		}
-		break;
+
+		ModelAction *ret2 = get_last_fence_conflict(act);
+		if (!ret2)
+			return ret;
+		if (!ret)
+			return ret2;
+		if (*ret < *ret2)
+			return ret2;
+		return ret;
 	}
 	case ATOMIC_LOCK:
 	case ATOMIC_TRYLOCK: {

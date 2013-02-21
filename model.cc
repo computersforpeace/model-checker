@@ -572,16 +572,22 @@ ModelAction * ModelChecker::get_last_fence_conflict(ModelAction *act) const
 	if (!last_release)
 		return NULL;
 
-	std::vector< ModelAction *, ModelAlloc<ModelAction *> > acquire_fences(get_num_threads(), NULL);
-	std::vector< ModelAction *, ModelAlloc<ModelAction *> > prior_loads(get_num_threads(), NULL);
-	bool found_acquire_fences = false;
+	/* Skip past the release */
+	action_list_t *list = action_trace;
+	action_list_t::reverse_iterator rit;
+	for (rit = list->rbegin(); rit != list->rend(); rit++)
+		if (*rit == last_release)
+			break;
+	ASSERT(rit != list->rend());
+
 	/* Find a prior:
 	 *   load-acquire
 	 * or
 	 *   load --sb-> fence-acquire */
-	action_list_t *list = action_trace;
-	action_list_t::reverse_iterator rit;
-	for (rit = list->rbegin(); rit != list->rend(); rit++) {
+	std::vector< ModelAction *, ModelAlloc<ModelAction *> > acquire_fences(get_num_threads(), NULL);
+	std::vector< ModelAction *, ModelAlloc<ModelAction *> > prior_loads(get_num_threads(), NULL);
+	bool found_acquire_fences = false;
+	for ( ; rit != list->rend(); rit++) {
 		ModelAction *prev = *rit;
 		if (act->same_thread(prev))
 			continue;

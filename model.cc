@@ -1870,7 +1870,7 @@ bool ModelChecker::release_seq_heads(const ModelAction *rf,
 	if (mo_graph->checkForCycles())
 		return false;
 
-	while (rf) {
+	for ( ; rf != NULL; rf = rf->get_reads_from()) {
 		ASSERT(rf->is_write());
 
 		if (rf->is_release())
@@ -1890,8 +1890,6 @@ bool ModelChecker::release_seq_heads(const ModelAction *rf,
 		/* acq_rel RMW is a sufficient stopping condition */
 		if (rf->is_acquire() && rf->is_release())
 			return true; /* complete */
-
-		rf = rf->get_reads_from();
 	};
 	if (!rf) {
 		/* read from future: need to settle this later */
@@ -2517,7 +2515,7 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 
 bool ModelChecker::sleep_can_read_from(ModelAction *curr, const ModelAction *write)
 {
-	while (true) {
+	for ( ; write != NULL; write = write->get_reads_from()) {
 		/* UNINIT actions don't have a Node, and they never sleep */
 		if (write->is_uninitialized())
 			return true;
@@ -2526,13 +2524,10 @@ bool ModelChecker::sleep_can_read_from(ModelAction *curr, const ModelAction *wri
 		bool thread_sleep = prevnode->enabled_status(curr->get_tid()) == THREAD_SLEEP_SET;
 		if (write->is_release() && thread_sleep)
 			return true;
-		if (!write->is_rmw()) {
+		if (!write->is_rmw())
 			return false;
-		}
-		if (write->get_reads_from() == NULL)
-			return true;
-		write = write->get_reads_from();
 	}
+	return true;
 }
 
 /**

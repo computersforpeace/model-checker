@@ -300,9 +300,9 @@ bool ModelAction::could_synchronize_with(const ModelAction *act) const
 	if (!same_var(act))
 		return false;
 
-	// Explore interleavings of seqcst writes to guarantee total
+	// Explore interleavings of seqcst writes/fences to guarantee total
 	// order of seq_cst operations that don't commute
-	if ((could_be_write() || act->could_be_write()) && is_seqcst() && act->is_seqcst())
+	if ((could_be_write() || act->could_be_write() || is_fence() || act->is_fence()) && is_seqcst() && act->is_seqcst())
 		return true;
 
 	// Explore synchronizing read/write pairs

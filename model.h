@@ -149,6 +149,7 @@ private:
 	void set_bad_synchronization();
 	bool promises_expired() const;
 	void execute_sleep_set();
+	bool should_wake_up(const ModelAction *curr, const Thread *thread) const;
 	void wake_up_sleeping_actions(ModelAction *curr);
 	modelclock_t get_next_seq_num();
 

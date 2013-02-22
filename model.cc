@@ -313,14 +313,41 @@ void ModelChecker::execute_sleep_set()
 	}
 }
 
+/**
+ * @brief Should the current action wake up a given thread?
+ *
+ * @param curr The current action
+ * @param thread The thread that we might wake up
+ * @return True, if we should wake up the sleeping thread; false otherwise
+ */
+bool ModelChecker::should_wake_up(const ModelAction *curr, const Thread *thread) const
+{
+	const ModelAction *asleep = thread->get_pending();
+	/* Don't allow partial RMW to wake anyone up */
+	if (curr->is_rmwr())
+		return false;
+	/* Synchronizing actions may have been backtracked */
+	if (asleep->could_synchronize_with(curr))
+		return true;
+	/* All acquire/release fences and fence-acquire/store-release */
+	if (asleep->is_fence() && asleep->is_acquire() && curr->is_release())
+		return true;
+	/* Fence-release + store can awake load-acquire on the same location */
+	if (asleep->is_read() && asleep->is_acquire() && curr->same_var(asleep) && curr->is_write()) {
+		ModelAction *fence_release = get_last_fence_release(curr->get_tid());
+		if (fence_release && *(get_last_action(thread->get_id())) < *fence_release)
+			return true;
+	}
+	return false;
+}
+
 void ModelChecker::wake_up_sleeping_actions(ModelAction *curr)
 {
 	for (unsigned int i = 0; i < get_num_threads(); i++) {
 		Thread *thr = get_thread(int_to_id(i));
 		if (scheduler->is_sleep_set(thr)) {
-			ModelAction *pending_act = thr->get_pending();
-			if ((!curr->is_rmwr()) && pending_act->could_synchronize_with(curr))
-				//Remove this thread from sleep set
+			if (should_wake_up(curr, thr))
+				/* Remove this thread from sleep set */
 				scheduler->remove_sleep(thr);
 		}
 	}

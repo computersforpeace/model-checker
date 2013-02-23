@@ -1393,7 +1393,7 @@ ModelAction * ModelChecker::check_current_action(ModelAction *curr)
 
 	/* Build may_read_from set for newly-created actions */
 	if (newly_explored && curr->is_read())
-		build_reads_from_past(curr);
+		build_may_read_from(curr);
 
 	/* Initialize work_queue with the "current action" work */
 	work_queue_t work_queue(1, CheckCurrWorkEntry(curr));
@@ -2568,12 +2568,12 @@ void ModelChecker::compute_relseq_breakwrites(ModelAction *curr)
 
 /**
  * Build up an initial set of all past writes that this 'read' action may read
- * from. This set is determined by the clock vector's "happens before"
- * relationship.
+ * from, as well as any previously-observed future values that must still be valid.
+ *
  * @param curr is the current ModelAction that we are exploring; it must be a
  * 'read' operation.
  */
-void ModelChecker::build_reads_from_past(ModelAction *curr)
+void ModelChecker::build_may_read_from(ModelAction *curr)
 {
 	std::vector<action_list_t> *thrd_lists = get_safe_ptr_vect_action(obj_thrd_map, curr->get_location());
 	unsigned int i;
@@ -2618,6 +2618,23 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 				break;
 		}
 	}
+
+	/* Inherit existing, promised future values */
+	for (i = 0; i < promises->size(); i++) {
+		const Promise *promise = (*promises)[i];
+		const ModelAction *promise_read = promise->get_action();
+		if (promise_read->same_var(curr)) {
+			/* Only add feasible future-values */
+			mo_graph->startChanges();
+			r_modification_order(curr, promise);
+			if (!is_infeasible()) {
+				const struct future_value fv = promise->get_fv();
+				curr->get_node()->add_future_value(fv);
+			}
+			mo_graph->rollbackChanges();
+		}
+	}
+
 	/* We may find no valid may-read-from only if the execution is doomed */
 	if (!curr->get_node()->get_read_from_size() && curr->get_node()->future_value_empty()) {
 		priv->no_valid_reads = true;

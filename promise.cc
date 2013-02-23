@@ -14,8 +14,7 @@
  */
 Promise::Promise(ModelAction *read, struct future_value fv) :
 	num_available_threads(0),
-	value(fv.value),
-	expiration(fv.expiration),
+	fv(fv),
 	read(read),
 	write(NULL)
 {
@@ -77,7 +76,7 @@ bool Promise::thread_is_available(thread_id_t tid) const
 /** @brief Print debug info about the Promise */
 void Promise::print() const
 {
-	model_print("Promised value %#" PRIx64 ", read from thread %d, available threads to resolve: ", value, id_to_int(read->get_tid()));
+	model_print("Promised value %#" PRIx64 ", read from thread %d, available threads to resolve: ", fv.value, id_to_int(read->get_tid()));
 	for (unsigned int i = 0; i < available_thread.size(); i++)
 		if (available_thread[i])
 			model_print("[%d]", i);

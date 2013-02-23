@@ -2619,7 +2619,7 @@ void ModelChecker::build_reads_from_past(ModelAction *curr)
 		}
 	}
 	/* We may find no valid may-read-from only if the execution is doomed */
-	if (!curr->get_node()->get_read_from_size()) {
+	if (!curr->get_node()->get_read_from_size() && curr->get_node()->future_value_empty()) {
 		priv->no_valid_reads = true;
 		set_assert();
 	}

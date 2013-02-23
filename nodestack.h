@@ -56,6 +56,7 @@ public:
 	/* return true = backtrack set is empty */
 	bool backtrack_empty() const;
 
+	void clear_backtracking();
 	void explore_child(ModelAction *act, enabled_type_t *is_enabled);
 	/* return false = thread was already in backtrack */
 	bool set_backtrack(thread_id_t id);

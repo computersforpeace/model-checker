@@ -348,6 +348,14 @@ thread_id_t Node::get_next_backtrack()
 	return int_to_id(i);
 }
 
+void Node::clear_backtracking()
+{
+	for (unsigned int i = 0; i < backtrack.size(); i++)
+		backtrack[i] = false;
+	for (unsigned int i = 0; i < explored_children.size(); i++)
+		explored_children[i] = false;
+}
+
 bool Node::is_enabled(Thread *t) const
 {
 	int thread_id = id_to_int(t->get_id());
@@ -581,6 +589,7 @@ void NodeStack::pop_restofstack(int numAhead)
 	for (unsigned int i = it; i < node_list.size(); i++)
 		delete node_list[i];
 	node_list.resize(it);
+	node_list.back()->clear_backtracking();
 }
 
 Node * NodeStack::get_head() const

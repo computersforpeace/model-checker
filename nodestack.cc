@@ -226,7 +226,7 @@ bool Node::misc_empty() const
  * @param value is the value to backtrack to.
  * @return True if the future value was successully added; false otherwise
  */
-bool Node::add_future_value(struct future_value& fv)
+bool Node::add_future_value(struct future_value fv)
 {
 	uint64_t value = fv.value;
 	modelclock_t expiration = fv.expiration;

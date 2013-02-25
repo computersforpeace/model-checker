@@ -207,10 +207,6 @@ Thread * Scheduler::select_next_thread()
 	return NULL;
 }
 
-void Scheduler::set_scheduler_thread(thread_id_t tid) {
-	curr_thread_index=id_to_int(tid);
-}
-
 /**
  * @brief Set the current "running" Thread
  * @param t Thread to run
@@ -219,7 +215,7 @@ void Scheduler::set_current_thread(Thread *t)
 {
 	ASSERT(t && !t->is_model_thread());
 
-	//	curr_thread_index = id_to_int(t->get_id());
+	curr_thread_index = id_to_int(t->get_id());
 
 	current = t;
 	if (DBG_ENABLED())

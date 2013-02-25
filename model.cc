@@ -282,8 +282,6 @@ Thread * ModelChecker::get_next_thread(ModelAction *curr)
 				earliest_diverge = prevnode->get_action();
 			}
 		}
-		/* Start the round robin scheduler from this thread id */
-		scheduler->set_scheduler_thread(tid);
 		/* The correct sleep set is in the parent node. */
 		execute_sleep_set();
 

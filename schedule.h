@@ -39,8 +39,6 @@ public:
 	bool is_enabled(const Thread *t) const;
 	bool is_enabled(thread_id_t tid) const;
 	bool is_sleep_set(const Thread *t) const;
-	void set_scheduler_thread(thread_id_t tid);
-
 
 	SNAPSHOTALLOC
 private:

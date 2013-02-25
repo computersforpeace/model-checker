@@ -207,10 +207,6 @@ Thread * Scheduler::select_next_thread()
 	return NULL;
 }
 
-void Scheduler::set_scheduler_thread(thread_id_t tid) {
-	curr_thread_index=id_to_int(tid);
-}
-
 /**
  * @brief Set the current "running" Thread
  * @param t Thread to run

@@ -151,7 +151,8 @@ Thread::Thread(thread_id_t tid) :
  * @param func The function that the thread will call.
  * @param a The parameter to pass to this function.
  */
-Thread::Thread(thrd_t *t, void (*func)(void *), void *a, Thread * parent_thrd) :
+Thread::Thread(thrd_t *t, void (*func)(void *), void *a, Thread *parent) :
+	parent(parent),
 	creation(NULL),
 	pending(NULL),
 	start_routine(func),
@@ -171,7 +172,6 @@ Thread::Thread(thrd_t *t, void (*func)(void *), void *a, Thread * parent_thrd) :
 
 	id = model->get_next_id();
 	user_thread->priv = this;
-	parent = parent_thrd ? parent_thrd : thread_current();
 }
 
 /** Destructor */

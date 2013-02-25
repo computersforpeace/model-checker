@@ -2890,7 +2890,7 @@ void ModelChecker::run()
 {
 	do {
 		thrd_t user_thread;
-		Thread *t = new Thread(&user_thread, &user_main_wrapper, NULL);
+		Thread *t = new Thread(&user_thread, &user_main_wrapper, NULL, NULL);
 		add_thread(t);
 
 		do {

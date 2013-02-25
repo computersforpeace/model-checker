@@ -41,7 +41,7 @@ class ModelAction;
 class Thread {
 public:
 	Thread(thread_id_t tid);
-	Thread(thrd_t *t, void (*func)(void *), void *a, Thread * parent_thrd = NULL);
+	Thread(thrd_t *t, void (*func)(void *), void *a, Thread *parent);
 	~Thread();
 	void complete();
 
@@ -128,7 +128,7 @@ private:
 	int create_context();
 
 	/** @brief The parent Thread which created this Thread */
-	Thread *parent;
+	Thread * const parent;
 
 	/** @brief The THREAD_CREATE ModelAction which created this Thread */
 	ModelAction *creation;

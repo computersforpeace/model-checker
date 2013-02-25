@@ -41,7 +41,7 @@ class ModelAction;
 class Thread {
 public:
 	Thread(thread_id_t tid);
-	Thread(thrd_t *t, void (*func)(void *), void *a);
+	Thread(thrd_t *t, void (*func)(void *), void *a, Thread * parent_thrd = NULL);
 	~Thread();
 	void complete();
 

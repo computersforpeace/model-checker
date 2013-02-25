@@ -1113,7 +1113,7 @@ bool ModelChecker::process_thread_action(ModelAction *curr)
 	case THREAD_CREATE: {
 		thrd_t *thrd = (thrd_t *)curr->get_location();
 		struct thread_params *params = (struct thread_params *)curr->get_value();
-		Thread *th = new Thread(thrd, params->func, params->arg);
+		Thread *th = new Thread(thrd, params->func, params->arg, get_thread(curr));
 		add_thread(th);
 		th->set_creation(curr);
 		/* Promises can be satisfied by children */

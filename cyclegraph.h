@@ -47,7 +47,7 @@ class CycleGraph {
 	void dumpGraphToFile(const char *filename) const;
 #endif
 
-	bool resolvePromise(ModelAction *reader, ModelAction *writer,
+	bool resolvePromise(const Promise *promise, ModelAction *writer,
 			promise_list_t *mustResolve);
 
 	SNAPSHOTALLOC
@@ -67,9 +67,8 @@ class CycleGraph {
 
 	/** @brief A table for mapping ModelActions to CycleNodes */
 	HashTable<const ModelAction *, CycleNode *, uintptr_t, 4> actionToNode;
-	/** @brief A table for mapping reader ModelActions to Promise
-	 *  CycleNodes */
-	HashTable<const ModelAction *, CycleNode *, uintptr_t, 4> readerToPromiseNode;
+	/** @brief A table for mapping Promises to CycleNodes */
+	HashTable<const Promise *, CycleNode *, uintptr_t, 4> promiseToNode;
 
 #if SUPPORT_MOD_ORDER_DUMP
 	std::vector<CycleNode *> nodeList;

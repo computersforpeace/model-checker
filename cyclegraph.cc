@@ -38,8 +38,7 @@ void CycleGraph::putNode(const ModelAction *act, CycleNode *node)
  */
 void CycleGraph::putNode(const Promise *promise, CycleNode *node)
 {
-	const ModelAction *reader = promise->get_action();
-	readerToPromiseNode.put(reader, node);
+	promiseToNode.put(promise, node);
 #if SUPPORT_MOD_ORDER_DUMP
 	nodeList.push_back(node);
 #endif
@@ -51,8 +50,7 @@ void CycleGraph::putNode(const Promise *promise, CycleNode *node)
  */
 void CycleGraph::erasePromiseNode(const Promise *promise)
 {
-	const ModelAction *reader = promise->get_action();
-	readerToPromiseNode.put(reader, NULL);
+	promiseToNode.put(promise, NULL);
 #if SUPPORT_MOD_ORDER_DUMP
 	/* Remove the promise node from nodeList */
 	CycleNode *node = getNode_noCreate(promise);
@@ -73,7 +71,7 @@ CycleNode * CycleGraph::getNode_noCreate(const ModelAction *act) const
 /** @return The corresponding CycleNode, if exists; otherwise NULL */
 CycleNode * CycleGraph::getNode_noCreate(const Promise *promise) const
 {
-	return readerToPromiseNode.get(promise->get_action());
+	return promiseToNode.get(promise);
 }
 
 /**
@@ -116,10 +114,10 @@ CycleNode * CycleGraph::getNode(const Promise *promise)
 /**
  * @return false if the resolution results in a cycle; true otherwise
  */
-bool CycleGraph::resolvePromise(ModelAction *reader, ModelAction *writer,
+bool CycleGraph::resolvePromise(const Promise *promise, ModelAction *writer,
 		promise_list_t *mustResolve)
 {
-	CycleNode *promise_node = readerToPromiseNode.get(reader);
+	CycleNode *promise_node = promiseToNode.get(promise);
 	CycleNode *w_node = actionToNode.get(writer);
 	ASSERT(promise_node);
 

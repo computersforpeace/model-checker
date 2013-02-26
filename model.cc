@@ -2447,7 +2447,7 @@ bool ModelChecker::resolve_promises(ModelAction *write)
 			read_from(read, write);
 			//Make sure the promise's value matches the write's value
 			ASSERT(promise->is_compatible(write));
-			mo_graph->resolvePromise(read, write, &mustResolve);
+			mo_graph->resolvePromise(promise, write, &mustResolve);
 
 			resolved.push_back(promise);
 			promises->erase(promises->begin() + promise_index);

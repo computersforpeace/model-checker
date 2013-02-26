@@ -219,8 +219,6 @@ void Scheduler::set_current_thread(Thread *t)
 {
 	ASSERT(t && !t->is_model_thread());
 
-	//curr_thread_index = id_to_int(t->get_id());
-
 	current = t;
 	if (DBG_ENABLED())
 		print();

@@ -36,6 +36,8 @@ Node::Node(ModelAction *act, Node *par, int nthreads, Node *prevfairness) :
 	enabled_array(NULL),
 	read_from_past(),
 	read_from_past_idx(0),
+	read_from_promises(),
+	read_from_promise_idx(-1),
 	future_values(),
 	future_index(-1),
 	relseq_break_writes(),
@@ -103,6 +105,11 @@ void Node::print() const
 	model_print("          read from past: %s", read_from_past_empty() ? "empty" : "non-empty ");
 	for (int i = read_from_past_idx + 1; i < (int)read_from_past.size(); i++)
 		model_print("[%d]", read_from_past[i]->get_seq_number());
+	model_print("\n");
+
+	model_print("          read-from promises: %s", read_from_promise_empty() ? "empty" : "non-empty ");
+	for (int i = read_from_promise_idx + 1; i < (int)read_from_promises.size(); i++)
+		model_print("[%d]", read_from_promises[i]->get_seq_number());
 	model_print("\n");
 
 	model_print("          future values: %s", future_value_empty() ? "empty" : "non-empty ");
@@ -342,6 +349,9 @@ bool Node::increment_read_from()
 	if (increment_read_from_past()) {
 	       read_from_status = READ_FROM_PAST;
 	       return true;
+	} else if (increment_read_from_promise()) {
+		read_from_status = READ_FROM_PROMISE;
+		return true;
 	} else if (increment_future_value()) {
 		read_from_status = READ_FROM_FUTURE;
 		return true;
@@ -435,6 +445,55 @@ bool Node::increment_read_from_past()
 }
 
 /************************** end read from past ********************************/
+
+/***************************** read_from_promises *****************************/
+
+/**
+ * Add an action to the read_from_promises set.
+ * @param reader The read which generated the Promise; we use the ModelAction
+ * instead of the Promise because the Promise does not last across executions
+ */
+void Node::add_read_from_promise(const ModelAction *reader)
+{
+	read_from_promises.push_back(reader);
+}
+
+/**
+ * Gets the next 'read-from-promise' from this Node. Only valid for a node
+ * where this->action is a 'read'.
+ * @return The current element in read_from_promises
+ */
+const Promise * Node::get_read_from_promise() const
+{
+	if (read_from_promise_idx < 0 || read_from_promise_idx >= ((int)read_from_promises.size()))
+		return NULL;
+	return read_from_promises[read_from_promise_idx]->get_reads_from_promise();
+}
+
+/**
+ * Checks whether the read_from_promises set for this node is empty.
+ * @return true if the read_from_promises set is empty.
+ */
+bool Node::read_from_promise_empty() const
+{
+	return ((read_from_promise_idx + 1) >= ((int)read_from_promises.size()));
+}
+
+/**
+ * Increments the index into the read_from_promises set to explore the next item.
+ * @return Returns false if we have explored all promises.
+ */
+bool Node::increment_read_from_promise()
+{
+	DBG();
+	if (read_from_promise_idx < ((int)read_from_promises.size())) {
+		read_from_promise_idx++;
+		return (read_from_promise_idx < ((int)read_from_promises.size()));
+	}
+	return false;
+}
+
+/************************* end read_from_promises *****************************/
 
 /****************************** future values *********************************/
 

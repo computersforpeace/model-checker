@@ -40,6 +40,7 @@ struct fairness_info {
 
 typedef enum {
 	READ_FROM_PAST,
+	READ_FROM_PROMISE,
 	READ_FROM_FUTURE,
 	READ_FROM_NONE,
 } read_from_type_t;
@@ -89,6 +90,9 @@ public:
 	const ModelAction * get_read_from_past(int i) const;
 	int get_read_from_past_size() const;
 
+	void add_read_from_promise(const ModelAction *reader);
+	const Promise * get_read_from_promise() const;
+
 	bool add_future_value(struct future_value fv);
 	struct future_value get_future_value() const;
 
@@ -116,6 +120,8 @@ private:
 
 	bool read_from_past_empty() const;
 	bool increment_read_from_past();
+	bool read_from_promise_empty() const;
+	bool increment_read_from_promise();
 	bool future_value_empty() const;
 	bool increment_future_value();
 	read_from_type_t read_from_status;
@@ -135,6 +141,9 @@ private:
 	 */
 	std::vector< const ModelAction *, ModelAlloc< const ModelAction * > > read_from_past;
 	unsigned int read_from_past_idx;
+
+	std::vector< const ModelAction *, ModelAlloc<const ModelAction *> > read_from_promises;
+	int read_from_promise_idx;
 
 	std::vector< struct future_value, ModelAlloc<struct future_value> > future_values;
 	std::vector< promise_t, ModelAlloc<promise_t> > promises;

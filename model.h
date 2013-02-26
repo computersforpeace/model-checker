@@ -126,7 +126,6 @@ public:
 	ClockVector * get_cv(thread_id_t tid) const;
 	ModelAction * get_parent_action(thread_id_t tid) const;
 	void check_promises_thread_disabled();
-	void mo_check_promises(const ModelAction *act, bool is_read_check);
 	void check_promises(thread_id_t tid, ClockVector *old_cv, ClockVector *merge_cv);
 	bool isfeasibleprefix() const;
 
@@ -178,6 +177,9 @@ private:
 	bool resolve_promises(ModelAction *curr);
 	void compute_promises(ModelAction *curr);
 	void compute_relseq_breakwrites(ModelAction *curr);
+
+	void mo_check_promises(const ModelAction *act, bool is_read_check);
+	void thread_blocking_check_promises(Thread *blocker, Thread *waiting);
 
 	void check_curr_backtracking(ModelAction *curr);
 	void add_action_to_lists(ModelAction *act);

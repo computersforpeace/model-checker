@@ -1328,6 +1328,30 @@ bool ModelChecker::read_from(ModelAction *act, const ModelAction *rf)
 }
 
 /**
+ * Check promises and eliminate potentially-satisfying threads when a thread is
+ * blocked (e.g., join, lock). A thread which is waiting on another thread can
+ * no longer satisfy a promise generated from that thread.
+ *
+ * @param blocker The thread on which a thread is waiting
+ * @param waiting The waiting thread
+ */
+void ModelChecker::thread_blocking_check_promises(Thread *blocker, Thread *waiting)
+{
+	for (unsigned int i = 0; i < promises->size(); i++) {
+		Promise *promise = (*promises)[i];
+		ModelAction *reader = promise->get_action();
+		if (reader->get_tid() != blocker->get_id())
+			continue;
+		if (!promise->thread_is_available(waiting->get_id()))
+			continue;
+		if (promise->eliminate_thread(waiting->get_id())) {
+			/* Promise has failed */
+			priv->failed_promise = true;
+		}
+	}
+}
+
+/**
  * @brief Check whether a model action is enabled.
  *
  * Checks whether a lock or join operation would be successful (i.e., is the
@@ -1350,6 +1374,7 @@ bool ModelChecker::check_action_enabled(ModelAction *curr) {
 		Thread *blocking = (Thread *)curr->get_location();
 		if (!blocking->is_complete()) {
 			blocking->push_wait_list(curr);
+			thread_blocking_check_promises(blocking, get_thread(curr));
 			return false;
 		}
 	}

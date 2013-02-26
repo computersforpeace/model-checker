@@ -2462,11 +2462,10 @@ void ModelChecker::compute_promises(ModelAction *curr)
 	for (unsigned int i = 0; i < promises->size(); i++) {
 		Promise *promise = (*promises)[i];
 		const ModelAction *act = promise->get_action();
+		ASSERT(act->is_read());
 		if (!act->happens_before(curr) &&
-				act->is_read() &&
 				!act->could_synchronize_with(curr) &&
-				!act->same_thread(curr) &&
-				act->get_location() == curr->get_location() &&
+				promise->is_compatible(curr) &&
 				promise->get_value() == curr->get_value()) {
 			curr->get_node()->set_promise(i, act->is_rmw());
 		}

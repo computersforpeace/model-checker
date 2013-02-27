@@ -15,11 +15,36 @@
 Promise::Promise(ModelAction *read, struct future_value fv) :
 	num_available_threads(0),
 	fv(fv),
-	read(read),
+	readers(1, read),
 	write(NULL)
 {
 	add_thread(fv.tid);
 	eliminate_thread(read->get_tid());
+}
+
+/**
+ * Add a reader that reads from this Promise. Must be added in an order
+ * consistent with execution order.
+ *
+ * @param reader The ModelAction that reads from this promise. Must be a read.
+ * @return True if this new reader has invalidated the promise; false otherwise
+ */
+bool Promise::add_reader(ModelAction *reader)
+{
+	readers.push_back(reader);
+	return eliminate_thread(reader->get_tid());
+}
+
+/**
+ * Access a reader that read from this Promise. Readers must be inserted in
+ * order by execution order, so they can be returned in this order.
+ *
+ * @param i The index of the reader to return
+ * @return The i'th reader of this Promise
+ */
+ModelAction * Promise::get_reader(unsigned int i) const
+{
+	return i < readers.size() ? readers[i] : NULL;
 }
 
 /**
@@ -76,7 +101,7 @@ bool Promise::thread_is_available(thread_id_t tid) const
 /** @brief Print debug info about the Promise */
 void Promise::print() const
 {
-	model_print("Promised value %#" PRIx64 ", read from thread %d, available threads to resolve: ", fv.value, id_to_int(read->get_tid()));
+	model_print("Promised value %#" PRIx64 ", first read from thread %d, available threads to resolve: ", fv.value, id_to_int(get_reader(0)->get_tid()));
 	for (unsigned int i = 0; i < available_thread.size(); i++)
 		if (available_thread[i])
 			model_print("[%d]", i);
@@ -102,7 +127,7 @@ bool Promise::has_failed() const
  */
 bool Promise::is_compatible(const ModelAction *act) const
 {
-	return thread_is_available(act->get_tid()) && read->same_var(act);
+	return thread_is_available(act->get_tid()) && get_reader(0)->same_var(act);
 }
 
 /**

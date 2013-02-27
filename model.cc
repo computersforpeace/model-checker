@@ -873,6 +873,7 @@ bool ModelChecker::process_read(ModelAction *curr)
 		}
 		case READ_FROM_PROMISE: {
 			Promise *promise = curr->get_node()->get_read_from_promise();
+			promise->add_reader(curr);
 			value = promise->get_value();
 			curr->set_read_from_promise(promise);
 			mo_graph->startChanges();
@@ -1348,14 +1349,19 @@ void ModelChecker::thread_blocking_check_promises(Thread *blocker, Thread *waiti
 {
 	for (unsigned int i = 0; i < promises->size(); i++) {
 		Promise *promise = (*promises)[i];
-		ModelAction *reader = promise->get_action();
-		if (reader->get_tid() != blocker->get_id())
-			continue;
 		if (!promise->thread_is_available(waiting->get_id()))
 			continue;
-		if (promise->eliminate_thread(waiting->get_id())) {
-			/* Promise has failed */
-			priv->failed_promise = true;
+		for (unsigned int j = 0; j < promise->get_num_readers(); j++) {
+			ModelAction *reader = promise->get_reader(j);
+			if (reader->get_tid() != blocker->get_id())
+				continue;
+			if (promise->eliminate_thread(waiting->get_id())) {
+				/* Promise has failed */
+				priv->failed_promise = true;
+			} else {
+				/* Only eliminate the 'waiting' thread once */
+				return;
+			}
 		}
 	}
 }
@@ -2451,15 +2457,17 @@ bool ModelChecker::resolve_promises(ModelAction *write)
 	for (unsigned int i = 0, promise_index = 0; promise_index < promises->size(); i++) {
 		Promise *promise = (*promises)[promise_index];
 		if (write->get_node()->get_promise(i)) {
-			ModelAction *read = promise->get_action();
-			read_from(read, write);
+			for (unsigned int j = 0; j < promise->get_num_readers(); j++) {
+				ModelAction *read = promise->get_reader(j);
+				read_from(read, write);
+				actions_to_check.push_back(read);
+			}
 			//Make sure the promise's value matches the write's value
 			ASSERT(promise->is_compatible(write));
 			mo_graph->resolvePromise(promise, write, &mustResolve);
 
 			resolved.push_back(promise);
 			promises->erase(promises->begin() + promise_index);
-			actions_to_check.push_back(read);
 
 			haveResolved = true;
 		} else
@@ -2494,14 +2502,20 @@ void ModelChecker::compute_promises(ModelAction *curr)
 {
 	for (unsigned int i = 0; i < promises->size(); i++) {
 		Promise *promise = (*promises)[i];
-		const ModelAction *act = promise->get_action();
-		ASSERT(act->is_read());
-		if (!act->happens_before(curr) &&
-				!act->could_synchronize_with(curr) &&
-				promise->is_compatible(curr) &&
-				promise->get_value() == curr->get_value()) {
-			curr->get_node()->set_promise(i);
+		if (!promise->is_compatible(curr) || promise->get_value() != curr->get_value())
+			continue;
+
+		bool satisfy = true;
+		for (unsigned int j = 0; j < promise->get_num_readers(); j++) {
+			const ModelAction *act = promise->get_reader(j);
+			if (act->happens_before(curr) ||
+					act->could_synchronize_with(curr)) {
+				satisfy = false;
+				break;
+			}
 		}
+		if (satisfy)
+			curr->get_node()->set_promise(i);
 	}
 }
 
@@ -2510,13 +2524,17 @@ void ModelChecker::check_promises(thread_id_t tid, ClockVector *old_cv, ClockVec
 {
 	for (unsigned int i = 0; i < promises->size(); i++) {
 		Promise *promise = (*promises)[i];
-		const ModelAction *act = promise->get_action();
-		if ((old_cv == NULL || !old_cv->synchronized_since(act)) &&
-				merge_cv->synchronized_since(act)) {
-			if (promise->eliminate_thread(tid)) {
-				//Promise has failed
-				priv->failed_promise = true;
-				return;
+		if (!promise->thread_is_available(tid))
+			continue;
+		for (unsigned int j = 0; j < promise->get_num_readers(); j++) {
+			const ModelAction *act = promise->get_reader(j);
+			if ((!old_cv || !old_cv->synchronized_since(act)) &&
+					merge_cv->synchronized_since(act)) {
+				if (promise->eliminate_thread(tid)) {
+					/* Promise has failed */
+					priv->failed_promise = true;
+					return;
+				}
 			}
 		}
 	}
@@ -2553,15 +2571,20 @@ void ModelChecker::mo_check_promises(const ModelAction *act, bool is_read_check)
 
 	for (unsigned int i = 0; i < promises->size(); i++) {
 		Promise *promise = (*promises)[i];
-		const ModelAction *pread = promise->get_action();
 
 		// Is this promise on the same location?
-		if (!pread->same_var(write))
+		if (promise->get_value() != write->get_value())
 			continue;
 
-		if (pread->happens_before(act) && mo_graph->checkPromise(write, promise)) {
-			priv->failed_promise = true;
-			return;
+		for (unsigned int j = 0; j < promise->get_num_readers(); j++) {
+			const ModelAction *pread = promise->get_reader(j);
+			if (!pread->happens_before(act))
+			       continue;
+			if (mo_graph->checkPromise(write, promise)) {
+				priv->failed_promise = true;
+				return;
+			}
+			break;
 		}
 
 		// Don't do any lookups twice for the same thread
@@ -2656,7 +2679,7 @@ void ModelChecker::build_may_read_from(ModelAction *curr)
 	/* Inherit existing, promised future values */
 	for (i = 0; i < promises->size(); i++) {
 		const Promise *promise = (*promises)[i];
-		const ModelAction *promise_read = promise->get_action();
+		const ModelAction *promise_read = promise->get_reader(0);
 		if (promise_read->same_var(curr)) {
 			/* Only add feasible future-values */
 			mo_graph->startChanges();

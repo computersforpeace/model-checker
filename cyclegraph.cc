@@ -320,7 +320,7 @@ static void print_node(const CycleNode *node, FILE *file, int label)
 	modelclock_t idx;
 	if (node->is_promise()) {
 		const Promise *promise = node->getPromise();
-		idx = promise->get_action()->get_seq_number();
+		idx = promise->get_reader(0)->get_seq_number();
 		fprintf(file, "P%u", idx);
 		if (label) {
 			int first = 1;

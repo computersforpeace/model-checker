@@ -24,7 +24,9 @@ struct future_value {
 class Promise {
  public:
 	Promise(ModelAction *read, struct future_value fv);
-	ModelAction * get_action() const { return read; }
+	bool add_reader(ModelAction *reader);
+	ModelAction * get_reader(unsigned int i) const;
+	unsigned int get_num_readers() const { return readers.size(); }
 	bool eliminate_thread(thread_id_t tid);
 	void add_thread(thread_id_t tid);
 	bool thread_is_available(thread_id_t tid) const;
@@ -54,8 +56,8 @@ class Promise {
 
 	const future_value fv;
 
-	/** @brief The action which reads a promised value */
-	ModelAction * const read;
+	/** @brief The action(s) which read the promised future value */
+	std::vector< ModelAction *, SnapshotAlloc<ModelAction *> > readers;
 
 	const ModelAction *write;
 };

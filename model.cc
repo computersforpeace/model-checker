@@ -1765,13 +1765,13 @@ bool ModelChecker::r_modification_order(ModelAction *curr, const rf_type *rf)
 						added = mo_graph->addEdge(act, rf) || added;
 					}
 				} else {
-					const ModelAction *prevreadfrom = act->get_reads_from();
-					//if the previous read is unresolved, keep going...
-					if (prevreadfrom == NULL)
-						continue;
-
-					if (!prevreadfrom->equals(rf)) {
-						added = mo_graph->addEdge(prevreadfrom, rf) || added;
+					const ModelAction *prevrf = act->get_reads_from();
+					const Promise *prevrf_promise = act->get_reads_from_promise();
+					if (prevrf) {
+						if (!prevrf->equals(rf))
+							added = mo_graph->addEdge(prevrf, rf) || added;
+					} else if (!prevrf->equals(rf)) {
+						added = mo_graph->addEdge(prevrf_promise, rf) || added;
 					}
 				}
 				break;

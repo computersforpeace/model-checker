@@ -41,6 +41,9 @@ class Promise {
 
 	void print() const;
 
+	bool equals(const Promise *x) const { return this == x; }
+	bool equals(const ModelAction *x) const { return false; }
+
 	SNAPSHOTALLOC
  private:
 	/** @brief Thread ID(s) for thread(s) that potentially can satisfy this

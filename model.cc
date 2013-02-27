@@ -871,6 +871,15 @@ bool ModelChecker::process_read(ModelAction *curr)
 			updated |= r_status;
 			break;
 		}
+		case READ_FROM_PROMISE: {
+			const Promise *promise = curr->get_node()->get_read_from_promise();
+			value = promise->get_value();
+			curr->set_read_from_promise(promise);
+			mo_graph->startChanges();
+			updated = r_modification_order(curr, promise);
+			mo_graph->commitChanges();
+			break;
+		}
 		case READ_FROM_FUTURE: {
 			/* Read from future value */
 			struct future_value fv = node->get_future_value();
@@ -2652,10 +2661,8 @@ void ModelChecker::build_may_read_from(ModelAction *curr)
 			/* Only add feasible future-values */
 			mo_graph->startChanges();
 			r_modification_order(curr, promise);
-			if (!is_infeasible()) {
-				const struct future_value fv = promise->get_fv();
-				curr->get_node()->add_future_value(fv);
-			}
+			if (!is_infeasible())
+				curr->get_node()->add_read_from_promise(promise_read);
 			mo_graph->rollbackChanges();
 		}
 	}

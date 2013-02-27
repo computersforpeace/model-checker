@@ -365,7 +365,9 @@ bool Node::increment_read_from()
  */
 bool Node::read_from_empty() const
 {
-	return read_from_past_empty() && future_value_empty();
+	return read_from_past_empty() &&
+		read_from_promise_empty() &&
+		future_value_empty();
 }
 
 /**
@@ -375,7 +377,9 @@ bool Node::read_from_empty() const
  */
 unsigned int Node::read_from_size() const
 {
-	return read_from_past.size() + future_values.size();
+	return read_from_past.size() +
+		read_from_promises.size() +
+		future_values.size();
 }
 
 /******************************* end read from ********************************/

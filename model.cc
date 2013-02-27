@@ -872,7 +872,7 @@ bool ModelChecker::process_read(ModelAction *curr)
 			break;
 		}
 		case READ_FROM_PROMISE: {
-			const Promise *promise = curr->get_node()->get_read_from_promise();
+			Promise *promise = curr->get_node()->get_read_from_promise();
 			value = promise->get_value();
 			curr->set_read_from_promise(promise);
 			mo_graph->startChanges();

@@ -81,13 +81,13 @@ public:
 	modelclock_t get_seq_number() const { return seq_number; }
 	uint64_t get_value() const { return value; }
 	const ModelAction * get_reads_from() const { return reads_from; }
-	const Promise * get_reads_from_promise() const { return reads_from_promise; }
+	Promise * get_reads_from_promise() const { return reads_from_promise; }
 
 	Node * get_node() const;
 	void set_node(Node *n) { node = n; }
 
 	void set_read_from(const ModelAction *act);
-	void set_read_from_promise(const Promise *promise);
+	void set_read_from_promise(Promise *promise);
 
 	/** Store the most recent fence-release from the same thread
 	 *  @param fence The fence-release that occured prior to this */
@@ -175,7 +175,7 @@ private:
 	const ModelAction *reads_from;
 
 	/** The promise that this action reads from. Only valid for reads */
-	const Promise *reads_from_promise;
+	Promise *reads_from_promise;
 
 	/** The last fence release from the same thread */
 	const ModelAction *last_fence_release;

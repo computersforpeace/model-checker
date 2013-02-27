@@ -402,7 +402,7 @@ void ModelAction::set_read_from(const ModelAction *act)
  * Set this action's read-from promise
  * @param promise The promise to read from
  */
-void ModelAction::set_read_from_promise(const Promise *promise)
+void ModelAction::set_read_from_promise(Promise *promise)
 {
 	ASSERT(is_read());
 	reads_from_promise = promise;

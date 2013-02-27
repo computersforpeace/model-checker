@@ -3,6 +3,7 @@
 #include "common.h"
 #include "promise.h"
 #include "model.h"
+#include "threads-model.h"
 
 /** Initializes a CycleGraph object. */
 CycleGraph::CycleGraph() :

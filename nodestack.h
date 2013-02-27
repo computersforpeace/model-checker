@@ -16,22 +16,6 @@
 class ModelAction;
 class Thread;
 
-/**
- * A flag used for the promise counting/combination problem within a node,
- * denoting whether a particular Promise is
- * <ol><li>@b applicable: can be satisfied by this Node's ModelAction and</li>
- * <li>@b fulfilled: satisfied by this Node's ModelAction under the current
- * configuration.</li></ol>
- */
-
-#define	PROMISE_IGNORE 0 /**< This promise is inapplicable; ignore it */
-#define	PROMISE_UNFULFILLED 1 /**< This promise is applicable but unfulfilled */
-#define	PROMISE_FULFILLED 2 /**< This promise is applicable and fulfilled */
-#define PROMISE_MASK 0xf
-#define PROMISE_RMW 0x10
-
-typedef int promise_t;
-
 struct fairness_info {
 	unsigned int enabled_count;
 	unsigned int turns;
@@ -96,10 +80,12 @@ public:
 	bool add_future_value(struct future_value fv);
 	struct future_value get_future_value() const;
 
-	void set_promise(unsigned int i, bool is_rmw);
+	void set_promise(unsigned int i);
 	bool get_promise(unsigned int i) const;
 	bool increment_promise();
 	bool promise_empty() const;
+	void clear_promise_resolutions();
+
 	enabled_type_t *get_enabled_array() {return enabled_array;}
 
 	void set_misc_max(int i);
@@ -146,8 +132,10 @@ private:
 	int read_from_promise_idx;
 
 	std::vector< struct future_value, ModelAlloc<struct future_value> > future_values;
-	std::vector< promise_t, ModelAlloc<promise_t> > promises;
 	int future_index;
+
+	std::vector< bool, ModelAlloc<bool> > resolve_promise;
+	int resolve_promise_idx;
 
 	std::vector< const ModelAction *, ModelAlloc<const ModelAction *> > relseq_break_writes;
 	int relseq_break_index;

@@ -40,6 +40,8 @@ Node::Node(ModelAction *act, Node *par, int nthreads, Node *prevfairness) :
 	read_from_promise_idx(-1),
 	future_values(),
 	future_index(-1),
+	resolve_promise(),
+	resolve_promise_idx(-1),
 	relseq_break_writes(),
 	relseq_break_index(0),
 	misc_index(0),
@@ -122,61 +124,44 @@ void Node::print() const
 	model_print("          rel seq break: %s\n", relseq_break_empty() ? "empty" : "non-empty");
 }
 
+/*********************************** promise **********************************/
+
 /**
  * Sets a promise to explore meeting with the given node.
  * @param i is the promise index.
  */
-void Node::set_promise(unsigned int i, bool is_rmw)
+void Node::set_promise(unsigned int i)
 {
-	if (i >= promises.size())
-		promises.resize(i + 1, PROMISE_IGNORE);
-	if (promises[i] == PROMISE_IGNORE) {
-		promises[i] = PROMISE_UNFULFILLED;
-		if (is_rmw)
-			promises[i] |= PROMISE_RMW;
-	}
+	if (i >= resolve_promise.size())
+		resolve_promise.resize(i + 1, false);
+	resolve_promise[i] = true;
 }
 
 /**
  * Looks up whether a given promise should be satisfied by this node.
  * @param i The promise index.
- * @return true if the promise should be satisfied by the given model action.
+ * @return true if the promise should be satisfied by the given ModelAction.
  */
 bool Node::get_promise(unsigned int i) const
 {
-	return (i < promises.size()) && ((promises[i] & PROMISE_MASK) == PROMISE_FULFILLED);
+	return (i < resolve_promise.size()) && (int)i == resolve_promise_idx;
 }
 
 /**
- * Increments to the next combination of promises.
+ * Increments to the next promise to resolve.
  * @return true if we have a valid combination.
  */
 bool Node::increment_promise()
 {
 	DBG();
-	unsigned int rmw_count = 0;
-	for (unsigned int i = 0; i < promises.size(); i++) {
-		if (promises[i] == (PROMISE_RMW|PROMISE_FULFILLED))
-			rmw_count++;
-	}
-
-	for (unsigned int i = 0; i < promises.size(); i++) {
-		if ((promises[i] & PROMISE_MASK) == PROMISE_UNFULFILLED) {
-			if ((rmw_count > 0) && (promises[i] & PROMISE_RMW)) {
-				//sending our value to two rmws... not going to work..try next combination
-				continue;
-			}
-			promises[i] = (promises[i] & PROMISE_RMW) | PROMISE_FULFILLED;
-			while (i > 0) {
-				i--;
-				if ((promises[i] & PROMISE_MASK) == PROMISE_FULFILLED)
-					promises[i] = (promises[i] & PROMISE_RMW) | PROMISE_UNFULFILLED;
-			}
+	if (resolve_promise.empty())
+		return false;
+	int prev_idx = resolve_promise_idx;
+	resolve_promise_idx++;
+	for ( ; resolve_promise_idx < (int)resolve_promise.size(); resolve_promise_idx++)
+		if (resolve_promise[resolve_promise_idx])
 			return true;
-		} else if (promises[i] == (PROMISE_RMW|PROMISE_FULFILLED)) {
-			rmw_count--;
-		}
-	}
+	resolve_promise_idx = prev_idx;
 	return false;
 }
 
@@ -186,17 +171,20 @@ bool Node::increment_promise()
  */
 bool Node::promise_empty() const
 {
-	bool fulfilledrmw = false;
-	for (int i = promises.size() - 1; i >= 0; i--) {
-		if (promises[i] == PROMISE_UNFULFILLED)
+	for (int i = resolve_promise_idx + 1; i < (int)resolve_promise.size(); i++)
+		if (i >= 0 && resolve_promise[i])
 			return false;
-		if (!fulfilledrmw && ((promises[i] & PROMISE_MASK) == PROMISE_UNFULFILLED))
-			return false;
-		if (promises[i] == (PROMISE_FULFILLED | PROMISE_RMW))
-			fulfilledrmw = true;
-	}
 	return true;
 }
+
+/** @brief Clear any promise-resolution information for this Node */
+void Node::clear_promise_resolutions()
+{
+	resolve_promise.clear();
+	resolve_promise_idx = -1;
+}
+
+/******************************* end promise **********************************/
 
 void Node::set_misc_max(int i)
 {
@@ -345,7 +333,7 @@ read_from_type_t Node::get_read_from_status()
  */
 bool Node::increment_read_from()
 {
-	promises.clear();
+	clear_promise_resolutions();
 	if (increment_read_from_past()) {
 	       read_from_status = READ_FROM_PAST;
 	       return true;
@@ -614,7 +602,6 @@ const ModelAction * Node::get_relseq_break() const
 bool Node::increment_relseq_break()
 {
 	DBG();
-	promises.clear();
 	if (relseq_break_index < ((int)relseq_break_writes.size())) {
 		relseq_break_index++;
 		return (relseq_break_index < ((int)relseq_break_writes.size()));

@@ -2500,7 +2500,7 @@ void ModelChecker::compute_promises(ModelAction *curr)
 				!act->could_synchronize_with(curr) &&
 				promise->is_compatible(curr) &&
 				promise->get_value() == curr->get_value()) {
-			curr->get_node()->set_promise(i, act->is_rmw());
+			curr->get_node()->set_promise(i);
 		}
 	}
 }

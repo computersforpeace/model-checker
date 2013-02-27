@@ -1770,7 +1770,7 @@ bool ModelChecker::r_modification_order(ModelAction *curr, const rf_type *rf)
 					if (prevrf) {
 						if (!prevrf->equals(rf))
 							added = mo_graph->addEdge(prevrf, rf) || added;
-					} else if (!prevrf->equals(rf)) {
+					} else if (!prevrf_promise->equals(rf)) {
 						added = mo_graph->addEdge(prevrf_promise, rf) || added;
 					}
 				}

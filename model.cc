@@ -848,10 +848,11 @@ ModelAction * ModelChecker::get_next_backtrack()
  */
 bool ModelChecker::process_read(ModelAction *curr)
 {
+	Node *node = curr->get_node();
 	uint64_t value = VALUE_NONE;
 	bool updated = false;
 	while (true) {
-		const ModelAction *rf = curr->get_node()->get_read_from_past();
+		const ModelAction *rf = node->get_read_from_past();
 		if (rf != NULL) {
 			mo_graph->startChanges();
 
@@ -860,7 +861,7 @@ bool ModelChecker::process_read(ModelAction *curr)
 			check_recency(curr, rf);
 			bool r_status = r_modification_order(curr, rf);
 
-			if (is_infeasible() && (curr->get_node()->increment_read_from_past() || curr->get_node()->increment_future_value())) {
+			if (is_infeasible() && (node->increment_read_from_past() || node->increment_future_value())) {
 				mo_graph->rollbackChanges();
 				priv->too_many_reads = false;
 				continue;
@@ -873,7 +874,7 @@ bool ModelChecker::process_read(ModelAction *curr)
 			updated |= r_status;
 		} else {
 			/* Read from future value */
-			struct future_value fv = curr->get_node()->get_future_value();
+			struct future_value fv = node->get_future_value();
 			Promise *promise = new Promise(curr, fv);
 			value = fv.value;
 			curr->set_read_from_promise(promise);

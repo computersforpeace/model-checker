@@ -285,6 +285,7 @@ void Node::clear_backtracking()
 		backtrack[i] = false;
 	for (unsigned int i = 0; i < explored_children.size(); i++)
 		explored_children[i] = false;
+	numBacktracks = 0;
 }
 
 bool Node::is_enabled(Thread *t) const

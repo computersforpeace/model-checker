@@ -851,14 +851,14 @@ bool ModelChecker::process_read(ModelAction *curr)
 	uint64_t value = VALUE_NONE;
 	bool updated = false;
 	while (true) {
-		const ModelAction *reads_from = curr->get_node()->get_read_from_past();
-		if (reads_from != NULL) {
+		const ModelAction *rf = curr->get_node()->get_read_from_past();
+		if (rf != NULL) {
 			mo_graph->startChanges();
 
-			value = reads_from->get_value();
+			value = rf->get_value();
 
-			check_recency(curr, reads_from);
-			bool r_status = r_modification_order(curr, reads_from);
+			check_recency(curr, rf);
+			bool r_status = r_modification_order(curr, rf);
 
 			if (is_infeasible() && (curr->get_node()->increment_read_from_past() || curr->get_node()->increment_future_value())) {
 				mo_graph->rollbackChanges();
@@ -866,7 +866,7 @@ bool ModelChecker::process_read(ModelAction *curr)
 				continue;
 			}
 
-			read_from(curr, reads_from);
+			read_from(curr, rf);
 			mo_graph->commitChanges();
 			mo_check_promises(curr, true);
 

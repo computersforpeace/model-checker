@@ -259,7 +259,7 @@ Thread * ModelChecker::get_next_thread(ModelAction *curr)
 			/* The next node will try to satisfy a different set of promises. */
 			tid = next->get_tid();
 			node_stack->pop_restofstack(2);
-		} else if (nextnode->increment_read_from()) {
+		} else if (nextnode->increment_read_from_past()) {
 			/* The next node will read from a different value. */
 			tid = next->get_tid();
 			node_stack->pop_restofstack(2);
@@ -851,7 +851,7 @@ bool ModelChecker::process_read(ModelAction *curr)
 	uint64_t value = VALUE_NONE;
 	bool updated = false;
 	while (true) {
-		const ModelAction *reads_from = curr->get_node()->get_read_from();
+		const ModelAction *reads_from = curr->get_node()->get_read_from_past();
 		if (reads_from != NULL) {
 			mo_graph->startChanges();
 
@@ -860,7 +860,7 @@ bool ModelChecker::process_read(ModelAction *curr)
 			check_recency(curr, reads_from);
 			bool r_status = r_modification_order(curr, reads_from);
 
-			if (is_infeasible() && (curr->get_node()->increment_read_from() || curr->get_node()->increment_future_value())) {
+			if (is_infeasible() && (curr->get_node()->increment_read_from_past() || curr->get_node()->increment_future_value())) {
 				mo_graph->rollbackChanges();
 				priv->too_many_reads = false;
 				continue;
@@ -1501,7 +1501,7 @@ void ModelChecker::check_curr_backtracking(ModelAction *curr)
 
 	if ((parnode && !parnode->backtrack_empty()) ||
 			 !currnode->misc_empty() ||
-			 !currnode->read_from_empty() ||
+			 !currnode->read_from_past_empty() ||
 			 !currnode->future_value_empty() ||
 			 !currnode->promise_empty() ||
 			 !currnode->relseq_break_empty()) {
@@ -1609,7 +1609,7 @@ ModelAction * ModelChecker::process_rmw(ModelAction *act) {
 void ModelChecker::check_recency(ModelAction *curr, const ModelAction *rf)
 {
 	if (params.maxreads != 0) {
-		if (curr->get_node()->get_read_from_size() <= 1)
+		if (curr->get_node()->get_read_from_past_size() <= 1)
 			return;
 		//Must make sure that execution is currently feasible...  We could
 		//accidentally clear by rolling back
@@ -1642,12 +1642,12 @@ void ModelChecker::check_recency(ModelAction *curr, const ModelAction *rf)
 
 			if (act->get_reads_from() != rf)
 				return;
-			if (act->get_node()->get_read_from_size() <= 1)
+			if (act->get_node()->get_read_from_past_size() <= 1)
 				return;
 		}
-		for (int i = 0; i < curr->get_node()->get_read_from_size(); i++) {
+		for (int i = 0; i < curr->get_node()->get_read_from_past_size(); i++) {
 			/* Get write */
-			const ModelAction *write = curr->get_node()->get_read_from_at(i);
+			const ModelAction *write = curr->get_node()->get_read_from_past(i);
 
 			/* Need a different write */
 			if (write == rf)
@@ -1665,8 +1665,8 @@ void ModelChecker::check_recency(ModelAction *curr, const ModelAction *rf)
 			for (int loop = count; loop > 0; loop--, rit++) {
 				ModelAction *act = *rit;
 				bool foundvalue = false;
-				for (int j = 0; j < act->get_node()->get_read_from_size(); j++) {
-					if (act->get_node()->get_read_from_at(j) == write) {
+				for (int j = 0; j < act->get_node()->get_read_from_past_size(); j++) {
+					if (act->get_node()->get_read_from_past(j) == write) {
 						foundvalue = true;
 						break;
 					}
@@ -2631,7 +2631,7 @@ void ModelChecker::build_may_read_from(ModelAction *curr)
 				mo_graph->startChanges();
 				r_modification_order(curr, act);
 				if (!is_infeasible())
-					curr->get_node()->add_read_from(act);
+					curr->get_node()->add_read_from_past(act);
 				mo_graph->rollbackChanges();
 			}
 
@@ -2658,7 +2658,7 @@ void ModelChecker::build_may_read_from(ModelAction *curr)
 	}
 
 	/* We may find no valid may-read-from only if the execution is doomed */
-	if (!curr->get_node()->get_read_from_size() && curr->get_node()->future_value_empty()) {
+	if (!curr->get_node()->get_read_from_past_size() && curr->get_node()->future_value_empty()) {
 		priv->no_valid_reads = true;
 		set_assert();
 	}
@@ -2666,9 +2666,9 @@ void ModelChecker::build_may_read_from(ModelAction *curr)
 	if (DBG_ENABLED()) {
 		model_print("Reached read action:\n");
 		curr->print();
-		model_print("Printing may_read_from\n");
-		curr->get_node()->print_may_read_from();
-		model_print("End printing may_read_from\n");
+		model_print("Printing read_from_past\n");
+		curr->get_node()->print_read_from_past();
+		model_print("End printing read_from_past\n");
 	}
 }
 

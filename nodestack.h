@@ -77,12 +77,12 @@ public:
 	bool increment_future_value();
 	bool future_value_empty() const;
 
-	void add_read_from(const ModelAction *act);
-	const ModelAction * get_read_from() const;
-	bool increment_read_from();
-	bool read_from_empty() const;
-	int get_read_from_size() const;
-	const ModelAction * get_read_from_at(int i) const;
+	void add_read_from_past(const ModelAction *act);
+	const ModelAction * get_read_from_past() const;
+	bool increment_read_from_past();
+	bool read_from_past_empty() const;
+	int get_read_from_past_size() const;
+	const ModelAction * get_read_from_past(int i) const;
 
 	void set_promise(unsigned int i, bool is_rmw);
 	bool get_promise(unsigned int i) const;
@@ -101,7 +101,7 @@ public:
 	bool relseq_break_empty() const;
 
 	void print() const;
-	void print_may_read_from();
+	void print_read_from_past();
 
 	MEMALLOC
 private:
@@ -116,11 +116,12 @@ private:
 	int numBacktracks;
 	enabled_type_t *enabled_array;
 
-	/** The set of ModelActions that this the action at this Node may read
-	 *  from. Only meaningful if this Node represents a 'read' action. */
-	std::vector< const ModelAction *, ModelAlloc< const ModelAction * > > may_read_from;
-
-	unsigned int read_from_index;
+	/**
+	 * The set of past ModelActions that this the action at this Node may
+	 * read from. Only meaningful if this Node represents a 'read' action.
+	 */
+	std::vector< const ModelAction *, ModelAlloc< const ModelAction * > > read_from_past;
+	unsigned int read_from_past_idx;
 
 	std::vector< struct future_value, ModelAlloc<struct future_value> > future_values;
 	std::vector< promise_t, ModelAlloc<promise_t> > promises;

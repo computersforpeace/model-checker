@@ -33,8 +33,8 @@ Node::Node(ModelAction *act, Node *par, int nthreads, Node *prevfairness)
 	fairness(num_threads),
 	numBacktracks(0),
 	enabled_array(NULL),
-	may_read_from(),
-	read_from_index(0),
+	read_from_past(),
+	read_from_past_idx(0),
 	future_values(),
 	future_index(-1),
 	relseq_break_writes(),
@@ -103,9 +103,9 @@ void Node::print() const
 		model_print("[%#" PRIx64 "]", future_values[i].value);
 	model_print("\n");
 
-	model_print("          read-from: %s", read_from_empty() ? "empty" : "non-empty ");
-	for (int i = read_from_index + 1; i < (int)may_read_from.size(); i++)
-		model_print("[%d]", may_read_from[i]->get_seq_number());
+	model_print("          read-from: %s", read_from_past_empty() ? "empty" : "non-empty ");
+	for (int i = read_from_past_idx + 1; i < (int)read_from_past.size(); i++)
+		model_print("[%d]", read_from_past[i]->get_seq_number());
 	model_print("\n");
 
 	model_print("          promises: %s\n", promise_empty() ? "empty" : "non-empty");
@@ -113,11 +113,11 @@ void Node::print() const
 	model_print("          rel seq break: %s\n", relseq_break_empty() ? "empty" : "non-empty");
 }
 
-/** @brief Prints info about may_read_from set */
-void Node::print_may_read_from()
+/** @brief Prints info about read_from_past set */
+void Node::print_read_from_past()
 {
-	for (unsigned int i = 0; i < may_read_from.size(); i++)
-		may_read_from[i]->print();
+	for (unsigned int i = 0; i < read_from_past.size(); i++)
+		read_from_past[i]->print();
 }
 
 /**
@@ -292,9 +292,9 @@ bool Node::backtrack_empty() const
  * Checks whether the readsfrom set for this node is empty.
  * @return true if the readsfrom set is empty.
  */
-bool Node::read_from_empty() const
+bool Node::read_from_past_empty() const
 {
-	return ((read_from_index + 1) >= may_read_from.size());
+	return ((read_from_past_idx + 1) >= read_from_past.size());
 }
 
 /**
@@ -383,12 +383,12 @@ bool Node::has_priority(thread_id_t tid) const
 }
 
 /**
- * Add an action to the may_read_from set.
+ * Add an action to the read_from_past set.
  * @param act is the action to add
  */
-void Node::add_read_from(const ModelAction *act)
+void Node::add_read_from_past(const ModelAction *act)
 {
-	may_read_from.push_back(act);
+	read_from_past.push_back(act);
 }
 
 /**
@@ -402,25 +402,25 @@ struct future_value Node::get_future_value() const
 	return future_values[future_index];
 }
 
-int Node::get_read_from_size() const
+int Node::get_read_from_past_size() const
 {
-	return may_read_from.size();
+	return read_from_past.size();
 }
 
-const ModelAction * Node::get_read_from_at(int i) const
+const ModelAction * Node::get_read_from_past(int i) const
 {
-	return may_read_from[i];
+	return read_from_past[i];
 }
 
 /**
- * Gets the next 'may_read_from' action from this Node. Only valid for a node
+ * Gets the next 'read_from_past' action from this Node. Only valid for a node
  * where this->action is a 'read'.
- * @return The first element in may_read_from
+ * @return The first element in read_from_past
  */
-const ModelAction * Node::get_read_from() const
+const ModelAction * Node::get_read_from_past() const
 {
-	if (read_from_index < may_read_from.size())
-		return may_read_from[read_from_index];
+	if (read_from_past_idx < read_from_past.size())
+		return read_from_past[read_from_past_idx];
 	else
 		return NULL;
 }
@@ -429,13 +429,13 @@ const ModelAction * Node::get_read_from() const
  * Increments the index into the readsfrom set to explore the next item.
  * @return Returns false if we have explored all items.
  */
-bool Node::increment_read_from()
+bool Node::increment_read_from_past()
 {
 	DBG();
 	promises.clear();
-	if (read_from_index < may_read_from.size()) {
-		read_from_index++;
-		return read_from_index < may_read_from.size();
+	if (read_from_past_idx < read_from_past.size()) {
+		read_from_past_idx++;
+		return read_from_past_idx < read_from_past.size();
 	}
 	return false;
 }

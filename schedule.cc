@@ -96,6 +96,23 @@ bool Scheduler::is_sleep_set(const Thread *t) const
 	return get_enabled(t) == THREAD_SLEEP_SET;
 }
 
+/**
+ * @brief Check if execution is stuck with no enabled threads and some sleeping
+ * thread
+ * @return True if no threads are enabled an some thread is in the sleep set;
+ * false otherwise
+ */
+bool Scheduler::all_threads_sleeping() const
+{
+	bool sleeping = false;
+	for (int i = 0; i < enabled_len; i++)
+		if (enabled[i] == THREAD_ENABLED)
+			return false;
+		else if (enabled[i] == THREAD_SLEEP_SET)
+			sleeping = true;
+	return sleeping;
+}
+
 enabled_type_t Scheduler::get_enabled(const Thread *t) const
 {
 	int id = id_to_int(t->get_id());

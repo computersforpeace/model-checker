@@ -483,8 +483,10 @@ void ModelChecker::record_stats()
 		stats.num_buggy_executions++;
 	else if (is_complete_execution())
 		stats.num_complete++;
-	else
+	else if (scheduler->all_threads_sleeping())
 		stats.num_redundant++;
+	else
+		ASSERT(false);
 }
 
 /** @brief Print execution stats */
@@ -2792,9 +2794,11 @@ void ModelChecker::print_summary() const
 #endif
 
 	model_print("Execution %d:", stats.num_total);
-	if (isfeasibleprefix())
+	if (isfeasibleprefix()) {
+		if (scheduler->all_threads_sleeping())
+			model_print(" SLEEP-SET REDUNDANT");
 		model_print("\n");
-	else
+	} else
 		print_infeasibility(" INFEASIBLE");
 	print_list(action_trace);
 	model_print("\n");

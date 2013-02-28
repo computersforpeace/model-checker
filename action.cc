@@ -543,7 +543,13 @@ void ModelAction::print() const
 	if (is_read()) {
 		if (reads_from)
 			model_print("  Rf: %-3d", reads_from->get_seq_number());
-		else
+		else if (reads_from_promise) {
+			int idx = model->get_promise_number(reads_from_promise);
+			if (idx >= 0)
+				model_print("  Rf: P%-2d", idx);
+			else
+				model_print("  RF: P? ");
+		} else
 			model_print("  Rf: ?  ");
 	}
 	if (cv) {

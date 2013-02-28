@@ -2841,6 +2841,26 @@ Thread * ModelChecker::get_thread(const ModelAction *act) const
 }
 
 /**
+ * @brief Get a Promise's "promise number"
+ *
+ * A "promise number" is an index number that is unique to a promise, valid
+ * only for a specific snapshot of an execution trace. Promises may come and go
+ * as they are generated an resolved, so an index only retains meaning for the
+ * current snapshot.
+ *
+ * @param promise The Promise to check
+ * @return The promise index, if the promise still is valid; otherwise -1
+ */
+int ModelChecker::get_promise_number(const Promise *promise) const
+{
+	for (unsigned int i = 0; i < promises->size(); i++)
+		if ((*promises)[i] == promise)
+			return i;
+	/* Not found */
+	return -1;
+}
+
+/**
  * @brief Check if a Thread is currently enabled
  * @param t The Thread to check
  * @return True if the Thread is currently enabled

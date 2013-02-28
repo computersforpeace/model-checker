@@ -155,7 +155,7 @@ private:
 	bool next_execution();
 	ModelAction * check_current_action(ModelAction *curr);
 	bool initialize_curr_action(ModelAction **curr);
-	bool process_read(ModelAction *curr, bool second_part_of_rmw);
+	bool process_read(ModelAction *curr);
 	bool process_write(ModelAction *curr);
 	bool process_fence(ModelAction *curr);
 	bool process_mutex(ModelAction *curr);

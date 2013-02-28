@@ -842,12 +842,11 @@ ModelAction * ModelChecker::get_next_backtrack()
 }
 
 /**
- * Processes a read or rmw model action.
+ * Processes a read model action.
  * @param curr is the read model action to process.
- * @param second_part_of_rmw is boolean that is true is this is the second action of a rmw.
  * @return True if processing this read updates the mo_graph.
  */
-bool ModelChecker::process_read(ModelAction *curr, bool second_part_of_rmw)
+bool ModelChecker::process_read(ModelAction *curr)
 {
 	uint64_t value = VALUE_NONE;
 	bool updated = false;
@@ -857,14 +856,11 @@ bool ModelChecker::process_read(ModelAction *curr, bool second_part_of_rmw)
 			mo_graph->startChanges();
 
 			value = reads_from->get_value();
-			bool r_status = false;
 
-			if (!second_part_of_rmw) {
-				check_recency(curr, reads_from);
-				r_status = r_modification_order(curr, reads_from);
-			}
+			check_recency(curr, reads_from);
+			bool r_status = r_modification_order(curr, reads_from);
 
-			if (!second_part_of_rmw && is_infeasible() && (curr->get_node()->increment_read_from() || curr->get_node()->increment_future_value())) {
+			if (is_infeasible() && (curr->get_node()->increment_read_from() || curr->get_node()->increment_future_value())) {
 				mo_graph->rollbackChanges();
 				priv->too_many_reads = false;
 				continue;
@@ -875,7 +871,7 @@ bool ModelChecker::process_read(ModelAction *curr, bool second_part_of_rmw)
 			mo_check_promises(curr, true);
 
 			updated |= r_status;
-		} else if (!second_part_of_rmw) {
+		} else {
 			/* Read from future value */
 			struct future_value fv = curr->get_node()->get_future_value();
 			Promise *promise = new Promise(curr, fv);
@@ -1437,7 +1433,7 @@ ModelAction * ModelChecker::check_current_action(ModelAction *curr)
 			if (process_thread_action(curr))
 				update_all = true;
 
-			if (act->is_read() && process_read(act, second_part_of_rmw))
+			if (act->is_read() && !second_part_of_rmw && process_read(act))
 				update = true;
 
 			if (act->is_write() && process_write(act))

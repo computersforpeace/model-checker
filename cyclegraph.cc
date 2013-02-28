@@ -315,16 +315,15 @@ template bool CycleGraph::addEdge(const Promise *from, const Promise *to);
 
 #if SUPPORT_MOD_ORDER_DUMP
 
-static void print_node(const CycleNode *node, FILE *file, int label)
+static void print_node(FILE *file, const CycleNode *node, int label)
 {
-	modelclock_t idx;
 	if (node->is_promise()) {
 		const Promise *promise = node->getPromise();
-		idx = promise->get_reader(0)->get_seq_number();
-		fprintf(file, "P%u", idx);
+		int idx = model->get_promise_number(promise);
+		fprintf(file, "P%d", idx);
 		if (label) {
 			int first = 1;
-			fprintf(file, " [label=\"P%u, T", idx);
+			fprintf(file, " [label=\"P%d, T", idx);
 			for (unsigned int i = 0 ; i < model->get_num_threads(); i++)
 				if (promise->thread_is_available(int_to_id(i))) {
 					fprintf(file, "%s%u", first ? "": ",", i);
@@ -334,31 +333,33 @@ static void print_node(const CycleNode *node, FILE *file, int label)
 		}
 	} else {
 		const ModelAction *act = node->getAction();
-		idx = act->get_seq_number();
+		modelclock_t idx = act->get_seq_number();
 		fprintf(file, "N%u", idx);
 		if (label)
 			fprintf(file, " [label=\"N%u, T%u\"]", idx, act->get_tid());
 	}
 }
 
+static void print_edge(FILE *file, const CycleNode *from, const CycleNode *to, const char *prop)
+{
+	print_node(file, from, 0);
+	fprintf(file, " -> ");
+	print_node(file, to, 0);
+	if (prop && strlen(prop))
+		fprintf(file, " [%s]", prop);
+	fprintf(file, ";\n");
+}
+
 void CycleGraph::dumpNodes(FILE *file) const
 {
 	for (unsigned int i = 0; i < nodeList.size(); i++) {
 		CycleNode *n = nodeList[i];
-		print_node(n, file, 1);
+		print_node(file, n, 1);
 		fprintf(file, ";\n");
-		if (n->getRMW() != NULL) {
-			print_node(n, file, 0);
-			fprintf(file, " -> ");
-			print_node(n->getRMW(), file, 0);
-			fprintf(file, "[style=dotted];\n");
-		}
-		for (unsigned int j = 0; j < n->getNumEdges(); j++) {
-			print_node(n, file, 0);
-			fprintf(file, " -> ");
-			print_node(n->getEdge(j), file, 0);
-			fprintf(file, ";\n");
-		}
+		if (n->getRMW())
+			print_edge(file, n, n->getRMW(), "style=dotted");
+		for (unsigned int j = 0; j < n->getNumEdges(); j++)
+			print_edge(file, n, n->getEdge(j), NULL);
 	}
 }
 

@@ -38,6 +38,12 @@ struct fairness_info {
 	bool priority;
 };
 
+typedef enum {
+	READ_FROM_PAST,
+	READ_FROM_FUTURE,
+	READ_FROM_NONE,
+} read_from_type_t;
+
 /**
  * @brief A single node in a NodeStack
  *
@@ -72,17 +78,19 @@ public:
 	 * occurred previously in the stack. */
 	Node * get_parent() const { return parent; }
 
-	bool add_future_value(struct future_value fv);
-	struct future_value get_future_value() const;
-	bool increment_future_value();
-	bool future_value_empty() const;
+	read_from_type_t get_read_from_status();
+	bool increment_read_from();
+	bool read_from_empty() const;
+	unsigned int read_from_size() const;
 
+	void print_read_from_past();
 	void add_read_from_past(const ModelAction *act);
 	const ModelAction * get_read_from_past() const;
-	bool increment_read_from_past();
-	bool read_from_past_empty() const;
-	int get_read_from_past_size() const;
 	const ModelAction * get_read_from_past(int i) const;
+	int get_read_from_past_size() const;
+
+	bool add_future_value(struct future_value fv);
+	struct future_value get_future_value() const;
 
 	void set_promise(unsigned int i, bool is_rmw);
 	bool get_promise(unsigned int i) const;
@@ -101,11 +109,16 @@ public:
 	bool relseq_break_empty() const;
 
 	void print() const;
-	void print_read_from_past();
 
 	MEMALLOC
 private:
 	void explore(thread_id_t tid);
+
+	bool read_from_past_empty() const;
+	bool increment_read_from_past();
+	bool future_value_empty() const;
+	bool increment_future_value();
+	read_from_type_t read_from_status;
 
 	ModelAction * const action;
 	Node * const parent;

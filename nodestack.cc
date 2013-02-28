@@ -24,8 +24,9 @@
  * @param nthreads The number of threads which exist at this point in the
  * execution trace.
  */
-Node::Node(ModelAction *act, Node *par, int nthreads, Node *prevfairness)
-	: action(act),
+Node::Node(ModelAction *act, Node *par, int nthreads, Node *prevfairness) :
+	read_from_status(READ_FROM_PAST),
+	action(act),
 	parent(par),
 	num_threads(nthreads),
 	explored_children(num_threads),
@@ -98,26 +99,20 @@ void Node::print() const
 		if (backtrack[i] == true)
 			model_print("[%d]", i);
 	model_print("\n");
+
+	model_print("          read from past: %s", read_from_past_empty() ? "empty" : "non-empty ");
+	for (int i = read_from_past_idx + 1; i < (int)read_from_past.size(); i++)
+		model_print("[%d]", read_from_past[i]->get_seq_number());
+	model_print("\n");
+
 	model_print("          future values: %s", future_value_empty() ? "empty" : "non-empty ");
 	for (int i = future_index + 1; i < (int)future_values.size(); i++)
 		model_print("[%#" PRIx64 "]", future_values[i].value);
 	model_print("\n");
 
-	model_print("          read-from: %s", read_from_past_empty() ? "empty" : "non-empty ");
-	for (int i = read_from_past_idx + 1; i < (int)read_from_past.size(); i++)
-		model_print("[%d]", read_from_past[i]->get_seq_number());
-	model_print("\n");
-
 	model_print("          promises: %s\n", promise_empty() ? "empty" : "non-empty");
 	model_print("          misc: %s\n", misc_empty() ? "empty" : "non-empty");
 	model_print("          rel seq break: %s\n", relseq_break_empty() ? "empty" : "non-empty");
-}
-
-/** @brief Prints info about read_from_past set */
-void Node::print_read_from_past()
-{
-	for (unsigned int i = 0; i < read_from_past.size(); i++)
-		read_from_past[i]->print();
 }
 
 /**
@@ -217,56 +212,6 @@ bool Node::misc_empty() const
 }
 
 /**
- * Adds a value from a weakly ordered future write to backtrack to. This
- * operation may "fail" if the future value has already been run (within some
- * sloppiness window of this expiration), or if the futurevalues set has
- * reached its maximum.
- * @see model_params.maxfuturevalues
- *
- * @param value is the value to backtrack to.
- * @return True if the future value was successully added; false otherwise
- */
-bool Node::add_future_value(struct future_value fv)
-{
-	uint64_t value = fv.value;
-	modelclock_t expiration = fv.expiration;
-	thread_id_t tid = fv.tid;
-	int idx = -1; /* Highest index where value is found */
-	for (unsigned int i = 0; i < future_values.size(); i++) {
-		if (future_values[i].value == value && future_values[i].tid == tid) {
-			if (expiration <= future_values[i].expiration)
-				return false;
-			idx = i;
-		}
-	}
-	if (idx > future_index) {
-		/* Future value hasn't been explored; update expiration */
-		future_values[idx].expiration = expiration;
-		return true;
-	} else if (idx >= 0 && expiration <= future_values[idx].expiration + model->params.expireslop) {
-		/* Future value has been explored and is within the "sloppy" window */
-		return false;
-	}
-
-	/* Limit the size of the future-values set */
-	if (model->params.maxfuturevalues > 0 &&
-			(int)future_values.size() >= model->params.maxfuturevalues)
-		return false;
-
-	future_values.push_back(fv);
-	return true;
-}
-
-/**
- * Checks whether the future_values set for this node is empty.
- * @return true if the future_values set is empty.
- */
-bool Node::future_value_empty() const
-{
-	return ((future_index + 1) >= ((int)future_values.size()));
-}
-
-/**
  * Checks if the Thread associated with this thread ID has been explored from
  * this Node already.
  * @param tid is the thread ID to check
@@ -286,15 +231,6 @@ bool Node::has_been_explored(thread_id_t tid) const
 bool Node::backtrack_empty() const
 {
 	return (numBacktracks == 0);
-}
-
-/**
- * Checks whether the readsfrom set for this node is empty.
- * @return true if the readsfrom set is empty.
- */
-bool Node::read_from_past_empty() const
-{
-	return ((read_from_past_idx + 1) >= read_from_past.size());
 }
 
 /**
@@ -382,6 +318,67 @@ bool Node::has_priority(thread_id_t tid) const
 	return fairness[id_to_int(tid)].priority;
 }
 
+/*********************************** read from ********************************/
+
+/**
+ * Get the current state of the may-read-from set iteration
+ * @return The read-from type we should currently be checking (past or future)
+ */
+read_from_type_t Node::get_read_from_status()
+{
+	if (read_from_status == READ_FROM_PAST && read_from_past.empty())
+		increment_read_from();
+	return read_from_status;
+}
+
+/**
+ * Iterate one step in the may-read-from iteration. This includes a step in
+ * reading from the either the past or the future.
+ * @return True if there is a new read-from to explore; false otherwise
+ */
+bool Node::increment_read_from()
+{
+	promises.clear();
+	if (increment_read_from_past()) {
+	       read_from_status = READ_FROM_PAST;
+	       return true;
+	} else if (increment_future_value()) {
+		read_from_status = READ_FROM_FUTURE;
+		return true;
+	}
+	read_from_status = READ_FROM_NONE;
+	return false;
+}
+
+/**
+ * @return True if there are any new read-froms to explore
+ */
+bool Node::read_from_empty() const
+{
+	return read_from_past_empty() && future_value_empty();
+}
+
+/**
+ * Get the total size of the may-read-from set, including both past and future
+ * values
+ * @return The size of may-read-from
+ */
+unsigned int Node::read_from_size() const
+{
+	return read_from_past.size() + future_values.size();
+}
+
+/******************************* end read from ********************************/
+
+/****************************** read from past ********************************/
+
+/** @brief Prints info about read_from_past set */
+void Node::print_read_from_past()
+{
+	for (unsigned int i = 0; i < read_from_past.size(); i++)
+		read_from_past[i]->print();
+}
+
 /**
  * Add an action to the read_from_past set.
  * @param act is the action to add
@@ -389,27 +386,6 @@ bool Node::has_priority(thread_id_t tid) const
 void Node::add_read_from_past(const ModelAction *act)
 {
 	read_from_past.push_back(act);
-}
-
-/**
- * Gets the next 'future_value' from this Node. Only valid for a node where
- * this->action is a 'read'.
- * @return The first element in future_values
- */
-struct future_value Node::get_future_value() const
-{
-	ASSERT(future_index >= 0 && future_index < ((int)future_values.size()));
-	return future_values[future_index];
-}
-
-int Node::get_read_from_past_size() const
-{
-	return read_from_past.size();
-}
-
-const ModelAction * Node::get_read_from_past(int i) const
-{
-	return read_from_past[i];
 }
 
 /**
@@ -425,6 +401,25 @@ const ModelAction * Node::get_read_from_past() const
 		return NULL;
 }
 
+const ModelAction * Node::get_read_from_past(int i) const
+{
+	return read_from_past[i];
+}
+
+int Node::get_read_from_past_size() const
+{
+	return read_from_past.size();
+}
+
+/**
+ * Checks whether the readsfrom set for this node is empty.
+ * @return true if the readsfrom set is empty.
+ */
+bool Node::read_from_past_empty() const
+{
+	return ((read_from_past_idx + 1) >= read_from_past.size());
+}
+
 /**
  * Increments the index into the readsfrom set to explore the next item.
  * @return Returns false if we have explored all items.
@@ -432,12 +427,76 @@ const ModelAction * Node::get_read_from_past() const
 bool Node::increment_read_from_past()
 {
 	DBG();
-	promises.clear();
 	if (read_from_past_idx < read_from_past.size()) {
 		read_from_past_idx++;
 		return read_from_past_idx < read_from_past.size();
 	}
 	return false;
+}
+
+/************************** end read from past ********************************/
+
+/****************************** future values *********************************/
+
+/**
+ * Adds a value from a weakly ordered future write to backtrack to. This
+ * operation may "fail" if the future value has already been run (within some
+ * sloppiness window of this expiration), or if the futurevalues set has
+ * reached its maximum.
+ * @see model_params.maxfuturevalues
+ *
+ * @param value is the value to backtrack to.
+ * @return True if the future value was successully added; false otherwise
+ */
+bool Node::add_future_value(struct future_value fv)
+{
+	uint64_t value = fv.value;
+	modelclock_t expiration = fv.expiration;
+	thread_id_t tid = fv.tid;
+	int idx = -1; /* Highest index where value is found */
+	for (unsigned int i = 0; i < future_values.size(); i++) {
+		if (future_values[i].value == value && future_values[i].tid == tid) {
+			if (expiration <= future_values[i].expiration)
+				return false;
+			idx = i;
+		}
+	}
+	if (idx > future_index) {
+		/* Future value hasn't been explored; update expiration */
+		future_values[idx].expiration = expiration;
+		return true;
+	} else if (idx >= 0 && expiration <= future_values[idx].expiration + model->params.expireslop) {
+		/* Future value has been explored and is within the "sloppy" window */
+		return false;
+	}
+
+	/* Limit the size of the future-values set */
+	if (model->params.maxfuturevalues > 0 &&
+			(int)future_values.size() >= model->params.maxfuturevalues)
+		return false;
+
+	future_values.push_back(fv);
+	return true;
+}
+
+/**
+ * Gets the next 'future_value' from this Node. Only valid for a node where
+ * this->action is a 'read'.
+ * @return The first element in future_values
+ */
+struct future_value Node::get_future_value() const
+{
+	ASSERT(future_index >= 0 && future_index < ((int)future_values.size()));
+	return future_values[future_index];
+}
+
+/**
+ * Checks whether the future_values set for this node is empty.
+ * @return true if the future_values set is empty.
+ */
+bool Node::future_value_empty() const
+{
+	return ((future_index + 1) >= ((int)future_values.size()));
 }
 
 /**
@@ -447,13 +506,14 @@ bool Node::increment_read_from_past()
 bool Node::increment_future_value()
 {
 	DBG();
-	promises.clear();
 	if (future_index < ((int)future_values.size())) {
 		future_index++;
 		return (future_index < ((int)future_values.size()));
 	}
 	return false;
 }
+
+/************************** end future values *********************************/
 
 /**
  * Add a write ModelAction to the set of writes that may break the release

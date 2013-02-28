@@ -259,12 +259,8 @@ Thread * ModelChecker::get_next_thread(ModelAction *curr)
 			/* The next node will try to satisfy a different set of promises. */
 			tid = next->get_tid();
 			node_stack->pop_restofstack(2);
-		} else if (nextnode->increment_read_from_past()) {
+		} else if (nextnode->increment_read_from()) {
 			/* The next node will read from a different value. */
-			tid = next->get_tid();
-			node_stack->pop_restofstack(2);
-		} else if (nextnode->increment_future_value()) {
-			/* The next node will try to read from a different future value. */
 			tid = next->get_tid();
 			node_stack->pop_restofstack(2);
 		} else if (nextnode->increment_relseq_break()) {
@@ -852,16 +848,17 @@ bool ModelChecker::process_read(ModelAction *curr)
 	uint64_t value = VALUE_NONE;
 	bool updated = false;
 	while (true) {
-		const ModelAction *rf = node->get_read_from_past();
-		if (rf != NULL) {
+		switch (node->get_read_from_status()) {
+		case READ_FROM_PAST: {
+			const ModelAction *rf = node->get_read_from_past();
+			ASSERT(rf);
+
 			mo_graph->startChanges();
-
 			value = rf->get_value();
-
 			check_recency(curr, rf);
 			bool r_status = r_modification_order(curr, rf);
 
-			if (is_infeasible() && (node->increment_read_from_past() || node->increment_future_value())) {
+			if (is_infeasible() && node->increment_read_from()) {
 				mo_graph->rollbackChanges();
 				priv->too_many_reads = false;
 				continue;
@@ -872,7 +869,9 @@ bool ModelChecker::process_read(ModelAction *curr)
 			mo_check_promises(curr, true);
 
 			updated |= r_status;
-		} else {
+			break;
+		}
+		case READ_FROM_FUTURE: {
 			/* Read from future value */
 			struct future_value fv = node->get_future_value();
 			Promise *promise = new Promise(curr, fv);
@@ -882,6 +881,10 @@ bool ModelChecker::process_read(ModelAction *curr)
 			mo_graph->startChanges();
 			updated = r_modification_order(curr, promise);
 			mo_graph->commitChanges();
+			break;
+		}
+		default:
+			ASSERT(false);
 		}
 		get_thread(curr)->set_return_value(value);
 		return updated;
@@ -1502,8 +1505,7 @@ void ModelChecker::check_curr_backtracking(ModelAction *curr)
 
 	if ((parnode && !parnode->backtrack_empty()) ||
 			 !currnode->misc_empty() ||
-			 !currnode->read_from_past_empty() ||
-			 !currnode->future_value_empty() ||
+			 !currnode->read_from_empty() ||
 			 !currnode->promise_empty() ||
 			 !currnode->relseq_break_empty()) {
 		set_latest_backtrack(curr);
@@ -2659,7 +2661,7 @@ void ModelChecker::build_may_read_from(ModelAction *curr)
 	}
 
 	/* We may find no valid may-read-from only if the execution is doomed */
-	if (!curr->get_node()->get_read_from_past_size() && curr->get_node()->future_value_empty()) {
+	if (!curr->get_node()->read_from_size()) {
 		priv->no_valid_reads = true;
 		set_assert();
 	}

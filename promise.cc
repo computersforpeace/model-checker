@@ -142,6 +142,16 @@ bool Promise::is_compatible_exclusive(const ModelAction *act) const
 }
 
 /**
+ * @brief Check if a store's value matches this Promise
+ * @param write The store to check
+ * @return True if the store's written value matches this Promise
+ */
+bool Promise::same_value(const ModelAction *write) const
+{
+	return get_value() == write->get_write_value();
+}
+
+/**
  * @brief Check if a ModelAction's location matches this Promise
  * @param act The ModelAction to check
  * @return True if the action's location matches this Promise

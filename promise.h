@@ -36,6 +36,7 @@ class Promise {
 	int get_num_available_threads() const { return num_available_threads; }
 	bool is_compatible(const ModelAction *act) const;
 	bool is_compatible_exclusive(const ModelAction *act) const;
+	bool same_value(const ModelAction *write) const;
 	bool same_location(const ModelAction *act) const;
 
 	modelclock_t get_expiration() const { return fv.expiration; }

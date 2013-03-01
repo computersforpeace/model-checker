@@ -151,7 +151,8 @@ bool CycleGraph::mergeNodes(CycleNode *w_node, CycleNode *p_node,
 	ASSERT(p_node->is_promise());
 
 	const Promise *promise = p_node->getPromise();
-	if (!promise->is_compatible(w_node->getAction())) {
+	if (!promise->is_compatible(w_node->getAction()) ||
+			!promise->same_value(w_node->getAction())) {
 		hasCycles = true;
 		return false;
 	}

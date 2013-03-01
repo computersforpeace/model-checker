@@ -2505,7 +2505,7 @@ void ModelChecker::compute_promises(ModelAction *curr)
 {
 	for (unsigned int i = 0; i < promises->size(); i++) {
 		Promise *promise = (*promises)[i];
-		if (!promise->is_compatible(curr) || promise->get_value() != curr->get_value())
+		if (!promise->is_compatible(curr) || !promise->same_value(curr))
 			continue;
 
 		bool satisfy = true;

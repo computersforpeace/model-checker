@@ -483,10 +483,16 @@ void ModelChecker::record_stats()
 		stats.num_buggy_executions++;
 	else if (is_complete_execution())
 		stats.num_complete++;
-	else if (scheduler->all_threads_sleeping())
+	else {
 		stats.num_redundant++;
-	else
-		ASSERT(false);
+
+		/**
+		 * @todo We can violate this ASSERT() when fairness/sleep sets
+		 * conflict to cause an execution to terminate, e.g. with:
+		 * Scheduler: [0: disabled][1: disabled][2: sleep][3: current, enabled]
+		 */
+		//ASSERT(scheduler->all_threads_sleeping());
+	}
 }
 
 /** @brief Print execution stats */

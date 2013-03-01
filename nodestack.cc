@@ -458,8 +458,7 @@ void Node::add_read_from_promise(const ModelAction *reader)
  */
 Promise * Node::get_read_from_promise() const
 {
-	if (read_from_promise_idx < 0 || read_from_promise_idx >= ((int)read_from_promises.size()))
-		return NULL;
+	ASSERT(read_from_promise_idx >= 0 && read_from_promise_idx < ((int)read_from_promises.size()));
 	return read_from_promises[read_from_promise_idx]->get_reads_from_promise();
 }
 

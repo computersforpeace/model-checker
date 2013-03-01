@@ -1022,7 +1022,7 @@ void ModelChecker::add_future_value(const ModelAction *writer, ModelAction *read
 			write_thread = write_thread->get_parent();
 
 		struct future_value fv = {
-			writer->get_value(),
+			writer->get_write_value(),
 			writer->get_seq_number() + params.maxfuturedelay,
 			write_thread->get_id(),
 		};

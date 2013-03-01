@@ -397,6 +397,23 @@ uint64_t ModelAction::get_reads_from_value() const
 	return reads_from_promise->get_value();
 }
 
+/**
+ * @brief Get the value written by this store
+ *
+ * We differentiate this function from ModelAction::get_reads_from_value and
+ * ModelAction::get_value for the purpose of RMW's, which may have both a
+ * 'read' and a 'write' value.
+ *
+ * Note: 'this' must be a store.
+ *
+ * @return The value written by this store
+ */
+uint64_t ModelAction::get_write_value() const
+{
+	ASSERT(is_write());
+	return value;
+}
+
 /** @return The Node associated with this ModelAction */
 Node * ModelAction::get_node() const
 {
@@ -532,6 +549,8 @@ void ModelAction::print() const
 	uint64_t valuetoprint;
 	if (is_read())
 		valuetoprint = get_reads_from_value();
+	else if (is_write())
+		valuetoprint = get_write_value();
 	else
 		valuetoprint = value;
 

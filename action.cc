@@ -378,6 +378,25 @@ void ModelAction::set_try_lock(bool obtainedlock) {
 		value = VALUE_TRYFAILED;
 }
 
+/**
+ * @brief Get the value read by this load
+ *
+ * We differentiate this function from ModelAction::get_write_value and
+ * ModelAction::get_value for the purpose of RMW's, which may have both a
+ * 'read' and a 'write' value.
+ *
+ * Note: 'this' must be a load.
+ *
+ * @return The value read by this load
+ */
+uint64_t ModelAction::get_reads_from_value() const
+{
+	ASSERT(is_read());
+	if (reads_from)
+		return reads_from->get_write_value();
+	return reads_from_promise->get_value();
+}
+
 /** @return The Node associated with this ModelAction */
 Node * ModelAction::get_node() const
 {
@@ -511,10 +530,8 @@ void ModelAction::print() const
 	}
 
 	uint64_t valuetoprint;
-	if (is_read() && reads_from)
-		valuetoprint = reads_from->value;
-	else if (is_read() && reads_from_promise)
-		valuetoprint = reads_from_promise->get_value();
+	if (is_read())
+		valuetoprint = get_reads_from_value();
 	else
 		valuetoprint = value;
 

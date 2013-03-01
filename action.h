@@ -80,6 +80,7 @@ public:
 	void * get_location() const { return location; }
 	modelclock_t get_seq_number() const { return seq_number; }
 	uint64_t get_value() const { return value; }
+	uint64_t get_reads_from_value() const;
 	const ModelAction * get_reads_from() const { return reads_from; }
 	Promise * get_reads_from_promise() const { return reads_from_promise; }
 

@@ -320,7 +320,7 @@ static void print_node(FILE *file, const CycleNode *node, int label)
 	if (node->is_promise()) {
 		const Promise *promise = node->getPromise();
 		int idx = model->get_promise_number(promise);
-		fprintf(file, "P%d", idx);
+		fprintf(file, "P%u", idx);
 		if (label) {
 			int first = 1;
 			fprintf(file, " [label=\"P%d, T", idx);
@@ -349,6 +349,23 @@ static void print_edge(FILE *file, const CycleNode *from, const CycleNode *to, c
 		fprintf(file, " [%s]", prop);
 	fprintf(file, ";\n");
 }
+
+void CycleGraph::dot_print_node(FILE *file, const ModelAction *act)
+{
+	print_node(file, getNode(act), 1);
+}
+
+template <typename T, typename U>
+void CycleGraph::dot_print_edge(FILE *file, const T *from, const U *to, const char *prop)
+{
+	CycleNode *fromnode = getNode(from);
+	CycleNode *tonode = getNode(to);
+
+	print_edge(file, fromnode, tonode, prop);
+}
+/* Instantiate two forms of CycleGraph::dot_print_edge */
+template void CycleGraph::dot_print_edge(FILE *file, const Promise *from, const ModelAction *to, const char *prop);
+template void CycleGraph::dot_print_edge(FILE *file, const ModelAction *from, const ModelAction *to, const char *prop);
 
 void CycleGraph::dumpNodes(FILE *file) const
 {

@@ -2764,17 +2764,28 @@ void ModelChecker::dumpGraph(char *filename) const
 	ModelAction **thread_array = (ModelAction **)model_calloc(1, sizeof(ModelAction *) * get_num_threads());
 
 	for (action_list_t::iterator it = action_trace->begin(); it != action_trace->end(); it++) {
-		ModelAction *action = *it;
-		if (action->is_read()) {
-			fprintf(file, "N%u [label=\"N%u, T%u\"];\n", action->get_seq_number(), action->get_seq_number(), action->get_tid());
-			if (action->get_reads_from() != NULL)
-				fprintf(file, "N%u -> N%u[label=\"rf\", color=red];\n", action->get_seq_number(), action->get_reads_from()->get_seq_number());
+		ModelAction *act = *it;
+		if (act->is_read()) {
+			mo_graph->dot_print_node(file, act);
+			if (act->get_reads_from())
+				mo_graph->dot_print_edge(file,
+						act->get_reads_from(),
+						act,
+						"label=\"rf\", color=red, weight=2");
+			else
+				mo_graph->dot_print_edge(file,
+						act->get_reads_from_promise(),
+						act,
+						"label=\"rf\", color=red");
 		}
-		if (thread_array[action->get_tid()] != NULL) {
-			fprintf(file, "N%u -> N%u[label=\"sb\", color=blue];\n", thread_array[action->get_tid()]->get_seq_number(), action->get_seq_number());
+		if (thread_array[act->get_tid()]) {
+			mo_graph->dot_print_edge(file,
+					thread_array[id_to_int(act->get_tid())],
+					act,
+					"label=\"sb\", color=blue, weight=400");
 		}
 
-		thread_array[action->get_tid()] = action;
+		thread_array[act->get_tid()] = act;
 	}
 	fprintf(file, "}\n");
 	model_free(thread_array);

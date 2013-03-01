@@ -9,9 +9,11 @@
 #ifndef __CYCLEGRAPH_H__
 #define __CYCLEGRAPH_H__
 
-#include "hashtable.h"
 #include <vector>
 #include <inttypes.h>
+#include <stdio.h>
+
+#include "hashtable.h"
 #include "config.h"
 #include "mymemory.h"
 
@@ -45,6 +47,10 @@ class CycleGraph {
 #if SUPPORT_MOD_ORDER_DUMP
 	void dumpNodes(FILE *file) const;
 	void dumpGraphToFile(const char *filename) const;
+
+	void dot_print_node(FILE *file, const ModelAction *act);
+	template <typename T, typename U>
+	void dot_print_edge(FILE *file, const T *from, const U *to, const char *prop);
 #endif
 
 	bool resolvePromise(const Promise *promise, ModelAction *writer,
@@ -71,7 +77,7 @@ class CycleGraph {
 	HashTable<const Promise *, CycleNode *, uintptr_t, 4> promiseToNode;
 
 #if SUPPORT_MOD_ORDER_DUMP
-	std::vector<CycleNode *> nodeList;
+	std::vector< CycleNode *, SnapshotAlloc<CycleNode *> > nodeList;
 #endif
 
 	bool checkReachable(const CycleNode *from, const CycleNode *to) const;

@@ -2576,7 +2576,7 @@ void ModelChecker::mo_check_promises(const ModelAction *act, bool is_read_check)
 		Promise *promise = (*promises)[i];
 
 		// Is this promise on the same location?
-		if (promise->get_value() != write->get_value())
+		if (!promise->same_location(write))
 			continue;
 
 		for (unsigned int j = 0; j < promise->get_num_readers(); j++) {

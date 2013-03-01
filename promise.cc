@@ -140,3 +140,13 @@ bool Promise::is_compatible_exclusive(const ModelAction *act) const
 {
 	return get_num_available_threads() == 1 && is_compatible(act);
 }
+
+/**
+ * @brief Check if a ModelAction's location matches this Promise
+ * @param act The ModelAction to check
+ * @return True if the action's location matches this Promise
+ */
+bool Promise::same_location(const ModelAction *act) const
+{
+	return get_reader(0)->same_var(act);
+}

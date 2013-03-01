@@ -1324,8 +1324,9 @@ bool ModelChecker::initialize_curr_action(ModelAction **curr)
  */
 bool ModelChecker::read_from(ModelAction *act, const ModelAction *rf)
 {
+	ASSERT(rf);
 	act->set_read_from(rf);
-	if (rf != NULL && act->is_acquire()) {
+	if (act->is_acquire()) {
 		rel_heads_list_t release_heads;
 		get_release_seq_heads(act, act, &release_heads);
 		int num_heads = release_heads.size();

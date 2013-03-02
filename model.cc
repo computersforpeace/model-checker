@@ -1045,7 +1045,11 @@ void ModelChecker::add_future_value(const ModelAction *writer, ModelAction *read
 bool ModelChecker::process_write(ModelAction *curr)
 {
 	bool updated_mod_order = w_modification_order(curr);
-	bool updated_promises = resolve_promises(curr);
+	int promise_idx = get_promise_to_resolve(curr);
+	bool updated_promises = false;
+
+	if (promise_idx >= 0)
+		updated_promises = resolve_promise(curr, promise_idx);
 
 	if (promises->size() == 0) {
 		for (unsigned int i = 0; i < futurevalues->size(); i++) {
@@ -2452,44 +2456,49 @@ ClockVector * ModelChecker::get_cv(thread_id_t tid) const
 }
 
 /**
- * Resolve a set of Promises with a current write. The set is provided in the
- * Node corresponding to @a write.
- * @param write The ModelAction that is fulfilling Promises
- * @return True if promises were resolved; false otherwise
+ * @brief Find the promise, if any to resolve for the current action
+ * @param curr The current ModelAction. Should be a write.
+ * @return The (non-negative) index for the Promise to resolve, if any;
+ * otherwise -1
  */
-bool ModelChecker::resolve_promises(ModelAction *write)
+int ModelChecker::get_promise_to_resolve(const ModelAction *curr) const
 {
-	bool haveResolved = false;
+	for (unsigned int i = 0; i < promises->size(); i++)
+		if (curr->get_node()->get_promise(i))
+			return i;
+	return -1;
+}
+
+/**
+ * Resolve a Promise with a current write.
+ * @param write The ModelAction that is fulfilling Promises
+ * @param promise_idx The index corresponding to the promise
+ * @return True if the Promise was successfully resolved; false otherwise
+ */
+bool ModelChecker::resolve_promise(ModelAction *write, unsigned int promise_idx)
+{
 	std::vector< ModelAction *, ModelAlloc<ModelAction *> > actions_to_check;
-	promise_list_t mustResolve, resolved;
+	promise_list_t mustResolve;
+	Promise *promise = (*promises)[promise_idx];
 
-	for (unsigned int i = 0, promise_index = 0; promise_index < promises->size(); i++) {
-		Promise *promise = (*promises)[promise_index];
-		if (write->get_node()->get_promise(i)) {
-			for (unsigned int j = 0; j < promise->get_num_readers(); j++) {
-				ModelAction *read = promise->get_reader(j);
-				read_from(read, write);
-				actions_to_check.push_back(read);
-			}
-			//Make sure the promise's value matches the write's value
-			ASSERT(promise->is_compatible(write));
-			mo_graph->resolvePromise(promise, write, &mustResolve);
-
-			resolved.push_back(promise);
-			promises->erase(promises->begin() + promise_index);
-
-			haveResolved = true;
-		} else
-			promise_index++;
+	for (unsigned int i = 0; i < promise->get_num_readers(); i++) {
+		ModelAction *read = promise->get_reader(i);
+		read_from(read, write);
+		actions_to_check.push_back(read);
 	}
+	/* Make sure the promise's value matches the write's value */
+	ASSERT(promise->is_compatible(write) && promise->same_value(write));
+	mo_graph->resolvePromise(promise, write, &mustResolve);
 
-	for (unsigned int i = 0; i < mustResolve.size(); i++) {
-		if (std::find(resolved.begin(), resolved.end(), mustResolve[i])
-				== resolved.end())
-			priv->failed_promise = true;
-	}
-	for (unsigned int i = 0; i < resolved.size(); i++)
-		delete resolved[i];
+	promises->erase(promises->begin() + promise_idx);
+
+	/** @todo simplify the 'mustResolve' stuff */
+	ASSERT(mustResolve.size() <= 1);
+
+	if (!mustResolve.empty() && mustResolve[0] != promise)
+		priv->failed_promise = true;
+	delete promise;
+
 	//Check whether reading these writes has made threads unable to
 	//resolve promises
 
@@ -2498,7 +2507,7 @@ bool ModelChecker::resolve_promises(ModelAction *write)
 		mo_check_promises(read, true);
 	}
 
-	return haveResolved;
+	return true;
 }
 
 /**

@@ -1644,6 +1644,17 @@ ModelAction * ModelChecker::process_rmw(ModelAction *act) {
 	return lastread;
 }
 
+/**
+ * A helper function for ModelChecker::check_recency, to check if the current
+ * thread is able to read from a different write/promise for 'params.maxreads'
+ * number of steps and if that write/promise should become visible (i.e., is
+ * ordered later in the modification order). This helps model memory liveness.
+ *
+ * @param curr The current action. Must be a read.
+ * @param rf The write/promise from which we plan to read
+ * @param other_rf The write/promise from which we may read
+ * @return True if we were able to read from other_rf for params.maxreads steps
+ */
 template <typename T, typename U>
 bool ModelChecker::should_read_instead(const ModelAction *curr, const T *rf, const U *other_rf) const
 {
@@ -1672,13 +1683,14 @@ bool ModelChecker::should_read_instead(const ModelAction *curr, const T *rf, con
 }
 
 /**
- * Checks whether a thread has read from the same write for too many times
- * without seeing the effects of a later write.
+ * Checks whether a thread has read from the same write or Promise for too many
+ * times without seeing the effects of a later write/Promise.
  *
  * Basic idea:
- * 1) there must a different write that we could read from that would satisfy the modification order,
- * 2) we must have read from the same value in excess of maxreads times, and
- * 3) that other write must have been in the reads_from set for maxreads times.
+ * 1) there must a different write/promise that we could read from,
+ * 2) we must have read from the same write/promise in excess of maxreads times,
+ * 3) that other write/promise must have been in the reads_from set for maxreads times, and
+ * 4) that other write/promise must be mod-ordered after the write/promise we are reading.
  *
  * If so, we decide that the execution is no longer feasible.
  *

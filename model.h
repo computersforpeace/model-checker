@@ -196,7 +196,7 @@ private:
 	template <typename rf_type>
 	bool r_modification_order(ModelAction *curr, const rf_type *rf);
 
-	bool w_modification_order(ModelAction *curr);
+	bool w_modification_order(ModelAction *curr, std::vector< ModelAction *, ModelAlloc<ModelAction *> > *send_fv);
 	void get_release_seq_heads(ModelAction *acquire, ModelAction *read, rel_heads_list_t *release_heads);
 	bool release_seq_heads(const ModelAction *rf, rel_heads_list_t *release_heads, struct release_seq *pending) const;
 	bool resolve_release_sequences(void *location, work_queue_t *work_queue);

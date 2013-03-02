@@ -1044,12 +1044,26 @@ void ModelChecker::add_future_value(const ModelAction *writer, ModelAction *read
  */
 bool ModelChecker::process_write(ModelAction *curr)
 {
-	bool updated_mod_order = w_modification_order(curr);
+	/* Readers to which we may send our future value */
+	std::vector< ModelAction *, ModelAlloc<ModelAction *> > send_fv;
+
+	bool updated_mod_order = w_modification_order(curr, &send_fv);
 	int promise_idx = get_promise_to_resolve(curr);
+	const ModelAction *earliest_promise_reader;
 	bool updated_promises = false;
 
-	if (promise_idx >= 0)
+	if (promise_idx >= 0) {
+		earliest_promise_reader = (*promises)[promise_idx]->get_reader(0);
 		updated_promises = resolve_promise(curr, promise_idx);
+	} else
+		earliest_promise_reader = NULL;
+
+	/* Don't send future values to reads after the Promise we resolve */
+	for (unsigned int i = 0; i < send_fv.size(); i++) {
+		ModelAction *read = send_fv[i];
+		if (!earliest_promise_reader || *read < *earliest_promise_reader)
+			futurevalues->push_back(PendingFutureValue(curr, read));
+	}
 
 	if (promises->size() == 0) {
 		for (unsigned int i = 0; i < futurevalues->size(); i++) {
@@ -1506,7 +1520,7 @@ ModelAction * ModelChecker::check_current_action(ModelAction *curr)
 				}
 			}
 			if (act->is_write()) {
-				if (w_modification_order(act))
+				if (w_modification_order(act, NULL))
 					updated = true;
 			}
 			mo_graph->commitChanges();
@@ -1837,9 +1851,11 @@ bool ModelChecker::r_modification_order(ModelAction *curr, const rf_type *rf)
  * (II) Sending the write back to non-synchronizing reads.
  *
  * @param curr The current action. Must be a write.
+ * @param send_fv A vector for stashing reads to which we may pass our future
+ * value. If NULL, then don't record any future values.
  * @return True if modification order edges were added; false otherwise
  */
-bool ModelChecker::w_modification_order(ModelAction *curr)
+bool ModelChecker::w_modification_order(ModelAction *curr, std::vector< ModelAction *, ModelAlloc<ModelAction *> > *send_fv)
 {
 	std::vector<action_list_t> *thrd_lists = get_safe_ptr_vect_action(obj_thrd_map, curr->get_location());
 	unsigned int i;
@@ -1932,9 +1948,9 @@ bool ModelChecker::w_modification_order(ModelAction *curr)
 				   pendingfuturevalue.
 
 				 */
-				if (thin_air_constraint_may_allow(curr, act)) {
+				if (send_fv && thin_air_constraint_may_allow(curr, act)) {
 					if (!is_infeasible())
-						futurevalues->push_back(PendingFutureValue(curr, act));
+						send_fv->push_back(act);
 					else if (curr->is_rmw() && act->is_rmw() && curr->get_reads_from() && curr->get_reads_from() == act->get_reads_from())
 						add_future_value(curr, act);
 				}

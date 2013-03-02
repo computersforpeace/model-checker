@@ -168,6 +168,10 @@ private:
 	Thread * take_step(ModelAction *curr);
 
 	bool check_recency(ModelAction *curr, const ModelAction *rf) const;
+
+	template <typename T>
+	bool should_read_instead(const ModelAction *curr, const ModelAction *rf, const T *other_rf) const;
+
 	ModelAction * get_last_fence_conflict(ModelAction *act) const;
 	ModelAction * get_last_conflict(ModelAction *act) const;
 	void set_backtracking(ModelAction *act);

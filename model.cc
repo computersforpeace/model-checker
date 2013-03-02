@@ -1642,6 +1642,33 @@ ModelAction * ModelChecker::process_rmw(ModelAction *act) {
 	return lastread;
 }
 
+template <typename T>
+bool ModelChecker::should_read_instead(const ModelAction *curr, const ModelAction *rf, const T *other_rf) const
+{
+	/* Need a different write/promise */
+	if (other_rf->equals(rf))
+		return false;
+
+	/* Only look for "newer" writes/promises */
+	if (!mo_graph->checkReachable(rf, other_rf))
+		return false;
+
+	std::vector<action_list_t> *thrd_lists = get_safe_ptr_vect_action(obj_thrd_map, curr->get_location());
+	action_list_t *list = &(*thrd_lists)[id_to_int(curr->get_tid())];
+	action_list_t::reverse_iterator rit = list->rbegin();
+	ASSERT((*rit) == curr);
+	/* Skip past curr */
+	rit++;
+
+	/* Does this write/promise work for everyone? */
+	for (int i = 0; i < params.maxreads; i++, rit++) {
+		ModelAction *act = *rit;
+		if (!act->may_read_from(other_rf))
+			return false;
+	}
+	return true;
+}
+
 /**
  * Checks whether a thread has read from the same write for too many times
  * without seeing the effects of a later write.
@@ -1663,7 +1690,8 @@ bool ModelChecker::check_recency(ModelAction *curr, const ModelAction *rf) const
 		return true;
 
 	//NOTE: Next check is just optimization, not really necessary....
-	if (curr->get_node()->get_read_from_past_size() <= 1)
+	if (curr->get_node()->get_read_from_past_size() +
+			curr->get_node()->get_read_from_promise_size() <= 1)
 		return true;
 
 	std::vector<action_list_t> *thrd_lists = get_safe_ptr_vect_action(obj_thrd_map, curr->get_location());
@@ -1683,36 +1711,23 @@ bool ModelChecker::check_recency(ModelAction *curr, const ModelAction *rf) const
 		ModelAction *act = *ritcopy;
 		if (!act->is_read())
 			return true;
-		if (act->get_reads_from() != rf)
+		if (act->get_reads_from_promise() && !act->get_reads_from_promise()->equals(rf))
 			return true;
-		if (act->get_node()->get_read_from_past_size() <= 1)
+		if (act->get_reads_from() && !act->get_reads_from()->equals(rf))
+			return true;
+		if (act->get_node()->get_read_from_past_size() +
+				act->get_node()->get_read_from_promise_size() <= 1)
 			return true;
 	}
 	for (int i = 0; i < curr->get_node()->get_read_from_past_size(); i++) {
-		/* Get write */
 		const ModelAction *write = curr->get_node()->get_read_from_past(i);
-
-		/* Need a different write */
-		if (write == rf)
-			continue;
-
-		/* Only look for "newer" writes */
-		if (!mo_graph->checkReachable(rf, write))
-			continue;
-
-		ritcopy = rit;
-
-		bool feasiblewrite = true;
-		/* now we need to see if this write works for everyone */
-		for (int loop = params.maxreads; loop > 0; loop--, ritcopy++) {
-			ModelAction *act = *ritcopy;
-			if (!act->may_read_from(write)) {
-				feasiblewrite = false;
-				break;
-			}
-		}
-		if (feasiblewrite)
-			return false;
+		if (should_read_instead(curr, rf, write))
+			return false; /* liveness failure */
+	}
+	for (int i = 0; i < curr->get_node()->get_read_from_promise_size(); i++) {
+		const Promise *promise = curr->get_node()->get_read_from_promise(i);
+		if (should_read_instead(curr, rf, promise))
+			return false; /* liveness failure */
 	}
 	return true;
 }

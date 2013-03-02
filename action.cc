@@ -394,7 +394,9 @@ uint64_t ModelAction::get_reads_from_value() const
 	ASSERT(is_read());
 	if (reads_from)
 		return reads_from->get_write_value();
-	return reads_from_promise->get_value();
+	else if (reads_from_promise)
+		return reads_from_promise->get_value();
+	return VALUE_NONE; /* Only for new actions with no reads-from */
 }
 
 /**

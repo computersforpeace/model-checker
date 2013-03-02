@@ -2524,11 +2524,19 @@ bool ModelChecker::resolve_promise(ModelAction *write, unsigned int promise_idx)
 		priv->failed_promise = true;
 
 	promises->erase(promises->begin() + promise_idx);
-	delete promise;
+	/**
+	 * @todo  It is possible to end up in an inconsistent state, where a
+	 * "resolved" promise may still be referenced if
+	 * CycleGraph::resolvePromise() failed, so don't delete 'promise'.
+	 *
+	 * Note that the inconsistency only matters when dumping mo_graph to
+	 * file.
+	 *
+	 * delete promise;
+	 */
 
 	//Check whether reading these writes has made threads unable to
 	//resolve promises
-
 	for (unsigned int i = 0; i < actions_to_check.size(); i++) {
 		ModelAction *read = actions_to_check[i];
 		mo_check_promises(read, true);

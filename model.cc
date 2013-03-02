@@ -874,7 +874,7 @@ bool ModelChecker::process_read(ModelAction *curr)
 			}
 
 			updated = r_modification_order(curr, rf);
-			value = rf->get_value();
+			value = rf->get_write_value();
 			read_from(curr, rf);
 			mo_graph->commitChanges();
 			mo_check_promises(curr, true);

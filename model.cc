@@ -887,6 +887,8 @@ bool ModelChecker::process_read(ModelAction *curr)
 			value = promise->get_value();
 			curr->set_read_from_promise(promise);
 			mo_graph->startChanges();
+			if (!check_recency(curr, promise))
+				priv->too_many_reads = true;
 			updated = r_modification_order(curr, promise);
 			mo_graph->commitChanges();
 			break;
@@ -1642,8 +1644,8 @@ ModelAction * ModelChecker::process_rmw(ModelAction *act) {
 	return lastread;
 }
 
-template <typename T>
-bool ModelChecker::should_read_instead(const ModelAction *curr, const ModelAction *rf, const T *other_rf) const
+template <typename T, typename U>
+bool ModelChecker::should_read_instead(const ModelAction *curr, const T *rf, const U *other_rf) const
 {
 	/* Need a different write/promise */
 	if (other_rf->equals(rf))
@@ -1681,10 +1683,11 @@ bool ModelChecker::should_read_instead(const ModelAction *curr, const ModelActio
  * If so, we decide that the execution is no longer feasible.
  *
  * @param curr The current action. Must be a read.
- * @param rf The store from which we might read.
+ * @param rf The ModelAction/Promise from which we might read.
  * @return True if the read should succeed; false otherwise
  */
-bool ModelChecker::check_recency(ModelAction *curr, const ModelAction *rf) const
+template <typename T>
+bool ModelChecker::check_recency(ModelAction *curr, const T *rf) const
 {
 	if (!params.maxreads)
 		return true;

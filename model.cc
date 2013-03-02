@@ -853,7 +853,6 @@ ModelAction * ModelChecker::get_next_backtrack()
 bool ModelChecker::process_read(ModelAction *curr)
 {
 	Node *node = curr->get_node();
-	uint64_t value = VALUE_NONE;
 	while (true) {
 		bool updated = false;
 		switch (node->get_read_from_status()) {
@@ -874,7 +873,6 @@ bool ModelChecker::process_read(ModelAction *curr)
 			}
 
 			updated = r_modification_order(curr, rf);
-			value = rf->get_write_value();
 			read_from(curr, rf);
 			mo_graph->commitChanges();
 			mo_check_promises(curr, true);
@@ -884,7 +882,6 @@ bool ModelChecker::process_read(ModelAction *curr)
 			Promise *promise = curr->get_node()->get_read_from_promise();
 			if (promise->add_reader(curr))
 				priv->failed_promise = true;
-			value = promise->get_value();
 			curr->set_read_from_promise(promise);
 			mo_graph->startChanges();
 			if (!check_recency(curr, promise))
@@ -897,7 +894,6 @@ bool ModelChecker::process_read(ModelAction *curr)
 			/* Read from future value */
 			struct future_value fv = node->get_future_value();
 			Promise *promise = new Promise(curr, fv);
-			value = fv.value;
 			curr->set_read_from_promise(promise);
 			promises->push_back(promise);
 			mo_graph->startChanges();
@@ -908,7 +904,7 @@ bool ModelChecker::process_read(ModelAction *curr)
 		default:
 			ASSERT(false);
 		}
-		get_thread(curr)->set_return_value(value);
+		get_thread(curr)->set_return_value(curr->get_return_value());
 		return updated;
 	}
 }

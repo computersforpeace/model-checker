@@ -416,6 +416,26 @@ uint64_t ModelAction::get_write_value() const
 	return value;
 }
 
+/**
+ * @brief Get the value returned by this action
+ *
+ * For atomic reads (including RMW), an operation returns the value it read.
+ * For atomic writes, an operation returns the value it wrote. For other
+ * operations, the return value varies (sometimes is a "don't care"), but the
+ * value is simply stored in the "value" field.
+ *
+ * @return This action's return value
+ */
+uint64_t ModelAction::get_return_value() const
+{
+	if (is_read())
+		return get_reads_from_value();
+	else if (is_write())
+		return get_write_value();
+	else
+		return value;
+}
+
 /** @return The Node associated with this ModelAction */
 Node * ModelAction::get_node() const
 {
@@ -548,14 +568,6 @@ void ModelAction::print() const
 		type_str = "unknown type";
 	}
 
-	uint64_t valuetoprint;
-	if (is_read())
-		valuetoprint = get_reads_from_value();
-	else if (is_write())
-		valuetoprint = get_write_value();
-	else
-		valuetoprint = value;
-
 	switch (this->order) {
 	case std::memory_order_relaxed:
 		mo_str = "relaxed";
@@ -578,7 +590,7 @@ void ModelAction::print() const
 	}
 
 	model_print("(%4d) Thread: %-2d   Action: %-13s   MO: %7s  Loc: %14p   Value: %-#18" PRIx64,
-			seq_number, id_to_int(tid), type_str, mo_str, location, valuetoprint);
+			seq_number, id_to_int(tid), type_str, mo_str, location, get_return_value());
 	if (is_read()) {
 		if (reads_from)
 			model_print("  Rf: %-3d", reads_from->get_seq_number());

@@ -1653,78 +1653,78 @@ ModelAction * ModelChecker::process_rmw(ModelAction *act) {
  */
 void ModelChecker::check_recency(ModelAction *curr, const ModelAction *rf)
 {
-	if (params.maxreads != 0) {
-		if (curr->get_node()->get_read_from_past_size() <= 1)
-			return;
-		//Must make sure that execution is currently feasible...  We could
-		//accidentally clear by rolling back
-		if (is_infeasible())
-			return;
-		std::vector<action_list_t> *thrd_lists = get_safe_ptr_vect_action(obj_thrd_map, curr->get_location());
-		int tid = id_to_int(curr->get_tid());
+	if (!params.maxreads)
+		return;
+	if (curr->get_node()->get_read_from_past_size() <= 1)
+		return;
+	/* Must make sure that execution is currently feasible...  We could
+	 * accidentally clear by rolling back */
+	if (is_infeasible())
+		return;
+	std::vector<action_list_t> *thrd_lists = get_safe_ptr_vect_action(obj_thrd_map, curr->get_location());
+	int tid = id_to_int(curr->get_tid());
 
-		/* Skip checks */
-		if ((int)thrd_lists->size() <= tid)
+	/* Skip checks */
+	if ((int)thrd_lists->size() <= tid)
+		return;
+	action_list_t *list = &(*thrd_lists)[tid];
+
+	action_list_t::reverse_iterator rit = list->rbegin();
+	/* Skip past curr */
+	for (; (*rit) != curr; rit++)
+		;
+	/* go past curr now */
+	rit++;
+
+	action_list_t::reverse_iterator ritcopy = rit;
+	/* See if we have enough reads from the same value */
+	int count = 0;
+	for (; count < params.maxreads; rit++, count++) {
+		if (rit == list->rend())
 			return;
-		action_list_t *list = &(*thrd_lists)[tid];
+		ModelAction *act = *rit;
+		if (!act->is_read())
+			return;
 
-		action_list_t::reverse_iterator rit = list->rbegin();
-		/* Skip past curr */
-		for (; (*rit) != curr; rit++)
-			;
-		/* go past curr now */
-		rit++;
+		if (act->get_reads_from() != rf)
+			return;
+		if (act->get_node()->get_read_from_past_size() <= 1)
+			return;
+	}
+	for (int i = 0; i < curr->get_node()->get_read_from_past_size(); i++) {
+		/* Get write */
+		const ModelAction *write = curr->get_node()->get_read_from_past(i);
 
-		action_list_t::reverse_iterator ritcopy = rit;
-		//See if we have enough reads from the same value
-		int count = 0;
-		for (; count < params.maxreads; rit++, count++) {
-			if (rit == list->rend())
-				return;
+		/* Need a different write */
+		if (write == rf)
+			continue;
+
+		/* Test to see whether this is a feasible write to read from */
+		/** NOTE: all members of read-from set should be
+		 *  feasible, so we no longer check it here **/
+
+		rit = ritcopy;
+
+		bool feasiblewrite = true;
+		/* now we need to see if this write works for everyone */
+
+		for (int loop = count; loop > 0; loop--, rit++) {
 			ModelAction *act = *rit;
-			if (!act->is_read())
-				return;
-
-			if (act->get_reads_from() != rf)
-				return;
-			if (act->get_node()->get_read_from_past_size() <= 1)
-				return;
-		}
-		for (int i = 0; i < curr->get_node()->get_read_from_past_size(); i++) {
-			/* Get write */
-			const ModelAction *write = curr->get_node()->get_read_from_past(i);
-
-			/* Need a different write */
-			if (write == rf)
-				continue;
-
-			/* Test to see whether this is a feasible write to read from */
-			/** NOTE: all members of read-from set should be
-			 *  feasible, so we no longer check it here **/
-
-			rit = ritcopy;
-
-			bool feasiblewrite = true;
-			//new we need to see if this write works for everyone
-
-			for (int loop = count; loop > 0; loop--, rit++) {
-				ModelAction *act = *rit;
-				bool foundvalue = false;
-				for (int j = 0; j < act->get_node()->get_read_from_past_size(); j++) {
-					if (act->get_node()->get_read_from_past(j) == write) {
-						foundvalue = true;
-						break;
-					}
-				}
-				if (!foundvalue) {
-					feasiblewrite = false;
+			bool foundvalue = false;
+			for (int j = 0; j < act->get_node()->get_read_from_past_size(); j++) {
+				if (act->get_node()->get_read_from_past(j) == write) {
+					foundvalue = true;
 					break;
 				}
 			}
-			if (feasiblewrite) {
-				priv->too_many_reads = true;
-				return;
+			if (!foundvalue) {
+				feasiblewrite = false;
+				break;
 			}
+		}
+		if (feasiblewrite) {
+			priv->too_many_reads = true;
+			return;
 		}
 	}
 }

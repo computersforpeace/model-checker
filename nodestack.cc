@@ -463,6 +463,24 @@ Promise * Node::get_read_from_promise() const
 }
 
 /**
+ * Gets a particular 'read-from-promise' form this Node. Only vlaid for a node
+ * where this->action is a 'read'.
+ * @param i The index of the Promise to get
+ * @return The Promise at index i, if the Promise is still available; NULL
+ * otherwise
+ */
+Promise * Node::get_read_from_promise(int i) const
+{
+	return read_from_promises[i]->get_reads_from_promise();
+}
+
+/** @return The size of the read-from-promise set */
+int Node::get_read_from_promise_size() const
+{
+	return read_from_promises.size();
+}
+
+/**
  * Checks whether the read_from_promises set for this node is empty.
  * @return true if the read_from_promises set is empty.
  */

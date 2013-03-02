@@ -76,6 +76,8 @@ public:
 
 	void add_read_from_promise(const ModelAction *reader);
 	Promise * get_read_from_promise() const;
+	Promise * get_read_from_promise(int i) const;
+	int get_read_from_promise_size() const;
 
 	bool add_future_value(struct future_value fv);
 	struct future_value get_future_value() const;

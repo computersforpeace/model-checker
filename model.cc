@@ -1663,20 +1663,14 @@ void ModelChecker::check_recency(ModelAction *curr, const ModelAction *rf)
 	 * accidentally clear by rolling back */
 	if (is_infeasible())
 		return;
+
 	std::vector<action_list_t> *thrd_lists = get_safe_ptr_vect_action(obj_thrd_map, curr->get_location());
 	int tid = id_to_int(curr->get_tid());
-
-	//NOTE: this check seems left over from previous approach that added action to list late in the game...should be safe to remove
-	/* Skip checks */
-	if ((int)thrd_lists->size() <= tid)
-		return;
+	ASSERT(tid < (int)thrd_lists->size());
 	action_list_t *list = &(*thrd_lists)[tid];
-
 	action_list_t::reverse_iterator rit = list->rbegin();
+	ASSERT((*rit) == curr);
 	/* Skip past curr */
-	for (; (*rit) != curr; rit++)
-		;
-	/* go past curr now */
 	rit++;
 
 	action_list_t::reverse_iterator ritcopy = rit;

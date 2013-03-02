@@ -864,21 +864,20 @@ bool ModelChecker::process_read(ModelAction *curr)
 			mo_graph->startChanges();
 
 			ASSERT(!is_infeasible());
-			if (!check_recency(curr, rf))
-				priv->too_many_reads = true;
-			updated = r_modification_order(curr, rf);
-
-			if (is_infeasible() && node->increment_read_from()) {
-				mo_graph->rollbackChanges();
-				priv->too_many_reads = false;
-				continue;
+			if (!check_recency(curr, rf)) {
+				if (node->increment_read_from()) {
+					mo_graph->rollbackChanges();
+					continue;
+				} else {
+					priv->too_many_reads = true;
+				}
 			}
 
+			updated = r_modification_order(curr, rf);
 			value = rf->get_value();
 			read_from(curr, rf);
 			mo_graph->commitChanges();
 			mo_check_promises(curr, true);
-
 			break;
 		}
 		case READ_FROM_PROMISE: {

@@ -1694,11 +1694,9 @@ void ModelChecker::check_recency(ModelAction *curr, const ModelAction *rf)
 		if (write == rf)
 			continue;
 
-		//NOTE: SHOULD MAKE SURE write is MOd after rf
-
-		/* Test to see whether this is a feasible write to read from */
-		/** NOTE: all members of read-from set should be
-		 *  feasible, so we no longer check it here **/
+		/* Only look for "newer" writes */
+		if (!mo_graph->checkReachable(rf, write))
+			continue;
 
 		ritcopy = rit;
 

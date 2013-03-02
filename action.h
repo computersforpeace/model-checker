@@ -155,6 +155,9 @@ public:
 
 	bool equals(const ModelAction *x) const { return this == x; }
 	bool equals(const Promise *x) const { return false; }
+
+	bool may_read_from(const ModelAction *write) const;
+	bool may_read_from(const Promise *promise) const;
 	MEMALLOC
 private:
 

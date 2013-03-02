@@ -1704,17 +1704,9 @@ void ModelChecker::check_recency(ModelAction *curr, const ModelAction *rf)
 
 		bool feasiblewrite = true;
 		/* now we need to see if this write works for everyone */
-
 		for (int loop = params.maxreads; loop > 0; loop--, ritcopy++) {
 			ModelAction *act = *ritcopy;
-			bool foundvalue = false;
-			for (int j = 0; j < act->get_node()->get_read_from_past_size(); j++) {
-				if (act->get_node()->get_read_from_past(j) == write) {
-					foundvalue = true;
-					break;
-				}
-			}
-			if (!foundvalue) {
+			if (!act->may_read_from(write)) {
 				feasiblewrite = false;
 				break;
 			}

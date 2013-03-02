@@ -613,3 +613,29 @@ unsigned int ModelAction::hash() const
 		hash ^= reads_from->get_seq_number();
 	return hash;
 }
+
+/**
+ * @brief Checks the NodeStack to see if a ModelAction is in our may-read-from set
+ * @param write The ModelAction to check for
+ * @return True if the ModelAction is found; false otherwise
+ */
+bool ModelAction::may_read_from(const ModelAction *write) const
+{
+	for (int i = 0; i < node->get_read_from_past_size(); i++)
+		if (node->get_read_from_past(i) == write)
+			return true;
+	return false;
+}
+
+/**
+ * @brief Checks the NodeStack to see if a Promise is in our may-read-from set
+ * @param promise The Promise to check for
+ * @return True if the Promise is found; false otherwise
+ */
+bool ModelAction::may_read_from(const Promise *promise) const
+{
+	for (int i = 0; i < node->get_read_from_promise_size(); i++)
+		if (node->get_read_from_promise(i) == promise)
+			return true;
+	return false;
+}

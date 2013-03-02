@@ -854,17 +854,19 @@ bool ModelChecker::process_read(ModelAction *curr)
 {
 	Node *node = curr->get_node();
 	uint64_t value = VALUE_NONE;
-	bool updated = false;
 	while (true) {
+		bool updated = false;
 		switch (node->get_read_from_status()) {
 		case READ_FROM_PAST: {
 			const ModelAction *rf = node->get_read_from_past();
 			ASSERT(rf);
 
 			mo_graph->startChanges();
-			value = rf->get_value();
-			check_recency(curr, rf);
-			bool r_status = r_modification_order(curr, rf);
+
+			ASSERT(!is_infeasible());
+			if (!check_recency(curr, rf))
+				priv->too_many_reads = true;
+			updated = r_modification_order(curr, rf);
 
 			if (is_infeasible() && node->increment_read_from()) {
 				mo_graph->rollbackChanges();
@@ -872,11 +874,11 @@ bool ModelChecker::process_read(ModelAction *curr)
 				continue;
 			}
 
+			value = rf->get_value();
 			read_from(curr, rf);
 			mo_graph->commitChanges();
 			mo_check_promises(curr, true);
 
-			updated |= r_status;
 			break;
 		}
 		case READ_FROM_PROMISE: {
@@ -1650,19 +1652,19 @@ ModelAction * ModelChecker::process_rmw(ModelAction *act) {
  * 3) that other write must have been in the reads_from set for maxreads times.
  *
  * If so, we decide that the execution is no longer feasible.
+ *
+ * @param curr The current action. Must be a read.
+ * @param rf The store from which we might read.
+ * @return True if the read should succeed; false otherwise
  */
-void ModelChecker::check_recency(ModelAction *curr, const ModelAction *rf)
+bool ModelChecker::check_recency(ModelAction *curr, const ModelAction *rf) const
 {
 	if (!params.maxreads)
-		return;
+		return true;
 
 	//NOTE: Next check is just optimization, not really necessary....
 	if (curr->get_node()->get_read_from_past_size() <= 1)
-		return;
-	/* Must make sure that execution is currently feasible...  We could
-	 * accidentally clear by rolling back */
-	if (is_infeasible())
-		return;
+		return true;
 
 	std::vector<action_list_t> *thrd_lists = get_safe_ptr_vect_action(obj_thrd_map, curr->get_location());
 	int tid = id_to_int(curr->get_tid());
@@ -1677,14 +1679,14 @@ void ModelChecker::check_recency(ModelAction *curr, const ModelAction *rf)
 	/* See if we have enough reads from the same value */
 	for (int count = 0; count < params.maxreads; ritcopy++, count++) {
 		if (ritcopy == list->rend())
-			return;
+			return true;
 		ModelAction *act = *ritcopy;
 		if (!act->is_read())
-			return;
+			return true;
 		if (act->get_reads_from() != rf)
-			return;
+			return true;
 		if (act->get_node()->get_read_from_past_size() <= 1)
-			return;
+			return true;
 	}
 	for (int i = 0; i < curr->get_node()->get_read_from_past_size(); i++) {
 		/* Get write */
@@ -1709,11 +1711,10 @@ void ModelChecker::check_recency(ModelAction *curr, const ModelAction *rf)
 				break;
 			}
 		}
-		if (feasiblewrite) {
-			priv->too_many_reads = true;
-			return;
-		}
+		if (feasiblewrite)
+			return false;
 	}
+	return true;
 }
 
 /**

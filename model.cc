@@ -2511,7 +2511,6 @@ int ModelChecker::get_promise_to_resolve(const ModelAction *curr) const
 bool ModelChecker::resolve_promise(ModelAction *write, unsigned int promise_idx)
 {
 	std::vector< ModelAction *, ModelAlloc<ModelAction *> > actions_to_check;
-	promise_list_t mustResolve;
 	Promise *promise = (*promises)[promise_idx];
 
 	for (unsigned int i = 0; i < promise->get_num_readers(); i++) {
@@ -2521,15 +2520,10 @@ bool ModelChecker::resolve_promise(ModelAction *write, unsigned int promise_idx)
 	}
 	/* Make sure the promise's value matches the write's value */
 	ASSERT(promise->is_compatible(write) && promise->same_value(write));
-	mo_graph->resolvePromise(promise, write, &mustResolve);
+	if (!mo_graph->resolvePromise(promise, write))
+		priv->failed_promise = true;
 
 	promises->erase(promises->begin() + promise_idx);
-
-	/** @todo simplify the 'mustResolve' stuff */
-	ASSERT(mustResolve.size() <= 1);
-
-	if (!mustResolve.empty() && mustResolve[0] != promise)
-		priv->failed_promise = true;
 	delete promise;
 
 	//Check whether reading these writes has made threads unable to

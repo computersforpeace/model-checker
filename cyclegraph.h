@@ -53,8 +53,7 @@ class CycleGraph {
 	void dot_print_edge(FILE *file, const T *from, const U *to, const char *prop);
 #endif
 
-	bool resolvePromise(const Promise *promise, ModelAction *writer,
-			promise_list_t *mustResolve);
+	bool resolvePromise(const Promise *promise, ModelAction *writer);
 
 	SNAPSHOTALLOC
  private:
@@ -66,8 +65,7 @@ class CycleGraph {
 	CycleNode * getNode(const Promise *promise);
 	CycleNode * getNode_noCreate(const ModelAction *act) const;
 	CycleNode * getNode_noCreate(const Promise *promise) const;
-	bool mergeNodes(CycleNode *node1, CycleNode *node2,
-			promise_list_t *mustMerge);
+	bool mergeNodes(CycleNode *node1, CycleNode *node2);
 
 	HashTable<const CycleNode *, const CycleNode *, uintptr_t, 4, model_malloc, model_calloc, model_free> *discovered;
 

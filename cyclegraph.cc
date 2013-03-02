@@ -113,17 +113,22 @@ CycleNode * CycleGraph::getNode(const Promise *promise)
 }
 
 /**
- * @return false if the resolution results in a cycle; true otherwise
+ * Resolve/satisfy a Promise with a particular store ModelAction, taking care
+ * of the CycleGraph cleanups, including merging any necessary CycleNodes.
+ *
+ * @param promise The Promise to resolve
+ * @param writer The store that will resolve this Promise
+ * @return false if the resolution results in a cycle (or fails in some other
+ * way); true otherwise
  */
-bool CycleGraph::resolvePromise(const Promise *promise, ModelAction *writer,
-		promise_list_t *mustResolve)
+bool CycleGraph::resolvePromise(const Promise *promise, ModelAction *writer)
 {
 	CycleNode *promise_node = promiseToNode.get(promise);
 	CycleNode *w_node = actionToNode.get(writer);
 	ASSERT(promise_node);
 
 	if (w_node)
-		return mergeNodes(w_node, promise_node, mustResolve);
+		return mergeNodes(w_node, promise_node);
 	/* No existing write-node; just convert the promise-node */
 	promise_node->resolvePromise(writer);
 	erasePromiseNode(promise_node->getPromise());
@@ -139,46 +144,32 @@ bool CycleGraph::resolvePromise(const Promise *promise, ModelAction *writer,
  * @param w_node The write ModelAction node with which to merge
  * @param p_node The Promise node to merge. Will be destroyed after this
  * function.
- * @param mustMerge Return (pass-by-reference) any additional Promises that
- * must also be merged with w_node
  *
- * @return false if the merge results in a cycle; true otherwise
+ * @return false if the merge cannot succeed; true otherwise
  */
-bool CycleGraph::mergeNodes(CycleNode *w_node, CycleNode *p_node,
-		promise_list_t *mustMerge)
+bool CycleGraph::mergeNodes(CycleNode *w_node, CycleNode *p_node)
 {
 	ASSERT(!w_node->is_promise());
 	ASSERT(p_node->is_promise());
 
 	const Promise *promise = p_node->getPromise();
 	if (!promise->is_compatible(w_node->getAction()) ||
-			!promise->same_value(w_node->getAction())) {
-		hasCycles = true;
+			!promise->same_value(w_node->getAction()))
 		return false;
-	}
 
 	/* Transfer the RMW */
 	CycleNode *promise_rmw = p_node->getRMW();
-	if (promise_rmw && promise_rmw != w_node->getRMW() && w_node->setRMW(promise_rmw)) {
-		hasCycles = true;
+	if (promise_rmw && promise_rmw != w_node->getRMW() && w_node->setRMW(promise_rmw))
 		return false;
-	}
 
 	/* Transfer back edges to w_node */
 	while (p_node->getNumBackEdges() > 0) {
 		CycleNode *back = p_node->removeBackEdge();
 		if (back == w_node)
 			continue;
-		if (back->is_promise()) {
-			if (checkReachable(w_node, back)) {
-				/* Edge would create cycle; merge instead */
-				mustMerge->push_back(back->getPromise());
-				if (!mergeNodes(w_node, back, mustMerge))
-					return false;
-			} else
-				back->addEdge(w_node);
-		} else
-			addNodeEdge(back, w_node);
+		addNodeEdge(back, w_node);
+		if (hasCycles)
+			return false;
 	}
 
 	/* Transfer forward edges to w_node */
@@ -186,15 +177,9 @@ bool CycleGraph::mergeNodes(CycleNode *w_node, CycleNode *p_node,
 		CycleNode *forward = p_node->removeEdge();
 		if (forward == w_node)
 			continue;
-		if (forward->is_promise()) {
-			if (checkReachable(forward, w_node)) {
-				mustMerge->push_back(forward->getPromise());
-				if (!mergeNodes(w_node, forward, mustMerge))
-					return false;
-			} else
-				w_node->addEdge(forward);
-		} else
-			addNodeEdge(w_node, forward);
+		addNodeEdge(w_node, forward);
+		if (hasCycles)
+			return false;
 	}
 
 	erasePromiseNode(promise);

@@ -1655,6 +1655,8 @@ void ModelChecker::check_recency(ModelAction *curr, const ModelAction *rf)
 {
 	if (!params.maxreads)
 		return;
+
+	//NOTE: Next check is just optimization, not really necessary....
 	if (curr->get_node()->get_read_from_past_size() <= 1)
 		return;
 	/* Must make sure that execution is currently feasible...  We could
@@ -1664,6 +1666,7 @@ void ModelChecker::check_recency(ModelAction *curr, const ModelAction *rf)
 	std::vector<action_list_t> *thrd_lists = get_safe_ptr_vect_action(obj_thrd_map, curr->get_location());
 	int tid = id_to_int(curr->get_tid());
 
+	//NOTE: this check seems left over from previous approach that added action to list late in the game...should be safe to remove
 	/* Skip checks */
 	if ((int)thrd_lists->size() <= tid)
 		return;
@@ -1678,14 +1681,12 @@ void ModelChecker::check_recency(ModelAction *curr, const ModelAction *rf)
 
 	action_list_t::reverse_iterator ritcopy = rit;
 	/* See if we have enough reads from the same value */
-	int count = 0;
-	for (; count < params.maxreads; rit++, count++) {
-		if (rit == list->rend())
+	for (int count = 0; count < params.maxreads; ritcopy++, count++) {
+		if (ritcopy == list->rend())
 			return;
-		ModelAction *act = *rit;
+		ModelAction *act = *ritcopy;
 		if (!act->is_read())
 			return;
-
 		if (act->get_reads_from() != rf)
 			return;
 		if (act->get_node()->get_read_from_past_size() <= 1)
@@ -1699,17 +1700,19 @@ void ModelChecker::check_recency(ModelAction *curr, const ModelAction *rf)
 		if (write == rf)
 			continue;
 
+		//NOTE: SHOULD MAKE SURE write is MOd after rf
+
 		/* Test to see whether this is a feasible write to read from */
 		/** NOTE: all members of read-from set should be
 		 *  feasible, so we no longer check it here **/
 
-		rit = ritcopy;
+		ritcopy = rit;
 
 		bool feasiblewrite = true;
 		/* now we need to see if this write works for everyone */
 
-		for (int loop = count; loop > 0; loop--, rit++) {
-			ModelAction *act = *rit;
+		for (int loop = params.maxreads; loop > 0; loop--, ritcopy++) {
+			ModelAction *act = *ritcopy;
 			bool foundvalue = false;
 			for (int j = 0; j < act->get_node()->get_read_from_past_size(); j++) {
 				if (act->get_node()->get_read_from_past(j) == write) {

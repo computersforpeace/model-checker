@@ -9,7 +9,7 @@ namespace std {
 
 mutex::mutex()
 {
-	state.islocked = false;
+	state.locked = NULL;
 	thread_id_t tid = thread_current()->get_id();
 	state.alloc_tid = tid;
 	state.alloc_clock = model->get_cv(tid)->getClock(tid);

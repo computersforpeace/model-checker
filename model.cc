@@ -935,7 +935,7 @@ bool ModelChecker::process_mutex(ModelAction *curr)
 
 	switch (curr->get_type()) {
 	case ATOMIC_TRYLOCK: {
-		bool success = !state->islocked;
+		bool success = !state->locked;
 		curr->set_try_lock(success);
 		if (!success) {
 			get_thread(curr)->set_return_value(0);
@@ -947,7 +947,7 @@ bool ModelChecker::process_mutex(ModelAction *curr)
 	case ATOMIC_LOCK: {
 		if (curr->get_cv()->getClock(state->alloc_tid) <= state->alloc_clock)
 			assert_bug("Lock access before initialization");
-		state->islocked = true;
+		state->locked = get_thread(curr);
 		ModelAction *unlock = get_last_unlock(curr);
 		//synchronize with the previous unlock statement
 		if (unlock != NULL) {
@@ -958,7 +958,7 @@ bool ModelChecker::process_mutex(ModelAction *curr)
 	}
 	case ATOMIC_UNLOCK: {
 		//unlock the lock
-		state->islocked = false;
+		state->locked = NULL;
 		//wake up the other threads
 		action_list_t *waiters = get_safe_ptr_action(lock_waiters_map, curr->get_location());
 		//activate all the waiting threads
@@ -970,7 +970,7 @@ bool ModelChecker::process_mutex(ModelAction *curr)
 	}
 	case ATOMIC_WAIT: {
 		//unlock the lock
-		state->islocked = false;
+		state->locked = NULL;
 		//wake up the other threads
 		action_list_t *waiters = get_safe_ptr_action(lock_waiters_map, (void *) curr->get_value());
 		//activate all the waiting threads
@@ -1402,7 +1402,7 @@ bool ModelChecker::check_action_enabled(ModelAction *curr) {
 	if (curr->is_lock()) {
 		std::mutex *lock = (std::mutex *)curr->get_location();
 		struct std::mutex_state *state = lock->get_state();
-		if (state->islocked) {
+		if (state->locked) {
 			//Stick the action in the appropriate waiting queue
 			get_safe_ptr_action(lock_waiters_map, curr->get_location())->push_back(curr);
 			return false;

@@ -10,7 +10,7 @@
 
 namespace std {
 	struct mutex_state {
-		bool islocked;
+		void *locked; /* Thread holding the lock */
 		thread_id_t alloc_tid;
 		modelclock_t alloc_clock;
 	};

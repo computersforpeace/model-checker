@@ -104,6 +104,8 @@ public:
 	 *  @see Thread::pending */
 	void set_pending(ModelAction *act) { pending = act; }
 
+	Thread * waiting_on() const;
+
 	/**
 	 * Remove one ModelAction from the waiting list
 	 * @return The ModelAction that was removed from the waiting list

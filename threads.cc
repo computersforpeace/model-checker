@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include <threads.h>
+#include <mutex>
 #include "common.h"
 #include "threads-model.h"
 #include "action.h"
@@ -196,4 +197,20 @@ void Thread::set_state(thread_state s)
 {
 	ASSERT(s == THREAD_COMPLETED || state != THREAD_COMPLETED);
 	state = s;
+}
+
+/**
+ * Get the Thread that this Thread is waiting on
+ * @return The thread we are waiting on, if any; otherwise NULL
+ */
+Thread * Thread::waiting_on() const
+{
+	if (!pending)
+		return NULL;
+
+	if (pending->get_type() == THREAD_JOIN)
+		return pending->get_thread_operand();
+	else if (pending->is_lock())
+		return (Thread *)pending->get_mutex()->get_state()->locked;
+	return NULL;
 }

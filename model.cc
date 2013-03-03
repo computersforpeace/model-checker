@@ -927,16 +927,11 @@ bool ModelChecker::process_read(ModelAction *curr)
  */
 bool ModelChecker::process_mutex(ModelAction *curr)
 {
-	std::mutex *mutex = NULL;
+	std::mutex *mutex = curr->get_mutex();
 	struct std::mutex_state *state = NULL;
 
-	if (curr->is_trylock() || curr->is_lock() || curr->is_unlock()) {
-		mutex = (std::mutex *)curr->get_location();
+	if (mutex)
 		state = mutex->get_state();
-	} else if (curr->is_wait()) {
-		mutex = (std::mutex *)curr->get_value();
-		state = mutex->get_state();
-	}
 
 	switch (curr->get_type()) {
 	case ATOMIC_TRYLOCK: {

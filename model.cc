@@ -401,6 +401,22 @@ bool ModelChecker::is_deadlocked() const
 }
 
 /**
+ * Check if a Thread has entered a deadlock situation. This will not check
+ * other threads for potential deadlock situations, and may miss deadlocks
+ * involving WAIT.
+ *
+ * @param t The thread which may have entered a deadlock
+ * @return True if this Thread entered a deadlock; false otherwise
+ */
+bool ModelChecker::check_deadlock(const Thread *t) const
+{
+	for (Thread *waiting = t->waiting_on() ; waiting != NULL; waiting = waiting->waiting_on())
+		if (waiting == t)
+			return true;
+	return false;
+}
+
+/**
  * Check if this is a complete execution. That is, have all thread completed
  * execution (rather than exiting because sleep sets have forced a redundant
  * execution).
@@ -3036,6 +3052,8 @@ void ModelChecker::run()
 				Thread *thr = get_thread(tid);
 				if (!thr->is_model_thread() && !thr->is_complete() && !thr->get_pending()) {
 					switch_from_master(thr);
+					if (check_deadlock(thr))
+						assert_bug("Deadlock detected");
 				}
 			}
 

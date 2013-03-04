@@ -2872,6 +2872,14 @@ void ModelChecker::print_summary() const
 		print_infeasibility(" INFEASIBLE");
 	print_list(action_trace);
 	model_print("\n");
+	if (!promises->empty()) {
+		model_print("Pending promises:\n");
+		for (unsigned int i = 0; i < promises->size(); i++) {
+			model_print(" [P%u] ", i);
+			(*promises)[i]->print();
+		}
+		model_print("\n");
+	}
 }
 
 /**

@@ -101,10 +101,16 @@ bool Promise::thread_is_available(thread_id_t tid) const
 /** @brief Print debug info about the Promise */
 void Promise::print() const
 {
-	model_print("Promised value %#" PRIx64 ", first read from thread %d, available threads to resolve: ", fv.value, id_to_int(get_reader(0)->get_tid()));
+	model_print("Promised value %#" PRIx64 ", first read from thread %d, available threads to resolve: ",
+			fv.value, id_to_int(get_reader(0)->get_tid()));
+	bool failed = true;
 	for (unsigned int i = 0; i < available_thread.size(); i++)
-		if (available_thread[i])
+		if (available_thread[i]) {
 			model_print("[%d]", i);
+			failed = false;
+		}
+	if (failed)
+		model_print("(none)");
 	model_print("\n");
 }
 

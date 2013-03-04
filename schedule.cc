@@ -12,7 +12,7 @@
  * @param e The type to format
  * @param str The output character array
  */
-static void enabled_type_to_string(enabled_type_t e, char *str)
+void enabled_type_to_string(enabled_type_t e, char *str)
 {
 	const char *res;
 	switch (e) {

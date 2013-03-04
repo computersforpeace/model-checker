@@ -18,6 +18,8 @@ typedef enum enabled_type {
 	THREAD_SLEEP_SET
 } enabled_type_t;
 
+void enabled_type_to_string(enabled_type_t e, char *str);
+
 /** @brief The Scheduler class performs the mechanics of Thread execution
  * scheduling. */
 class Scheduler {

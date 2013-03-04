@@ -98,6 +98,16 @@ Node::~Node()
 void Node::print() const
 {
 	action->print();
+	model_print("          thread status: ");
+	if (enabled_array) {
+		for (int i = 0; i < num_threads; i++) {
+			char str[20];
+			enabled_type_to_string(enabled_array[i], str);
+			model_print("[%d: %s]", i, str);
+		}
+		model_print("\n");
+	} else
+		model_print("(info not available)\n");
 	model_print("          backtrack: %s", backtrack_empty() ? "empty" : "non-empty ");
 	for (int i = 0; i < (int)backtrack.size(); i++)
 		if (backtrack[i] == true)

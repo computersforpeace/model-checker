@@ -425,13 +425,15 @@ bool CycleGraph::checkReachable(const T *from, const U *to) const
 
 	return checkReachable(fromnode, tonode);
 }
-/* Instantiate three forms of CycleGraph::checkReachable */
+/* Instantiate four forms of CycleGraph::checkReachable */
 template bool CycleGraph::checkReachable(const ModelAction *from,
 		const ModelAction *to) const;
 template bool CycleGraph::checkReachable(const ModelAction *from,
 		const Promise *to) const;
 template bool CycleGraph::checkReachable(const Promise *from,
 		const ModelAction *to) const;
+template bool CycleGraph::checkReachable(const Promise *from,
+		const Promise *to) const;
 
 /** @return True, if the promise has failed; false otherwise */
 bool CycleGraph::checkPromise(const ModelAction *fromact, Promise *promise) const

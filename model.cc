@@ -530,7 +530,7 @@ void ModelChecker::print_execution(bool printbugs) const
 {
 	print_program_output();
 
-	if (DBG_ENABLED() || params.verbose) {
+	if (params.verbose) {
 		model_print("Earliest divergence point since last feasible execution:\n");
 		if (earliest_diverge)
 			earliest_diverge->print();
@@ -574,7 +574,7 @@ bool ModelChecker::next_execution()
 	record_stats();
 
 	/* Output */
-	if (DBG_ENABLED() || params.verbose || (complete && have_bug_reports()))
+	if (params.verbose || (complete && have_bug_reports()))
 		print_execution(complete);
 	else
 		clear_program_output();

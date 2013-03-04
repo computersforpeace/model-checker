@@ -22,7 +22,7 @@ static void param_defaults(struct model_params *params)
 	params->bound = 0;
 	params->maxfuturevalues = 0;
 	params->expireslop = 10;
-	params->verbose = 0;
+	params->verbose = !!DBG_ENABLED();
 }
 
 static void print_usage(struct model_params *params)

@@ -68,6 +68,8 @@ class CycleGraph {
 	bool mergeNodes(CycleNode *node1, CycleNode *node2);
 
 	HashTable<const CycleNode *, const CycleNode *, uintptr_t, 4, model_malloc, model_calloc, model_free> *discovered;
+	std::vector< const CycleNode *, ModelAlloc<const CycleNode *> > * queue;
+
 
 	/** @brief A table for mapping ModelActions to CycleNodes */
 	HashTable<const ModelAction *, CycleNode *, uintptr_t, 4> actionToNode;

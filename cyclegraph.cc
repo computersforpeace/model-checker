@@ -8,6 +8,7 @@
 /** Initializes a CycleGraph object. */
 CycleGraph::CycleGraph() :
 	discovered(new HashTable<const CycleNode *, const CycleNode *, uintptr_t, 4, model_malloc, model_calloc, model_free>(16)),
+	queue(new	std::vector< const CycleNode *, ModelAlloc<const CycleNode *> >()),
 	hasCycles(false),
 	oldCycles(false)
 {
@@ -198,11 +199,11 @@ bool CycleGraph::addNodeEdge(CycleNode *fromnode, CycleNode *tonode)
 {
 	bool added;
 
-	if (!hasCycles)
-		hasCycles = checkReachable(tonode, fromnode);
-
-	if ((added = fromnode->addEdge(tonode)))
+	if ((added = fromnode->addEdge(tonode))) {
 		rollbackvector.push_back(fromnode);
+		if (!hasCycles)
+			hasCycles = checkReachable(tonode, fromnode);
+	}
 
 	/*
 	 * If the fromnode has a rmwnode that is not the tonode, we should add
@@ -210,10 +211,10 @@ bool CycleGraph::addNodeEdge(CycleNode *fromnode, CycleNode *tonode)
 	 */
 	CycleNode *rmwnode = fromnode->getRMW();
 	if (rmwnode && rmwnode != tonode) {
-		if (!hasCycles)
-			hasCycles = checkReachable(tonode, rmwnode);
-
 		if (rmwnode->addEdge(tonode)) {
+			if (!hasCycles)
+				hasCycles = checkReachable(tonode, rmwnode);
+
 			rollbackvector.push_back(rmwnode);
 			added = true;
 		}
@@ -386,22 +387,20 @@ void CycleGraph::dumpGraphToFile(const char *filename) const
  */
 bool CycleGraph::checkReachable(const CycleNode *from, const CycleNode *to) const
 {
-	std::vector< const CycleNode *, ModelAlloc<const CycleNode *> > queue;
 	discovered->reset();
-
-	queue.push_back(from);
+	queue->clear();
+	queue->push_back(from);
 	discovered->put(from, from);
-	while (!queue.empty()) {
-		const CycleNode *node = queue.back();
-		queue.pop_back();
+	while (!queue->empty()) {
+		const CycleNode *node = queue->back();
+		queue->pop_back();
 		if (node == to)
 			return true;
-
 		for (unsigned int i = 0; i < node->getNumEdges(); i++) {
 			CycleNode *next = node->getEdge(i);
 			if (!discovered->contains(next)) {
 				discovered->put(next, next);
-				queue.push_back(next);
+				queue->push_back(next);
 			}
 		}
 	}
@@ -438,15 +437,15 @@ template bool CycleGraph::checkReachable(const Promise *from,
 /** @return True, if the promise has failed; false otherwise */
 bool CycleGraph::checkPromise(const ModelAction *fromact, Promise *promise) const
 {
-	std::vector< CycleNode *, ModelAlloc<CycleNode *> > queue;
 	discovered->reset();
+	queue->clear();
 	CycleNode *from = actionToNode.get(fromact);
 
-	queue.push_back(from);
+	queue->push_back(from);
 	discovered->put(from, from);
-	while (!queue.empty()) {
-		CycleNode *node = queue.back();
-		queue.pop_back();
+	while (!queue->empty()) {
+		const CycleNode *node = queue->back();
+		queue->pop_back();
 
 		if (node->getPromise() == promise)
 			return true;
@@ -458,7 +457,7 @@ bool CycleGraph::checkPromise(const ModelAction *fromact, Promise *promise) cons
 			CycleNode *next = node->getEdge(i);
 			if (!discovered->contains(next)) {
 				discovered->put(next, next);
-				queue.push_back(next);
+				queue->push_back(next);
 			}
 		}
 	}

@@ -205,32 +205,41 @@ Node * ModelChecker::get_curr_node() const
 }
 
 /**
+ * @brief Select the next thread to execute based on the curren action
+ *
+ * RMW actions occur in two parts, and we cannot split them. And THREAD_CREATE
+ * actions should be followed by the execution of their child thread. In either
+ * case, the current action should determine the next thread schedule.
+ *
+ * @param curr The current action
+ * @return The next thread to run, if the current action will determine this
+ * selection; otherwise NULL
+ */
+Thread * ModelChecker::action_select_next_thread(const ModelAction *curr) const
+{
+	/* Do not split atomic RMW */
+	if (curr->is_rmwr())
+		return get_thread(curr);
+	/* Follow CREATE with the created thread */
+	if (curr->get_type() == THREAD_CREATE)
+		return curr->get_thread_operand();
+	return NULL;
+}
+
+/**
  * @brief Choose the next thread to execute.
  *
- * This function chooses the next thread that should execute. It can force the
- * adjacency of read/write portions of a RMW action, force THREAD_CREATE to be
- * followed by a THREAD_START, or it can enforce execution replay/backtracking.
- * The model-checker may have no preference regarding the next thread (i.e.,
- * when exploring a new execution ordering), in which case we defer to the
- * scheduler.
+ * This function chooses the next thread that should execute. It can enforce
+ * execution replay/backtracking or, if the model-checker has no preference
+ * regarding the next thread (i.e., when exploring a new execution ordering),
+ * we defer to the scheduler.
  *
- * @param curr Optional: The current ModelAction. Only used if non-NULL and it
- * might guide the choice of next thread (i.e., THREAD_CREATE should be
- * followed by THREAD_START, or ATOMIC_RMWR followed by ATOMIC_{RMW,RMWC})
- * @return The next chosen thread to run, if any exist. Or else if no threads
- * remain to be executed, return NULL.
+ * @return The next chosen thread to run, if any exist. Or else if the current
+ * execution should terminate, return NULL.
  */
-Thread * ModelChecker::get_next_thread(ModelAction *curr)
+Thread * ModelChecker::get_next_thread()
 {
 	thread_id_t tid;
-
-	if (curr != NULL) {
-		/* Do not split atomic actions. */
-		if (curr->is_rmwr())
-			return get_thread(curr);
-		else if (curr->get_type() == THREAD_CREATE)
-			return curr->get_thread_operand();
-	}
 
 	/*
 	 * Have we completed exploring the preselected path? Then let the
@@ -3026,7 +3035,11 @@ Thread * ModelChecker::take_step(ModelAction *curr)
 	if (curr_thrd->is_blocked() || curr_thrd->is_complete())
 		scheduler->remove_thread(curr_thrd);
 
-	Thread *next_thrd = get_next_thread(curr);
+	Thread *next_thrd = NULL;
+	if (curr)
+		next_thrd = action_select_next_thread(curr);
+	if (!next_thrd)
+		next_thrd = get_next_thread();
 
 	DEBUG("(%d, %d)\n", curr_thrd ? id_to_int(curr_thrd->get_id()) : -1,
 			next_thrd ? id_to_int(next_thrd->get_id()) : -1);

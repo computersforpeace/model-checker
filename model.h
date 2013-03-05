@@ -176,7 +176,8 @@ private:
 	ModelAction * get_last_fence_conflict(ModelAction *act) const;
 	ModelAction * get_last_conflict(ModelAction *act) const;
 	void set_backtracking(ModelAction *act);
-	Thread * get_next_thread(ModelAction *curr);
+	Thread * action_select_next_thread(const ModelAction *curr) const;
+	Thread * get_next_thread();
 	bool set_latest_backtrack(ModelAction *act);
 	ModelAction * get_next_backtrack();
 	void reset_to_initial_state();

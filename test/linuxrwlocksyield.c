@@ -29,12 +29,9 @@ static inline void read_lock(rwlock_t *rw)
 	int priorvalue = atomic_fetch_sub_explicit(&rw->lock, 1, memory_order_acquire);
 	while (priorvalue <= 0) {
 		atomic_fetch_add_explicit(&rw->lock, 1, memory_order_relaxed);
-		do {
-			priorvalue = atomic_load_explicit(&rw->lock, memory_order_relaxed);
-			if (priorvalue > 0)
-				break;
+		while (atomic_load_explicit(&rw->lock, memory_order_relaxed) <= 0) {
 			thrd_yield();
-		} while (true);
+		}
 		priorvalue = atomic_fetch_sub_explicit(&rw->lock, 1, memory_order_acquire);
 	}
 }
@@ -44,12 +41,9 @@ static inline void write_lock(rwlock_t *rw)
 	int priorvalue = atomic_fetch_sub_explicit(&rw->lock, RW_LOCK_BIAS, memory_order_acquire);
 	while (priorvalue != RW_LOCK_BIAS) {
 		atomic_fetch_add_explicit(&rw->lock, RW_LOCK_BIAS, memory_order_relaxed);
-		do {
-			priorvalue = atomic_load_explicit(&rw->lock, memory_order_relaxed);
-			if (priorvalue == RW_LOCK_BIAS)
-				break;
+		while (atomic_load_explicit(&rw->lock, memory_order_relaxed) != RW_LOCK_BIAS) {
 			thrd_yield();
-		} while (true);
+		}
 		priorvalue = atomic_fetch_sub_explicit(&rw->lock, RW_LOCK_BIAS, memory_order_acquire);
 	}
 }

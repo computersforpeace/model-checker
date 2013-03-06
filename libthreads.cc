@@ -27,7 +27,7 @@ int thrd_join(thrd_t t)
 /** A no-op, for now */
 void thrd_yield(void)
 {
-	//model->switch_to_master(new ModelAction(THREAD_YIELD, std::memory_order_seq_cst, thread_current(), VALUE_NONE));
+	model->switch_to_master(new ModelAction(THREAD_YIELD, std::memory_order_seq_cst, thread_current(), VALUE_NONE));
 }
 
 thrd_t thrd_current(void)

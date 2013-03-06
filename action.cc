@@ -151,6 +151,11 @@ bool ModelAction::could_be_write() const
 	return is_write() || is_rmwr();
 }
 
+bool ModelAction::is_yield() const
+{
+	return type == THREAD_YIELD;
+}
+
 bool ModelAction::is_rmwr() const
 {
 	return type == ATOMIC_RMWR;

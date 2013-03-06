@@ -29,6 +29,13 @@ typedef enum {
 	READ_FROM_NONE,
 } read_from_type_t;
 
+#define YIELD_E 1
+#define YIELD_D 2
+#define YIELD_S 4
+#define YIELD_P 8
+#define YIELD_INDEX(tid1, tid2, num_threads) (tid1*num_threads+tid2)
+
+
 /**
  * @brief A single node in a NodeStack
  *
@@ -58,6 +65,8 @@ public:
 
 	ModelAction * get_action() const { return action; }
 	bool has_priority(thread_id_t tid) const;
+	void update_yield(Scheduler *);
+	bool has_priority_over(thread_id_t tid, thread_id_t tid2) const;
 	int get_num_threads() const { return num_threads; }
 	/** @return the parent Node to this Node; that is, the action that
 	 * occurred previously in the stack. */
@@ -105,7 +114,7 @@ public:
 	MEMALLOC
 private:
 	void explore(thread_id_t tid);
-
+	int get_yield_data(int tid1, int tid2) const;
 	bool read_from_past_empty() const;
 	bool increment_read_from_past();
 	bool read_from_promise_empty() const;
@@ -144,6 +153,7 @@ private:
 
 	int misc_index;
 	int misc_max;
+	int * yield_data;
 };
 
 typedef std::vector< Node *, ModelAlloc< Node * > > node_list_t;

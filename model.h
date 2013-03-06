@@ -38,6 +38,7 @@ typedef std::list< ModelAction *, SnapshotAlloc<ModelAction *> > action_list_t;
 struct model_params {
 	int maxreads;
 	int maxfuturedelay;
+	bool yieldon;
 	unsigned int fairwindow;
 	unsigned int enabledcount;
 	unsigned int bound;

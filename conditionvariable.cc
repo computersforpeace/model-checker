@@ -9,6 +9,10 @@ condition_variable::condition_variable() {
 		
 }
 
+condition_variable::~condition_variable() {
+		
+}
+
 void condition_variable::notify_one() {
 	model->switch_to_master(new ModelAction(ATOMIC_NOTIFY_ONE, std::memory_order_seq_cst, this));
 }

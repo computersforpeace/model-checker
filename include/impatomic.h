@@ -3902,11 +3902,11 @@ T* atomic<T*>::fetch_sub( ptrdiff_t __v__, memory_order __x__ ) volatile
 #ifdef __cplusplus
 extern "C" {
 #endif
-inline void atomic_thread_fence(memory_order order)
+static inline void atomic_thread_fence(memory_order order)
 { _ATOMIC_FENCE_(order); }
 
 /** @todo Do we want to try to support a user's signal-handler? */
-inline void atomic_signal_fence(memory_order order)
+static inline void atomic_signal_fence(memory_order order)
 { /* No-op? */ }
 #ifdef __cplusplus
 }

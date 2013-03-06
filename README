@@ -47,6 +47,7 @@ Options:
 -e                    Enabled count. Default: 1
 -b                    Upper length bound. Default: 0
 -v                    Print verbose execution information.
+-y                    CHESS like yield based fairness. Default: 0
 --                    Program arguments follow.
 
 

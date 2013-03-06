@@ -822,6 +822,21 @@ void ModelChecker::set_backtracking(ModelAction *act)
 			if (unfair)
 				continue;
 		}
+
+		/* See if CHESS-like yield fairness allows */
+		if (model->params.yieldon) {
+			bool unfair = false;
+			for (int t = 0; t < node->get_num_threads(); t++) {
+				thread_id_t tother = int_to_id(t);
+				if (node->is_enabled(tother) && node->has_priority_over(tid, tother)) {
+					unfair = true;
+					break;
+				}
+			}
+			if (unfair)
+				continue;
+		}
+		
 		/* Cache the latest backtracking point */
 		set_latest_backtrack(prev);
 
@@ -1475,6 +1490,11 @@ ModelAction * ModelChecker::check_current_action(ModelAction *curr)
 		curr->print();
 
 	wake_up_sleeping_actions(curr);
+
+	/* Compute fairness information for CHESS yield algorithm */
+	if (model->params.yieldon) {
+		curr->get_node()->update_yield(scheduler);
+	}
 
 	/* Add the action to lists before any other model-checking tasks */
 	if (!second_part_of_rmw)

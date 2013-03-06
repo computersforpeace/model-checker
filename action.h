@@ -121,6 +121,7 @@ public:
 	bool is_uninitialized() const;
 	bool is_read() const;
 	bool is_write() const;
+	bool is_yield() const;
 	bool could_be_write() const;
 	bool is_rmwr() const;
 	bool is_rmwc() const;

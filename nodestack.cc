@@ -45,7 +45,8 @@ Node::Node(ModelAction *act, Node *par, int nthreads, Node *prevfairness) :
 	relseq_break_writes(),
 	relseq_break_index(0),
 	misc_index(0),
-	misc_max(0)
+	misc_max(0),
+	yield_data(NULL)
 {
 	ASSERT(act);
 	act->set_node(this);
@@ -86,12 +87,63 @@ Node::Node(ModelAction *act, Node *par, int nthreads, Node *prevfairness) :
 	}
 }
 
+int Node::get_yield_data(int tid1, int tid2) const {
+	if (tid1<num_threads && tid2 < num_threads)
+		return yield_data[YIELD_INDEX(tid1,tid2,num_threads)];
+	else
+		return YIELD_S | YIELD_D;
+}
+
+void Node::update_yield(Scheduler * scheduler) {
+	yield_data=(int *) model_calloc(1, sizeof(int)*num_threads*num_threads);
+	//handle base case
+	if (parent == NULL) {
+		for(int i = 0; i < num_threads*num_threads; i++) {
+			yield_data[i] = YIELD_S | YIELD_D;
+		}
+		return;
+	}
+	int curr_tid=id_to_int(action->get_tid());
+
+	for(int u = 0; u < num_threads; u++) {
+		for(int v = 0; v < num_threads; v++) {
+			int yield_state=parent->get_yield_data(u, v);
+			bool next_enabled=scheduler->is_enabled(int_to_id(v));
+			bool curr_enabled=parent->is_enabled(int_to_id(v));
+			if (!next_enabled) {
+				//Compute intersection of ES and E
+				yield_state&=~YIELD_E;
+				//Check to see if we disabled the thread
+				if (u==curr_tid && curr_enabled)
+					yield_state|=YIELD_D;
+			}
+			yield_data[YIELD_INDEX(u, v, num_threads)]=yield_state;
+		}
+		yield_data[YIELD_INDEX(u, curr_tid, num_threads)]=(yield_data[YIELD_INDEX(u, curr_tid, num_threads)]&~YIELD_P)|YIELD_S;
+	}
+	//handle curr.yield(t) part of computation
+	if (action->is_yield()) {
+		for(int v = 0; v < num_threads; v++) {
+			int yield_state=yield_data[YIELD_INDEX(curr_tid, v, num_threads)];
+			if ((yield_state & (YIELD_E | YIELD_D)) && (!(yield_state & YIELD_S)))
+				yield_state |= YIELD_P;
+			yield_state &= YIELD_P;
+			if (scheduler->is_enabled(int_to_id(v))) {
+				yield_state|=YIELD_E;
+			}
+			yield_data[YIELD_INDEX(curr_tid, v, num_threads)]=yield_state;
+		}
+	}
+}
+
 /** @brief Node desctructor */
 Node::~Node()
 {
 	delete action;
 	if (enabled_array)
 		model_free(enabled_array);
+	if (yield_data)
+		model_free(yield_data);
 }
 
 /** Prints debugging info for the ModelAction associated with this Node */
@@ -322,6 +374,11 @@ bool Node::is_enabled(thread_id_t tid) const
 bool Node::has_priority(thread_id_t tid) const
 {
 	return fairness[id_to_int(tid)].priority;
+}
+
+bool Node::has_priority_over(thread_id_t tid1, thread_id_t tid2) const
+{
+	return get_yield_data(id_to_int(tid1), id_to_int(tid2)) & YIELD_P;
 }
 
 /*********************************** read from ********************************/

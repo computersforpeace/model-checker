@@ -200,26 +200,42 @@ void Scheduler::wake(Thread *t)
 Thread * Scheduler::select_next_thread()
 {
 	int old_curr_thread = curr_thread_index;
-	bool have_enabled_thread_with_priority = false;
 	Node *n = model->get_curr_node();
 
-	for (int i = 0; i < enabled_len; i++) {
-		thread_id_t tid = int_to_id(i);
-		if (n->has_priority(tid)) {
-			DEBUG("Node (tid %d) has priority\n", i);
-			if (enabled[i] != THREAD_DISABLED)
-				have_enabled_thread_with_priority = true;
+	bool have_enabled_thread_with_priority = false;
+	if (model->params.fairwindow != 0) {
+		for (int i = 0; i < enabled_len; i++) {
+			thread_id_t tid = int_to_id(i);
+			if (n->has_priority(tid)) {
+				DEBUG("Node (tid %d) has priority\n", i);
+				if (enabled[i] != THREAD_DISABLED)
+					have_enabled_thread_with_priority = true;
+			}
 		}
-	}
+	}	
 
 	for (int i = 0; i < enabled_len; i++) {
 		curr_thread_index = (old_curr_thread + i + 1) % enabled_len;
 		thread_id_t curr_tid = int_to_id(curr_thread_index);
+		if (model->params.yieldon) {
+			bool bad_thread = false;
+			for (int j = 0; j < enabled_len; j++) {
+				thread_id_t tother = int_to_id(j);
+				if ((enabled[j] != THREAD_DISABLED) && n->has_priority_over(curr_tid, tother)) {
+					bad_thread=true;
+					break;
+				}
+			}
+			if (bad_thread)
+				continue;
+		}
+		
 		if (enabled[curr_thread_index] == THREAD_ENABLED &&
 				(!have_enabled_thread_with_priority || n->has_priority(curr_tid))) {
 			return model->get_thread(curr_tid);
 		}
 	}
+	
 	/* No thread was enabled */
 	return NULL;
 }

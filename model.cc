@@ -2814,7 +2814,9 @@ static void print_list(action_list_t *list)
 	unsigned int hash = 0;
 
 	for (it = list->begin(); it != list->end(); it++) {
-		(*it)->print();
+		const ModelAction *act = *it;
+		if (act->get_seq_number() > 0)
+			act->print();
 		hash = hash^(hash<<3)^((*it)->hash());
 	}
 	model_print("HASH %u\n", hash);

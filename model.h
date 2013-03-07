@@ -15,6 +15,7 @@
 #include "workqueue.h"
 #include "config.h"
 #include "modeltypes.h"
+#include "stl-model.h"
 
 /* Forward declaration */
 class Node;
@@ -27,9 +28,9 @@ class ClockVector;
 struct model_snapshot_members;
 
 /** @brief Shorthand for a list of release sequence heads */
-typedef std::vector< const ModelAction *, ModelAlloc<const ModelAction *> > rel_heads_list_t;
+typedef ModelVector<const ModelAction *> rel_heads_list_t;
 
-typedef std::list< ModelAction *, SnapshotAlloc<ModelAction *> > action_list_t;
+typedef SnapList<ModelAction *> action_list_t;
 
 /**
  * Model checker parameter structure. Holds run-time configuration options for
@@ -92,7 +93,7 @@ struct release_seq {
 	/** @brief The head of the potential longest release sequence chain */
 	const ModelAction *release;
 	/** @brief The write(s) that may break the release sequence */
-	std::vector<const ModelAction *> writes;
+	SnapVector<const ModelAction *> writes;
 };
 
 /** @brief The central structure for model-checking */
@@ -204,7 +205,7 @@ private:
 	template <typename rf_type>
 	bool r_modification_order(ModelAction *curr, const rf_type *rf);
 
-	bool w_modification_order(ModelAction *curr, std::vector< ModelAction *, ModelAlloc<ModelAction *> > *send_fv);
+	bool w_modification_order(ModelAction *curr, ModelVector<ModelAction *> *send_fv);
 	void get_release_seq_heads(ModelAction *acquire, ModelAction *read, rel_heads_list_t *release_heads);
 	bool release_seq_heads(const ModelAction *rf, rel_heads_list_t *release_heads, struct release_seq *pending) const;
 	bool resolve_release_sequences(void *location, work_queue_t *work_queue);
@@ -231,9 +232,9 @@ private:
 	 * to a trace of all actions performed on the object. */
 	HashTable<const void *, action_list_t *, uintptr_t, 4> * const condvar_waiters_map;
 
-	HashTable<void *, std::vector<action_list_t> *, uintptr_t, 4 > * const obj_thrd_map;
-	std::vector< Promise *, SnapshotAlloc<Promise *> > * const promises;
-	std::vector< struct PendingFutureValue, SnapshotAlloc<struct PendingFutureValue> > * const futurevalues;
+	HashTable<void *, SnapVector<action_list_t> *, uintptr_t, 4 > * const obj_thrd_map;
+	SnapVector<Promise *> * const promises;
+	SnapVector<struct PendingFutureValue> * const futurevalues;
 
 	/**
 	 * List of pending release sequences. Release sequences might be
@@ -241,10 +242,10 @@ private:
 	 * are established. Each entry in the list may only be partially
 	 * filled, depending on its pending status.
 	 */
-	std::vector< struct release_seq *, SnapshotAlloc<struct release_seq *> > * const pending_rel_seqs;
+	SnapVector<struct release_seq *> * const pending_rel_seqs;
 
-	std::vector< ModelAction *, SnapshotAlloc<ModelAction *> > * const thrd_last_action;
-	std::vector< ModelAction *, SnapshotAlloc<ModelAction *> > * const thrd_last_fence_release;
+	SnapVector<ModelAction *> * const thrd_last_action;
+	SnapVector<ModelAction *> * const thrd_last_fence_release;
 	NodeStack * const node_stack;
 
 	/** Private data members that should be snapshotted. They are grouped

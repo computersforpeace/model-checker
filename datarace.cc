@@ -9,7 +9,7 @@
 #include "action.h"
 
 struct ShadowTable *root;
-std::vector<struct DataRace *> unrealizedraces;
+SnapVector<struct DataRace *> unrealizedraces;
 void *memory_base;
 void *memory_top;
 

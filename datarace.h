@@ -5,8 +5,8 @@
 #ifndef DATARACE_H
 #include "config.h"
 #include <stdint.h>
-#include <vector>
 #include "modeltypes.h"
+#include "stl-model.h"
 
 /* Forward declaration */
 class ClockVector;
@@ -47,7 +47,7 @@ void raceCheckRead(thread_id_t thread, const void *location, ClockVector *currCl
 bool checkDataRaces();
 void assert_race(struct DataRace *race);
 
-extern std::vector<struct DataRace *> unrealizedraces;
+extern SnapVector<struct DataRace *> unrealizedraces;
 
 /** Basic encoding idea:
  *	 (void *) Either:

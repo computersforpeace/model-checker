@@ -8,6 +8,7 @@
 
 #include <list>
 #include "mymemory.h"
+#include "stl-model.h"
 
 class ModelAction;
 
@@ -102,6 +103,6 @@ class MOEdgeWorkEntry : public WorkQueueEntry {
 };
 
 /** @brief typedef for the work queue type */
-typedef std::list< WorkQueueEntry, ModelAlloc<WorkQueueEntry> > work_queue_t;
+typedef ModelList<WorkQueueEntry> work_queue_t;
 
 #endif /* __WORKQUEUE_H__ */

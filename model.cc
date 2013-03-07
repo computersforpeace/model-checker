@@ -61,7 +61,7 @@ struct model_snapshot_members {
 	unsigned int next_thread_id;
 	modelclock_t used_sequence_numbers;
 	ModelAction *next_backtrack;
-	std::vector< bug_message *, SnapshotAlloc<bug_message *> > bugs;
+	SnapVector<bug_message *> bugs;
 	struct execution_stats stats;
 	bool failed_promise;
 	bool too_many_reads;
@@ -85,12 +85,12 @@ ModelChecker::ModelChecker(struct model_params params) :
 	obj_map(new HashTable<const void *, action_list_t *, uintptr_t, 4>()),
 	lock_waiters_map(new HashTable<const void *, action_list_t *, uintptr_t, 4>()),
 	condvar_waiters_map(new HashTable<const void *, action_list_t *, uintptr_t, 4>()),
-	obj_thrd_map(new HashTable<void *, std::vector<action_list_t> *, uintptr_t, 4 >()),
-	promises(new std::vector< Promise *, SnapshotAlloc<Promise *> >()),
-	futurevalues(new std::vector< struct PendingFutureValue, SnapshotAlloc<struct PendingFutureValue> >()),
-	pending_rel_seqs(new std::vector< struct release_seq *, SnapshotAlloc<struct release_seq *> >()),
-	thrd_last_action(new std::vector< ModelAction *, SnapshotAlloc<ModelAction *> >(1)),
-	thrd_last_fence_release(new std::vector< ModelAction *, SnapshotAlloc<ModelAction *> >()),
+	obj_thrd_map(new HashTable<void *, SnapVector<action_list_t> *, uintptr_t, 4 >()),
+	promises(new SnapVector<Promise *>()),
+	futurevalues(new SnapVector<struct PendingFutureValue>()),
+	pending_rel_seqs(new SnapVector<struct release_seq *>()),
+	thrd_last_action(new SnapVector<ModelAction *>(1)),
+	thrd_last_fence_release(new SnapVector<ModelAction *>()),
 	node_stack(new NodeStack()),
 	priv(new struct model_snapshot_members()),
 	mo_graph(new CycleGraph())
@@ -137,11 +137,11 @@ static action_list_t * get_safe_ptr_action(HashTable<const void *, action_list_t
 	return tmp;
 }
 
-static std::vector<action_list_t> * get_safe_ptr_vect_action(HashTable<void *, std::vector<action_list_t> *, uintptr_t, 4> * hash, void * ptr)
+static SnapVector<action_list_t> * get_safe_ptr_vect_action(HashTable<void *, SnapVector<action_list_t> *, uintptr_t, 4> * hash, void * ptr)
 {
-	std::vector<action_list_t> *tmp = hash->get(ptr);
+	SnapVector<action_list_t> *tmp = hash->get(ptr);
 	if (tmp == NULL) {
-		tmp = new std::vector<action_list_t>();
+		tmp = new SnapVector<action_list_t>();
 		hash->put(ptr, tmp);
 	}
 	return tmp;
@@ -642,8 +642,8 @@ ModelAction * ModelChecker::get_last_fence_conflict(ModelAction *act) const
 	 *   load-acquire
 	 * or
 	 *   load --sb-> fence-acquire */
-	std::vector< ModelAction *, ModelAlloc<ModelAction *> > acquire_fences(get_num_threads(), NULL);
-	std::vector< ModelAction *, ModelAlloc<ModelAction *> > prior_loads(get_num_threads(), NULL);
+	ModelVector<ModelAction *> acquire_fences(get_num_threads(), NULL);
+	ModelVector<ModelAction *> prior_loads(get_num_threads(), NULL);
 	bool found_acquire_fences = false;
 	for ( ; rit != list->rend(); rit++) {
 		ModelAction *prev = *rit;
@@ -1080,7 +1080,7 @@ void ModelChecker::add_future_value(const ModelAction *writer, ModelAction *read
 bool ModelChecker::process_write(ModelAction *curr)
 {
 	/* Readers to which we may send our future value */
-	std::vector< ModelAction *, ModelAlloc<ModelAction *> > send_fv;
+	ModelVector<ModelAction *> send_fv;
 
 	bool updated_mod_order = w_modification_order(curr, &send_fv);
 	int promise_idx = get_promise_to_resolve(curr);
@@ -1704,7 +1704,7 @@ bool ModelChecker::should_read_instead(const ModelAction *curr, const T *rf, con
 	if (!mo_graph->checkReachable(rf, other_rf))
 		return false;
 
-	std::vector<action_list_t> *thrd_lists = get_safe_ptr_vect_action(obj_thrd_map, curr->get_location());
+	SnapVector<action_list_t> *thrd_lists = get_safe_ptr_vect_action(obj_thrd_map, curr->get_location());
 	action_list_t *list = &(*thrd_lists)[id_to_int(curr->get_tid())];
 	action_list_t::reverse_iterator rit = list->rbegin();
 	ASSERT((*rit) == curr);
@@ -1747,7 +1747,7 @@ bool ModelChecker::check_recency(ModelAction *curr, const T *rf) const
 			curr->get_node()->get_read_from_promise_size() <= 1)
 		return true;
 
-	std::vector<action_list_t> *thrd_lists = get_safe_ptr_vect_action(obj_thrd_map, curr->get_location());
+	SnapVector<action_list_t> *thrd_lists = get_safe_ptr_vect_action(obj_thrd_map, curr->get_location());
 	int tid = id_to_int(curr->get_tid());
 	ASSERT(tid < (int)thrd_lists->size());
 	action_list_t *list = &(*thrd_lists)[tid];
@@ -1805,7 +1805,7 @@ bool ModelChecker::check_recency(ModelAction *curr, const T *rf) const
 template <typename rf_type>
 bool ModelChecker::r_modification_order(ModelAction *curr, const rf_type *rf)
 {
-	std::vector<action_list_t> *thrd_lists = get_safe_ptr_vect_action(obj_thrd_map, curr->get_location());
+	SnapVector<action_list_t> *thrd_lists = get_safe_ptr_vect_action(obj_thrd_map, curr->get_location());
 	unsigned int i;
 	bool added = false;
 	ASSERT(curr->is_read());
@@ -1911,9 +1911,9 @@ bool ModelChecker::r_modification_order(ModelAction *curr, const rf_type *rf)
  * value. If NULL, then don't record any future values.
  * @return True if modification order edges were added; false otherwise
  */
-bool ModelChecker::w_modification_order(ModelAction *curr, std::vector< ModelAction *, ModelAlloc<ModelAction *> > *send_fv)
+bool ModelChecker::w_modification_order(ModelAction *curr, ModelVector<ModelAction *> *send_fv)
 {
-	std::vector<action_list_t> *thrd_lists = get_safe_ptr_vect_action(obj_thrd_map, curr->get_location());
+	SnapVector<action_list_t> *thrd_lists = get_safe_ptr_vect_action(obj_thrd_map, curr->get_location());
 	unsigned int i;
 	bool added = false;
 	ASSERT(curr->is_write());
@@ -2057,7 +2057,7 @@ bool ModelChecker::thin_air_constraint_may_allow(const ModelAction *writer, cons
  */
 bool ModelChecker::mo_may_allow(const ModelAction *writer, const ModelAction *reader)
 {
-	std::vector<action_list_t> *thrd_lists = get_safe_ptr_vect_action(obj_thrd_map, reader->get_location());
+	SnapVector<action_list_t> *thrd_lists = get_safe_ptr_vect_action(obj_thrd_map, reader->get_location());
 	unsigned int i;
 	/* Iterate over all threads */
 	for (i = 0; i < thrd_lists->size(); i++) {
@@ -2158,7 +2158,7 @@ bool ModelChecker::release_seq_heads(const ModelAction *rf,
 		release_heads->push_back(fence_release);
 
 	int tid = id_to_int(rf->get_tid());
-	std::vector<action_list_t> *thrd_lists = get_safe_ptr_vect_action(obj_thrd_map, rf->get_location());
+	SnapVector<action_list_t> *thrd_lists = get_safe_ptr_vect_action(obj_thrd_map, rf->get_location());
 	action_list_t *list = &(*thrd_lists)[tid];
 	action_list_t::const_reverse_iterator rit;
 
@@ -2301,7 +2301,7 @@ void ModelChecker::get_release_seq_heads(ModelAction *acquire,
 bool ModelChecker::resolve_release_sequences(void *location, work_queue_t *work_queue)
 {
 	bool updated = false;
-	std::vector< struct release_seq *, SnapshotAlloc<struct release_seq *> >::iterator it = pending_rel_seqs->begin();
+	SnapVector<struct release_seq *>::iterator it = pending_rel_seqs->begin();
 	while (it != pending_rel_seqs->end()) {
 		struct release_seq *pending = *it;
 		ModelAction *acquire = pending->acquire;
@@ -2382,7 +2382,7 @@ void ModelChecker::add_action_to_lists(ModelAction *act)
 	if (uninit)
 		action_trace->push_front(uninit);
 
-	std::vector<action_list_t> *vec = get_safe_ptr_vect_action(obj_thrd_map, act->get_location());
+	SnapVector<action_list_t> *vec = get_safe_ptr_vect_action(obj_thrd_map, act->get_location());
 	if (tid >= (int)vec->size())
 		vec->resize(priv->next_thread_id);
 	(*vec)[tid].push_back(act);
@@ -2405,7 +2405,7 @@ void ModelChecker::add_action_to_lists(ModelAction *act)
 		void *mutex_loc = (void *) act->get_value();
 		get_safe_ptr_action(obj_map, mutex_loc)->push_back(act);
 
-		std::vector<action_list_t> *vec = get_safe_ptr_vect_action(obj_thrd_map, mutex_loc);
+		SnapVector<action_list_t> *vec = get_safe_ptr_vect_action(obj_thrd_map, mutex_loc);
 		if (tid >= (int)vec->size())
 			vec->resize(priv->next_thread_id);
 		(*vec)[tid].push_back(act);
@@ -2549,7 +2549,7 @@ int ModelChecker::get_promise_to_resolve(const ModelAction *curr) const
  */
 bool ModelChecker::resolve_promise(ModelAction *write, unsigned int promise_idx)
 {
-	std::vector< ModelAction *, ModelAlloc<ModelAction *> > actions_to_check;
+	ModelVector<ModelAction *> actions_to_check;
 	Promise *promise = (*promises)[promise_idx];
 
 	for (unsigned int i = 0; i < promise->get_num_readers(); i++) {
@@ -2724,7 +2724,7 @@ void ModelChecker::compute_relseq_breakwrites(ModelAction *curr)
  */
 void ModelChecker::build_may_read_from(ModelAction *curr)
 {
-	std::vector<action_list_t> *thrd_lists = get_safe_ptr_vect_action(obj_thrd_map, curr->get_location());
+	SnapVector<action_list_t> *thrd_lists = get_safe_ptr_vect_action(obj_thrd_map, curr->get_location());
 	unsigned int i;
 	ASSERT(curr->is_read());
 

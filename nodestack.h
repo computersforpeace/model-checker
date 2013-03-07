@@ -12,6 +12,7 @@
 #include "mymemory.h"
 #include "schedule.h"
 #include "promise.h"
+#include "stl-model.h"
 
 class ModelAction;
 class Thread;
@@ -133,9 +134,9 @@ private:
 
 	Node * const parent;
 	const int num_threads;
-	std::vector< bool, ModelAlloc<bool> > explored_children;
-	std::vector< bool, ModelAlloc<bool> > backtrack;
-	std::vector< struct fairness_info, ModelAlloc< struct fairness_info> > fairness;
+	ModelVector<bool> explored_children;
+	ModelVector<bool> backtrack;
+	ModelVector<struct fairness_info> fairness;
 	int numBacktracks;
 	enabled_type_t *enabled_array;
 
@@ -143,19 +144,19 @@ private:
 	 * The set of past ModelActions that this the action at this Node may
 	 * read from. Only meaningful if this Node represents a 'read' action.
 	 */
-	std::vector< const ModelAction *, ModelAlloc< const ModelAction * > > read_from_past;
+	ModelVector<const ModelAction *> read_from_past;
 	unsigned int read_from_past_idx;
 
-	std::vector< const ModelAction *, ModelAlloc<const ModelAction *> > read_from_promises;
+	ModelVector<const ModelAction *> read_from_promises;
 	int read_from_promise_idx;
 
-	std::vector< struct future_value, ModelAlloc<struct future_value> > future_values;
+	ModelVector<struct future_value> future_values;
 	int future_index;
 
-	std::vector< bool, ModelAlloc<bool> > resolve_promise;
+	ModelVector<bool> resolve_promise;
 	int resolve_promise_idx;
 
-	std::vector< const ModelAction *, ModelAlloc<const ModelAction *> > relseq_break_writes;
+	ModelVector<const ModelAction *> relseq_break_writes;
 	int relseq_break_index;
 
 	int misc_index;
@@ -163,7 +164,7 @@ private:
 	int * yield_data;
 };
 
-typedef std::vector< Node *, ModelAlloc< Node * > > node_list_t;
+typedef ModelVector<Node *> node_list_t;
 
 /**
  * @brief A stack of nodes

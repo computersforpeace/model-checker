@@ -2,12 +2,12 @@
 #include <unistd.h>
 #include <cstring>
 #include <inttypes.h>
-#include <vector>
 
 #include "snapshot-interface.h"
 #include "snapshot.h"
 #include "common.h"
 #include "mymemory.h"
+#include "stl-model.h"
 
 /* MYBINARYNAME only works because our pathname usually includes 'model' (e.g.,
  * /.../model-checker/test/userprog.o) */
@@ -29,7 +29,7 @@ class SnapshotStack {
 
 	MEMALLOC
  private:
-	std::vector<struct snapshot_entry, ModelAlloc<struct snapshot_entry> > stack;
+	ModelVector<struct snapshot_entry> stack;
 };
 
 static SnapshotStack *snap_stack;

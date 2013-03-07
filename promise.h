@@ -8,10 +8,10 @@
 #define __PROMISE_H__
 
 #include <inttypes.h>
-#include <vector>
 
 #include "modeltypes.h"
 #include "mymemory.h"
+#include "stl-model.h"
 
 class ModelAction;
 
@@ -52,14 +52,14 @@ class Promise {
  private:
 	/** @brief Thread ID(s) for thread(s) that potentially can satisfy this
 	 *  promise */
-	std::vector< bool, SnapshotAlloc<bool> > available_thread;
+	SnapVector<bool> available_thread;
 
 	int num_available_threads;
 
 	const future_value fv;
 
 	/** @brief The action(s) which read the promised future value */
-	std::vector< ModelAction *, SnapshotAlloc<ModelAction *> > readers;
+	SnapVector<ModelAction *> readers;
 
 	const ModelAction *write;
 };

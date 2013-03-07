@@ -8,7 +8,7 @@
 /** Initializes a CycleGraph object. */
 CycleGraph::CycleGraph() :
 	discovered(new HashTable<const CycleNode *, const CycleNode *, uintptr_t, 4, model_malloc, model_calloc, model_free>(16)),
-	queue(new std::vector< const CycleNode *, ModelAlloc<const CycleNode *> >()),
+	queue(new ModelVector<const CycleNode *>()),
 	hasCycles(false),
 	oldCycles(false)
 {
@@ -554,7 +554,7 @@ unsigned int CycleNode::getNumBackEdges() const
  * @return True if the element was found; false otherwise
  */
 template <typename T>
-static bool vector_remove_node(std::vector<T, SnapshotAlloc<T> >& v, const T n)
+static bool vector_remove_node(SnapVector<T>& v, const T n)
 {
 	for (unsigned int i = 0; i < v.size(); i++) {
 		if (v[i] == n) {

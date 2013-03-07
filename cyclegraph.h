@@ -16,12 +16,13 @@
 #include "hashtable.h"
 #include "config.h"
 #include "mymemory.h"
+#include "stl-model.h"
 
 class Promise;
 class CycleNode;
 class ModelAction;
 
-typedef std::vector< const Promise *, ModelAlloc<const Promise *> > promise_list_t;
+typedef ModelVector<const Promise *> promise_list_t;
 
 /** @brief A graph of Model Actions for tracking cycles. */
 class CycleGraph {
@@ -68,7 +69,7 @@ class CycleGraph {
 	bool mergeNodes(CycleNode *node1, CycleNode *node2);
 
 	HashTable<const CycleNode *, const CycleNode *, uintptr_t, 4, model_malloc, model_calloc, model_free> *discovered;
-	std::vector< const CycleNode *, ModelAlloc<const CycleNode *> > * queue;
+	ModelVector<const CycleNode *> * queue;
 
 
 	/** @brief A table for mapping ModelActions to CycleNodes */
@@ -77,7 +78,7 @@ class CycleGraph {
 	HashTable<const Promise *, CycleNode *, uintptr_t, 4> promiseToNode;
 
 #if SUPPORT_MOD_ORDER_DUMP
-	std::vector< CycleNode *, SnapshotAlloc<CycleNode *> > nodeList;
+	SnapVector<CycleNode *> nodeList;
 #endif
 
 	bool checkReachable(const CycleNode *from, const CycleNode *to) const;
@@ -86,8 +87,8 @@ class CycleGraph {
 	bool hasCycles;
 	bool oldCycles;
 
-	std::vector< CycleNode *, SnapshotAlloc<CycleNode *> > rollbackvector;
-	std::vector< CycleNode *, SnapshotAlloc<CycleNode *> > rmwrollbackvector;
+	SnapVector<CycleNode *> rollbackvector;
+	SnapVector<CycleNode *> rmwrollbackvector;
 };
 
 /**
@@ -124,10 +125,10 @@ class CycleNode {
 	const Promise *promise;
 
 	/** @brief The edges leading out from this node */
-	std::vector< CycleNode *, SnapshotAlloc<CycleNode *> > edges;
+	SnapVector<CycleNode *> edges;
 
 	/** @brief The edges leading into this node */
-	std::vector< CycleNode *, SnapshotAlloc<CycleNode *> > back_edges;
+	SnapVector<CycleNode *> back_edges;
 
 	/** Pointer to a RMW node that reads from this node, or NULL, if none
 	 * exists */

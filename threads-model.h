@@ -7,11 +7,11 @@
 
 #include <ucontext.h>
 #include <stdint.h>
-#include <vector>
 
 #include "mymemory.h"
 #include <threads.h>
 #include "modeltypes.h"
+#include "stl-model.h"
 
 struct thread_params {
 	thrd_start_t func;
@@ -157,7 +157,7 @@ private:
 	 * list is used for thread joins, where another Thread waits for this
 	 * Thread to complete
 	 */
-	std::vector< ModelAction *, SnapshotAlloc<ModelAction *> > wait_list;
+	SnapVector<ModelAction *> wait_list;
 
 	/**
 	 * The value returned by the last action in this thread

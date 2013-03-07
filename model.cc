@@ -1384,6 +1384,8 @@ bool ModelChecker::initialize_curr_action(ModelAction **curr)
 bool ModelChecker::read_from(ModelAction *act, const ModelAction *rf)
 {
 	ASSERT(rf);
+	ASSERT(rf->is_write());
+
 	act->set_read_from(rf);
 	if (act->is_acquire()) {
 		rel_heads_list_t release_heads;
@@ -2370,9 +2372,9 @@ void ModelChecker::add_action_to_lists(ModelAction *act)
 	int uninit_id = -1;
 	action_list_t *list = get_safe_ptr_action(obj_map, act->get_location());
 	if (list->empty() && act->is_atomic_var()) {
-		uninit = new_uninitialized_action(act->get_location());
+		uninit = get_uninitialized_action(act);
 		uninit_id = id_to_int(uninit->get_tid());
-		list->push_back(uninit);
+		list->push_front(uninit);
 	}
 	list->push_back(act);
 
@@ -2813,14 +2815,21 @@ bool ModelChecker::sleep_can_read_from(ModelAction *curr, const ModelAction *wri
 }
 
 /**
- * @brief Create a new action representing an uninitialized atomic
- * @param location The memory location of the atomic object
- * @return A pointer to a new ModelAction
+ * @brief Get an action representing an uninitialized atomic
+ *
+ * This function may create a new one or try to retrieve one from the NodeStack
+ *
+ * @param curr The current action, which prompts the creation of an UNINIT action
+ * @return A pointer to the UNINIT ModelAction
  */
-ModelAction * ModelChecker::new_uninitialized_action(void *location) const
+ModelAction * ModelChecker::get_uninitialized_action(const ModelAction *curr) const
 {
-	ModelAction *act = (ModelAction *)snapshot_malloc(sizeof(class ModelAction));
-	act = new (act) ModelAction(ATOMIC_UNINIT, std::memory_order_relaxed, location, 0, model_thread);
+	Node *node = curr->get_node();
+	ModelAction *act = node->get_uninit_action();
+	if (!act) {
+		act = new ModelAction(ATOMIC_UNINIT, std::memory_order_relaxed, curr->get_location(), 0, model_thread);
+		node->set_uninit_action(act);
+	}
 	act->create_cv(NULL);
 	return act;
 }

@@ -209,7 +209,7 @@ private:
 	bool resolve_release_sequences(void *location, work_queue_t *work_queue);
 	void add_future_value(const ModelAction *writer, ModelAction *reader);
 
-	ModelAction * new_uninitialized_action(void *location) const;
+	ModelAction * get_uninitialized_action(const ModelAction *curr) const;
 
 	ModelAction *diverge;
 	ModelAction *earliest_diverge;

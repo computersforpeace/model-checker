@@ -64,6 +64,9 @@ public:
 	enabled_type_t enabled_status(thread_id_t tid) const;
 
 	ModelAction * get_action() const { return action; }
+	void set_uninit_action(ModelAction *act) { uninit_action = act; }
+	ModelAction * get_uninit_action() const { return uninit_action; }
+
 	bool has_priority(thread_id_t tid) const;
 	void update_yield(Scheduler *);
 	bool has_priority_over(thread_id_t tid, thread_id_t tid2) const;
@@ -124,6 +127,10 @@ private:
 	read_from_type_t read_from_status;
 
 	ModelAction * const action;
+
+	/** @brief ATOMIC_UNINIT action which was created at this Node */
+	ModelAction *uninit_action;
+
 	Node * const parent;
 	const int num_threads;
 	std::vector< bool, ModelAlloc<bool> > explored_children;

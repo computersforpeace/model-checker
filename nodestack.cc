@@ -27,6 +27,7 @@
 Node::Node(ModelAction *act, Node *par, int nthreads, Node *prevfairness) :
 	read_from_status(READ_FROM_PAST),
 	action(act),
+	uninit_action(NULL),
 	parent(par),
 	num_threads(nthreads),
 	explored_children(num_threads),
@@ -140,6 +141,8 @@ void Node::update_yield(Scheduler * scheduler) {
 Node::~Node()
 {
 	delete action;
+	if (uninit_action)
+		delete uninit_action;
 	if (enabled_array)
 		model_free(enabled_array);
 	if (yield_data)

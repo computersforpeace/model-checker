@@ -8,7 +8,7 @@
 /** Initializes a CycleGraph object. */
 CycleGraph::CycleGraph() :
 	discovered(new HashTable<const CycleNode *, const CycleNode *, uintptr_t, 4, model_malloc, model_calloc, model_free>(16)),
-	queue(new model_vector< const CycleNode * >()),
+	queue(new std::vector< const CycleNode *, ModelAlloc<const CycleNode *> >()),
 	hasCycles(false),
 	oldCycles(false)
 {

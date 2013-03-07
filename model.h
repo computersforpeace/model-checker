@@ -5,7 +5,7 @@
 #ifndef __MODEL_H__
 #define __MODEL_H__
 
-#include "stl_wrappers.h"
+#include <vector>
 #include <cstddef>
 #include <ucontext.h>
 #include <inttypes.h>
@@ -27,9 +27,9 @@ class ClockVector;
 struct model_snapshot_members;
 
 /** @brief Shorthand for a list of release sequence heads */
-typedef model_vector< const ModelAction * > rel_heads_list_t;
+typedef std::vector< const ModelAction *, ModelAlloc<const ModelAction *> > rel_heads_list_t;
 
-typedef snap_list< ModelAction * > action_list_t;
+typedef std::list< ModelAction *, SnapshotAlloc<ModelAction *> > action_list_t;
 
 /**
  * Model checker parameter structure. Holds run-time configuration options for
@@ -231,9 +231,9 @@ private:
 	 * to a trace of all actions performed on the object. */
 	HashTable<const void *, action_list_t *, uintptr_t, 4> * const condvar_waiters_map;
 
-	HashTable<void *, snap_vector<action_list_t> *, uintptr_t, 4 > * const obj_thrd_map;
-	snap_vector< Promise * > * const promises;
-	snap_vector< struct PendingFutureValue > * const futurevalues;
+	HashTable<void *, std::vector<action_list_t> *, uintptr_t, 4 > * const obj_thrd_map;
+	std::vector< Promise *, SnapshotAlloc<Promise *> > * const promises;
+	std::vector< struct PendingFutureValue, SnapshotAlloc<struct PendingFutureValue> > * const futurevalues;
 
 	/**
 	 * List of pending release sequences. Release sequences might be
@@ -241,10 +241,10 @@ private:
 	 * are established. Each entry in the list may only be partially
 	 * filled, depending on its pending status.
 	 */
-	snap_vector< struct release_seq * > * const pending_rel_seqs;
+	std::vector< struct release_seq *, SnapshotAlloc<struct release_seq *> > * const pending_rel_seqs;
 
-	snap_vector< ModelAction * > * const thrd_last_action;
-	snap_vector< ModelAction * > * const thrd_last_fence_release;
+	std::vector< ModelAction *, SnapshotAlloc<ModelAction *> > * const thrd_last_action;
+	std::vector< ModelAction *, SnapshotAlloc<ModelAction *> > * const thrd_last_fence_release;
 	NodeStack * const node_stack;
 
 	/** Private data members that should be snapshotted. They are grouped

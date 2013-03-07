@@ -6,7 +6,7 @@
 #ifndef __WORKQUEUE_H__
 #define __WORKQUEUE_H__
 
-#include <list>
+#include "stl_wrappers.h"
 #include "mymemory.h"
 
 class ModelAction;
@@ -102,6 +102,6 @@ class MOEdgeWorkEntry : public WorkQueueEntry {
 };
 
 /** @brief typedef for the work queue type */
-typedef std::list< WorkQueueEntry, ModelAlloc<WorkQueueEntry> > work_queue_t;
+typedef model_list< WorkQueueEntry > work_queue_t;
 
 #endif /* __WORKQUEUE_H__ */

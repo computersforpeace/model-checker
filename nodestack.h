@@ -5,7 +5,7 @@
 #ifndef __NODESTACK_H__
 #define __NODESTACK_H__
 
-#include <vector>
+#include "stl_wrappers.h"
 #include <cstddef>
 #include <inttypes.h>
 
@@ -163,7 +163,7 @@ private:
 	int * yield_data;
 };
 
-typedef std::vector< Node *, ModelAlloc< Node * > > node_list_t;
+typedef model_vector< Node * > node_list_t;
 
 /**
  * @brief A stack of nodes

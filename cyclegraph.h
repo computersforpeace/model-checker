@@ -9,7 +9,7 @@
 #ifndef __CYCLEGRAPH_H__
 #define __CYCLEGRAPH_H__
 
-#include <vector>
+#include "stl_wrappers.h"
 #include <inttypes.h>
 #include <stdio.h>
 
@@ -21,7 +21,7 @@ class Promise;
 class CycleNode;
 class ModelAction;
 
-typedef std::vector< const Promise *, ModelAlloc<const Promise *> > promise_list_t;
+typedef model_vector< const Promise * > promise_list_t;
 
 /** @brief A graph of Model Actions for tracking cycles. */
 class CycleGraph {
@@ -68,7 +68,7 @@ class CycleGraph {
 	bool mergeNodes(CycleNode *node1, CycleNode *node2);
 
 	HashTable<const CycleNode *, const CycleNode *, uintptr_t, 4, model_malloc, model_calloc, model_free> *discovered;
-	std::vector< const CycleNode *, ModelAlloc<const CycleNode *> > * queue;
+	model_vector< const CycleNode * > * queue;
 
 
 	/** @brief A table for mapping ModelActions to CycleNodes */

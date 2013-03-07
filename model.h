@@ -42,6 +42,7 @@ struct model_params {
 	unsigned int fairwindow;
 	unsigned int enabledcount;
 	unsigned int bound;
+	unsigned int uninitvalue;
 
 	/** @brief Maximum number of future values that can be sent to the same
 	 *  read */

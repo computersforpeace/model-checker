@@ -24,6 +24,7 @@ static void param_defaults(struct model_params *params)
 	params->maxfuturevalues = 0;
 	params->expireslop = 10;
 	params->verbose = !!DBG_ENABLED();
+	params->uninitvalue = 0;
 }
 
 static void print_usage(struct model_params *params)
@@ -52,14 +53,15 @@ static void print_usage(struct model_params *params)
 "-e                    Enabled count. Default: %d\n"
 "-b                    Upper length bound. Default: %d\n"
 "-v                    Print verbose execution information.\n"
+"-u                    Value for uninitialized reads. Default: %u\n"
 "--                    Program arguments follow.\n\n",
-params->maxreads, params->maxfuturevalues, params->maxfuturedelay, params->expireslop, params->fairwindow, params->yieldon, params->enabledcount, params->bound);
+params->maxreads, params->maxfuturevalues, params->maxfuturedelay, params->expireslop, params->fairwindow, params->yieldon, params->enabledcount, params->bound, params->uninitvalue);
 	exit(EXIT_SUCCESS);
 }
 
 static void parse_options(struct model_params *params, int argc, char **argv)
 {
-	const char *shortopts = "hym:M:s:S:f:e:b:v";
+	const char *shortopts = "hym:M:s:S:f:e:b:u:v";
 	int opt;
 	bool error = false;
 	while (!error && (opt = getopt(argc, argv, shortopts)) != -1) {
@@ -90,6 +92,9 @@ static void parse_options(struct model_params *params, int argc, char **argv)
 			break;
 		case 'v':
 			params->verbose = 1;
+			break;
+		case 'u':
+			params->uninitvalue = atoi(optarg);
 			break;
 		case 'y':
 			params->yieldon = true;

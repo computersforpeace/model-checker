@@ -2827,7 +2827,7 @@ ModelAction * ModelChecker::get_uninitialized_action(const ModelAction *curr) co
 	Node *node = curr->get_node();
 	ModelAction *act = node->get_uninit_action();
 	if (!act) {
-		act = new ModelAction(ATOMIC_UNINIT, std::memory_order_relaxed, curr->get_location(), 0, model_thread);
+		act = new ModelAction(ATOMIC_UNINIT, std::memory_order_relaxed, curr->get_location(), model->params.uninitvalue, model_thread);
 		node->set_uninit_action(act);
 	}
 	act->create_cv(NULL);

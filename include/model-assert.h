@@ -3,6 +3,8 @@
 
 #if __cplusplus
 extern "C" {
+#else
+#include <stdbool.h>
 #endif
 
 void model_assert(bool expr, const char *file, int line);

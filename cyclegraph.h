@@ -9,7 +9,6 @@
 #ifndef __CYCLEGRAPH_H__
 #define __CYCLEGRAPH_H__
 
-#include <vector>
 #include <inttypes.h>
 #include <stdio.h>
 

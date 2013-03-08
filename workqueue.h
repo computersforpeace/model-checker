@@ -6,7 +6,6 @@
 #ifndef __WORKQUEUE_H__
 #define __WORKQUEUE_H__
 
-#include <list>
 #include "mymemory.h"
 #include "stl-model.h"
 

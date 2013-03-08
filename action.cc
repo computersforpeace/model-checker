@@ -1,7 +1,6 @@
 #include <stdio.h>
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
-#include <vector>
 
 #include "model.h"
 #include "action.h"

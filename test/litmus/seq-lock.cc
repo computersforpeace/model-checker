@@ -3,6 +3,13 @@
 #include <threads.h>
 #include <atomic>
 
+#include "model-assert.h"
+
+/*
+ * This 'seqlock' example should never trigger the MODEL_ASSERT() for
+ * release/acquire; it may trigger the MODEL_ASSERT() for release/consume
+ */
+
 std::atomic_int x;
 std::atomic_int y;
 std::atomic_int z;
@@ -21,10 +28,18 @@ static void a(void *obj)
 
 static void b(void *obj)
 {
-	printf("x: %d\n", x.load(std::memory_order_acquire));
-	printf("y: %d\n", y.load(std::memory_order_acquire));
-	printf("z: %d\n", z.load(std::memory_order_acquire));
-	printf("x: %d\n", x.load(std::memory_order_acquire));
+	int x1, y1, z1, x2;
+	x1 = x.load(std::memory_order_acquire);
+	y1 = y.load(std::memory_order_acquire);
+	z1 = z.load(std::memory_order_acquire);
+	x2 = x.load(std::memory_order_acquire);
+	printf("x: %d\n", x1);
+	printf("y: %d\n", y1);
+	printf("z: %d\n", z1);
+	printf("x: %d\n", x2);
+
+	/* If x1 and x2 are the same, even value, then y1 must equal z1 */
+	MODEL_ASSERT(x1 != x2 || x1 & 0x1 || y1 == z1);
 }
 
 int user_main(int argc, char **argv)

@@ -111,8 +111,6 @@ public:
 	void dumpGraph(char *filename) const;
 #endif
 
-	void add_thread(Thread *t);
-	void remove_thread(Thread *t);
 	Thread * get_thread(thread_id_t tid) const;
 	Thread * get_thread(const ModelAction *act) const;
 	int get_promise_number(const Promise *promise) const;
@@ -142,6 +140,8 @@ public:
 private:
 	/** The scheduler to use: tracks the running/ready Threads */
 	Scheduler * const scheduler;
+
+	void add_thread(Thread *t);
 
 	bool sleep_can_read_from(ModelAction *curr, const ModelAction *write);
 	bool thin_air_constraint_may_allow(const ModelAction *writer, const ModelAction *reader);

@@ -2934,15 +2934,6 @@ void ModelChecker::add_thread(Thread *t)
 }
 
 /**
- * Removes a thread from the scheduler.
- * @param the thread to remove.
- */
-void ModelChecker::remove_thread(Thread *t)
-{
-	scheduler->remove_thread(t);
-}
-
-/**
  * @brief Get a Thread reference by its ID
  * @param tid The Thread's ID
  * @return A Thread reference

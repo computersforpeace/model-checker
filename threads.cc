@@ -180,7 +180,6 @@ Thread::~Thread()
 {
 	if (!is_complete())
 		complete();
-	model->remove_thread(this);
 }
 
 /** @return The thread_id_t corresponding to this Thread object. */

@@ -250,7 +250,7 @@ void Scheduler::set_scheduler_thread(thread_id_t tid) {
  */
 void Scheduler::set_current_thread(Thread *t)
 {
-	ASSERT(t && !t->is_model_thread());
+	ASSERT(!t || !t->is_model_thread());
 
 	current = t;
 	if (DBG_ENABLED())

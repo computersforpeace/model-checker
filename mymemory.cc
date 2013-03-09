@@ -8,6 +8,8 @@
 #include "mymemory.h"
 #include "snapshot.h"
 #include "common.h"
+#include "threads-model.h"
+#include "model.h"
 
 #define REQUESTS_BEFORE_ALLOC 1024
 
@@ -176,9 +178,11 @@ static void * user_malloc(size_t size)
  */
 void *malloc(size_t size)
 {
-	if (user_snapshot_space)
+	if (user_snapshot_space) {
+		/* Only perform user allocations from user context */
+		ASSERT(!model || thread_current());
 		return user_malloc(size);
-	else
+	} else
 		return HandleEarlyAllocationRequest(size);
 }
 

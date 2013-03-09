@@ -3021,6 +3021,7 @@ uint64_t ModelChecker::switch_to_master(ModelAction *act)
 {
 	DBG();
 	Thread *old = thread_current();
+	scheduler->set_current_thread(NULL);
 	ASSERT(!old->get_pending());
 	old->set_pending(act);
 	if (Thread::swap(old, &system_context) < 0) {

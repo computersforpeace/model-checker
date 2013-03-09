@@ -155,14 +155,30 @@ static bool DontFree(void *ptr)
 	return (ptr >= (&bootstrapmemory[0]) && ptr < (&bootstrapmemory[BOOTSTRAPBYTES]));
 }
 
-/** @brief Snapshotting malloc implementation for user programs */
+/**
+ * @brief The allocator function for "user" allocation
+ *
+ * Should only be used for allocations which will not disturb the allocation
+ * patterns of a user thread.
+ */
+static void * user_malloc(size_t size)
+{
+	void *tmp = mspace_malloc(user_snapshot_space, size);
+	ASSERT(tmp);
+	return tmp;
+}
+
+/**
+ * @brief Snapshotting malloc implementation for user programs
+ *
+ * Do NOT call this function from a model-checker context. Doing so may disrupt
+ * the allocation patterns of a user thread.
+ */
 void *malloc(size_t size)
 {
-	if (user_snapshot_space) {
-		void *tmp = mspace_malloc(user_snapshot_space, size);
-		ASSERT(tmp);
-		return tmp;
-	} else
+	if (user_snapshot_space)
+		return user_malloc(size);
+	else
 		return HandleEarlyAllocationRequest(size);
 }
 
@@ -193,6 +209,18 @@ void * calloc(size_t num, size_t size)
 		memset(tmp, 0, size * num);
 		return tmp;
 	}
+}
+
+/** @brief Snapshotting allocation function for use by the Thread class only */
+void * Thread_malloc(size_t size)
+{
+	return user_malloc(size);
+}
+
+/** @brief Snapshotting free function for use by the Thread class only */
+void Thread_free(void *ptr)
+{
+	free(ptr);
 }
 
 /** @brief Snapshotting new operator for user programs */

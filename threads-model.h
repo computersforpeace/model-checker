@@ -126,6 +126,18 @@ public:
 	 * to allow their allocation/deallocation to follow the same pattern as
 	 * the rest of the backtracked/replayed program.
 	 */
+	void * operator new(size_t size) {
+		return Thread_malloc(size);
+	}
+	void operator delete(void *p, size_t size) {
+		Thread_free(p);
+	}
+	void * operator new[](size_t size) {
+		return Thread_malloc(size);
+	}
+	void operator delete[](void *p, size_t size) {
+		Thread_free(p);
+	}
 private:
 	int create_context();
 

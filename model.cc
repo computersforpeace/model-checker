@@ -1831,7 +1831,18 @@ bool ModelChecker::r_modification_order(ModelAction *curr, const rf_type *rf)
 		for (rit = list->rbegin(); rit != list->rend(); rit++) {
 			ModelAction *act = *rit;
 
-			if (act->is_write() && !act->equals(rf) && act != curr) {
+			/* Skip curr */
+			if (act == curr)
+				continue;
+			/* Don't want to add reflexive edges on 'rf' */
+			if (act->equals(rf)) {
+				if (act->happens_before(curr))
+					break;
+				else
+					continue;
+			}
+
+			if (act->is_write()) {
 				/* C++, Section 29.3 statement 5 */
 				if (curr->is_seqcst() && last_sc_fence_thread_local &&
 						*act < *last_sc_fence_thread_local) {
@@ -1854,13 +1865,11 @@ bool ModelChecker::r_modification_order(ModelAction *curr, const rf_type *rf)
 
 			/*
 			 * Include at most one act per-thread that "happens
-			 * before" curr. Don't consider reflexively.
+			 * before" curr
 			 */
-			if (act->happens_before(curr) && act != curr) {
+			if (act->happens_before(curr)) {
 				if (act->is_write()) {
-					if (!act->equals(rf)) {
-						added = mo_graph->addEdge(act, rf) || added;
-					}
+					added = mo_graph->addEdge(act, rf) || added;
 				} else {
 					const ModelAction *prevrf = act->get_reads_from();
 					const Promise *prevrf_promise = act->get_reads_from_promise();

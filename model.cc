@@ -1812,6 +1812,9 @@ bool ModelChecker::r_modification_order(ModelAction *curr, const rf_type *rf)
 
 	/* Last SC fence in the current thread */
 	ModelAction *last_sc_fence_local = get_last_seq_cst_fence(curr->get_tid(), NULL);
+	ModelAction *last_sc_write = NULL;
+	if (curr->is_seqcst())
+		last_sc_write = get_last_seq_cst_write(curr);
 
 	/* Iterate over all threads */
 	for (i = 0; i < thrd_lists->size(); i++) {
@@ -1861,6 +1864,12 @@ bool ModelChecker::r_modification_order(ModelAction *curr, const rf_type *rf)
 					added = mo_graph->addEdge(act, rf) || added;
 					break;
 				}
+			}
+
+			/* C++, Section 29.3 statement 3 (second subpoint) */
+			if (curr->is_seqcst() && last_sc_write && act == last_sc_write) {
+				added = mo_graph->addEdge(act, rf) || added;
+				break;
 			}
 
 			/*
@@ -2463,8 +2472,11 @@ ModelAction * ModelChecker::get_last_seq_cst_write(ModelAction *curr) const
 	action_list_t *list = get_safe_ptr_action(obj_map, location);
 	/* Find: max({i in dom(S) | seq_cst(t_i) && isWrite(t_i) && samevar(t_i, t)}) */
 	action_list_t::reverse_iterator rit;
-	for (rit = list->rbegin(); rit != list->rend(); rit++)
-		if ((*rit)->is_write() && (*rit)->is_seqcst() && (*rit) != curr)
+	for (rit = list->rbegin(); (*rit) != curr; rit++)
+		;
+	rit++; /* Skip past curr */
+	for ( ; rit != list->rend(); rit++)
+		if ((*rit)->is_write() && (*rit)->is_seqcst())
 			return *rit;
 	return NULL;
 }

@@ -96,7 +96,8 @@ int Node::get_yield_data(int tid1, int tid2) const {
 }
 
 void Node::update_yield(Scheduler * scheduler) {
-	yield_data=(int *) model_calloc(1, sizeof(int)*num_threads*num_threads);
+	if (yield_data==NULL)
+		yield_data=(int *) model_calloc(1, sizeof(int)*num_threads*num_threads);
 	//handle base case
 	if (parent == NULL) {
 		for(int i = 0; i < num_threads*num_threads; i++) {

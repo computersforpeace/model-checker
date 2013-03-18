@@ -4,6 +4,7 @@
 #include <stdatomic.h>
 
 #include "librace.h"
+#include "model-assert.h"
 
 atomic_int x;
 static int N = 2;
@@ -28,6 +29,8 @@ int user_main(int argc, char **argv)
 
 	thrd_join(t1);
 	thrd_join(t2);
+
+	MODEL_ASSERT(atomic_load(&x) == N * 2);
 
 	return 0;
 }

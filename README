@@ -2,6 +2,8 @@
 CDSChecker Readme
 ****************************************
 
+Copyright (c) 2013 Regents of the University of California. All rights reserved.
+
 CDSChecker is distributed under the GPL v2.
 
 CDSChecker compiles as a dynamically-linked shared library by simply running

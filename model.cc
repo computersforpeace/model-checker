@@ -1128,6 +1128,7 @@ bool ModelChecker::process_fence(ModelAction *curr)
 	 *   use in later synchronization
 	 * fence-acquire (this function): search for hypothetical release
 	 *   sequences
+	 * fence-seq-cst: MO constraints formed in {r,w}_modification_order
 	 */
 	bool updated = false;
 	if (curr->is_acquire()) {

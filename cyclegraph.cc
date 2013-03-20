@@ -198,29 +198,33 @@ bool CycleGraph::mergeNodes(CycleNode *w_node, CycleNode *p_node)
  */
 bool CycleGraph::addNodeEdge(CycleNode *fromnode, CycleNode *tonode)
 {
-	bool added;
-
-	if ((added = fromnode->addEdge(tonode))) {
+	if (fromnode->addEdge(tonode)) {
 		rollbackvector.push_back(fromnode);
 		if (!hasCycles)
 			hasCycles = checkReachable(tonode, fromnode);
-	}
+	} else
+		return false; /* No new edge */
 
 	/*
-	 * If the fromnode has a rmwnode that is not the tonode, we should add
-	 * an edge between its rmwnode and the tonode
+	 * If the fromnode has a rmwnode that is not the tonode, we should
+	 * follow its RMW chain to add an edge at the end, unless we encounter
+	 * tonode along the way
 	 */
 	CycleNode *rmwnode = fromnode->getRMW();
-	if (rmwnode && rmwnode != tonode) {
-		if (rmwnode->addEdge(tonode)) {
-			if (!hasCycles)
-				hasCycles = checkReachable(tonode, rmwnode);
+	if (rmwnode) {
+		while (rmwnode != tonode && rmwnode->getRMW())
+			rmwnode = rmwnode->getRMW();
 
-			rollbackvector.push_back(rmwnode);
-			added = true;
+		if (rmwnode != tonode) {
+			if (rmwnode->addEdge(tonode)) {
+				if (!hasCycles)
+					hasCycles = checkReachable(tonode, rmwnode);
+
+				rollbackvector.push_back(rmwnode);
+			}
 		}
 	}
-	return added;
+	return true;
 }
 
 /**
@@ -243,6 +247,9 @@ void CycleGraph::addRMWEdge(const T *from, const ModelAction *rmw)
 
 	CycleNode *fromnode = getNode(from);
 	CycleNode *rmwnode = getNode(rmw);
+
+	/* We assume that this RMW has no RMW reading from it yet */
+	ASSERT(!rmwnode->getRMW());
 
 	/* Two RMW actions cannot read from the same write. */
 	if (fromnode->setRMW(rmwnode))

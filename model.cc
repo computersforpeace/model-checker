@@ -1139,12 +1139,13 @@ bool ModelChecker::process_write(ModelAction *curr)
 		}
 	}
 
-	if (promises->empty()) {
-		for (unsigned int i = 0; i < futurevalues->size(); i++) {
-			struct PendingFutureValue pfv = (*futurevalues)[i];
+	/* Check the pending future values */
+	for (int i = (int)futurevalues->size() - 1; i >= 0; i--) {
+		struct PendingFutureValue pfv = (*futurevalues)[i];
+		if (promises_may_allow(pfv.writer, pfv.reader)) {
 			add_future_value(pfv.writer, pfv.reader);
+			futurevalues->erase(futurevalues->begin() + i);
 		}
-		futurevalues->clear();
 	}
 
 	mo_graph->commitChanges();

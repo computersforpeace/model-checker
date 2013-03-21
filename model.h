@@ -146,7 +146,7 @@ private:
 	void add_thread(Thread *t);
 
 	bool sleep_can_read_from(ModelAction *curr, const ModelAction *write);
-	bool thin_air_constraint_may_allow(const ModelAction *writer, const ModelAction *reader);
+	bool thin_air_constraint_may_allow(const ModelAction *writer, const ModelAction *reader) const;
 	bool mo_may_allow(const ModelAction *writer, const ModelAction *reader);
 	bool has_asserted() const;
 	void set_assert();

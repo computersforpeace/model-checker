@@ -2049,7 +2049,7 @@ bool ModelChecker::w_modification_order(ModelAction *curr, ModelVector<ModelActi
 /** Arbitrary reads from the future are not allowed.  Section 29.3
  * part 9 places some constraints.  This method checks one result of constraint
  * constraint.  Others require compiler support. */
-bool ModelChecker::thin_air_constraint_may_allow(const ModelAction *writer, const ModelAction *reader)
+bool ModelChecker::thin_air_constraint_may_allow(const ModelAction *writer, const ModelAction *reader) const
 {
 	if (!writer->is_rmw())
 		return true;

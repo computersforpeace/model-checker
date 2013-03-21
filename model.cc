@@ -1082,14 +1082,15 @@ bool ModelChecker::process_write(ModelAction *curr)
 	/* Readers to which we may send our future value */
 	ModelVector<ModelAction *> send_fv;
 
-	bool updated_mod_order = w_modification_order(curr, &send_fv);
-	int promise_idx = get_promise_to_resolve(curr);
 	const ModelAction *earliest_promise_reader;
 	bool updated_promises = false;
 
-	if (promise_idx >= 0) {
-		earliest_promise_reader = (*promises)[promise_idx]->get_reader(0);
-		updated_promises = resolve_promise(curr, promise_idx);
+	bool updated_mod_order = w_modification_order(curr, &send_fv);
+	Promise *promise = pop_promise_to_resolve(curr);
+
+	if (promise) {
+		earliest_promise_reader = promise->get_reader(0);
+		updated_promises = resolve_promise(curr, promise);
 	} else
 		earliest_promise_reader = NULL;
 
@@ -1100,7 +1101,7 @@ bool ModelChecker::process_write(ModelAction *curr)
 			futurevalues->push_back(PendingFutureValue(curr, read));
 	}
 
-	if (promises->size() == 0) {
+	if (promises->empty()) {
 		for (unsigned int i = 0; i < futurevalues->size(); i++) {
 			struct PendingFutureValue pfv = (*futurevalues)[i];
 			add_future_value(pfv.writer, pfv.act);
@@ -2550,29 +2551,31 @@ ClockVector * ModelChecker::get_cv(thread_id_t tid) const
 }
 
 /**
- * @brief Find the promise, if any to resolve for the current action
+ * @brief Find the promise (if any) to resolve for the current action and
+ * remove it from the pending promise vector
  * @param curr The current ModelAction. Should be a write.
- * @return The (non-negative) index for the Promise to resolve, if any;
- * otherwise -1
+ * @return The Promise to resolve, if any; otherwise NULL
  */
-int ModelChecker::get_promise_to_resolve(const ModelAction *curr) const
+Promise * ModelChecker::pop_promise_to_resolve(const ModelAction *curr)
 {
 	for (unsigned int i = 0; i < promises->size(); i++)
-		if (curr->get_node()->get_promise(i))
-			return i;
-	return -1;
+		if (curr->get_node()->get_promise(i)) {
+			Promise *ret = (*promises)[i];
+			promises->erase(promises->begin() + i);
+			return ret;
+		}
+	return NULL;
 }
 
 /**
  * Resolve a Promise with a current write.
  * @param write The ModelAction that is fulfilling Promises
- * @param promise_idx The index corresponding to the promise
+ * @param promise The Promise to resolve
  * @return True if the Promise was successfully resolved; false otherwise
  */
-bool ModelChecker::resolve_promise(ModelAction *write, unsigned int promise_idx)
+bool ModelChecker::resolve_promise(ModelAction *write, Promise *promise)
 {
 	ModelVector<ModelAction *> actions_to_check;
-	Promise *promise = (*promises)[promise_idx];
 
 	for (unsigned int i = 0; i < promise->get_num_readers(); i++) {
 		ModelAction *read = promise->get_reader(i);
@@ -2584,7 +2587,6 @@ bool ModelChecker::resolve_promise(ModelAction *write, unsigned int promise_idx)
 	if (!mo_graph->resolvePromise(promise, write))
 		priv->failed_promise = true;
 
-	promises->erase(promises->begin() + promise_idx);
 	/**
 	 * @todo  It is possible to end up in an inconsistent state, where a
 	 * "resolved" promise may still be referenced if

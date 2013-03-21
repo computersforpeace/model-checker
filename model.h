@@ -183,8 +183,8 @@ private:
 	bool set_latest_backtrack(ModelAction *act);
 	ModelAction * get_next_backtrack();
 	void reset_to_initial_state();
-	int get_promise_to_resolve(const ModelAction *curr) const;
-	bool resolve_promise(ModelAction *curr, unsigned int promise_idx);
+	Promise * pop_promise_to_resolve(const ModelAction *curr);
+	bool resolve_promise(ModelAction *curr, Promise *promise);
 	void compute_promises(ModelAction *curr);
 	void compute_relseq_breakwrites(ModelAction *curr);
 

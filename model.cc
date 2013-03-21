@@ -1052,6 +1052,27 @@ bool ModelChecker::process_mutex(ModelAction *curr)
 }
 
 /**
+ * @brief Check if the current pending promises allow a future value to be sent
+ *
+ * If one of the following is true:
+ *  (a) there are no pending promises
+ *  (b) the reader is ordered after the latest Promise creation
+ * Then, it is safe to pass a future value back now.
+ *
+ * Otherwise, we must save the pending future value until (a) or (b) is true
+ *
+ * @param writer The operation which sends the future value. Must be a write.
+ * @param reader The operation which will observe the value. Must be a read.
+ * @return True if the future value can be sent now; false if it must wait.
+ */
+bool ModelChecker::promises_may_allow(const ModelAction *writer,
+		const ModelAction *reader) const
+{
+	return promises->empty() ||
+		*(promises->back()->get_reader(0)) < *reader;
+}
+
+/**
  * @brief Add a future value to a reader
  *
  * This function performs a few additional checks to ensure that the future
@@ -1104,11 +1125,18 @@ bool ModelChecker::process_write(ModelAction *curr)
 	} else
 		earliest_promise_reader = NULL;
 
-	/* Don't send future values to reads after the Promise we resolve */
 	for (unsigned int i = 0; i < send_fv.size(); i++) {
 		ModelAction *read = send_fv[i];
-		if (!earliest_promise_reader || *read < *earliest_promise_reader)
-			futurevalues->push_back(PendingFutureValue(curr, read));
+
+		/* Don't send future values to reads after the Promise we resolve */
+		if (!earliest_promise_reader || *read < *earliest_promise_reader) {
+			/* Check if future value can be sent immediately */
+			if (promises_may_allow(curr, read)) {
+				add_future_value(curr, read);
+			} else {
+				futurevalues->push_back(PendingFutureValue(curr, read));
+			}
+		}
 	}
 
 	if (promises->empty()) {

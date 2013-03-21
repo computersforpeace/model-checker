@@ -148,6 +148,7 @@ private:
 	bool sleep_can_read_from(ModelAction *curr, const ModelAction *write);
 	bool thin_air_constraint_may_allow(const ModelAction *writer, const ModelAction *reader) const;
 	bool mo_may_allow(const ModelAction *writer, const ModelAction *reader);
+	bool promises_may_allow(const ModelAction *writer, const ModelAction *reader) const;
 	bool has_asserted() const;
 	void set_assert();
 	void set_bad_synchronization();

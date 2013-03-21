@@ -1051,25 +1051,35 @@ bool ModelChecker::process_mutex(ModelAction *curr)
 	return false;
 }
 
+/**
+ * @brief Add a future value to a reader
+ *
+ * This function performs a few additional checks to ensure that the future
+ * value can be feasibly observed by the reader
+ *
+ * @param writer The operation whose value is sent. Must be a write.
+ * @param reader The read operation which may read the future value. Must be a read.
+ */
 void ModelChecker::add_future_value(const ModelAction *writer, ModelAction *reader)
 {
 	/* Do more ambitious checks now that mo is more complete */
-	if (mo_may_allow(writer, reader)) {
-		Node *node = reader->get_node();
+	if (!mo_may_allow(writer, reader))
+		return;
 
-		/* Find an ancestor thread which exists at the time of the reader */
-		Thread *write_thread = get_thread(writer);
-		while (id_to_int(write_thread->get_id()) >= node->get_num_threads())
-			write_thread = write_thread->get_parent();
+	Node *node = reader->get_node();
 
-		struct future_value fv = {
-			writer->get_write_value(),
-			writer->get_seq_number() + params.maxfuturedelay,
-			write_thread->get_id(),
-		};
-		if (node->add_future_value(fv))
-			set_latest_backtrack(reader);
-	}
+	/* Find an ancestor thread which exists at the time of the reader */
+	Thread *write_thread = get_thread(writer);
+	while (id_to_int(write_thread->get_id()) >= node->get_num_threads())
+		write_thread = write_thread->get_parent();
+
+	struct future_value fv = {
+		writer->get_write_value(),
+		writer->get_seq_number() + params.maxfuturedelay,
+		write_thread->get_id(),
+	};
+	if (node->add_future_value(fv))
+		set_latest_backtrack(reader);
 }
 
 /**

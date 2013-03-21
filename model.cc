@@ -1104,7 +1104,7 @@ bool ModelChecker::process_write(ModelAction *curr)
 	if (promises->empty()) {
 		for (unsigned int i = 0; i < futurevalues->size(); i++) {
 			struct PendingFutureValue pfv = (*futurevalues)[i];
-			add_future_value(pfv.writer, pfv.act);
+			add_future_value(pfv.writer, pfv.reader);
 		}
 		futurevalues->clear();
 	}

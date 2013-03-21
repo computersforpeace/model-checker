@@ -73,9 +73,11 @@ struct execution_stats {
 };
 
 struct PendingFutureValue {
-	PendingFutureValue(ModelAction *writer, ModelAction *act) : writer(writer), act(act) { }
+	PendingFutureValue(ModelAction *writer, ModelAction *reader) :
+		writer(writer), reader(reader)
+	{ }
 	const ModelAction *writer;
-	ModelAction *act;
+	ModelAction *reader;
 };
 
 /** @brief Records information regarding a single pending release sequence */

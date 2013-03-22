@@ -12,7 +12,7 @@ atomic_llong z;
 atomic_llong z2;
 
 /** 
-		This example illustrates a self-satisfying cycling involving
+		This example illustrates a self-satisfying cycle involving
 		synchronization.  A failed synchronization creates the store that
 		causes the synchronization to fail. 
 		

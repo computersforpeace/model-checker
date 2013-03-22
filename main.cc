@@ -16,7 +16,7 @@
 static void param_defaults(struct model_params *params)
 {
 	params->maxreads = 0;
-	params->maxfuturedelay = 100;
+	params->maxfuturedelay = 10;
 	params->fairwindow = 0;
 	params->yieldon = false;
 	params->enabledcount = 1;

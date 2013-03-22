@@ -1056,7 +1056,7 @@ bool ModelChecker::process_mutex(ModelAction *curr)
  *
  * If one of the following is true:
  *  (a) there are no pending promises
- *  (b) the reader is ordered after the latest Promise creation
+ *  (b) the reader and writer do not cross any promises
  * Then, it is safe to pass a future value back now.
  *
  * Otherwise, we must save the pending future value until (a) or (b) is true
@@ -1068,8 +1068,18 @@ bool ModelChecker::process_mutex(ModelAction *curr)
 bool ModelChecker::promises_may_allow(const ModelAction *writer,
 		const ModelAction *reader) const
 {
-	return promises->empty() ||
-		*(promises->back()->get_reader(0)) < *reader;
+	if (promises->empty())
+		return true;
+	for(int i=promises->size()-1;i>=0;i--) {
+		ModelAction *pr=(*promises)[i]->get_reader(0);
+		//reader is after promise...doesn't cross any promise
+		if (*reader > *pr)
+			return true;
+		//writer is after promise, reader before...bad...
+		if (*writer > *pr)
+			return false;
+	}
+	return true;
 }
 
 /**

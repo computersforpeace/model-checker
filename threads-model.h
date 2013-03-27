@@ -105,6 +105,7 @@ public:
 	void set_pending(ModelAction *act) { pending = act; }
 
 	Thread * waiting_on() const;
+	bool is_waiting_on(const Thread *t) const;
 
 	/**
 	 * Remove one ModelAction from the waiting list

@@ -199,7 +199,7 @@ void Thread::set_state(thread_state s)
 }
 
 /**
- * Get the Thread that this Thread is waiting on
+ * Get the Thread that this Thread is immediately waiting on
  * @return The thread we are waiting on, if any; otherwise NULL
  */
 Thread * Thread::waiting_on() const
@@ -212,4 +212,20 @@ Thread * Thread::waiting_on() const
 	else if (pending->is_lock())
 		return (Thread *)pending->get_mutex()->get_state()->locked;
 	return NULL;
+}
+
+/**
+ * Check if this Thread is waiting (blocking) on a given Thread, directly or
+ * indirectly (via a chain of waiting threads)
+ *
+ * @param t The Thread on which we may be waiting
+ * @return True if we are waiting on Thread t; false otherwise
+ */
+bool Thread::is_waiting_on(const Thread *t) const
+{
+	Thread *wait;
+	for (wait = waiting_on(); wait != NULL; wait = wait->waiting_on())
+		if (wait == t)
+			return true;
+	return false;
 }

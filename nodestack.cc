@@ -190,6 +190,103 @@ void Node::print() const
 	model_print("          rel seq break: %s\n", relseq_break_empty() ? "empty" : "non-empty");
 }
 
+/****************************** threads backtracking **************************/
+
+/**
+ * Checks if the Thread associated with this thread ID has been explored from
+ * this Node already.
+ * @param tid is the thread ID to check
+ * @return true if this thread choice has been explored already, false
+ * otherwise
+ */
+bool Node::has_been_explored(thread_id_t tid) const
+{
+	int id = id_to_int(tid);
+	return explored_children[id];
+}
+
+/**
+ * Checks if the backtracking set is empty.
+ * @return true if the backtracking set is empty
+ */
+bool Node::backtrack_empty() const
+{
+	return (numBacktracks == 0);
+}
+
+void Node::explore(thread_id_t tid)
+{
+	int i = id_to_int(tid);
+	ASSERT(i < ((int)backtrack.size()));
+	if (backtrack[i]) {
+		backtrack[i] = false;
+		numBacktracks--;
+	}
+	explored_children[i] = true;
+}
+
+/**
+ * Mark the appropriate backtracking information for exploring a thread choice.
+ * @param act The ModelAction to explore
+ */
+void Node::explore_child(ModelAction *act, enabled_type_t *is_enabled)
+{
+	if (!enabled_array)
+		enabled_array = (enabled_type_t *)model_malloc(sizeof(enabled_type_t) * num_threads);
+	if (is_enabled != NULL)
+		memcpy(enabled_array, is_enabled, sizeof(enabled_type_t) * num_threads);
+	else {
+		for (int i = 0; i < num_threads; i++)
+			enabled_array[i] = THREAD_DISABLED;
+	}
+
+	explore(act->get_tid());
+}
+
+/**
+ * Records a backtracking reference for a thread choice within this Node.
+ * Provides feedback as to whether this thread choice is already set for
+ * backtracking.
+ * @return false if the thread was already set to be backtracked, true
+ * otherwise
+ */
+bool Node::set_backtrack(thread_id_t id)
+{
+	int i = id_to_int(id);
+	ASSERT(i < ((int)backtrack.size()));
+	if (backtrack[i])
+		return false;
+	backtrack[i] = true;
+	numBacktracks++;
+	return true;
+}
+
+thread_id_t Node::get_next_backtrack()
+{
+	/** @todo Find next backtrack */
+	unsigned int i;
+	for (i = 0; i < backtrack.size(); i++)
+		if (backtrack[i] == true)
+			break;
+	/* Backtrack set was empty? */
+	ASSERT(i != backtrack.size());
+
+	backtrack[i] = false;
+	numBacktracks--;
+	return int_to_id(i);
+}
+
+void Node::clear_backtracking()
+{
+	for (unsigned int i = 0; i < backtrack.size(); i++)
+		backtrack[i] = false;
+	for (unsigned int i = 0; i < explored_children.size(); i++)
+		explored_children[i] = false;
+	numBacktracks = 0;
+}
+
+/************************** end threads backtracking **************************/
+
 /*********************************** promise **********************************/
 
 /**
@@ -270,88 +367,6 @@ bool Node::increment_misc()
 bool Node::misc_empty() const
 {
 	return (misc_index + 1) >= misc_max;
-}
-
-/**
- * Checks if the Thread associated with this thread ID has been explored from
- * this Node already.
- * @param tid is the thread ID to check
- * @return true if this thread choice has been explored already, false
- * otherwise
- */
-bool Node::has_been_explored(thread_id_t tid) const
-{
-	int id = id_to_int(tid);
-	return explored_children[id];
-}
-
-/**
- * Checks if the backtracking set is empty.
- * @return true if the backtracking set is empty
- */
-bool Node::backtrack_empty() const
-{
-	return (numBacktracks == 0);
-}
-
-/**
- * Mark the appropriate backtracking information for exploring a thread choice.
- * @param act The ModelAction to explore
- */
-void Node::explore_child(ModelAction *act, enabled_type_t *is_enabled)
-{
-	if (!enabled_array)
-		enabled_array = (enabled_type_t *)model_malloc(sizeof(enabled_type_t) * num_threads);
-	if (is_enabled != NULL)
-		memcpy(enabled_array, is_enabled, sizeof(enabled_type_t) * num_threads);
-	else {
-		for (int i = 0; i < num_threads; i++)
-			enabled_array[i] = THREAD_DISABLED;
-	}
-
-	explore(act->get_tid());
-}
-
-/**
- * Records a backtracking reference for a thread choice within this Node.
- * Provides feedback as to whether this thread choice is already set for
- * backtracking.
- * @return false if the thread was already set to be backtracked, true
- * otherwise
- */
-bool Node::set_backtrack(thread_id_t id)
-{
-	int i = id_to_int(id);
-	ASSERT(i < ((int)backtrack.size()));
-	if (backtrack[i])
-		return false;
-	backtrack[i] = true;
-	numBacktracks++;
-	return true;
-}
-
-thread_id_t Node::get_next_backtrack()
-{
-	/** @todo Find next backtrack */
-	unsigned int i;
-	for (i = 0; i < backtrack.size(); i++)
-		if (backtrack[i] == true)
-			break;
-	/* Backtrack set was empty? */
-	ASSERT(i != backtrack.size());
-
-	backtrack[i] = false;
-	numBacktracks--;
-	return int_to_id(i);
-}
-
-void Node::clear_backtracking()
-{
-	for (unsigned int i = 0; i < backtrack.size(); i++)
-		backtrack[i] = false;
-	for (unsigned int i = 0; i < explored_children.size(); i++)
-		explored_children[i] = false;
-	numBacktracks = 0;
 }
 
 bool Node::is_enabled(Thread *t) const
@@ -655,6 +670,8 @@ bool Node::increment_future_value()
 
 /************************** end future values *********************************/
 
+/*********************** breaking release sequences ***************************/
+
 /**
  * Add a write ModelAction to the set of writes that may break the release
  * sequence. This is used during replay exploration of pending release
@@ -707,16 +724,7 @@ bool Node::relseq_break_empty() const
 	return ((relseq_break_index + 1) >= ((int)relseq_break_writes.size()));
 }
 
-void Node::explore(thread_id_t tid)
-{
-	int i = id_to_int(tid);
-	ASSERT(i < ((int)backtrack.size()));
-	if (backtrack[i]) {
-		backtrack[i] = false;
-		numBacktracks--;
-	}
-	explored_children[i] = true;
-}
+/******************* end breaking release sequences ***************************/
 
 NodeStack::NodeStack() :
 	node_list(),

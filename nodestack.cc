@@ -726,6 +726,27 @@ bool Node::relseq_break_empty() const
 
 /******************* end breaking release sequences ***************************/
 
+/**
+ * Increments some behavior's index, if a new behavior is available
+ * @return True if there is a new behavior available; otherwise false
+ */
+bool Node::increment_behaviors()
+{
+	/* satisfy a different misc_index values */
+	if (increment_misc())
+		return true;
+	/* satisfy a different set of promises */
+	if (increment_promise())
+		return true;
+	/* read from a different value */
+	if (increment_read_from())
+		return true;
+	/* resolve a release sequence differently */
+	if (increment_relseq_break())
+		return true;
+	return false;
+}
+
 NodeStack::NodeStack() :
 	node_list(),
 	head_idx(-1),

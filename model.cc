@@ -260,20 +260,8 @@ Thread * ModelChecker::get_next_thread()
 		scheduler->update_sleep_set(prevnode);
 
 		/* Reached divergence point */
-		if (nextnode->increment_misc()) {
-			/* The next node will try to satisfy a different misc_index values. */
-			tid = next->get_tid();
-			node_stack->pop_restofstack(2);
-		} else if (nextnode->increment_promise()) {
-			/* The next node will try to satisfy a different set of promises. */
-			tid = next->get_tid();
-			node_stack->pop_restofstack(2);
-		} else if (nextnode->increment_read_from()) {
-			/* The next node will read from a different value. */
-			tid = next->get_tid();
-			node_stack->pop_restofstack(2);
-		} else if (nextnode->increment_relseq_break()) {
-			/* The next node will try to resolve a release sequence differently */
+		if (nextnode->increment_behaviors()) {
+			/* Execute the same thread with a new behavior */
 			tid = next->get_tid();
 			node_stack->pop_restofstack(2);
 		} else {

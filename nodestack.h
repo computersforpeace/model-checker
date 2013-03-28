@@ -112,6 +112,8 @@ public:
 	bool increment_relseq_break();
 	bool relseq_break_empty() const;
 
+	bool increment_behaviors();
+
 	void print() const;
 
 	MEMALLOC

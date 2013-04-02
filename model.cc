@@ -1472,7 +1472,7 @@ bool ModelChecker::check_action_enabled(ModelAction *curr) {
 			get_safe_ptr_action(lock_waiters_map, curr->get_location())->push_back(curr);
 			return false;
 		}
-	} else if (curr->get_type() == THREAD_JOIN) {
+	} else if (curr->is_thread_join()) {
 		Thread *blocking = (Thread *)curr->get_location();
 		if (!blocking->is_complete()) {
 			blocking->push_wait_list(curr);

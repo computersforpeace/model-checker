@@ -106,6 +106,7 @@ public:
 	void set_seq_number(modelclock_t num);
 	void set_try_lock(bool obtainedlock);
 	bool is_thread_start() const;
+	bool is_thread_join() const;
 	bool is_relseq_fixup() const;
 	bool is_mutex_op() const;
 	bool is_lock() const;

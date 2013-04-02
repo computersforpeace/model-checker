@@ -77,6 +77,11 @@ bool ModelAction::is_thread_start() const
 	return type == THREAD_START;
 }
 
+bool ModelAction::is_thread_join() const
+{
+	return type == THREAD_JOIN;
+}
+
 bool ModelAction::is_relseq_fixup() const
 {
 	return type == MODEL_FIXUP_RELSEQ;

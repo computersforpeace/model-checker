@@ -171,6 +171,7 @@ private:
 	bool check_action_enabled(ModelAction *curr);
 
 	Thread * take_step(ModelAction *curr);
+	bool should_terminate_execution();
 
 	template <typename T>
 	bool check_recency(ModelAction *curr, const T *rf) const;

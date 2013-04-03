@@ -1489,15 +1489,6 @@ ModelAction * ModelChecker::check_current_action(ModelAction *curr)
 {
 	ASSERT(curr);
 	bool second_part_of_rmw = curr->is_rmwc() || curr->is_rmw();
-
-	if (!check_action_enabled(curr)) {
-		/* Make the execution look like we chose to run this action
-		 * much later, when a lock/join can succeed */
-		get_thread(curr)->set_pending(curr);
-		scheduler->sleep(get_thread(curr));
-		return NULL;
-	}
-
 	bool newly_explored = initialize_curr_action(&curr);
 
 	DBG();
@@ -3077,38 +3068,44 @@ Thread * ModelChecker::take_step(ModelAction *curr)
 	Thread *curr_thrd = get_thread(curr);
 	ASSERT(curr_thrd->get_state() == THREAD_READY);
 
-	curr = check_current_action(curr);
-
-	/* Infeasible -> don't take any more steps */
-	if (is_infeasible())
-		return NULL;
-	else if (isfeasibleprefix() && have_bug_reports()) {
-		set_assert();
-		return NULL;
+	if (!check_action_enabled(curr)) {
+		/* Make the execution look like we chose to run this action
+		 * much later, when a lock/join can succeed */
+		get_thread(curr)->set_pending(curr);
+		scheduler->sleep(curr_thrd);
+		curr = NULL;
+	} else {
+		curr = check_current_action(curr);
+		ASSERT(curr);
 	}
-
-	if (params.bound != 0 && priv->used_sequence_numbers > params.bound)
-		return NULL;
 
 	if (curr_thrd->is_blocked() || curr_thrd->is_complete())
 		scheduler->remove_thread(curr_thrd);
 
-	Thread *next_thrd = NULL;
 	if (curr)
-		next_thrd = action_select_next_thread(curr);
-	if (!next_thrd)
-		next_thrd = get_next_thread();
-
-	DEBUG("(%d, %d)\n", curr_thrd ? id_to_int(curr_thrd->get_id()) : -1,
-			next_thrd ? id_to_int(next_thrd->get_id()) : -1);
-
-	return next_thrd;
+		return action_select_next_thread(curr);
+	return NULL;
 }
 
 /** Wrapper to run the user's main function, with appropriate arguments */
 void user_main_wrapper(void *)
 {
 	user_main(model->params.argc, model->params.argv);
+}
+
+bool ModelChecker::should_terminate_execution()
+{
+	/* Infeasible -> don't take any more steps */
+	if (is_infeasible())
+		return true;
+	else if (isfeasibleprefix() && have_bug_reports()) {
+		set_assert();
+		return true;
+	}
+
+	if (params.bound != 0 && priv->used_sequence_numbers > params.bound)
+		return true;
+	return false;
 }
 
 /** @brief Run ModelChecker for the user program */
@@ -3141,11 +3138,16 @@ void ModelChecker::run()
 			if (has_asserted())
 				break;
 
+			if (!t)
+				t = get_next_thread();
+			if (!t || t->is_model_thread())
+				break;
+
 			/* Consume the next action for a Thread */
 			ModelAction *curr = t->get_pending();
 			t->set_pending(NULL);
 			t = take_step(curr);
-		} while (t && !t->is_model_thread());
+		} while (!should_terminate_execution());
 
 		/*
 		 * Launch end-of-execution release sequence fixups only when

@@ -83,7 +83,6 @@ ModelChecker::ModelChecker(struct model_params params) :
 	action_trace(new action_list_t()),
 	thread_map(new HashTable<int, Thread *, int>()),
 	obj_map(new HashTable<const void *, action_list_t *, uintptr_t, 4>()),
-	lock_waiters_map(new HashTable<const void *, action_list_t *, uintptr_t, 4>()),
 	condvar_waiters_map(new HashTable<const void *, action_list_t *, uintptr_t, 4>()),
 	obj_thrd_map(new HashTable<void *, SnapVector<action_list_t> *, uintptr_t, 4 >()),
 	promises(new SnapVector<Promise *>()),
@@ -109,7 +108,6 @@ ModelChecker::~ModelChecker()
 
 	delete obj_thrd_map;
 	delete obj_map;
-	delete lock_waiters_map;
 	delete condvar_waiters_map;
 	delete action_trace;
 
@@ -970,15 +968,16 @@ bool ModelChecker::process_mutex(ModelAction *curr)
 	}
 	case ATOMIC_WAIT:
 	case ATOMIC_UNLOCK: {
-		//unlock the lock
-		state->locked = NULL;
-		//wake up the other threads
-		action_list_t *waiters = get_safe_ptr_action(lock_waiters_map, mutex);
-		//activate all the waiting threads
-		for (action_list_t::iterator rit = waiters->begin(); rit != waiters->end(); rit++) {
-			scheduler->wake(get_thread(*rit));
+		/* wake up the other threads */
+		for (unsigned int i = 0; i < get_num_threads(); i++) {
+			Thread *t = get_thread(int_to_id(i));
+			Thread *curr_thrd = get_thread(curr);
+			if (t->waiting_on() == curr_thrd && t->get_pending()->is_lock())
+				scheduler->wake(t);
 		}
-		waiters->clear();
+
+		/* unlock the lock - after checking who was waiting on it */
+		state->locked = NULL;
 
 		if (!curr->is_wait())
 			break; /* The rest is only for ATOMIC_WAIT */
@@ -1460,11 +1459,8 @@ bool ModelChecker::check_action_enabled(ModelAction *curr) {
 	if (curr->is_lock()) {
 		std::mutex *lock = (std::mutex *)curr->get_location();
 		struct std::mutex_state *state = lock->get_state();
-		if (state->locked) {
-			//Stick the action in the appropriate waiting queue
-			get_safe_ptr_action(lock_waiters_map, curr->get_location())->push_back(curr);
+		if (state->locked)
 			return false;
-		}
 	} else if (curr->is_thread_join()) {
 		Thread *blocking = (Thread *)curr->get_location();
 		if (!blocking->is_complete()) {

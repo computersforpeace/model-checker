@@ -286,7 +286,7 @@ Thread * ModelChecker::get_next_thread()
 	}
 	DEBUG("*** ModelChecker chose next thread = %d ***\n", id_to_int(tid));
 	ASSERT(tid != THREAD_ID_T_NONE);
-	return thread_map->get(id_to_int(tid));
+	return get_thread(id_to_int(tid));
 }
 
 /**

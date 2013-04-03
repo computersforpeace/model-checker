@@ -972,7 +972,7 @@ bool ModelChecker::process_mutex(ModelAction *curr)
 		//unlock the lock
 		state->locked = NULL;
 		//wake up the other threads
-		action_list_t *waiters = get_safe_ptr_action(lock_waiters_map, curr->get_location());
+		action_list_t *waiters = get_safe_ptr_action(lock_waiters_map, mutex);
 		//activate all the waiting threads
 		for (action_list_t::iterator rit = waiters->begin(); rit != waiters->end(); rit++) {
 			scheduler->wake(get_thread(*rit));
@@ -984,7 +984,7 @@ bool ModelChecker::process_mutex(ModelAction *curr)
 		//unlock the lock
 		state->locked = NULL;
 		//wake up the other threads
-		action_list_t *waiters = get_safe_ptr_action(lock_waiters_map, (void *) curr->get_value());
+		action_list_t *waiters = get_safe_ptr_action(lock_waiters_map, mutex);
 		//activate all the waiting threads
 		for (action_list_t::iterator rit = waiters->begin(); rit != waiters->end(); rit++) {
 			scheduler->wake(get_thread(*rit));

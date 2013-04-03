@@ -968,6 +968,7 @@ bool ModelChecker::process_mutex(ModelAction *curr)
 		}
 		break;
 	}
+	case ATOMIC_WAIT:
 	case ATOMIC_UNLOCK: {
 		//unlock the lock
 		state->locked = NULL;
@@ -978,22 +979,14 @@ bool ModelChecker::process_mutex(ModelAction *curr)
 			scheduler->wake(get_thread(*rit));
 		}
 		waiters->clear();
-		break;
-	}
-	case ATOMIC_WAIT: {
-		//unlock the lock
-		state->locked = NULL;
-		//wake up the other threads
-		action_list_t *waiters = get_safe_ptr_action(lock_waiters_map, mutex);
-		//activate all the waiting threads
-		for (action_list_t::iterator rit = waiters->begin(); rit != waiters->end(); rit++) {
-			scheduler->wake(get_thread(*rit));
-		}
-		waiters->clear();
-		//check whether we should go to sleep or not...simulate spurious failures
+
+		if (!curr->is_wait())
+			break; /* The rest is only for ATOMIC_WAIT */
+
+		/* Should we go to sleep? (simulate spurious failures) */
 		if (curr->get_node()->get_misc() == 0) {
 			get_safe_ptr_action(condvar_waiters_map, curr->get_location())->push_back(curr);
-			//disable us
+			/* disable us */
 			scheduler->sleep(get_thread(curr));
 		}
 		break;

@@ -17,7 +17,7 @@ static void a(void *obj)
 			m->unlock();
 		} else {
 			while(!m->try_lock())
-				;
+				thrd_yield();
 			store_32(&shareddata,(unsigned int)i);
 			m->unlock();
 		}

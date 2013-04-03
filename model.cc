@@ -1457,12 +1457,12 @@ void ModelChecker::thread_blocking_check_promises(Thread *blocker, Thread *waiti
  */
 bool ModelChecker::check_action_enabled(ModelAction *curr) {
 	if (curr->is_lock()) {
-		std::mutex *lock = (std::mutex *)curr->get_location();
+		std::mutex *lock = curr->get_mutex();
 		struct std::mutex_state *state = lock->get_state();
 		if (state->locked)
 			return false;
 	} else if (curr->is_thread_join()) {
-		Thread *blocking = (Thread *)curr->get_location();
+		Thread *blocking = curr->get_thread_operand();
 		if (!blocking->is_complete()) {
 			blocking->push_wait_list(curr);
 			thread_blocking_check_promises(blocking, get_thread(curr));

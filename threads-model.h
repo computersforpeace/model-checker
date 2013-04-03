@@ -78,23 +78,6 @@ public:
 	/** @return True if this thread is blocked */
 	bool is_blocked() const { return state == THREAD_BLOCKED; }
 
-	/** @return True if no threads are waiting on this Thread */
-	bool wait_list_empty() const { return wait_list.empty(); }
-
-	/**
-	 * Add a ModelAction to the waiting list for this thread.
-	 * @param t The ModelAction to add. Must be a JOIN.
-	 */
-	void push_wait_list(ModelAction *act) { wait_list.push_back(act); }
-
-	unsigned int num_wait_list() const {
-		return wait_list.size();
-	}
-
-	ModelAction * get_waiter(unsigned int i) const {
-		return wait_list[i];
-	}
-
 	/** @return The pending (next) ModelAction for this Thread
 	 *  @see Thread::pending */
 	ModelAction * get_pending() const { return pending; }
@@ -106,16 +89,6 @@ public:
 
 	Thread * waiting_on() const;
 	bool is_waiting_on(const Thread *t) const;
-
-	/**
-	 * Remove one ModelAction from the waiting list
-	 * @return The ModelAction that was removed from the waiting list
-	 */
-	ModelAction * pop_wait_list() {
-		ModelAction *ret = wait_list.front();
-		wait_list.pop_back();
-		return ret;
-	}
 
 	bool is_model_thread() const { return model_thread; }
 
@@ -164,13 +137,6 @@ private:
 	thrd_t *user_thread;
 	thread_id_t id;
 	thread_state state;
-
-	/**
-	 * A list of ModelActions waiting on this Thread. Particularly, this
-	 * list is used for thread joins, where another Thread waits for this
-	 * Thread to complete
-	 */
-	SnapVector<ModelAction *> wait_list;
 
 	/**
 	 * The value returned by the last action in this thread

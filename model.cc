@@ -1219,9 +1219,12 @@ bool ModelChecker::process_thread_action(ModelAction *curr)
 	}
 	case THREAD_FINISH: {
 		Thread *th = get_thread(curr);
-		while (!th->wait_list_empty()) {
-			ModelAction *act = th->pop_wait_list();
-			scheduler->wake(get_thread(act));
+		/* Wake up any joining threads */
+		for (unsigned int i = 0; i < get_num_threads(); i++) {
+			Thread *waiting = get_thread(int_to_id(i));
+			if (waiting->waiting_on() == th &&
+					waiting->get_pending()->is_thread_join())
+				scheduler->wake(waiting);
 		}
 		th->complete();
 		/* Completed thread can't satisfy promises */
@@ -1464,7 +1467,6 @@ bool ModelChecker::check_action_enabled(ModelAction *curr) {
 	} else if (curr->is_thread_join()) {
 		Thread *blocking = curr->get_thread_operand();
 		if (!blocking->is_complete()) {
-			blocking->push_wait_list(curr);
 			thread_blocking_check_promises(blocking, get_thread(curr));
 			return false;
 		}

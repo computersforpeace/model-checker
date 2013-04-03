@@ -139,7 +139,6 @@ Thread::Thread(thread_id_t tid) :
 	user_thread(NULL),
 	id(tid),
 	state(THREAD_READY), /* Thread is always ready? */
-	wait_list(),
 	last_action_val(0),
 	model_thread(true)
 {
@@ -160,7 +159,6 @@ Thread::Thread(thrd_t *t, void (*func)(void *), void *a, Thread *parent) :
 	arg(a),
 	user_thread(t),
 	state(THREAD_CREATED),
-	wait_list(),
 	last_action_val(VALUE_NONE),
 	model_thread(false)
 {

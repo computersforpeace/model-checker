@@ -3068,23 +3068,14 @@ Thread * ModelChecker::take_step(ModelAction *curr)
 	Thread *curr_thrd = get_thread(curr);
 	ASSERT(curr_thrd->get_state() == THREAD_READY);
 
-	if (!check_action_enabled(curr)) {
-		/* Make the execution look like we chose to run this action
-		 * much later, when a lock/join can succeed */
-		get_thread(curr)->set_pending(curr);
-		scheduler->sleep(curr_thrd);
-		curr = NULL;
-	} else {
-		curr = check_current_action(curr);
-		ASSERT(curr);
-	}
+	ASSERT(check_action_enabled(curr)); /* May have side effects? */
+	curr = check_current_action(curr);
+	ASSERT(curr);
 
 	if (curr_thrd->is_blocked() || curr_thrd->is_complete())
 		scheduler->remove_thread(curr_thrd);
 
-	if (curr)
-		return action_select_next_thread(curr);
-	return NULL;
+	return action_select_next_thread(curr);
 }
 
 /** Wrapper to run the user's main function, with appropriate arguments */
@@ -3130,6 +3121,15 @@ void ModelChecker::run()
 					switch_from_master(thr);
 					if (thr->is_waiting_on(thr))
 						assert_bug("Deadlock detected");
+				}
+			}
+
+			/* Don't schedule threads which should be disabled */
+			for (unsigned int i = 0; i < get_num_threads(); i++) {
+				Thread *th = get_thread(int_to_id(i));
+				ModelAction *act = th->get_pending();
+				if (act && is_enabled(th) && !check_action_enabled(act)) {
+					scheduler->sleep(th);
 				}
 			}
 

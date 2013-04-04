@@ -132,7 +132,7 @@ public:
 	void check_promises(thread_id_t tid, ClockVector *old_cv, ClockVector *merge_cv);
 	bool isfeasibleprefix() const;
 
-	bool assert_bug(const char *msg);
+	bool assert_bug(const char *msg, ...);
 	void assert_user_bug(const char *msg);
 
 	const model_params params;

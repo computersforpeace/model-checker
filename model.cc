@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <mutex>
 #include <new>
+#include <stdarg.h>
 
 #include "model.h"
 #include "action.h"
@@ -419,9 +420,16 @@ bool ModelChecker::is_complete_execution() const
  * @param msg Descriptive message for the bug (do not include newline char)
  * @return True if bug is immediately-feasible
  */
-bool ModelChecker::assert_bug(const char *msg)
+bool ModelChecker::assert_bug(const char *msg, ...)
 {
-	priv->bugs.push_back(new bug_message(msg));
+	char str[800];
+
+	va_list ap;
+	va_start(ap, msg);
+	vsnprintf(str, sizeof(str), msg, ap);
+	va_end(ap);
+
+	priv->bugs.push_back(new bug_message(str));
 
 	if (isfeasibleprefix()) {
 		set_assert();

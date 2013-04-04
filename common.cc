@@ -88,10 +88,12 @@ static int fd_user_out; /**< @brief File descriptor from which to read user prog
  */
 void redirect_output()
 {
-	int fd;
-
 	/* Save stdout for later use */
-	model_out = dup(fileno(stdout));
+	model_out = dup(STDOUT_FILENO);
+	if (model_out < 0) {
+		perror("dup");
+		exit(EXIT_FAILURE);
+	}
 
 	/* Redirect program output to a pipe */
 	int pipefd[2];
@@ -99,11 +101,17 @@ void redirect_output()
 		perror("pipe");
 		exit(EXIT_FAILURE);
 	}
-	fd = dup2(pipefd[1], fileno(stdout)); // STDOUT_FILENO
+	if (dup2(pipefd[1], STDOUT_FILENO) < 0) {
+		perror("dup2");
+		exit(EXIT_FAILURE);
+	}
 	close(pipefd[1]);
 
 	/* Save the "read" side of the pipe for use later */
-	fcntl(pipefd[0], F_SETFL, O_NONBLOCK);
+	if (fcntl(pipefd[0], F_SETFL, O_NONBLOCK) < 0) {
+		perror("fcntl");
+		exit(EXIT_FAILURE);
+	}
 	fd_user_out = pipefd[0];
 }
 

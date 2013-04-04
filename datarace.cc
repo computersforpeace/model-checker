@@ -150,16 +150,18 @@ bool checkDataRaces()
  */
 void assert_race(struct DataRace *race)
 {
-	char buf[200];
-	char *ptr = buf;
-	ptr += sprintf(ptr, "Data race detected @ address %p:\n", race->address);
-	ptr += sprintf(ptr, "    Access 1: %5s in thread %2d @ clock %3u\n",
+	model->assert_bug(
+			"Data race detected @ address %p:\n"
+			"    Access 1: %5s in thread %2d @ clock %3u\n"
+			"    Access 2: %5s in thread %2d @ clock %3u",
+			race->address,
 			race->isoldwrite ? "write" : "read",
-			id_to_int(race->oldthread), race->oldclock);
-	ptr += sprintf(ptr, "    Access 2: %5s in thread %2d @ clock %3u",
+			id_to_int(race->oldthread),
+			race->oldclock,
 			race->isnewwrite ? "write" : "read",
-			id_to_int(race->newaction->get_tid()), race->newaction->get_seq_number());
-	model->assert_bug(buf);
+			id_to_int(race->newaction->get_tid()),
+			race->newaction->get_seq_number()
+		);
 }
 
 /** This function does race detection for a write on an expanded record. */

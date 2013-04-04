@@ -8,8 +8,8 @@
 
 atomic_int x;
 atomic_int y;
-atomic_llong z;
-atomic_llong z2;
+atomic_intptr_t z;
+atomic_intptr_t z2;
 
 /** 
 		This example illustrates a self-satisfying cycle involving
@@ -24,9 +24,9 @@ atomic_llong z2;
 
 static void a(void *obj)
 {
-	atomic_store_explicit(&z, (long long) &y, memory_order_relaxed);
+	atomic_store_explicit(&z, (intptr_t) &y, memory_order_relaxed);
 	int t1=atomic_fetch_add_explicit(&y, 1, memory_order_release);
-	atomic_store_explicit(&z, (long long) &x, memory_order_relaxed);
+	atomic_store_explicit(&z, (intptr_t) &x, memory_order_relaxed);
 	int t2=atomic_fetch_add_explicit(&y, 1, memory_order_release);
 	printf("t1=%d, t2=%d\n", t1, t2);
 }
@@ -35,8 +35,8 @@ static void a(void *obj)
 static void b(void *obj)
 {
 	int t3=atomic_fetch_add_explicit(&y, 1, memory_order_acquire);
-	void * ptr=(void *)atomic_load_explicit(&z, memory_order_relaxed);
-	atomic_store_explicit(&z2, ptr, memory_order_relaxed);
+	void *ptr = (void *)atomic_load_explicit(&z, memory_order_relaxed);
+	atomic_store_explicit(&z2, (intptr_t)ptr, memory_order_relaxed);
 	printf("t3=%d\n", t3);
 }
 
@@ -53,8 +53,8 @@ int user_main(int argc, char **argv)
 	
 	atomic_init(&x, 0);
 	atomic_init(&y, 0);
-	atomic_init(&z, (long long) &x);
-	atomic_init(&z2, (long long) &x);
+	atomic_init(&z, (intptr_t) &x);
+	atomic_init(&z2, (intptr_t) &x);
 
 	thrd_create(&t1, (thrd_start_t)&a, NULL);
 	thrd_create(&t2, (thrd_start_t)&b, NULL);

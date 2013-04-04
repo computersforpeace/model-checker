@@ -154,9 +154,6 @@ void ModelChecker::reset_to_initial_state()
 	DEBUG("+++ Resetting to initial state +++\n");
 	node_stack->reset_execution();
 
-	/* Print all model-checker output before rollback */
-	fflush(model_out);
-
 	/**
 	 * FIXME: if we utilize partial rollback, we will need to free only
 	 * those pending actions which were NOT pending before the rollback

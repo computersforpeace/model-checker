@@ -14,15 +14,17 @@
 
 #define MAX_TRACE_LEN 100
 
-/** @brief Model-checker output stream; default to stdout until redirected */
-FILE *model_out = stdout;
+/** @brief Model-checker output file descriptor; default to stdout until redirected */
+int model_out = STDOUT_FILENO;
 
 #define CONFIG_STACKTRACE
 /** Print a backtrace of the current program state. */
 void print_trace(void)
 {
 #ifdef CONFIG_STACKTRACE
-	print_stacktrace(model_out);
+	FILE *file = fdopen(model_out, "w");
+	print_stacktrace(file);
+	fclose(file);
 #else
 	void *array[MAX_TRACE_LEN];
 	char **strings;
@@ -69,7 +71,7 @@ static int fd_user_out; /**< @brief File descriptor from which to read user prog
  *
  * Redirects user program's stdout to a pipe so that we can dump it
  * selectively, when displaying bugs, etc.
- * Also connects a special file 'model_out' directly to stdout, for printing
+ * Also connects a file descriptor 'model_out' directly to stdout, for printing
  * data when needed.
  *
  * The model-checker can selectively choose to print/hide the user program
@@ -89,8 +91,7 @@ void redirect_output()
 	int fd;
 
 	/* Save stdout for later use */
-	fd = dup(fileno(stdout));
-	model_out = fdopen(fd, "w");
+	model_out = dup(fileno(stdout));
 
 	/* Redirect program output to a pipe */
 	int pipefd[2];
@@ -149,16 +150,15 @@ void print_program_output()
 	fflush(stdout);
 
 	/* Read program output pipe and write to (real) stdout */
-	int ret;
+	ssize_t ret;
 	while (1) {
 		ret = read_to_buf(fd_user_out, buf, sizeof(buf));
 		if (!ret)
 			break;
 		while (ret > 0) {
-			int res = fwrite(buf, 1, ret, model_out);
+			ssize_t res = write(model_out, buf, ret);
 			if (res < 0) {
-				errno = ferror(model_out);
-				perror("fwrite");
+				perror("write");
 				exit(EXIT_FAILURE);
 			}
 			ret -= res;

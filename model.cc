@@ -3128,7 +3128,7 @@ void ModelChecker::run()
 				if (!thr->is_model_thread() && !thr->is_complete() && !thr->get_pending()) {
 					switch_from_master(thr);
 					if (thr->is_waiting_on(thr))
-						assert_bug("Deadlock detected");
+						assert_bug("Deadlock detected (thread %u)", i);
 				}
 			}
 

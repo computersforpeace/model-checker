@@ -630,8 +630,13 @@ unsigned int ModelAction::hash() const
 	hash ^= seq_number << 5;
 	hash ^= id_to_int(tid) << 6;
 
-	if (is_read() && reads_from)
-		hash ^= reads_from->get_seq_number();
+	if (is_read()) {
+	       if (reads_from)
+		       hash ^= reads_from->get_seq_number();
+	       else if (reads_from_promise)
+		       hash ^= model->get_promise_number(reads_from_promise);
+	       hash ^= get_reads_from_value();
+	}
 	return hash;
 }
 

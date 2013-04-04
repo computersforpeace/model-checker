@@ -755,6 +755,7 @@ void ModelChecker::set_backtracking(ModelAction *act)
 
 	Node *node = prev->get_node()->get_parent();
 
+	/* See Dynamic Partial Order Reduction (addendum), POPL '05 */
 	int low_tid, high_tid;
 	if (node->enabled_status(t->get_id()) == THREAD_ENABLED) {
 		low_tid = id_to_int(act->get_tid());
@@ -771,6 +772,7 @@ void ModelChecker::set_backtracking(ModelAction *act)
 		if (i >= node->get_num_threads())
 			break;
 
+		/* See Dynamic Partial Order Reduction (addendum), POPL '05 */
 		/* Don't backtrack into a point where the thread is disabled or sleeping. */
 		if (node->enabled_status(tid) != THREAD_ENABLED)
 			continue;

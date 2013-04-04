@@ -6,12 +6,12 @@
 #include <string.h>
 #include <errno.h>
 #include <sys/wait.h>
-#include <ucontext.h>
 
 #include "hashtable.h"
 #include "snapshot.h"
 #include "mymemory.h"
 #include "common.h"
+#include "context.h"
 
 #define FAILURE(mesg) { model_print("failed in the API: %s with errno relative message: %s\n", mesg, strerror(errno)); exit(EXIT_FAILURE); }
 
@@ -247,8 +247,6 @@ static void mprot_roll_back(snapshot_id theID)
 
 #else /* !USE_MPROTECT_SNAPSHOT */
 
-#include <ucontext.h>
-
 #define SHARED_MEMORY_DEFAULT  (100 * ((size_t)1 << 20)) // 100mb for the shared memory
 #define STACK_SIZE_DEFAULT      (((size_t)1 << 20) * 20)  // 20 mb out of the above 100 mb for my stack
 
@@ -325,7 +323,7 @@ static void fork_snapshot_init(unsigned int numbackingpages,
 	newContext.uc_stack.ss_size = STACK_SIZE_DEFAULT;
 	makecontext(&newContext, entryPoint, 0);
 	/* switch to a new entryPoint context, on a new stack */
-	swapcontext(&savedSnapshotContext, &newContext);
+	model_swapcontext(&savedSnapshotContext, &newContext);
 
 	/* switch back here when takesnapshot is called */
 	pid_t forkedID = 0;
@@ -369,7 +367,7 @@ static void fork_snapshot_init(unsigned int numbackingpages,
 
 static snapshot_id fork_take_snapshot()
 {
-	swapcontext(&savedUserSnapshotContext, &savedSnapshotContext);
+	model_swapcontext(&savedUserSnapshotContext, &savedSnapshotContext);
 	DEBUG("TAKESNAPSHOT RETURN\n");
 	return snapshotid;
 }

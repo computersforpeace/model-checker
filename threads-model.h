@@ -5,13 +5,13 @@
 #ifndef __THREADS_MODEL_H__
 #define __THREADS_MODEL_H__
 
-#include <ucontext.h>
 #include <stdint.h>
 
 #include "mymemory.h"
 #include <threads.h>
 #include "modeltypes.h"
 #include "stl-model.h"
+#include "context.h"
 
 struct thread_params {
 	thrd_start_t func;

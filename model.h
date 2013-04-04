@@ -6,7 +6,6 @@
 #define __MODEL_H__
 
 #include <cstddef>
-#include <ucontext.h>
 #include <inttypes.h>
 
 #include "mymemory.h"
@@ -15,6 +14,7 @@
 #include "config.h"
 #include "modeltypes.h"
 #include "stl-model.h"
+#include "context.h"
 
 /* Forward declaration */
 class Node;

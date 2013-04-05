@@ -347,19 +347,19 @@ static void fork_snapshot_init(unsigned int numbackingpages,
 				setcontext(&savedUserSnapshotContext);
 			}
 		} else {
-			int status;
-			int retVal;
+			DEBUG("parent PID: %d, child PID: %d, snapshot ID: %d\n",
+			        getpid(), forkedID, snapshotid);
 
-			DEBUG("The process id of child is %d and the process id of this process is %d and snapshot id is %d\n",
-			        forkedID, getpid(), snapshotid);
-
-			do {
-				retVal = waitpid(forkedID, &status, 0);
-			} while (-1 == retVal && errno == EINTR);
-
-			if (fork_snap->mIDToRollback != snapshotid) {
-				exit(EXIT_SUCCESS);
+			while (waitpid(forkedID, NULL, 0) < 0) {
+				/* waitpid() may be interrupted */
+				if (errno != EINTR) {
+					perror("waitpid");
+					exit(EXIT_FAILURE);
+				}
 			}
+
+			if (fork_snap->mIDToRollback != snapshotid)
+				exit(EXIT_SUCCESS);
 			rollback = true;
 		}
 	}

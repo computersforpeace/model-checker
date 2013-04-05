@@ -13,8 +13,6 @@
 #include "common.h"
 #include "context.h"
 
-#define FAILURE(mesg) { model_print("failed in the API: %s with errno relative message: %s\n", mesg, strerror(errno)); exit(EXIT_FAILURE); }
-
 /** PageAlignedAdressUpdate return a page aligned address for the
  * address being added as a side effect the numBytes are also changed.
  */
@@ -280,8 +278,10 @@ static void createSharedMemory()
 {
 	//step 1. create shared memory.
 	void *memMapBase = mmap(0, SHARED_MEMORY_DEFAULT + STACK_SIZE_DEFAULT, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANON, -1, 0);
-	if (MAP_FAILED == memMapBase)
-		FAILURE("mmap");
+	if (memMapBase == MAP_FAILED) {
+		perror("mmap");
+		exit(EXIT_FAILURE);
+	}
 
 	//Setup snapshot record at top of free region
 	fork_snap = (struct fork_snapshotter *)memMapBase;

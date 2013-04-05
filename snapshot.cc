@@ -285,7 +285,7 @@ static void createSharedMemory()
 
 	//Setup snapshot record at top of free region
 	fork_snap = (struct fork_snapshotter *)memMapBase;
-	fork_snap->mSharedMemoryBase = (void *)((uintptr_t)memMapBase + sizeof(struct fork_snapshotter));
+	fork_snap->mSharedMemoryBase = (void *)((uintptr_t)memMapBase + sizeof(*fork_snap));
 	fork_snap->mStackBase = (void *)((uintptr_t)memMapBase + SHARED_MEMORY_DEFAULT);
 	fork_snap->mStackSize = STACK_SIZE_DEFAULT;
 	fork_snap->mIDToRollback = -1;
@@ -302,7 +302,7 @@ mspace create_shared_mspace()
 {
 	if (!fork_snap)
 		createSharedMemory();
-	return create_mspace_with_base((void *)(fork_snap->mSharedMemoryBase), SHARED_MEMORY_DEFAULT - sizeof(struct fork_snapshotter), 1);
+	return create_mspace_with_base((void *)(fork_snap->mSharedMemoryBase), SHARED_MEMORY_DEFAULT - sizeof(*fork_snap), 1);
 }
 
 static void fork_snapshot_init(unsigned int numbackingpages,

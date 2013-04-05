@@ -1500,8 +1500,6 @@ ModelAction * ModelChecker::check_current_action(ModelAction *curr)
 	bool newly_explored = initialize_curr_action(&curr);
 
 	DBG();
-	if (DBG_ENABLED())
-		curr->print();
 
 	wake_up_sleeping_actions(curr);
 

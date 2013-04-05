@@ -608,7 +608,7 @@ void ModelAction::print() const
 			if (idx >= 0)
 				model_print("  Rf: P%-2d", idx);
 			else
-				model_print("  RF: P? ");
+				model_print("  Rf: P? ");
 		} else
 			model_print("  Rf: ?  ");
 	}

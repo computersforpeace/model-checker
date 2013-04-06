@@ -249,11 +249,37 @@ static void mprot_roll_back(snapshot_id theID)
 #define STACK_SIZE_DEFAULT      (((size_t)1 << 20) * 20)  // 20 mb out of the above 100 mb for my stack
 
 struct fork_snapshotter {
+	/** @brief Pointer to the shared (non-snapshot) memory heap base
+	 * (NOTE: this has size SHARED_MEMORY_DEFAULT - sizeof(*fork_snap)) */
 	void *mSharedMemoryBase;
+
+	/** @brief Pointer to the shared (non-snapshot) stack region */
 	void *mStackBase;
+
+	/** @brief Size of the shared stack */
 	size_t mStackSize;
+
+	/**
+	 * @brief Stores the ID that we are attempting to roll back to
+	 *
+	 * Used in inter-process communication so that each process can
+	 * determine whether or not to take over execution (w/ matching ID) or
+	 * exit (we're rolling back even further). Dubiously marked 'volatile'
+	 * to prevent compiler optimizations from messing with the
+	 * inter-process behavior.
+	 */
 	volatile snapshot_id mIDToRollback;
-	ucontext_t mContextToRollback;
+
+	/**
+	 * @brief The context for the shared (non-snapshot) stack
+	 *
+	 * This context is passed between the various processes which represent
+	 * various snapshot states. It should be used primarily for the
+	 * "client-side" code, not the main snapshot loop.
+	 */
+	ucontext_t shared_ctxt;
+
+	/** @brief Inter-process tracking of the next snapshot ID */
 	snapshot_id currSnapShotID;
 };
 
@@ -266,13 +292,39 @@ static struct fork_snapshotter *fork_snap = NULL;
 *   The bug was actually observed with the forkID, these variables below are
 *   used to indicate the various contexts to which to switch to.
 *
-*   @savedSnapshotContext: contains the point to which takesnapshot() call should switch to.
-*   @savedUserSnapshotContext: contains the point to which the process whose snapshotid is equal to the rollbackid should switch to
-*   @snapshotid: it is a running counter for the various forked processes snapshotid. it is incremented and set in a persistently shared record
+*   @private_ctxt: the context which is internal to the current process. Used
+*   for running the internal snapshot/rollback loop.
+*   @exit_ctxt: a special context used just for exiting from a process (so we
+*   can use swapcontext() instead of setcontext() + hacks)
+*   @snapshotid: it is a running counter for the various forked processes
+*   snapshotid. it is incremented and set in a persistently shared record
 */
-static ucontext_t savedSnapshotContext;
-static ucontext_t savedUserSnapshotContext;
+static ucontext_t private_ctxt;
+static ucontext_t exit_ctxt;
 static snapshot_id snapshotid = 0;
+
+/**
+ * @brief Create a new context, with a given stack and entry function
+ * @param ctxt The context structure to fill
+ * @param stack The stack to run the new context in
+ * @param stacksize The size of the stack
+ * @param func The entry point function for the context
+ */
+static void create_context(ucontext_t *ctxt, void *stack, size_t stacksize,
+		void (*func)(void))
+{
+	getcontext(ctxt);
+	ctxt->uc_stack.ss_sp = stack;
+	ctxt->uc_stack.ss_size = stacksize;
+	makecontext(ctxt, func, 0);
+}
+
+/** @brief An empty function, used for an "empty" context which just exits a
+ *  process */
+static void fork_exit()
+{
+	/* Intentionally empty */
+}
 
 static void createSharedMemory()
 {
@@ -316,36 +368,26 @@ static void fork_snapshot_init(unsigned int numbackingpages,
 	void *pagealignedbase = PageAlignAddressUpward(base_model_snapshot_space);
 	model_snapshot_space = create_mspace_with_base(pagealignedbase, numheappages * PAGESIZE, 1);
 
-	//step 2 setup the stack context.
-	ucontext_t newContext;
-	getcontext(&newContext);
-	newContext.uc_stack.ss_sp = fork_snap->mStackBase;
-	newContext.uc_stack.ss_size = STACK_SIZE_DEFAULT;
-	makecontext(&newContext, entryPoint, 0);
+	/* setup an "exiting" context */
+	char stack[128];
+	create_context(&exit_ctxt, stack, sizeof(stack), fork_exit);
+
+	/* setup the shared-stack context */
+	create_context(&fork_snap->shared_ctxt, fork_snap->mStackBase,
+			STACK_SIZE_DEFAULT, entryPoint);
 	/* switch to a new entryPoint context, on a new stack */
-	model_swapcontext(&savedSnapshotContext, &newContext);
+	model_swapcontext(&private_ctxt, &fork_snap->shared_ctxt);
 
 	/* switch back here when takesnapshot is called */
-	pid_t forkedID = 0;
 	snapshotid = fork_snap->currSnapShotID;
-	/* This bool indicates that the current process's snapshotid is same
-		 as the id to which the rollback needs to occur */
 
-	bool rollback = false;
 	while (true) {
+		pid_t forkedID;
 		fork_snap->currSnapShotID = snapshotid + 1;
 		forkedID = fork();
 
 		if (0 == forkedID) {
-			/* If the rollback bool is set, switch to the context we need to
-				 return to during a rollback. */
-			if (rollback) {
-				setcontext(&(fork_snap->mContextToRollback));
-			} else {
-				/*Child process which is forked as a result of takesnapshot
-					call should switch back to the takesnapshot context*/
-				setcontext(&savedUserSnapshotContext);
-			}
+			setcontext(&fork_snap->shared_ctxt);
 		} else {
 			DEBUG("parent PID: %d, child PID: %d, snapshot ID: %d\n",
 			        getpid(), forkedID, snapshotid);
@@ -360,37 +402,22 @@ static void fork_snapshot_init(unsigned int numbackingpages,
 
 			if (fork_snap->mIDToRollback != snapshotid)
 				exit(EXIT_SUCCESS);
-			rollback = true;
 		}
 	}
 }
 
 static snapshot_id fork_take_snapshot()
 {
-	model_swapcontext(&savedUserSnapshotContext, &savedSnapshotContext);
+	model_swapcontext(&fork_snap->shared_ctxt, &private_ctxt);
 	DEBUG("TAKESNAPSHOT RETURN\n");
 	return snapshotid;
 }
 
 static void fork_roll_back(snapshot_id theID)
 {
+	DEBUG("Rollback\n");
 	fork_snap->mIDToRollback = theID;
-	volatile int sTemp = 0;
-	getcontext(&fork_snap->mContextToRollback);
-	/*
-	 * This is used to quit the process on rollback, so that the process
-	 * which needs to rollback can quit allowing the process whose
-	 * snapshotid matches the rollbackid to switch to this context and
-	 * continue....
-	 */
-	if (!sTemp) {
-		sTemp = 1;
-		DEBUG("Invoked rollback\n");
-		exit(EXIT_SUCCESS);
-	}
-	/*
-	 * This fix obviates the need for a finalize call. hence less dependences for model-checker....
-	 */
+	model_swapcontext(&fork_snap->shared_ctxt, &exit_ctxt);
 	fork_snap->mIDToRollback = -1;
 }
 

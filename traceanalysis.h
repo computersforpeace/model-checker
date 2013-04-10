@@ -4,6 +4,6 @@
 
 class Trace_Analysis {
  public:
-	virtual void analyze(action_list_t *);
+	virtual void analyze(action_list_t *) = 0;
 };
 #endif

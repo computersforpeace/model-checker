@@ -12,6 +12,7 @@
 /* global "model" object */
 #include "model.h"
 #include "snapshot-interface.h"
+#include "scanalysis.h"
 
 static void param_defaults(struct model_params *params)
 {
@@ -19,6 +20,7 @@ static void param_defaults(struct model_params *params)
 	params->maxfuturedelay = 6;
 	params->fairwindow = 0;
 	params->yieldon = false;
+	params->sc_trace_analysis = false;
 	params->enabledcount = 1;
 	params->bound = 0;
 	params->maxfuturevalues = 0;
@@ -58,6 +60,7 @@ static void print_usage(struct model_params *params)
 "-b                    Upper length bound. Default: %d\n"
 "-v                    Print verbose execution information.\n"
 "-u                    Value for uninitialized reads. Default: %u\n"
+"-c                    Use SC Trace Analysis.\n"
 "--                    Program arguments follow.\n\n",
 params->maxreads, params->maxfuturevalues, params->maxfuturedelay, params->expireslop, params->fairwindow, params->yieldon, params->enabledcount, params->bound, params->uninitvalue);
 	exit(EXIT_SUCCESS);
@@ -65,7 +68,7 @@ params->maxreads, params->maxfuturevalues, params->maxfuturedelay, params->expir
 
 static void parse_options(struct model_params *params, int argc, char **argv)
 {
-	const char *shortopts = "hym:M:s:S:f:e:b:u:v";
+	const char *shortopts = "hymc:M:s:S:f:e:b:u:v";
 	int opt;
 	bool error = false;
 	while (!error && (opt = getopt(argc, argv, shortopts)) != -1) {
@@ -100,6 +103,9 @@ static void parse_options(struct model_params *params, int argc, char **argv)
 		case 'u':
 			params->uninitvalue = atoi(optarg);
 			break;
+		case 'c':
+			params->sc_trace_analysis = true;
+			break;
 		case 'y':
 			params->yieldon = true;
 			break;
@@ -126,6 +132,11 @@ static void parse_options(struct model_params *params, int argc, char **argv)
 int main_argc;
 char **main_argv;
 
+void install_trace_analyses() {
+	if (model->params.sc_trace_analysis)
+		model->add_trace_analysis(new SCAnalysis());
+}
+
 /** The model_main function contains the main model checking loop. */
 static void model_main()
 {
@@ -141,6 +152,8 @@ static void model_main()
 	snapshot_stack_init();
 
 	model = new ModelChecker(params);
+	install_trace_analyses();
+
 	snapshot_record(0);
 	model->run();
 	delete model;

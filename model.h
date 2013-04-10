@@ -40,6 +40,7 @@ struct model_params {
 	int maxreads;
 	int maxfuturedelay;
 	bool yieldon;
+	bool sc_trace_analysis;
 	unsigned int fairwindow;
 	unsigned int enabledcount;
 	unsigned int bound;
@@ -138,6 +139,9 @@ public:
 
 	const model_params params;
 	Node * get_curr_node() const;
+	void add_trace_analysis(Trace_Analysis * a) {
+		trace_analyses->push_back(a);
+	}
 
 	MEMALLOC
 private:

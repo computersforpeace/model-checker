@@ -24,6 +24,7 @@ class Promise;
 class Scheduler;
 class Thread;
 class ClockVector;
+class Trace_Analysis;
 struct model_snapshot_members;
 
 /** @brief Shorthand for a list of release sequence heads */
@@ -246,6 +247,8 @@ private:
 	SnapVector<ModelAction *> * const thrd_last_action;
 	SnapVector<ModelAction *> * const thrd_last_fence_release;
 	NodeStack * const node_stack;
+	ModelVector<Trace_Analysis *> * trace_analyses;
+
 
 	/** Private data members that should be snapshotted. They are grouped
 	 * together for efficiency and maintainability. */
@@ -274,7 +277,7 @@ private:
 	/** @brief The cumulative execution stats */
 	struct execution_stats stats;
 	void record_stats();
-
+	void run_trace_analyses();
 	void print_infeasibility(const char *prefix) const;
 	bool is_feasible_prefix_ignore_relseq() const;
 	bool is_infeasible() const;

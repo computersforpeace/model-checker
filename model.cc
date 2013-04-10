@@ -16,6 +16,7 @@
 #include "datarace.h"
 #include "threads-model.h"
 #include "output.h"
+#include "traceanalysis.h"
 
 #define INITIAL_THREAD_ID	0
 
@@ -92,6 +93,7 @@ ModelChecker::ModelChecker(struct model_params params) :
 	thrd_last_action(new SnapVector<ModelAction *>(1)),
 	thrd_last_fence_release(new SnapVector<ModelAction *>()),
 	node_stack(new NodeStack()),
+	trace_analyses(new ModelVector<Trace_Analysis *>()),
 	priv(new struct model_snapshot_members()),
 	mo_graph(new CycleGraph())
 {
@@ -121,6 +123,9 @@ ModelChecker::~ModelChecker()
 	delete thrd_last_action;
 	delete thrd_last_fence_release;
 	delete node_stack;
+	for (unsigned int i = 0; i <trace_analyses->size();i++)
+		delete (*trace_analyses)[i];
+	delete trace_analyses;
 	delete scheduler;
 	delete mo_graph;
 	delete priv;
@@ -553,6 +558,7 @@ bool ModelChecker::next_execution()
 			assert_bug("Deadlock detected");
 
 		checkDataRaces();
+		run_trace_analyses();
 	}
 
 	record_stats();
@@ -576,6 +582,15 @@ bool ModelChecker::next_execution()
 
 	reset_to_initial_state();
 	return true;
+}
+
+/**
+ * @brief Run trace analyses on complete trace. */
+
+void ModelChecker::run_trace_analyses() {
+	for(unsigned int i=0; i < trace_analyses->size(); i++) {
+		(*trace_analyses)[i]->analyze(action_trace);
+	}
 }
 
 /**

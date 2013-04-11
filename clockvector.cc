@@ -37,10 +37,10 @@ ClockVector::~ClockVector()
  * resulting vector length will be the maximum length of the two being merged.
  * @param cv is the ClockVector being merged into this vector.
  */
-void ClockVector::merge(const ClockVector *cv)
+bool ClockVector::merge(const ClockVector *cv)
 {
 	ASSERT(cv != NULL);
-
+	bool changed = false;
 	if (cv->num_threads > num_threads) {
 		clock = (modelclock_t *)snapshot_realloc(clock, cv->num_threads * sizeof(modelclock_t));
 		for (int i = num_threads; i < cv->num_threads; i++)
@@ -50,8 +50,12 @@ void ClockVector::merge(const ClockVector *cv)
 
 	/* Element-wise maximum */
 	for (int i = 0; i < cv->num_threads; i++)
-		if (cv->clock[i] > clock[i])
+		if (cv->clock[i] > clock[i]) {
 			clock[i] = cv->clock[i];
+			changed = true;
+		}
+	
+	return changed;
 }
 
 /**

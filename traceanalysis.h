@@ -5,5 +5,6 @@
 class Trace_Analysis {
  public:
 	virtual void analyze(action_list_t *) = 0;
+	SNAPSHOTALLOC
 };
 #endif

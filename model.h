@@ -29,7 +29,6 @@ struct model_snapshot_members;
 
 /** @brief Shorthand for a list of release sequence heads */
 typedef ModelVector<const ModelAction *> rel_heads_list_t;
-
 typedef SnapList<ModelAction *> action_list_t;
 
 /**
@@ -142,6 +141,8 @@ public:
 	void add_trace_analysis(Trace_Analysis * a) {
 		trace_analyses->push_back(a);
 	}
+
+	action_list_t * get_actions_on_obj(void * obj, thread_id_t tid);
 
 	MEMALLOC
 private:

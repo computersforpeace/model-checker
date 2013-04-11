@@ -151,6 +151,18 @@ static SnapVector<action_list_t> * get_safe_ptr_vect_action(HashTable<void *, Sn
 	return tmp;
 }
 
+action_list_t * ModelChecker::get_actions_on_obj(void * obj, thread_id_t tid) {
+	SnapVector<action_list_t> *wrv=obj_thrd_map->get(obj);
+	if (wrv==NULL)
+		return NULL;
+	unsigned int thread=id_to_int(tid);
+	if (thread < wrv->size())
+		return &(*wrv)[thread];
+	else
+		return NULL;
+}
+
+
 /**
  * Restores user program to initial state and resets all model-checker data
  * structures.

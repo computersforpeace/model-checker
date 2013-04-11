@@ -68,7 +68,7 @@ params->maxreads, params->maxfuturevalues, params->maxfuturedelay, params->expir
 
 static void parse_options(struct model_params *params, int argc, char **argv)
 {
-	const char *shortopts = "hymc:M:s:S:f:e:b:u:v";
+	const char *shortopts = "hycm:M:s:S:f:e:b:u:v";
 	int opt;
 	bool error = false;
 	while (!error && (opt = getopt(argc, argv, shortopts)) != -1) {

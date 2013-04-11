@@ -21,8 +21,6 @@ class Promise;
 class CycleNode;
 class ModelAction;
 
-typedef ModelVector<const Promise *> promise_list_t;
-
 /** @brief A graph of Model Actions for tracking cycles. */
 class CycleGraph {
  public:

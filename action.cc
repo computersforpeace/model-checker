@@ -11,6 +11,12 @@
 
 #define ACTION_INITIAL_CLOCK 0
 
+/** A special value to represent a successful trylock */
+#define VALUE_TRYSUCCESS 1
+
+/** A special value to represent a failed trylock */
+#define VALUE_TRYFAILED 0
+
 /**
  * @brief Construct a new ModelAction
  *
@@ -380,11 +386,9 @@ void ModelAction::create_cv(const ModelAction *parent)
 		cv = new ClockVector(NULL, this);
 }
 
-void ModelAction::set_try_lock(bool obtainedlock) {
-	if (obtainedlock)
-		value = VALUE_TRYSUCCESS;
-	else
-		value = VALUE_TRYFAILED;
+void ModelAction::set_try_lock(bool obtainedlock)
+{
+	value = obtainedlock ? VALUE_TRYSUCCESS : VALUE_TRYFAILED;
 }
 
 /**

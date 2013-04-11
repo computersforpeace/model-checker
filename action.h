@@ -31,12 +31,6 @@ using std::memory_order_seq_cst;
  *  hence by iteself does not indicate no value. */
 #define VALUE_NONE 0xdeadbeef
 
-/** A special value to represent a successful trylock */
-#define VALUE_TRYSUCCESS 1
-
-/** A special value to represent a failed trylock */
-#define VALUE_TRYFAILED 0
-
 /** @brief Represents an action type, identifying one of several types of
  * ModelAction */
 typedef enum action_type {

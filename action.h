@@ -12,6 +12,7 @@
 #include "memoryorder.h"
 #include "modeltypes.h"
 
+/* Forward declarations */
 class ClockVector;
 class Thread;
 class Promise;
@@ -27,8 +28,13 @@ using std::memory_order_release;
 using std::memory_order_acq_rel;
 using std::memory_order_seq_cst;
 
-/** Note that this value can be legitimately used by a program, and
- *  hence by iteself does not indicate no value. */
+/**
+ * @brief A recognizable don't-care value for use in the ModelAction::value
+ * field
+ *
+ * Note that this value can be legitimately used by a program, and hence by
+ * iteself does not indicate no value.
+ */
 #define VALUE_NONE 0xdeadbeef
 
 /** @brief Represents an action type, identifying one of several types of
@@ -63,7 +69,12 @@ class Node;
 class ClockVector;
 
 /**
- * The ModelAction class encapsulates an atomic action.
+ * @brief Represents a single atomic action
+ *
+ * A ModelAction is always allocated as non-snapshotting, because it is used in
+ * multiple executions during backtracking. Except for fake uninitialized
+ * (ATOMIC_UNINIT) ModelActions, each action is assigned a unique sequence
+ * number.
  */
 class ModelAction {
 public:
@@ -162,38 +173,61 @@ public:
 	MEMALLOC
 private:
 
-	/** Type of action (read, write, thread create, thread yield, thread join) */
+	/** @brief Type of action (read, write, RMW, fence, thread create, etc.) */
 	action_type type;
 
-	/** The memory order for this operation. */
+	/** @brief The memory order for this operation. */
 	memory_order order;
 
-	/** A pointer to the memory location for this action. */
+	/** @brief A pointer to the memory location for this action. */
 	void *location;
 
-	/** The thread id that performed this action. */
+	/** @brief The thread id that performed this action. */
 	thread_id_t tid;
 
-	/** The value written (for write or RMW; undefined for read) */
+	/** @brief The value written (for write or RMW; undefined for read) */
 	uint64_t value;
 
-	/** The action that this action reads from. Only valid for reads */
+	/**
+	 * @brief The store that this action reads from
+	 *
+	 * Only valid for reads
+	 */
 	const ModelAction *reads_from;
 
-	/** The promise that this action reads from. Only valid for reads */
+	/**
+	 * @brief The promise that this action reads from
+	 *
+	 * Only valid for reads
+	 */
 	Promise *reads_from_promise;
 
-	/** The last fence release from the same thread */
+	/** @brief The last fence release from the same thread */
 	const ModelAction *last_fence_release;
 
-	/** A back reference to a Node in NodeStack, if this ModelAction is
-	 * saved on the NodeStack. */
+	/**
+	 * @brief A back reference to a Node in NodeStack
+	 *
+	 * Only set if this ModelAction is saved on the NodeStack. (A
+	 * ModelAction can be thrown away before it ever enters the NodeStack.)
+	 */
 	Node *node;
 
+	/**
+	 * @brief The sequence number of this action
+	 *
+	 * Except for ATOMIC_UNINIT actions, this number should be unique and
+	 * should represent the action's position in the execution order.
+	 */
 	modelclock_t seq_number;
 
-	/** The clock vector stored with this action; only needed if this
-	 * action is a store release? */
+	/**
+	 * @brief The clock vector for this operation
+	 *
+	 * Technically, this is only needed for potentially synchronizing
+	 * (e.g., non-relaxed) operations, but it is very handy to have these
+	 * vectors for all operations.
+	 */
 	ClockVector *cv;
 
 	bool sleep_flag;

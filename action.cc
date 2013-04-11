@@ -11,10 +11,10 @@
 
 #define ACTION_INITIAL_CLOCK 0
 
-/** A special value to represent a successful trylock */
+/** @brief A special value to represent a successful trylock */
 #define VALUE_TRYSUCCESS 1
 
-/** A special value to represent a failed trylock */
+/** @brief A special value to represent a failed trylock */
 #define VALUE_TRYFAILED 0
 
 /**
@@ -279,11 +279,17 @@ Thread * ModelAction::get_thread_operand() const
 		return NULL;
 }
 
-/** This method changes an existing read part of an RMW action into either:
- *  (1) a full RMW action in case of the completed write or
- *  (2) a READ action in case a failed action.
+/**
+ * @brief Convert the read portion of an RMW
+ *
+ * Changes an existing read part of an RMW action into either:
+ *  -# a full RMW action in case of the completed write or
+ *  -# a READ action in case a failed action.
+ *
  * @todo  If the memory_order changes, we may potentially need to update our
  * clock vector.
+ *
+ * @param act The second half of the RMW (either RMWC or RMW)
  */
 void ModelAction::process_rmw(ModelAction *act)
 {
@@ -296,14 +302,18 @@ void ModelAction::process_rmw(ModelAction *act)
 	}
 }
 
-/** The is_synchronizing method should only explore interleavings if:
- *  (1) the operations are seq_cst and don't commute or
- *  (2) the reordering may establish or break a synchronization relation.
- *  Other memory operations will be dealt with by using the reads_from
- *  relation.
+/**
+ * @brief Check if this action should be backtracked with another, due to
+ * potential synchronization
  *
- *  @param act is the action to consider exploring a reordering.
- *  @return tells whether we have to explore a reordering.
+ * The is_synchronizing method should only explore interleavings if:
+ *  -# the operations are seq_cst and don't commute or
+ *  -# the reordering may establish or break a synchronization relation.
+ *
+ * Other memory operations will be dealt with by using the reads_from relation.
+ *
+ * @param act The action to consider exploring a reordering
+ * @return True, if we have to explore a reordering; otherwise false
  */
 bool ModelAction::could_synchronize_with(const ModelAction *act) const
 {

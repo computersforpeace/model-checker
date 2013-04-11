@@ -82,6 +82,7 @@ class CycleGraph {
 
 	/** @brief A flag: true if this graph contains cycles */
 	bool hasCycles;
+	/** @brief The previous value of CycleGraph::hasCycles, for rollback */
 	bool oldCycles;
 
 	SnapVector<CycleNode *> rollbackvector;

@@ -232,8 +232,8 @@ bool CycleGraph::addNodeEdge(CycleNode *fromnode, CycleNode *tonode)
  *
  * Handles special case of a RMW action, where the ModelAction rmw reads from
  * the ModelAction/Promise from. The key differences are:
- * (1) no write can occur in between the rmw and the from action.
- * (2) Only one RMW action can read from a given write.
+ *  -# No write can occur in between the @a rmw and @a from actions.
+ *  -# Only one RMW action can read from a given write.
  *
  * @param from The edge comes from this ModelAction/Promise
  * @param rmw The edge points to this ModelAction; this action must read from
@@ -472,6 +472,7 @@ bool CycleGraph::checkPromise(const ModelAction *fromact, Promise *promise) cons
 	return false;
 }
 
+/** @brief Begin a new sequence of graph additions which can be rolled back */
 void CycleGraph::startChanges()
 {
 	ASSERT(rollbackvector.empty());
@@ -531,7 +532,7 @@ CycleNode::CycleNode(const Promise *promise) :
 
 /**
  * @param i The index of the edge to return
- * @returns The a CycleNode edge indexed by i
+ * @returns The CycleNode edge indexed by i
  */
 CycleNode * CycleNode::getEdge(unsigned int i) const
 {
@@ -544,11 +545,16 @@ unsigned int CycleNode::getNumEdges() const
 	return edges.size();
 }
 
+/**
+ * @param i The index of the back edge to return
+ * @returns The CycleNode back-edge indexed by i
+ */
 CycleNode * CycleNode::getBackEdge(unsigned int i) const
 {
 	return back_edges[i];
 }
 
+/** @returns The number of edges entering this CycleNode */
 unsigned int CycleNode::getNumBackEdges() const
 {
 	return back_edges.size();

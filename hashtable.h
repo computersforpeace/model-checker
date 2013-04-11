@@ -12,8 +12,9 @@
 #include "common.h"
 
 /**
- * Hashtable linked node class, for chained storage of hash table conflicts. By
- * default it is snapshotting, but you can pass in your own allocation
+ * @brief HashTable linked node class, for chained storage of hash table conflicts
+ *
+ * By default it is snapshotting, but you can pass in your own allocation
  * functions.
  *
  * @tparam _Key    Type name for the key
@@ -33,8 +34,10 @@ struct hashlistnode {
 };
 
 /**
- * Hashtable class. By default it is snapshotting, but you can pass in your own
- * allocation functions.
+ * @brief A simple, custom hash table
+ *
+ * By default it is snapshotting, but you can pass in your own allocation
+ * functions.
  *
  * @tparam _Key    Type name for the key
  * @tparam _Val    Type name for the values to be stored

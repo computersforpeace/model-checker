@@ -22,11 +22,18 @@ struct fairness_info {
 	bool priority;
 };
 
+/**
+ * @brief Types of read-from relations
+ *
+ * Our "may-read-from" set is composed of multiple types of reads, and we have
+ * to iterate through all of them in the backtracking search. This enumeration
+ * helps to identify which type of read-from we are currently observing.
+ */
 typedef enum {
-	READ_FROM_PAST,
-	READ_FROM_PROMISE,
-	READ_FROM_FUTURE,
-	READ_FROM_NONE,
+	READ_FROM_PAST, /**< @brief Read from a prior, existing store */
+	READ_FROM_PROMISE, /**< @brief Read from an existing promised future value */
+	READ_FROM_FUTURE, /**< @brief Read from a newly-asserted future value */
+	READ_FROM_NONE, /**< @brief A NULL state, which should not be reached */
 } read_from_type_t;
 
 #define YIELD_E 1

@@ -49,15 +49,9 @@ void assert_race(struct DataRace *race);
 
 extern SnapVector<struct DataRace *> unrealizedraces;
 
-/** Basic encoding idea:
- *	 (void *) Either:
- *	 (1) points to a full record or
- *
- * (2) encodes the information in a 64 bit word.  Encoding is as
- * follows: lowest bit set to 1, next 8 bits are read thread id, next
- * 23 bits are read clock vector, next 8 bites are write thread id,
- * next 23 bits are write clock vector.  */
-
+/**
+ * @brief A record of information for detecting data races
+ */
 struct RaceRecord {
 	modelclock_t *readClock;
 	thread_id_t *thread;
@@ -81,6 +75,17 @@ struct RaceRecord {
 #define WRITEMASK READMASK
 #define WRITEVECTOR(x) (((x)>>40)&WRITEMASK)
 
+/**
+ * The basic encoding idea is that (void *) either:
+ *  -# points to a full record (RaceRecord) or
+ *  -# encodes the information in a 64 bit word. Encoding is as
+ *     follows:
+ *     - lowest bit set to 1
+ *     - next 8 bits are read thread id
+ *     - next 23 bits are read clock vector
+ *     - next 8 bits are write thread id
+ *     - next 23 bits are write clock vector
+ */
 #define ENCODEOP(rdthread, rdtime, wrthread, wrtime) (0x1ULL | ((rdthread)<<1) | ((rdtime) << 9) | (((uint64_t)wrthread)<<32) | (((uint64_t)wrtime)<<40))
 
 #define MAXTHREADID (THREADMASK-1)

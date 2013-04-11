@@ -1796,16 +1796,15 @@ bool ModelChecker::check_recency(ModelAction *curr, const T *rf) const
 }
 
 /**
- * Updates the mo_graph with the constraints imposed from the current
+ * @brief Updates the mo_graph with the constraints imposed from the current
  * read.
  *
  * Basic idea is the following: Go through each other thread and find
  * the last action that happened before our read.  Two cases:
  *
- * (1) The action is a write => that write must either occur before
+ * -# The action is a write: that write must either occur before
  * the write we read from or be the write we read from.
- *
- * (2) The action is a read => the write that that action read from
+ * -# The action is a read: the write that that action read from
  * must occur before the write we read from or be the same write.
  *
  * @param curr The current action. Must be a read.

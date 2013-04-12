@@ -5,11 +5,13 @@
 
 SCAnalysis::SCAnalysis() {
 	cvmap=new HashTable<const ModelAction *, ClockVector *, uintptr_t, 4>();
+	cycleset=new HashTable<const ModelAction *, const ModelAction *, uintptr_t, 4>();
 	threadlists=new SnapVector<action_list_t>(1);
 }
 
 SCAnalysis::~SCAnalysis() {
 	delete cvmap;
+	delete cycleset;
 	delete threadlists;
 }
 
@@ -22,8 +24,11 @@ void SCAnalysis::print_list(action_list_t *list) {
 
 	for (it = list->begin(); it != list->end(); it++) {
 		const ModelAction *act = *it;
-		if (act->get_seq_number() > 0)
+		if (act->get_seq_number() > 0) {
+			if (cycleset->contains(act))
+				model_print("CYC");
 			act->print();
+		}
 		hash = hash^(hash<<3)^((*it)->hash());
 	}
 	model_print("HASH %u\n", hash);
@@ -35,6 +40,13 @@ void SCAnalysis::analyze(action_list_t * actions) {
 	computeCV(actions);
 	action_list_t *list=generateSC(actions);
 	print_list(list);
+}
+
+bool SCAnalysis::merge(ClockVector * cv, const ModelAction * act, ClockVector *cv2) {
+	if (cv2->getClock(act->get_tid())>=act->get_seq_number() && act->get_seq_number() != 0) {
+		cycleset->put(act, act);
+	}
+	return cv->merge(cv2);
 }
 
 ModelAction * SCAnalysis::getNextAction() {
@@ -107,7 +119,7 @@ bool SCAnalysis::updateConstraints(ModelAction *act) {
 				break;
 			if (write->get_location() == act->get_location()) {
 				//write is sc after act
-				writecv->merge(actcv);
+				merge(writecv, write, actcv);
 				changed=true;
 				break;
 			}
@@ -122,7 +134,7 @@ bool SCAnalysis::processRead(ModelAction *read, ClockVector *cv) {
 	/* Merge in the clock vector from the write */
 	const ModelAction *write=read->get_reads_from();
 	ClockVector *writecv=cvmap->get(write);
-	changed|= ( writecv == NULL || cv->merge(writecv) && (*read < *write));
+	changed|= ( writecv == NULL || merge(cv, read, writecv) && (*read < *write));
 
 	for(int i=0;i<=maxthreads;i++) {
 		thread_id_t tid=int_to_id(i);
@@ -146,7 +158,7 @@ bool SCAnalysis::processRead(ModelAction *read, ClockVector *cv) {
 				 write -rf-> R =>
 				 R -sc-> write2 */
 			if (write2cv->synchronized_since(write)) {
-				changed |= write2cv->merge(cv);
+				changed |= merge(write2cv, write2, cv);
 			}
 		
 			//looking for earliest write2 in iteration to satisfy this
@@ -154,7 +166,7 @@ bool SCAnalysis::processRead(ModelAction *read, ClockVector *cv) {
 				 write -rf-> R =>
 				 write2 -sc-> write */
 			if (cv->synchronized_since(write2)) {
-				changed |= writecv == NULL || writecv->merge(write2cv);
+				changed |= writecv == NULL || merge(writecv, write, write2cv);
 				break;
 			}
 		}
@@ -183,7 +195,13 @@ void SCAnalysis::computeCV(action_list_t *list) {
 				cv = new ClockVector(lastcv, act);
 				cvmap->put(act, cv);
 			} else if ( lastcv != NULL ) {
-					cv->merge(lastcv);
+				merge(cv, act, lastcv);
+			}
+			if (act->is_thread_join()) {
+				Thread *joinedthr = act->get_thread_operand();
+				ModelAction *finish = model->get_last_action(joinedthr->get_id());
+				ClockVector *finishcv = cvmap->get(finish);
+				changed |= (finishcv == NULL) || merge(cv, act, finishcv);
 			}
 			if (act->is_thread_join()) {
 				Thread *joinedthr = act->get_thread_operand();

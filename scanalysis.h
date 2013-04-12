@@ -18,8 +18,10 @@ class SCAnalysis : public Trace_Analysis {
 	action_list_t * generateSC(action_list_t *);
 	bool processRead(ModelAction *read, ClockVector *cv);
 	ModelAction * getNextAction();
+	bool merge(ClockVector * cv, const ModelAction * act, ClockVector *cv2);
 	int maxthreads;
 	HashTable<const ModelAction *,ClockVector *, uintptr_t, 4 > * cvmap;
+	HashTable<const ModelAction *,const ModelAction *, uintptr_t, 4 > * cycleset;
 	SnapVector<action_list_t> * threadlists;
 };
 #endif

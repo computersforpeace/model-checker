@@ -143,6 +143,7 @@ public:
 	}
 
 	action_list_t * get_actions_on_obj(void * obj, thread_id_t tid);
+	ModelAction * get_last_action(thread_id_t tid) const;
 
 	MEMALLOC
 private:
@@ -203,7 +204,6 @@ private:
 
 	void check_curr_backtracking(ModelAction *curr);
 	void add_action_to_lists(ModelAction *act);
-	ModelAction * get_last_action(thread_id_t tid) const;
 	ModelAction * get_last_fence_release(thread_id_t tid) const;
 	ModelAction * get_last_seq_cst_write(ModelAction *curr) const;
 	ModelAction * get_last_seq_cst_fence(thread_id_t tid, const ModelAction *before_fence) const;

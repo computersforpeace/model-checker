@@ -65,6 +65,31 @@ ModelAction * SCAnalysis::getNextAction() {
 			act=first;
 		}
 	}
+	if (act==NULL)
+		return act;
+	//print cycles in a nice way to avoid confusion
+	//make sure thread starts appear after the create
+	if (act->is_thread_start()) {
+		ModelAction *createact=model->get_thread(act)->get_creation();
+		if (createact) {
+			action_list_t *threadlist=&(*threadlists)[id_to_int(createact->get_tid())];
+			if (!threadlist->empty()) {
+				ModelAction *first=threadlist->front();
+				if (first->get_seq_number() <= createact->get_seq_number())
+					act=first;
+			}
+		}
+	}
+
+	//make sure that joins appear after the thread is finished
+	if (act->is_thread_join()) {
+		int jointhread=id_to_int(act->get_thread_operand()->get_id());
+		action_list_t *threadlist=&(*threadlists)[jointhread];
+		if (!threadlist->empty()) {
+			act=threadlist->front();
+		}
+	}
+
 	return act;
 }
 

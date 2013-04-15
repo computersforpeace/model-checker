@@ -3113,6 +3113,12 @@ void user_main_wrapper(void *)
 	user_main(model->params.argc, model->params.argv);
 }
 
+/** @return True if the execution has taken too many steps */
+bool ModelChecker::too_many_steps() const
+{
+	return params.bound != 0 && priv->used_sequence_numbers > params.bound;
+}
+
 bool ModelChecker::should_terminate_execution()
 {
 	/* Infeasible -> don't take any more steps */
@@ -3123,7 +3129,7 @@ bool ModelChecker::should_terminate_execution()
 		return true;
 	}
 
-	if (params.bound != 0 && priv->used_sequence_numbers > params.bound)
+	if (too_many_steps())
 		return true;
 	return false;
 }

@@ -287,6 +287,7 @@ private:
 	bool is_feasible_prefix_ignore_relseq() const;
 	bool is_infeasible() const;
 	bool is_deadlocked() const;
+	bool too_many_steps() const;
 	bool is_complete_execution() const;
 	bool have_bug_reports() const;
 	void print_bugs() const;

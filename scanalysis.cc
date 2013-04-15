@@ -93,7 +93,7 @@ ModelAction * SCAnalysis::getNextAction() {
 	return act;
 }
 
-action_list_t * SCAnalysis::generateSC(action_list_t *list) {	
+action_list_t * SCAnalysis::generateSC(action_list_t *list) {
 	action_list_t *sclist=new action_list_t();
 	while (true) {
 		ModelAction * act=getNextAction();
@@ -148,7 +148,7 @@ bool SCAnalysis::updateConstraints(ModelAction *act) {
 				changed=true;
 				break;
 			}
-		}		
+		}
 	}
 	return changed;
 }
@@ -178,14 +178,14 @@ bool SCAnalysis::processRead(ModelAction *read, ClockVector *cv) {
 			ClockVector *write2cv = cvmap->get(write2);
 			if (write2cv == NULL)
 				continue;
-			
+
 			/* write -sc-> write2 &&
 				 write -rf-> R =>
 				 R -sc-> write2 */
 			if (write2cv->synchronized_since(write)) {
 				changed |= merge(write2cv, write2, cv);
 			}
-		
+
 			//looking for earliest write2 in iteration to satisfy this
 			/* write2 -sc-> R &&
 				 write -rf-> R =>

@@ -123,7 +123,7 @@ ModelChecker::~ModelChecker()
 	delete thrd_last_action;
 	delete thrd_last_fence_release;
 	delete node_stack;
-	for (unsigned int i = 0; i <trace_analyses->size();i++)
+	for (unsigned int i = 0; i < trace_analyses->size(); i++)
 		delete (*trace_analyses)[i];
 	delete trace_analyses;
 	delete scheduler;
@@ -596,13 +596,10 @@ bool ModelChecker::next_execution()
 	return true;
 }
 
-/**
- * @brief Run trace analyses on complete trace. */
-
+/** @brief Run trace analyses on complete trace */
 void ModelChecker::run_trace_analyses() {
-	for(unsigned int i=0; i < trace_analyses->size(); i++) {
+	for (unsigned int i = 0; i < trace_analyses->size(); i++)
 		(*trace_analyses)[i]->analyze(action_trace);
-	}
 }
 
 /**

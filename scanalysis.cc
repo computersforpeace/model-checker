@@ -228,12 +228,6 @@ void SCAnalysis::computeCV(action_list_t *list) {
 				ClockVector *finishcv = cvmap->get(finish);
 				changed |= (finishcv == NULL) || merge(cv, act, finishcv);
 			}
-			if (act->is_thread_join()) {
-				Thread *joinedthr = act->get_thread_operand();
-				ModelAction *finish = model->get_last_action(joinedthr->get_id());
-				ClockVector *finishcv = cvmap->get(finish);
-				changed |= (finishcv == NULL) || cv->merge(finishcv);
-			}
 			if (act->is_read()) {
 				changed|=processRead(act, cv);
 			}

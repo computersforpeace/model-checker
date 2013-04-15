@@ -159,7 +159,7 @@ bool SCAnalysis::processRead(ModelAction *read, ClockVector *cv) {
 	/* Merge in the clock vector from the write */
 	const ModelAction *write=read->get_reads_from();
 	ClockVector *writecv=cvmap->get(write);
-	changed|= ( writecv == NULL || merge(cv, read, writecv) && (*read < *write));
+	changed |= writecv == NULL || (merge(cv, read, writecv) && (*read < *write));
 
 	for(int i=0;i<=maxthreads;i++) {
 		thread_id_t tid=int_to_id(i);

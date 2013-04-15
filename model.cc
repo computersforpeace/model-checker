@@ -80,7 +80,7 @@ ModelChecker::ModelChecker(struct model_params params) :
 	thrd_last_action(new SnapVector<ModelAction *>(1)),
 	thrd_last_fence_release(new SnapVector<ModelAction *>()),
 	node_stack(new NodeStack()),
-	trace_analyses(new ModelVector<Trace_Analysis *>()),
+	trace_analyses(new ModelVector<TraceAnalysis *>()),
 	priv(new struct model_snapshot_members()),
 	mo_graph(new CycleGraph())
 {

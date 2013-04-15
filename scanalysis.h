@@ -3,7 +3,7 @@
 #include "traceanalysis.h"
 #include "hashtable.h"
 
-class SCAnalysis : public Trace_Analysis {
+class SCAnalysis : public TraceAnalysis {
  public:
 	SCAnalysis();
 	~SCAnalysis();

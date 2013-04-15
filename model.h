@@ -25,7 +25,7 @@ class Promise;
 class Scheduler;
 class Thread;
 class ClockVector;
-class Trace_Analysis;
+class TraceAnalysis;
 struct model_snapshot_members;
 
 /** @brief Shorthand for a list of release sequence heads */
@@ -106,7 +106,7 @@ public:
 
 	const model_params params;
 	Node * get_curr_node() const;
-	void add_trace_analysis(Trace_Analysis * a) {
+	void add_trace_analysis(TraceAnalysis *a) {
 		trace_analyses->push_back(a);
 	}
 
@@ -220,7 +220,7 @@ private:
 	SnapVector<ModelAction *> * const thrd_last_action;
 	SnapVector<ModelAction *> * const thrd_last_fence_release;
 	NodeStack * const node_stack;
-	ModelVector<Trace_Analysis *> * trace_analyses;
+	ModelVector<TraceAnalysis *> * trace_analyses;
 
 
 	/** Private data members that should be snapshotted. They are grouped

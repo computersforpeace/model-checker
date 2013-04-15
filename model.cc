@@ -17,24 +17,11 @@
 #include "threads-model.h"
 #include "output.h"
 #include "traceanalysis.h"
+#include "bugmessage.h"
 
 #define INITIAL_THREAD_ID	0
 
 ModelChecker *model;
-
-struct bug_message {
-	bug_message(const char *str) {
-		const char *fmt = "  [BUG] %s\n";
-		msg = (char *)snapshot_malloc(strlen(fmt) + strlen(str));
-		sprintf(msg, fmt, str);
-	}
-	~bug_message() { if (msg) snapshot_free(msg); }
-
-	char *msg;
-	void print() { model_print("%s", msg); }
-
-	SNAPSHOTALLOC
-};
 
 /**
  * Structure for holding small ModelChecker members that should be snapshotted

@@ -37,7 +37,8 @@ struct hashlistnode {
  * @brief A simple, custom hash table
  *
  * By default it is snapshotting, but you can pass in your own allocation
- * functions.
+ * functions. Note that this table does not support 0 (NULL) keys and is
+ * designed primarily with pointer-based keys in mind.
  *
  * @tparam _Key    Type name for the key
  * @tparam _Val    Type name for the values to be stored
@@ -105,6 +106,9 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift = 0, void * 
 
 	/** Put a key value pair into the table. */
 	void put(_Key key, _Val val) {
+		/* HashTable cannot handle 0 as a key */
+		ASSERT(key);
+
 		if (size > threshold)
 			resize(capacity << 1);
 
@@ -130,6 +134,9 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift = 0, void * 
 	_Val get(_Key key) const {
 		struct hashlistnode<_Key, _Val> *search;
 
+		/* HashTable cannot handle 0 as a key */
+		ASSERT(key);
+
 		unsigned int index = ((_KeyInt)key) >> _Shift;
 		do {
 			index &= capacitymask;
@@ -144,6 +151,9 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift = 0, void * 
 	/** Check whether the table contains a value for the given key. */
 	bool contains(_Key key) const {
 		struct hashlistnode<_Key, _Val> *search;
+
+		/* HashTable cannot handle 0 as a key */
+		ASSERT(key);
 
 		unsigned int index = ((_KeyInt)key) >> _Shift;
 		do {

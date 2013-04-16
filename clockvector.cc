@@ -1,7 +1,6 @@
 #include <cstring>
 #include <stdlib.h>
 
-#include "model.h"
 #include "action.h"
 #include "clockvector.h"
 #include "common.h"
@@ -17,13 +16,16 @@
  */
 ClockVector::ClockVector(ClockVector *parent, ModelAction *act)
 {
-	num_threads = model->get_num_threads();
+	ASSERT(act);
+	num_threads = int_to_id(act->get_tid()) + 1;
+	if (parent && parent->num_threads > num_threads)
+		num_threads = parent->num_threads;
+
 	clock = (modelclock_t *)snapshot_calloc(num_threads, sizeof(int));
 	if (parent)
 		std::memcpy(clock, parent->clock, parent->num_threads * sizeof(modelclock_t));
 
-	if (act)
-		clock[id_to_int(act->get_tid())] = act->get_seq_number();
+	clock[id_to_int(act->get_tid())] = act->get_seq_number();
 }
 
 /** @brief Destructor */

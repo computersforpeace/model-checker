@@ -4,6 +4,7 @@
 #include <new>
 #include <stdarg.h>
 
+#include "model.h"
 #include "execution.h"
 #include "action.h"
 #include "nodestack.h"
@@ -56,7 +57,11 @@ struct model_snapshot_members {
 };
 
 /** @brief Constructor */
-ModelExecution::ModelExecution(struct model_params *params, Scheduler *scheduler, NodeStack *node_stack) :
+ModelExecution::ModelExecution(ModelChecker *m,
+		struct model_params *params,
+		Scheduler *scheduler,
+		NodeStack *node_stack) :
+	model(m),
 	params(params),
 	scheduler(scheduler),
 	action_trace(new action_list_t()),
@@ -71,8 +76,7 @@ ModelExecution::ModelExecution(struct model_params *params, Scheduler *scheduler
 	thrd_last_fence_release(new SnapVector<ModelAction *>()),
 	node_stack(node_stack),
 	priv(new struct model_snapshot_members()),
-	mo_graph(new CycleGraph()),
-	execution_number(1)
+	mo_graph(new CycleGraph())
 {
 	/* Initialize a model-checker thread, for special ModelActions */
 	model_thread = new Thread(get_next_id());
@@ -102,6 +106,11 @@ ModelExecution::~ModelExecution()
 	delete thrd_last_fence_release;
 	delete mo_graph;
 	delete priv;
+}
+
+int ModelExecution::get_execution_number() const
+{
+	return model->get_execution_number();
 }
 
 static action_list_t * get_safe_ptr_action(HashTable<const void *, action_list_t *, uintptr_t, 4> * hash, void * ptr)
@@ -2643,13 +2652,13 @@ void ModelExecution::print_summary() const
 {
 #if SUPPORT_MOD_ORDER_DUMP
 	char buffername[100];
-	sprintf(buffername, "exec%04u", execution_number);
+	sprintf(buffername, "exec%04u", get_execution_number());
 	mo_graph->dumpGraphToFile(buffername);
-	sprintf(buffername, "graph%04u", execution_number);
+	sprintf(buffername, "graph%04u", get_execution_number());
 	dumpGraph(buffername);
 #endif
 
-	model_print("Execution %d:", execution_number);
+	model_print("Execution %d:", get_execution_number());
 	if (isfeasibleprefix()) {
 		if (scheduler->all_threads_sleeping())
 			model_print(" SLEEP-SET REDUNDANT");

@@ -60,7 +60,10 @@ struct release_seq {
 /** @brief The central structure for model-checking */
 class ModelExecution {
 public:
-	ModelExecution(struct model_params *params, Scheduler *scheduler, NodeStack *node_stack);
+	ModelExecution(ModelChecker *m,
+			struct model_params *params,
+			Scheduler *scheduler,
+			NodeStack *node_stack);
 	~ModelExecution();
 
 	Thread * take_step(ModelAction *curr);
@@ -110,10 +113,12 @@ public:
 
 	action_list_t * get_action_trace() const { return action_trace; }
 
-	void increment_execution_number() { execution_number++; }
-
 	MEMALLOC
 private:
+	int get_execution_number() const;
+
+	ModelChecker *model;
+
 	const model_params * const params;
 
 	/** The scheduler to use: tracks the running/ready Threads */
@@ -230,8 +235,6 @@ private:
 	 * <tt>b</tt>.
 	 */
 	CycleGraph * const mo_graph;
-
-	int execution_number;
 
 	Thread * action_select_next_thread(const ModelAction *curr) const;
 };

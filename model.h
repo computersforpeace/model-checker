@@ -52,6 +52,8 @@ public:
 
 	const ModelExecution * get_execution() const { return execution; }
 
+	int get_execution_number() const { return execution_number; }
+
 	Thread * get_thread(thread_id_t tid) const;
 	Thread * get_thread(const ModelAction *act) const;
 
@@ -81,6 +83,8 @@ private:
 	Scheduler * const scheduler;
 	NodeStack * const node_stack;
 	ModelExecution *execution;
+
+	int execution_number;
 
 	void execute_sleep_set();
 

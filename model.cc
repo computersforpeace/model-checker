@@ -26,7 +26,8 @@ ModelChecker::ModelChecker(struct model_params params) :
 	params(params),
 	scheduler(new Scheduler()),
 	node_stack(new NodeStack()),
-	execution(new ModelExecution(&params, scheduler, node_stack)),
+	execution(new ModelExecution(this, &params, scheduler, node_stack)),
+	execution_number(1),
 	diverge(NULL),
 	earliest_diverge(NULL),
 	trace_analyses()
@@ -319,7 +320,8 @@ bool ModelChecker::next_execution()
 		diverge->print();
 	}
 
-	execution->increment_execution_number();
+	execution_number++;
+
 	reset_to_initial_state();
 	return true;
 }

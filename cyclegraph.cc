@@ -314,7 +314,7 @@ static void print_node(FILE *file, const CycleNode *node, int label)
 {
 	if (node->is_promise()) {
 		const Promise *promise = node->getPromise();
-		int idx = model->get_promise_number(promise);
+		int idx = promise->get_index();
 		fprintf(file, "P%u", idx);
 		if (label) {
 			int first = 1;

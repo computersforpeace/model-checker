@@ -43,6 +43,8 @@ class Promise {
 	uint64_t get_value() const { return fv.value; }
 	struct future_value get_fv() const { return fv; }
 
+	int get_index() const;
+
 	void print() const;
 
 	bool equals(const Promise *x) const { return this == x; }

@@ -166,3 +166,9 @@ bool Promise::same_location(const ModelAction *act) const
 {
 	return get_reader(0)->same_var(act);
 }
+
+/** @brief Get this Promise's index within the execution's promise array */
+int Promise::get_index() const
+{
+	return model->get_promise_number(this);
+}

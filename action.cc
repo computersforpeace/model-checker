@@ -618,7 +618,7 @@ void ModelAction::print() const
 		if (reads_from)
 			model_print("  Rf: %-3d", reads_from->get_seq_number());
 		else if (reads_from_promise) {
-			int idx = model->get_promise_number(reads_from_promise);
+			int idx = reads_from_promise->get_index();
 			if (idx >= 0)
 				model_print("  Rf: P%-2d", idx);
 			else
@@ -648,7 +648,7 @@ unsigned int ModelAction::hash() const
 	       if (reads_from)
 		       hash ^= reads_from->get_seq_number();
 	       else if (reads_from_promise)
-		       hash ^= model->get_promise_number(reads_from_promise);
+		       hash ^= reads_from_promise->get_index();
 	       hash ^= get_reads_from_value();
 	}
 	return hash;

@@ -88,7 +88,7 @@ public:
 	void check_promises_thread_disabled();
 	bool isfeasibleprefix() const;
 
-	action_list_t * get_actions_on_obj(void * obj, thread_id_t tid);
+	action_list_t * get_actions_on_obj(void * obj, thread_id_t tid) const;
 	ModelAction * get_last_action(thread_id_t tid) const;
 
 	bool check_action_enabled(ModelAction *curr);

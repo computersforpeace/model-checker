@@ -128,7 +128,8 @@ static SnapVector<action_list_t> * get_safe_ptr_vect_action(HashTable<void *, Sn
 	return tmp;
 }
 
-action_list_t * ModelExecution::get_actions_on_obj(void * obj, thread_id_t tid) {
+action_list_t * ModelExecution::get_actions_on_obj(void * obj, thread_id_t tid) const
+{
 	SnapVector<action_list_t> *wrv=obj_thrd_map->get(obj);
 	if (wrv==NULL)
 		return NULL;

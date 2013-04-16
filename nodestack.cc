@@ -9,6 +9,7 @@
 #include "model.h"
 #include "threads-model.h"
 #include "modeltypes.h"
+#include "execution.h"
 
 /**
  * @brief Node constructor
@@ -759,6 +760,15 @@ NodeStack::~NodeStack()
 {
 	for (unsigned int i = 0; i < node_list.size(); i++)
 		delete node_list[i];
+}
+
+/**
+ * @brief Register the model-checker object with this NodeStack
+ * @param exec The execution structure for the ModelChecker
+ */
+void NodeStack::register_engine(const ModelExecution *exec)
+{
+	this->execution = exec;
 }
 
 void NodeStack::print() const

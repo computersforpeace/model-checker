@@ -82,6 +82,7 @@ ModelExecution::ModelExecution(ModelChecker *m,
 	model_thread = new Thread(get_next_id());
 	add_thread(model_thread);
 	scheduler->register_engine(this);
+	node_stack->register_engine(this);
 }
 
 /** @brief Destructor */

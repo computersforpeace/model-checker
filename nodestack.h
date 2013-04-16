@@ -186,6 +186,9 @@ class NodeStack {
 public:
 	NodeStack();
 	~NodeStack();
+
+	void register_engine(const ModelExecution *exec);
+
 	ModelAction * explore_action(ModelAction *act, enabled_type_t * is_enabled);
 	Node * get_head() const;
 	Node * get_next() const;
@@ -198,6 +201,9 @@ public:
 	MEMALLOC
 private:
 	node_list_t node_list;
+
+	/** @brief The model-checker execution object */
+	const ModelExecution *execution;
 
 	/**
 	 * @brief the index position of the current head Node

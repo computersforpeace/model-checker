@@ -65,7 +65,7 @@ ModelExecution::ModelExecution(ModelChecker *m,
 	params(params),
 	scheduler(scheduler),
 	action_trace(),
-	thread_map(),
+	thread_map(2), /* We'll always need at least 2 threads */
 	obj_map(new HashTable<const void *, action_list_t *, uintptr_t, 4>()),
 	condvar_waiters_map(),
 	obj_thrd_map(),
@@ -80,7 +80,7 @@ ModelExecution::ModelExecution(ModelChecker *m,
 {
 	/* Initialize a model-checker thread, for special ModelActions */
 	model_thread = new Thread(get_next_id());
-	thread_map.put(id_to_int(model_thread->get_id()), model_thread);
+	add_thread(model_thread);
 	scheduler->register_engine(this);
 }
 
@@ -88,7 +88,7 @@ ModelExecution::ModelExecution(ModelChecker *m,
 ModelExecution::~ModelExecution()
 {
 	for (unsigned int i = 0; i < get_num_threads(); i++)
-		delete thread_map.get(i);
+		delete get_thread(int_to_id(i));
 
 	delete obj_map;
 
@@ -2675,7 +2675,10 @@ void ModelExecution::print_summary() const
  */
 void ModelExecution::add_thread(Thread *t)
 {
-	thread_map.put(id_to_int(t->get_id()), t);
+	unsigned int i = id_to_int(t->get_id());
+	if (i >= thread_map.size())
+		thread_map.resize(i + 1);
+	thread_map[i] = t;
 	if (!t->is_model_thread())
 		scheduler->add_thread(t);
 }
@@ -2687,7 +2690,10 @@ void ModelExecution::add_thread(Thread *t)
  */
 Thread * ModelExecution::get_thread(thread_id_t tid) const
 {
-	return thread_map.get(id_to_int(tid));
+	unsigned int i = id_to_int(tid);
+	if (i < thread_map.size())
+		return thread_map[i];
+	return NULL;
 }
 
 /**

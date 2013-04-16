@@ -186,7 +186,7 @@ private:
 	ModelAction * get_uninitialized_action(const ModelAction *curr) const;
 
 	action_list_t action_trace;
-	HashTable<int, Thread *, int> thread_map;
+	SnapVector<Thread *> thread_map;
 
 	/** Per-object list of actions. Maps an object (i.e., memory location)
 	 * to a trace of all actions performed on the object. */

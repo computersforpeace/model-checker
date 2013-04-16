@@ -14,7 +14,6 @@
 #include "config.h"
 #include "modeltypes.h"
 #include "stl-model.h"
-#include "context.h"
 #include "params.h"
 
 /* Forward declaration */

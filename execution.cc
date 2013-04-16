@@ -5,18 +5,15 @@
 #include <stdarg.h>
 
 #include "execution.h"
-#include "model.h"
 #include "action.h"
 #include "nodestack.h"
 #include "schedule.h"
-#include "snapshot-interface.h"
 #include "common.h"
 #include "clockvector.h"
 #include "cyclegraph.h"
 #include "promise.h"
 #include "datarace.h"
 #include "threads-model.h"
-#include "output.h"
 #include "bugmessage.h"
 
 #define INITIAL_THREAD_ID	0
@@ -31,7 +28,6 @@ struct model_snapshot_members {
 		used_sequence_numbers(0),
 		next_backtrack(NULL),
 		bugs(),
-		stats(),
 		failed_promise(false),
 		too_many_reads(false),
 		no_valid_reads(false),
@@ -49,7 +45,6 @@ struct model_snapshot_members {
 	modelclock_t used_sequence_numbers;
 	ModelAction *next_backtrack;
 	SnapVector<bug_message *> bugs;
-	struct execution_stats stats;
 	bool failed_promise;
 	bool too_many_reads;
 	bool no_valid_reads;

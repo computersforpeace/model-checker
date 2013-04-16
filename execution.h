@@ -190,7 +190,7 @@ private:
 
 	/** Per-object list of actions. Maps an object (i.e., memory location)
 	 * to a trace of all actions performed on the object. */
-	HashTable<const void *, action_list_t *, uintptr_t, 4> * const obj_map;
+	HashTable<const void *, action_list_t *, uintptr_t, 4> obj_map;
 
 	/** Per-object list of actions. Maps an object (i.e., memory location)
 	 * to a trace of all actions performed on the object. */

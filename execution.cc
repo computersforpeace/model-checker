@@ -66,7 +66,7 @@ ModelExecution::ModelExecution(ModelChecker *m,
 	scheduler(scheduler),
 	action_trace(),
 	thread_map(2), /* We'll always need at least 2 threads */
-	obj_map(new HashTable<const void *, action_list_t *, uintptr_t, 4>()),
+	obj_map(),
 	condvar_waiters_map(),
 	obj_thrd_map(),
 	promises(),
@@ -89,8 +89,6 @@ ModelExecution::~ModelExecution()
 {
 	for (unsigned int i = 0; i < get_num_threads(); i++)
 		delete get_thread(int_to_id(i));
-
-	delete obj_map;
 
 	for (unsigned int i = 0; i < promises.size(); i++)
 		delete promises[i];
@@ -374,7 +372,7 @@ ModelAction * ModelExecution::get_last_conflict(ModelAction *act) const
 		ModelAction *ret = NULL;
 
 		/* linear search: from most recent to oldest */
-		action_list_t *list = get_safe_ptr_action(obj_map, act->get_location());
+		action_list_t *list = obj_map.get(act->get_location());
 		action_list_t::reverse_iterator rit;
 		for (rit = list->rbegin(); rit != list->rend(); rit++) {
 			ModelAction *prev = *rit;
@@ -396,7 +394,7 @@ ModelAction * ModelExecution::get_last_conflict(ModelAction *act) const
 	case ATOMIC_LOCK:
 	case ATOMIC_TRYLOCK: {
 		/* linear search: from most recent to oldest */
-		action_list_t *list = get_safe_ptr_action(obj_map, act->get_location());
+		action_list_t *list = obj_map.get(act->get_location());
 		action_list_t::reverse_iterator rit;
 		for (rit = list->rbegin(); rit != list->rend(); rit++) {
 			ModelAction *prev = *rit;
@@ -407,7 +405,7 @@ ModelAction * ModelExecution::get_last_conflict(ModelAction *act) const
 	}
 	case ATOMIC_UNLOCK: {
 		/* linear search: from most recent to oldest */
-		action_list_t *list = get_safe_ptr_action(obj_map, act->get_location());
+		action_list_t *list = obj_map.get(act->get_location());
 		action_list_t::reverse_iterator rit;
 		for (rit = list->rbegin(); rit != list->rend(); rit++) {
 			ModelAction *prev = *rit;
@@ -418,7 +416,7 @@ ModelAction * ModelExecution::get_last_conflict(ModelAction *act) const
 	}
 	case ATOMIC_WAIT: {
 		/* linear search: from most recent to oldest */
-		action_list_t *list = get_safe_ptr_action(obj_map, act->get_location());
+		action_list_t *list = obj_map.get(act->get_location());
 		action_list_t::reverse_iterator rit;
 		for (rit = list->rbegin(); rit != list->rend(); rit++) {
 			ModelAction *prev = *rit;
@@ -433,7 +431,7 @@ ModelAction * ModelExecution::get_last_conflict(ModelAction *act) const
 	case ATOMIC_NOTIFY_ALL:
 	case ATOMIC_NOTIFY_ONE: {
 		/* linear search: from most recent to oldest */
-		action_list_t *list = get_safe_ptr_action(obj_map, act->get_location());
+		action_list_t *list = obj_map.get(act->get_location());
 		action_list_t::reverse_iterator rit;
 		for (rit = list->rbegin(); rit != list->rend(); rit++) {
 			ModelAction *prev = *rit;
@@ -2112,7 +2110,7 @@ void ModelExecution::add_action_to_lists(ModelAction *act)
 	int tid = id_to_int(act->get_tid());
 	ModelAction *uninit = NULL;
 	int uninit_id = -1;
-	action_list_t *list = get_safe_ptr_action(obj_map, act->get_location());
+	action_list_t *list = get_safe_ptr_action(&obj_map, act->get_location());
 	if (list->empty() && act->is_atomic_var()) {
 		uninit = get_uninitialized_action(act);
 		uninit_id = id_to_int(uninit->get_tid());
@@ -2145,7 +2143,7 @@ void ModelExecution::add_action_to_lists(ModelAction *act)
 
 	if (act->is_wait()) {
 		void *mutex_loc = (void *) act->get_value();
-		get_safe_ptr_action(obj_map, mutex_loc)->push_back(act);
+		get_safe_ptr_action(&obj_map, mutex_loc)->push_back(act);
 
 		SnapVector<action_list_t> *vec = get_safe_ptr_vect_action(&obj_thrd_map, mutex_loc);
 		if (tid >= (int)vec->size())
@@ -2193,7 +2191,7 @@ ModelAction * ModelExecution::get_last_fence_release(thread_id_t tid) const
 ModelAction * ModelExecution::get_last_seq_cst_write(ModelAction *curr) const
 {
 	void *location = curr->get_location();
-	action_list_t *list = get_safe_ptr_action(obj_map, location);
+	action_list_t *list = obj_map.get(location);
 	/* Find: max({i in dom(S) | seq_cst(t_i) && isWrite(t_i) && samevar(t_i, t)}) */
 	action_list_t::reverse_iterator rit;
 	for (rit = list->rbegin(); (*rit) != curr; rit++)
@@ -2216,7 +2214,11 @@ ModelAction * ModelExecution::get_last_seq_cst_write(ModelAction *curr) const
 ModelAction * ModelExecution::get_last_seq_cst_fence(thread_id_t tid, const ModelAction *before_fence) const
 {
 	/* All fences should have location FENCE_LOCATION */
-	action_list_t *list = get_safe_ptr_action(obj_map, FENCE_LOCATION);
+	action_list_t *list = obj_map.get(FENCE_LOCATION);
+
+	if (!list)
+		return NULL;
+
 	action_list_t::reverse_iterator rit = list->rbegin();
 
 	if (before_fence) {
@@ -2245,7 +2247,7 @@ ModelAction * ModelExecution::get_last_seq_cst_fence(thread_id_t tid, const Mode
 ModelAction * ModelExecution::get_last_unlock(ModelAction *curr) const
 {
 	void *location = curr->get_location();
-	action_list_t *list = get_safe_ptr_action(obj_map, location);
+	action_list_t *list = obj_map.get(location);
 	/* Find: max({i in dom(S) | isUnlock(t_i) && samevar(t_i, t)}) */
 	action_list_t::reverse_iterator rit;
 	for (rit = list->rbegin(); rit != list->rend(); rit++)

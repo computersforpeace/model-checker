@@ -151,13 +151,14 @@ Thread::Thread(thread_id_t tid) :
  * @param func The function that the thread will call.
  * @param a The parameter to pass to this function.
  */
-Thread::Thread(thrd_t *t, void (*func)(void *), void *a, Thread *parent) :
+Thread::Thread(thread_id_t tid, thrd_t *t, void (*func)(void *), void *a, Thread *parent) :
 	parent(parent),
 	creation(NULL),
 	pending(NULL),
 	start_routine(func),
 	arg(a),
 	user_thread(t),
+	id(tid),
 	state(THREAD_CREATED),
 	last_action_val(VALUE_NONE),
 	model_thread(false)
@@ -169,7 +170,6 @@ Thread::Thread(thrd_t *t, void (*func)(void *), void *a, Thread *parent) :
 	if (ret)
 		model_print("Error in create_context\n");
 
-	id = model->get_next_id();
 	user_thread->priv = this;
 }
 

@@ -58,7 +58,6 @@ public:
 	bool is_enabled(Thread *t) const;
 	bool is_enabled(thread_id_t tid) const;
 
-	thread_id_t get_next_id();
 	unsigned int get_num_threads() const;
 	Thread * get_current_thread() const;
 

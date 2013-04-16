@@ -11,6 +11,7 @@
 
 /* global "model" object */
 #include "model.h"
+#include "params.h"
 #include "snapshot-interface.h"
 #include "scanalysis.h"
 

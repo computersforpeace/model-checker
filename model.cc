@@ -17,24 +17,11 @@
 #include "threads-model.h"
 #include "output.h"
 #include "traceanalysis.h"
+#include "bugmessage.h"
 
 #define INITIAL_THREAD_ID	0
 
 ModelChecker *model;
-
-struct bug_message {
-	bug_message(const char *str) {
-		const char *fmt = "  [BUG] %s\n";
-		msg = (char *)snapshot_malloc(strlen(fmt) + strlen(str));
-		sprintf(msg, fmt, str);
-	}
-	~bug_message() { if (msg) snapshot_free(msg); }
-
-	char *msg;
-	void print() { model_print("%s", msg); }
-
-	SNAPSHOTALLOC
-};
 
 /**
  * Structure for holding small ModelChecker members that should be snapshotted
@@ -93,7 +80,7 @@ ModelChecker::ModelChecker(struct model_params params) :
 	thrd_last_action(new SnapVector<ModelAction *>(1)),
 	thrd_last_fence_release(new SnapVector<ModelAction *>()),
 	node_stack(new NodeStack()),
-	trace_analyses(new ModelVector<Trace_Analysis *>()),
+	trace_analyses(new ModelVector<TraceAnalysis *>()),
 	priv(new struct model_snapshot_members()),
 	mo_graph(new CycleGraph())
 {
@@ -3113,6 +3100,12 @@ void user_main_wrapper(void *)
 	user_main(model->params.argc, model->params.argv);
 }
 
+/** @return True if the execution has taken too many steps */
+bool ModelChecker::too_many_steps() const
+{
+	return params.bound != 0 && priv->used_sequence_numbers > params.bound;
+}
+
 bool ModelChecker::should_terminate_execution()
 {
 	/* Infeasible -> don't take any more steps */
@@ -3123,7 +3116,7 @@ bool ModelChecker::should_terminate_execution()
 		return true;
 	}
 
-	if (params.bound != 0 && priv->used_sequence_numbers > params.bound)
+	if (too_many_steps())
 		return true;
 	return false;
 }

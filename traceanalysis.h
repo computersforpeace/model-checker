@@ -2,7 +2,7 @@
 #define TRACE_ANALYSIS_H
 #include "model.h"
 
-class Trace_Analysis {
+class TraceAnalysis {
  public:
 	virtual void analyze(action_list_t *) = 0;
 	SNAPSHOTALLOC

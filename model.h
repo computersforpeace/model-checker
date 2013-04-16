@@ -15,6 +15,7 @@
 #include "modeltypes.h"
 #include "stl-model.h"
 #include "context.h"
+#include "params.h"
 
 /* Forward declaration */
 class Node;
@@ -24,45 +25,12 @@ class Promise;
 class Scheduler;
 class Thread;
 class ClockVector;
-class Trace_Analysis;
+class TraceAnalysis;
 struct model_snapshot_members;
 
 /** @brief Shorthand for a list of release sequence heads */
 typedef ModelVector<const ModelAction *> rel_heads_list_t;
 typedef SnapList<ModelAction *> action_list_t;
-
-/**
- * Model checker parameter structure. Holds run-time configuration options for
- * the model checker.
- */
-struct model_params {
-	int maxreads;
-	int maxfuturedelay;
-	bool yieldon;
-	bool sc_trace_analysis;
-	unsigned int fairwindow;
-	unsigned int enabledcount;
-	unsigned int bound;
-	unsigned int uninitvalue;
-
-	/** @brief Maximum number of future values that can be sent to the same
-	 *  read */
-	int maxfuturevalues;
-
-	/** @brief Only generate a new future value/expiration pair if the
-	 *  expiration time exceeds the existing one by more than the slop
-	 *  value */
-	unsigned int expireslop;
-
-	/** @brief Verbosity (0 = quiet; 1 = noisy) */
-	int verbose;
-
-	/** @brief Command-line argument count to pass to user program */
-	int argc;
-
-	/** @brief Command-line arguments to pass to user program */
-	char **argv;
-};
 
 /** @brief Model checker execution stats */
 struct execution_stats {
@@ -138,7 +106,7 @@ public:
 
 	const model_params params;
 	Node * get_curr_node() const;
-	void add_trace_analysis(Trace_Analysis * a) {
+	void add_trace_analysis(TraceAnalysis *a) {
 		trace_analyses->push_back(a);
 	}
 
@@ -252,7 +220,7 @@ private:
 	SnapVector<ModelAction *> * const thrd_last_action;
 	SnapVector<ModelAction *> * const thrd_last_fence_release;
 	NodeStack * const node_stack;
-	ModelVector<Trace_Analysis *> * trace_analyses;
+	ModelVector<TraceAnalysis *> * trace_analyses;
 
 
 	/** Private data members that should be snapshotted. They are grouped
@@ -287,6 +255,7 @@ private:
 	bool is_feasible_prefix_ignore_relseq() const;
 	bool is_infeasible() const;
 	bool is_deadlocked() const;
+	bool too_many_steps() const;
 	bool is_complete_execution() const;
 	bool have_bug_reports() const;
 	void print_bugs() const;

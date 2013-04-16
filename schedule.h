@@ -29,7 +29,7 @@ public:
 	void remove_thread(Thread *t);
 	void sleep(Thread *t);
 	void wake(Thread *t);
-	Thread * select_next_thread();
+	Thread * select_next_thread(Node *n);
 	void set_current_thread(Thread *t);
 	Thread * get_current_thread() const;
 	void print() const;

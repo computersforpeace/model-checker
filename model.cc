@@ -199,11 +199,6 @@ modelclock_t ModelChecker::get_next_seq_num()
 	return ++priv->used_sequence_numbers;
 }
 
-Node * ModelChecker::get_curr_node() const
-{
-	return node_stack->get_head();
-}
-
 /**
  * @brief Select the next thread to execute based on the curren action
  *
@@ -246,7 +241,7 @@ Thread * ModelChecker::get_next_thread()
 	 * scheduler decide
 	 */
 	if (diverge == NULL)
-		return scheduler->select_next_thread();
+		return scheduler->select_next_thread(node_stack->get_head());
 
 	/* Else, we are trying to replay an execution */
 	ModelAction *next = node_stack->get_next()->get_action();

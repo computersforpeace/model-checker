@@ -195,12 +195,15 @@ void Scheduler::wake(Thread *t)
 
 /**
  * @brief Select a Thread to run via round-robin
+ *
+ * @param n The current Node, holding priority information for the next thread
+ * selection
+ *
  * @return The next Thread to run
  */
-Thread * Scheduler::select_next_thread()
+Thread * Scheduler::select_next_thread(Node *n)
 {
 	int old_curr_thread = curr_thread_index;
-	Node *n = model->get_curr_node();
 
 	bool have_enabled_thread_with_priority = false;
 	if (model->params.fairwindow != 0) {

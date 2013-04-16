@@ -104,7 +104,6 @@ public:
 	void assert_user_bug(const char *msg);
 
 	const model_params params;
-	Node * get_curr_node() const;
 	void add_trace_analysis(TraceAnalysis *a) {
 		trace_analyses->push_back(a);
 	}

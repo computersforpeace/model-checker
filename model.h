@@ -54,7 +54,6 @@ public:
 
 	Thread * get_thread(thread_id_t tid) const;
 	Thread * get_thread(const ModelAction *act) const;
-	int get_promise_number(const Promise *promise) const;
 
 	bool is_enabled(Thread *t) const;
 	bool is_enabled(thread_id_t tid) const;

@@ -2,17 +2,19 @@
 #include <inttypes.h>
 
 #include "promise.h"
-#include "model.h"
+#include "execution.h"
 #include "schedule.h"
 #include "action.h"
 #include "threads-model.h"
 
 /**
  * @brief Promise constructor
+ * @param execution The execution which is creating this Promise
  * @param read The read which reads from a promised future value
  * @param fv The future value that is promised
  */
-Promise::Promise(ModelAction *read, struct future_value fv) :
+Promise::Promise(const ModelExecution *execution, ModelAction *read, struct future_value fv) :
+	execution(execution),
 	num_available_threads(0),
 	fv(fv),
 	readers(1, read),
@@ -170,5 +172,5 @@ bool Promise::same_location(const ModelAction *act) const
 /** @brief Get this Promise's index within the execution's promise array */
 int Promise::get_index() const
 {
-	return model->get_promise_number(this);
+	return execution->get_promise_number(this);
 }

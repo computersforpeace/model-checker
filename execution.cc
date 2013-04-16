@@ -616,7 +616,7 @@ bool ModelExecution::process_read(ModelAction *curr)
 		case READ_FROM_FUTURE: {
 			/* Read from future value */
 			struct future_value fv = node->get_future_value();
-			Promise *promise = new Promise(curr, fv);
+			Promise *promise = new Promise(this, curr, fv);
 			curr->set_read_from_promise(promise);
 			promises->push_back(promise);
 			mo_graph->startChanges();

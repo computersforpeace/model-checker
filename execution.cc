@@ -2215,8 +2215,8 @@ ModelAction * ModelExecution::get_last_seq_cst_write(ModelAction *curr) const
  */
 ModelAction * ModelExecution::get_last_seq_cst_fence(thread_id_t tid, const ModelAction *before_fence) const
 {
-	/* All fences should have NULL location */
-	action_list_t *list = get_safe_ptr_action(obj_map, NULL);
+	/* All fences should have location FENCE_LOCATION */
+	action_list_t *list = get_safe_ptr_action(obj_map, FENCE_LOCATION);
 	action_list_t::reverse_iterator rit = list->rbegin();
 
 	if (before_fence) {

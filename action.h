@@ -37,6 +37,15 @@ using std::memory_order_seq_cst;
  */
 #define VALUE_NONE 0xdeadbeef
 
+/**
+ * @brief The "location" at which a fence occurs
+ *
+ * We need a non-zero memory location to associate with fences, since our hash
+ * tables don't handle NULL-pointer keys. HACK: Hopefully this doesn't collide
+ * with any legitimate memory locations.
+ */
+#define FENCE_LOCATION ((void *)0x7)
+
 /** @brief Represents an action type, identifying one of several types of
  * ModelAction */
 typedef enum action_type {

@@ -444,7 +444,7 @@ void ModelChecker::run()
 			 * thread which just took a step--plus the first step
 			 * for any newly-created thread
 			 */
-			for (unsigned int i = 0; i < execution->get_num_threads(); i++) {
+			for (unsigned int i = 0; i < get_num_threads(); i++) {
 				thread_id_t tid = int_to_id(i);
 				Thread *thr = get_thread(tid);
 				if (!thr->is_model_thread() && !thr->is_complete() && !thr->get_pending()) {

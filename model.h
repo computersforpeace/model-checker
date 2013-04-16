@@ -60,7 +60,6 @@ public:
 	bool is_enabled(Thread *t) const;
 	bool is_enabled(thread_id_t tid) const;
 
-	unsigned int get_num_threads() const;
 	Thread * get_current_thread() const;
 
 	void switch_from_master(Thread *thread);
@@ -82,6 +81,8 @@ private:
 	ModelExecution *execution;
 
 	int execution_number;
+
+	unsigned int get_num_threads() const;
 
 	void execute_sleep_set();
 

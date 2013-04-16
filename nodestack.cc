@@ -803,7 +803,7 @@ ModelAction * NodeStack::explore_action(ModelAction *act, enabled_type_t *is_ena
 			prevfairness = node_list[head_idx - model->params.fairwindow];
 	}
 
-	int next_threads = model->get_num_threads();
+	int next_threads = execution->get_num_threads();
 	if (act->get_type() == THREAD_CREATE)
 		next_threads++;
 	node_list.push_back(new Node(act, head, next_threads, prevfairness));

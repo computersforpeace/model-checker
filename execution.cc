@@ -82,6 +82,7 @@ ModelExecution::ModelExecution(struct model_params *params, Scheduler *scheduler
 	/* Initialize a model-checker thread, for special ModelActions */
 	model_thread = new Thread(get_next_id());
 	thread_map->put(id_to_int(model_thread->get_id()), model_thread);
+	scheduler->register_engine(this);
 }
 
 /** @brief Destructor */

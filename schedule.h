@@ -11,6 +11,7 @@
 /* Forward declaration */
 class Thread;
 class Node;
+class ModelExecution;
 
 typedef enum enabled_type {
 	THREAD_DISABLED,
@@ -25,6 +26,8 @@ void enabled_type_to_string(enabled_type_t e, char *str);
 class Scheduler {
 public:
 	Scheduler();
+	void register_engine(ModelExecution *execution);
+
 	void add_thread(Thread *t);
 	void remove_thread(Thread *t);
 	void sleep(Thread *t);
@@ -46,6 +49,7 @@ public:
 
 	SNAPSHOTALLOC
 private:
+	ModelExecution *execution;
 	/** The list of available Threads that are not currently running */
 	enabled_type_t *enabled;
 	int enabled_len;

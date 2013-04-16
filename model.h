@@ -50,6 +50,8 @@ public:
 	/** @returns the context for the main model-checking system thread */
 	ucontext_t * get_system_context() { return &system_context; }
 
+	const ModelExecution * get_execution() const { return execution; }
+
 	Thread * get_thread(thread_id_t tid) const;
 	Thread * get_thread(const ModelAction *act) const;
 	int get_promise_number(const Promise *promise) const;

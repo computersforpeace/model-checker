@@ -143,6 +143,7 @@ private:
 	bool process_thread_action(ModelAction *curr);
 	void process_relseq_fixup(ModelAction *curr, work_queue_t *work_queue);
 	bool read_from(ModelAction *act, const ModelAction *rf);
+	bool synchronize(const ModelAction *first, ModelAction *second);
 	bool check_action_enabled(ModelAction *curr);
 
 	Thread * take_step(ModelAction *curr);

@@ -979,7 +979,7 @@ bool ModelChecker::process_mutex(ModelAction *curr)
 		ModelAction *unlock = get_last_unlock(curr);
 		//synchronize with the previous unlock statement
 		if (unlock != NULL) {
-			curr->synchronize_with(unlock);
+			synchronize(unlock, curr);
 			return true;
 		}
 		break;
@@ -1189,8 +1189,7 @@ bool ModelChecker::process_fence(ModelAction *curr)
 			rel_heads_list_t release_heads;
 			get_release_seq_heads(curr, act, &release_heads);
 			for (unsigned int i = 0; i < release_heads.size(); i++)
-				if (!curr->synchronize_with(release_heads[i]))
-					set_bad_synchronization();
+				synchronize(release_heads[i], curr);
 			if (release_heads.size() != 0)
 				updated = true;
 		}
@@ -1231,7 +1230,7 @@ bool ModelChecker::process_thread_action(ModelAction *curr)
 	case THREAD_JOIN: {
 		Thread *blocking = curr->get_thread_operand();
 		ModelAction *act = get_last_action(blocking->get_id());
-		curr->synchronize_with(act);
+		synchronize(act, curr);
 		updated = true; /* trigger rel-seq checks */
 		break;
 	}
@@ -1305,10 +1304,8 @@ void ModelChecker::process_relseq_fixup(ModelAction *curr, work_queue_t *work_qu
 		 */
 
 		/* Must synchronize */
-		if (!acquire->synchronize_with(release)) {
-			set_bad_synchronization();
+		if (!synchronize(release, acquire))
 			return;
-		}
 		/* Re-check all pending release sequences */
 		work_queue->push_back(CheckRelSeqWorkEntry(NULL));
 		/* Re-check act for mo_graph edges */
@@ -1319,7 +1316,7 @@ void ModelChecker::process_relseq_fixup(ModelAction *curr, work_queue_t *work_qu
 		for (; (*rit) != acquire; rit++) {
 			ModelAction *propagate = *rit;
 			if (acquire->happens_before(propagate)) {
-				propagate->synchronize_with(acquire);
+				synchronize(acquire, propagate);
 				/* Re-check 'propagate' for mo_graph edges */
 				work_queue->push_back(MOEdgeWorkEntry(propagate));
 			}
@@ -1428,13 +1425,32 @@ bool ModelChecker::read_from(ModelAction *act, const ModelAction *rf)
 		get_release_seq_heads(act, act, &release_heads);
 		int num_heads = release_heads.size();
 		for (unsigned int i = 0; i < release_heads.size(); i++)
-			if (!act->synchronize_with(release_heads[i])) {
-				set_bad_synchronization();
+			if (!synchronize(release_heads[i], act))
 				num_heads--;
-			}
 		return num_heads > 0;
 	}
 	return false;
+}
+
+/**
+ * @brief Synchronizes two actions
+ *
+ * When A synchronizes with B (or A --sw-> B), B inherits A's clock vector.
+ * This function performs the synchronization as well as providing other hooks
+ * for other checks along with synchronization.
+ *
+ * @param first The left-hand side of the synchronizes-with relation
+ * @param second The right-hand side of the synchronizes-with relation
+ * @return True if the synchronization was successful (i.e., was consistent
+ * with the execution order); false otherwise
+ */
+bool ModelChecker::synchronize(const ModelAction *first, ModelAction *second)
+{
+	if (!second->synchronize_with(first)) {
+		set_bad_synchronization();
+		return false;
+	}
+	return true;
 }
 
 /**
@@ -2355,14 +2371,10 @@ bool ModelChecker::resolve_release_sequences(void *location, work_queue_t *work_
 		rel_heads_list_t release_heads;
 		bool complete;
 		complete = release_seq_heads(rf, &release_heads, pending);
-		for (unsigned int i = 0; i < release_heads.size(); i++) {
-			if (!acquire->has_synchronized_with(release_heads[i])) {
-				if (acquire->synchronize_with(release_heads[i]))
+		for (unsigned int i = 0; i < release_heads.size(); i++)
+			if (!acquire->has_synchronized_with(release_heads[i]))
+				if (synchronize(release_heads[i], acquire))
 					updated = true;
-				else
-					set_bad_synchronization();
-			}
-		}
 
 		if (updated) {
 			/* Re-check all pending release sequences */
@@ -2376,7 +2388,7 @@ bool ModelChecker::resolve_release_sequences(void *location, work_queue_t *work_
 			for (; (*rit) != acquire; rit++) {
 				ModelAction *propagate = *rit;
 				if (acquire->happens_before(propagate)) {
-					propagate->synchronize_with(acquire);
+					synchronize(acquire, propagate);
 					/* Re-check 'propagate' for mo_graph edges */
 					work_queue->push_back(MOEdgeWorkEntry(propagate));
 				}

@@ -65,10 +65,7 @@ public:
 
 	void switch_from_master(Thread *thread);
 	uint64_t switch_to_master(ModelAction *act);
-	ClockVector * get_cv(thread_id_t tid) const;
-	ModelAction * get_parent_action(thread_id_t tid) const;
 	void check_promises_thread_disabled();
-	bool isfeasibleprefix() const;
 
 	bool assert_bug(const char *msg, ...);
 	void assert_user_bug(const char *msg);

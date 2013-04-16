@@ -1,6 +1,7 @@
 #include <mutex>
 
 #include "model.h"
+#include "execution.h"
 #include "threads-model.h"
 #include "clockvector.h"
 #include "action.h"
@@ -12,7 +13,7 @@ mutex::mutex()
 	state.locked = NULL;
 	thread_id_t tid = thread_current()->get_id();
 	state.alloc_tid = tid;
-	state.alloc_clock = model->get_cv(tid)->getClock(tid);
+	state.alloc_clock = model->get_execution()->get_cv(tid)->getClock(tid);
 }
 	
 void mutex::lock()

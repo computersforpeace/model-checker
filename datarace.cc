@@ -7,12 +7,17 @@
 #include "clockvector.h"
 #include "config.h"
 #include "action.h"
+#include "execution.h"
 
 static struct ShadowTable *root;
 SnapVector<struct DataRace *> unrealizedraces;
 static void *memory_base;
 static void *memory_top;
 
+static const ModelExecution * get_execution()
+{
+	return model->get_execution();
+}
 
 /** This function initialized the data race detector. */
 void initRaceDetector()
@@ -123,7 +128,7 @@ static void reportDataRace(thread_id_t oldthread, modelclock_t oldclock, bool is
  */
 bool checkDataRaces()
 {
-	if (model->isfeasibleprefix()) {
+	if (get_execution()->isfeasibleprefix()) {
 		bool race_asserted = false;
 		/* Prune the non-racing unrealized dataraces */
 		for (unsigned i = 0; i < unrealizedraces.size(); i++) {
@@ -180,7 +185,7 @@ void fullRaceCheckWrite(thread_id_t thread, void *location, uint64_t *shadow, Cl
 
 		if (clock_may_race(currClock, thread, readClock, readThread)) {
 			/* We have a datarace */
-			reportDataRace(readThread, readClock, false, model->get_parent_action(thread), true, location);
+			reportDataRace(readThread, readClock, false, get_execution()->get_parent_action(thread), true, location);
 		}
 	}
 
@@ -191,7 +196,7 @@ void fullRaceCheckWrite(thread_id_t thread, void *location, uint64_t *shadow, Cl
 
 	if (clock_may_race(currClock, thread, writeClock, writeThread)) {
 		/* We have a datarace */
-		reportDataRace(writeThread, writeClock, true, model->get_parent_action(thread), true, location);
+		reportDataRace(writeThread, writeClock, true, get_execution()->get_parent_action(thread), true, location);
 	}
 
 	record->numReads = 0;
@@ -205,7 +210,7 @@ void raceCheckWrite(thread_id_t thread, void *location)
 {
 	uint64_t *shadow = lookupAddressEntry(location);
 	uint64_t shadowval = *shadow;
-	ClockVector *currClock = model->get_cv(thread);
+	ClockVector *currClock = get_execution()->get_cv(thread);
 
 	/* Do full record */
 	if (shadowval != 0 && !ISSHORTRECORD(shadowval)) {
@@ -230,7 +235,7 @@ void raceCheckWrite(thread_id_t thread, void *location)
 
 	if (clock_may_race(currClock, thread, readClock, readThread)) {
 		/* We have a datarace */
-		reportDataRace(readThread, readClock, false, model->get_parent_action(thread), true, location);
+		reportDataRace(readThread, readClock, false, get_execution()->get_parent_action(thread), true, location);
 	}
 
 	/* Check for datarace against last write. */
@@ -240,7 +245,7 @@ void raceCheckWrite(thread_id_t thread, void *location)
 
 	if (clock_may_race(currClock, thread, writeClock, writeThread)) {
 		/* We have a datarace */
-		reportDataRace(writeThread, writeClock, true, model->get_parent_action(thread), true, location);
+		reportDataRace(writeThread, writeClock, true, get_execution()->get_parent_action(thread), true, location);
 	}
 	*shadow = ENCODEOP(0, 0, threadid, ourClock);
 }
@@ -257,7 +262,7 @@ void fullRaceCheckRead(thread_id_t thread, const void *location, uint64_t *shado
 
 	if (clock_may_race(currClock, thread, writeClock, writeThread)) {
 		/* We have a datarace */
-		reportDataRace(writeThread, writeClock, true, model->get_parent_action(thread), false, location);
+		reportDataRace(writeThread, writeClock, true, get_execution()->get_parent_action(thread), false, location);
 	}
 
 	/* Shorten vector when possible */
@@ -309,7 +314,7 @@ void raceCheckRead(thread_id_t thread, const void *location)
 {
 	uint64_t *shadow = lookupAddressEntry(location);
 	uint64_t shadowval = *shadow;
-	ClockVector *currClock = model->get_cv(thread);
+	ClockVector *currClock = get_execution()->get_cv(thread);
 
 	/* Do full record */
 	if (shadowval != 0 && !ISSHORTRECORD(shadowval)) {
@@ -334,7 +339,7 @@ void raceCheckRead(thread_id_t thread, const void *location)
 
 	if (clock_may_race(currClock, thread, writeClock, writeThread)) {
 		/* We have a datarace */
-		reportDataRace(writeThread, writeClock, true, model->get_parent_action(thread), false, location);
+		reportDataRace(writeThread, writeClock, true, get_execution()->get_parent_action(thread), false, location);
 	}
 
 	modelclock_t readClock = READVECTOR(shadowval);

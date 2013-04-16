@@ -8,10 +8,10 @@
 #include "config.h"
 #include "action.h"
 
-struct ShadowTable *root;
+static struct ShadowTable *root;
 SnapVector<struct DataRace *> unrealizedraces;
-void *memory_base;
-void *memory_top;
+static void *memory_base;
+static void *memory_top;
 
 
 /** This function initialized the data race detector. */

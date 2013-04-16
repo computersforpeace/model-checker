@@ -1446,11 +1446,12 @@ bool ModelChecker::read_from(ModelAction *act, const ModelAction *rf)
  */
 bool ModelChecker::synchronize(const ModelAction *first, ModelAction *second)
 {
-	if (!second->synchronize_with(first)) {
+	if (*second < *first) {
 		set_bad_synchronization();
 		return false;
 	}
-	return true;
+	check_promises(first->get_tid(), second->get_cv(), first->get_cv());
+	return second->synchronize_with(first);
 }
 
 /**

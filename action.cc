@@ -501,7 +501,6 @@ bool ModelAction::synchronize_with(const ModelAction *act)
 {
 	if (*this < *act)
 		return false;
-	model->check_promises(act->get_tid(), cv, act->cv);
 	cv->merge(act->cv);
 	return true;
 }

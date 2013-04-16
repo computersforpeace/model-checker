@@ -42,8 +42,8 @@ struct DataRace {
 #define MASK16BIT 0xffff
 
 void initRaceDetector();
-void raceCheckWrite(thread_id_t thread, void *location, ClockVector *currClock);
-void raceCheckRead(thread_id_t thread, const void *location, ClockVector *currClock);
+void raceCheckWrite(thread_id_t thread, void *location);
+void raceCheckRead(thread_id_t thread, const void *location);
 bool checkDataRaces();
 void assert_race(struct DataRace *race);
 

@@ -201,10 +201,11 @@ void fullRaceCheckWrite(thread_id_t thread, void *location, uint64_t *shadow, Cl
 }
 
 /** This function does race detection on a write. */
-void raceCheckWrite(thread_id_t thread, void *location, ClockVector *currClock)
+void raceCheckWrite(thread_id_t thread, void *location)
 {
 	uint64_t *shadow = lookupAddressEntry(location);
 	uint64_t shadowval = *shadow;
+	ClockVector *currClock = model->get_cv(thread);
 
 	/* Do full record */
 	if (shadowval != 0 && !ISSHORTRECORD(shadowval)) {
@@ -304,10 +305,11 @@ void fullRaceCheckRead(thread_id_t thread, const void *location, uint64_t *shado
 }
 
 /** This function does race detection on a read. */
-void raceCheckRead(thread_id_t thread, const void *location, ClockVector *currClock)
+void raceCheckRead(thread_id_t thread, const void *location)
 {
 	uint64_t *shadow = lookupAddressEntry(location);
 	uint64_t shadowval = *shadow;
+	ClockVector *currClock = model->get_cv(thread);
 
 	/* Do full record */
 	if (shadowval != 0 && !ISSHORTRECORD(shadowval)) {

@@ -197,8 +197,8 @@ private:
 	HashTable<const void *, action_list_t *, uintptr_t, 4> * const condvar_waiters_map;
 
 	HashTable<void *, SnapVector<action_list_t> *, uintptr_t, 4 > * const obj_thrd_map;
-	SnapVector<Promise *> * const promises;
-	SnapVector<struct PendingFutureValue> * const futurevalues;
+	SnapVector<Promise *> promises;
+	SnapVector<struct PendingFutureValue> futurevalues;
 
 	/**
 	 * List of pending release sequences. Release sequences might be
@@ -206,10 +206,10 @@ private:
 	 * are established. Each entry in the list may only be partially
 	 * filled, depending on its pending status.
 	 */
-	SnapVector<struct release_seq *> * const pending_rel_seqs;
+	SnapVector<struct release_seq *> pending_rel_seqs;
 
-	SnapVector<ModelAction *> * const thrd_last_action;
-	SnapVector<ModelAction *> * const thrd_last_fence_release;
+	SnapVector<ModelAction *> thrd_last_action;
+	SnapVector<ModelAction *> thrd_last_fence_release;
 	NodeStack * const node_stack;
 
 	/** A special model-checker Thread; used for associating with

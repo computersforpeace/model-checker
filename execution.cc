@@ -69,11 +69,11 @@ ModelExecution::ModelExecution(ModelChecker *m,
 	obj_map(new HashTable<const void *, action_list_t *, uintptr_t, 4>()),
 	condvar_waiters_map(new HashTable<const void *, action_list_t *, uintptr_t, 4>()),
 	obj_thrd_map(new HashTable<void *, SnapVector<action_list_t> *, uintptr_t, 4 >()),
-	promises(new SnapVector<Promise *>()),
-	futurevalues(new SnapVector<struct PendingFutureValue>()),
-	pending_rel_seqs(new SnapVector<struct release_seq *>()),
-	thrd_last_action(new SnapVector<ModelAction *>(1)),
-	thrd_last_fence_release(new SnapVector<ModelAction *>()),
+	promises(),
+	futurevalues(),
+	pending_rel_seqs(),
+	thrd_last_action(1),
+	thrd_last_fence_release(),
 	node_stack(node_stack),
 	priv(new struct model_snapshot_members()),
 	mo_graph(new CycleGraph())
@@ -96,14 +96,9 @@ ModelExecution::~ModelExecution()
 	delete condvar_waiters_map;
 	delete action_trace;
 
-	for (unsigned int i = 0; i < promises->size(); i++)
-		delete (*promises)[i];
-	delete promises;
+	for (unsigned int i = 0; i < promises.size(); i++)
+		delete promises[i];
 
-	delete pending_rel_seqs;
-
-	delete thrd_last_action;
-	delete thrd_last_fence_release;
 	delete mo_graph;
 	delete priv;
 }
@@ -623,7 +618,7 @@ bool ModelExecution::process_read(ModelAction *curr)
 			struct future_value fv = node->get_future_value();
 			Promise *promise = new Promise(this, curr, fv);
 			curr->set_read_from_promise(promise);
-			promises->push_back(promise);
+			promises.push_back(promise);
 			mo_graph->startChanges();
 			updated = r_modification_order(curr, promise);
 			mo_graph->commitChanges();
@@ -750,10 +745,10 @@ bool ModelExecution::process_mutex(ModelAction *curr)
 bool ModelExecution::promises_may_allow(const ModelAction *writer,
 		const ModelAction *reader) const
 {
-	if (promises->empty())
+	if (promises.empty())
 		return true;
-	for(int i=promises->size()-1;i>=0;i--) {
-		ModelAction *pr=(*promises)[i]->get_reader(0);
+	for (int i = promises.size() - 1; i >= 0; i--) {
+		ModelAction *pr = promises[i]->get_reader(0);
 		//reader is after promise...doesn't cross any promise
 		if (*reader > *pr)
 			return true;
@@ -826,17 +821,17 @@ bool ModelExecution::process_write(ModelAction *curr)
 			if (promises_may_allow(curr, read)) {
 				add_future_value(curr, read);
 			} else {
-				futurevalues->push_back(PendingFutureValue(curr, read));
+				futurevalues.push_back(PendingFutureValue(curr, read));
 			}
 		}
 	}
 
 	/* Check the pending future values */
-	for (int i = (int)futurevalues->size() - 1; i >= 0; i--) {
-		struct PendingFutureValue pfv = (*futurevalues)[i];
+	for (int i = (int)futurevalues.size() - 1; i >= 0; i--) {
+		struct PendingFutureValue pfv = futurevalues[i];
 		if (promises_may_allow(pfv.writer, pfv.reader)) {
 			add_future_value(pfv.writer, pfv.reader);
-			futurevalues->erase(futurevalues->begin() + i);
+			futurevalues.erase(futurevalues.begin() + i);
 		}
 	}
 
@@ -920,8 +915,8 @@ bool ModelExecution::process_thread_action(ModelAction *curr)
 		add_thread(th);
 		th->set_creation(curr);
 		/* Promises can be satisfied by children */
-		for (unsigned int i = 0; i < promises->size(); i++) {
-			Promise *promise = (*promises)[i];
+		for (unsigned int i = 0; i < promises.size(); i++) {
+			Promise *promise = promises[i];
 			if (promise->thread_is_available(curr->get_tid()))
 				promise->add_thread(th->get_id());
 		}
@@ -945,8 +940,8 @@ bool ModelExecution::process_thread_action(ModelAction *curr)
 		}
 		th->complete();
 		/* Completed thread can't satisfy promises */
-		for (unsigned int i = 0; i < promises->size(); i++) {
-			Promise *promise = (*promises)[i];
+		for (unsigned int i = 0; i < promises.size(); i++) {
+			Promise *promise = promises[i];
 			if (promise->thread_is_available(th->get_id()))
 				if (promise->eliminate_thread(th->get_id()))
 					priv->failed_promise = true;
@@ -981,8 +976,8 @@ bool ModelExecution::process_thread_action(ModelAction *curr)
 void ModelExecution::process_relseq_fixup(ModelAction *curr, work_queue_t *work_queue)
 {
 	const ModelAction *write = curr->get_node()->get_relseq_break();
-	struct release_seq *sequence = pending_rel_seqs->back();
-	pending_rel_seqs->pop_back();
+	struct release_seq *sequence = pending_rel_seqs.back();
+	pending_rel_seqs.pop_back();
 	ASSERT(sequence);
 	ModelAction *acquire = sequence->acquire;
 	const ModelAction *rf = sequence->rf;
@@ -1164,8 +1159,8 @@ bool ModelExecution::synchronize(const ModelAction *first, ModelAction *second)
  */
 void ModelExecution::thread_blocking_check_promises(Thread *blocker, Thread *waiting)
 {
-	for (unsigned int i = 0; i < promises->size(); i++) {
-		Promise *promise = (*promises)[i];
+	for (unsigned int i = 0; i < promises.size(); i++) {
+		Promise *promise = promises[i];
 		if (!promise->thread_is_available(waiting->get_id()))
 			continue;
 		for (unsigned int j = 0; j < promise->get_num_readers(); j++) {
@@ -1336,8 +1331,8 @@ void ModelExecution::check_curr_backtracking(ModelAction *curr)
 
 bool ModelExecution::promises_expired() const
 {
-	for (unsigned int i = 0; i < promises->size(); i++) {
-		Promise *promise = (*promises)[i];
+	for (unsigned int i = 0; i < promises.size(); i++) {
+		Promise *promise = promises[i];
 		if (promise->get_expiration() < priv->used_sequence_numbers)
 			return true;
 	}
@@ -1351,7 +1346,7 @@ bool ModelExecution::promises_expired() const
  */
 bool ModelExecution::isfeasibleprefix() const
 {
-	return pending_rel_seqs->size() == 0 && is_feasible_prefix_ignore_relseq();
+	return pending_rel_seqs.size() == 0 && is_feasible_prefix_ignore_relseq();
 }
 
 /**
@@ -1375,7 +1370,7 @@ void ModelExecution::print_infeasibility(const char *prefix) const
 		ptr += sprintf(ptr, "[bad sw ordering]");
 	if (promises_expired())
 		ptr += sprintf(ptr, "[promise expired]");
-	if (promises->size() != 0)
+	if (promises.size() != 0)
 		ptr += sprintf(ptr, "[unresolved promise]");
 	if (ptr != buf)
 		model_print("%s: %s\n", prefix ? prefix : "Infeasible", buf);
@@ -1387,7 +1382,7 @@ void ModelExecution::print_infeasibility(const char *prefix) const
  */
 bool ModelExecution::is_feasible_prefix_ignore_relseq() const
 {
-	return !is_infeasible() && promises->size() == 0;
+	return !is_infeasible() && promises.size() == 0;
 }
 
 /**
@@ -1635,9 +1630,9 @@ bool ModelExecution::r_modification_order(ModelAction *curr, const rf_type *rf)
 	 * All compatible, thread-exclusive promises must be ordered after any
 	 * concrete loads from the same thread
 	 */
-	for (unsigned int i = 0; i < promises->size(); i++)
-		if ((*promises)[i]->is_compatible_exclusive(curr))
-			added = mo_graph->addEdge(rf, (*promises)[i]) || added;
+	for (unsigned int i = 0; i < promises.size(); i++)
+		if (promises[i]->is_compatible_exclusive(curr))
+			added = mo_graph->addEdge(rf, promises[i]) || added;
 
 	return added;
 }
@@ -1774,9 +1769,9 @@ bool ModelExecution::w_modification_order(ModelAction *curr, ModelVector<ModelAc
 	 * concrete stores to the same thread, or else they can be merged with
 	 * this store later
 	 */
-	for (unsigned int i = 0; i < promises->size(); i++)
-		if ((*promises)[i]->is_compatible_exclusive(curr))
-			added = mo_graph->addEdge(curr, (*promises)[i]) || added;
+	for (unsigned int i = 0; i < promises.size(); i++)
+		if (promises[i]->is_compatible_exclusive(curr))
+			added = mo_graph->addEdge(curr, promises[i]) || added;
 
 	return added;
 }
@@ -2034,7 +2029,7 @@ void ModelExecution::get_release_seq_heads(ModelAction *acquire,
 
 	if (!release_seq_heads(rf, release_heads, sequence)) {
 		/* add act to 'lazy checking' list */
-		pending_rel_seqs->push_back(sequence);
+		pending_rel_seqs.push_back(sequence);
 	} else {
 		snapshot_free(sequence);
 	}
@@ -2056,8 +2051,8 @@ void ModelExecution::get_release_seq_heads(ModelAction *acquire,
 bool ModelExecution::resolve_release_sequences(void *location, work_queue_t *work_queue)
 {
 	bool updated = false;
-	SnapVector<struct release_seq *>::iterator it = pending_rel_seqs->begin();
-	while (it != pending_rel_seqs->end()) {
+	SnapVector<struct release_seq *>::iterator it = pending_rel_seqs.begin();
+	while (it != pending_rel_seqs.end()) {
 		struct release_seq *pending = *it;
 		ModelAction *acquire = pending->acquire;
 		const ModelAction *read = pending->read;
@@ -2096,7 +2091,7 @@ bool ModelExecution::resolve_release_sequences(void *location, work_queue_t *wor
 			}
 		}
 		if (complete) {
-			it = pending_rel_seqs->erase(it);
+			it = pending_rel_seqs.erase(it);
 			snapshot_free(pending);
 		} else {
 			it++;
@@ -2140,16 +2135,16 @@ void ModelExecution::add_action_to_lists(ModelAction *act)
 	if (uninit)
 		(*vec)[uninit_id].push_front(uninit);
 
-	if ((int)thrd_last_action->size() <= tid)
-		thrd_last_action->resize(get_num_threads());
-	(*thrd_last_action)[tid] = act;
+	if ((int)thrd_last_action.size() <= tid)
+		thrd_last_action.resize(get_num_threads());
+	thrd_last_action[tid] = act;
 	if (uninit)
-		(*thrd_last_action)[uninit_id] = uninit;
+		thrd_last_action[uninit_id] = uninit;
 
 	if (act->is_fence() && act->is_release()) {
-		if ((int)thrd_last_fence_release->size() <= tid)
-			thrd_last_fence_release->resize(get_num_threads());
-		(*thrd_last_fence_release)[tid] = act;
+		if ((int)thrd_last_fence_release.size() <= tid)
+			thrd_last_fence_release.resize(get_num_threads());
+		thrd_last_fence_release[tid] = act;
 	}
 
 	if (act->is_wait()) {
@@ -2171,8 +2166,8 @@ void ModelExecution::add_action_to_lists(ModelAction *act)
 ModelAction * ModelExecution::get_last_action(thread_id_t tid) const
 {
 	int threadid = id_to_int(tid);
-	if (threadid < (int)thrd_last_action->size())
-		return (*thrd_last_action)[id_to_int(tid)];
+	if (threadid < (int)thrd_last_action.size())
+		return thrd_last_action[id_to_int(tid)];
 	else
 		return NULL;
 }
@@ -2185,8 +2180,8 @@ ModelAction * ModelExecution::get_last_action(thread_id_t tid) const
 ModelAction * ModelExecution::get_last_fence_release(thread_id_t tid) const
 {
 	int threadid = id_to_int(tid);
-	if (threadid < (int)thrd_last_fence_release->size())
-		return (*thrd_last_fence_release)[id_to_int(tid)];
+	if (threadid < (int)thrd_last_fence_release.size())
+		return thrd_last_fence_release[id_to_int(tid)];
 	else
 		return NULL;
 }
@@ -2289,10 +2284,10 @@ ClockVector * ModelExecution::get_cv(thread_id_t tid) const
  */
 Promise * ModelExecution::pop_promise_to_resolve(const ModelAction *curr)
 {
-	for (unsigned int i = 0; i < promises->size(); i++)
+	for (unsigned int i = 0; i < promises.size(); i++)
 		if (curr->get_node()->get_promise(i)) {
-			Promise *ret = (*promises)[i];
-			promises->erase(promises->begin() + i);
+			Promise *ret = promises[i];
+			promises.erase(promises.begin() + i);
 			return ret;
 		}
 	return NULL;
@@ -2347,8 +2342,8 @@ bool ModelExecution::resolve_promise(ModelAction *write, Promise *promise)
  */
 void ModelExecution::compute_promises(ModelAction *curr)
 {
-	for (unsigned int i = 0; i < promises->size(); i++) {
-		Promise *promise = (*promises)[i];
+	for (unsigned int i = 0; i < promises.size(); i++) {
+		Promise *promise = promises[i];
 		if (!promise->is_compatible(curr) || !promise->same_value(curr))
 			continue;
 
@@ -2369,8 +2364,8 @@ void ModelExecution::compute_promises(ModelAction *curr)
 /** Checks promises in response to change in ClockVector Threads. */
 void ModelExecution::check_promises(thread_id_t tid, ClockVector *old_cv, ClockVector *merge_cv)
 {
-	for (unsigned int i = 0; i < promises->size(); i++) {
-		Promise *promise = (*promises)[i];
+	for (unsigned int i = 0; i < promises.size(); i++) {
+		Promise *promise = promises[i];
 		if (!promise->thread_is_available(tid))
 			continue;
 		for (unsigned int j = 0; j < promise->get_num_readers(); j++) {
@@ -2389,8 +2384,8 @@ void ModelExecution::check_promises(thread_id_t tid, ClockVector *old_cv, ClockV
 
 void ModelExecution::check_promises_thread_disabled()
 {
-	for (unsigned int i = 0; i < promises->size(); i++) {
-		Promise *promise = (*promises)[i];
+	for (unsigned int i = 0; i < promises.size(); i++) {
+		Promise *promise = promises[i];
 		if (promise->has_failed()) {
 			priv->failed_promise = true;
 			return;
@@ -2416,8 +2411,8 @@ void ModelExecution::mo_check_promises(const ModelAction *act, bool is_read_chec
 {
 	const ModelAction *write = is_read_check ? act->get_reads_from() : act;
 
-	for (unsigned int i = 0; i < promises->size(); i++) {
-		Promise *promise = (*promises)[i];
+	for (unsigned int i = 0; i < promises.size(); i++) {
+		Promise *promise = promises[i];
 
 		// Is this promise on the same location?
 		if (!promise->same_location(write))
@@ -2457,10 +2452,10 @@ void ModelExecution::mo_check_promises(const ModelAction *act, bool is_read_chec
  */
 void ModelExecution::compute_relseq_breakwrites(ModelAction *curr)
 {
-	if (pending_rel_seqs->empty())
+	if (pending_rel_seqs.empty())
 		return;
 
-	struct release_seq *pending = pending_rel_seqs->back();
+	struct release_seq *pending = pending_rel_seqs.back();
 	for (unsigned int i = 0; i < pending->writes.size(); i++) {
 		const ModelAction *write = pending->writes[i];
 		curr->get_node()->add_relseq_break(write);
@@ -2524,8 +2519,8 @@ void ModelExecution::build_may_read_from(ModelAction *curr)
 	}
 
 	/* Inherit existing, promised future values */
-	for (i = 0; i < promises->size(); i++) {
-		const Promise *promise = (*promises)[i];
+	for (i = 0; i < promises.size(); i++) {
+		const Promise *promise = promises[i];
 		const ModelAction *promise_read = promise->get_reader(0);
 		if (promise_read->same_var(curr)) {
 			/* Only add feasible future-values */
@@ -2667,11 +2662,11 @@ void ModelExecution::print_summary() const
 		print_infeasibility(" INFEASIBLE");
 	print_list(action_trace);
 	model_print("\n");
-	if (!promises->empty()) {
+	if (!promises.empty()) {
 		model_print("Pending promises:\n");
-		for (unsigned int i = 0; i < promises->size(); i++) {
+		for (unsigned int i = 0; i < promises.size(); i++) {
 			model_print(" [P%u] ", i);
-			(*promises)[i]->print();
+			promises[i]->print();
 		}
 		model_print("\n");
 	}
@@ -2722,8 +2717,8 @@ Thread * ModelExecution::get_thread(const ModelAction *act) const
  */
 int ModelExecution::get_promise_number(const Promise *promise) const
 {
-	for (unsigned int i = 0; i < promises->size(); i++)
-		if ((*promises)[i] == promise)
+	for (unsigned int i = 0; i < promises.size(); i++)
+		if (promises[i] == promise)
 			return i;
 	/* Not found */
 	return -1;
@@ -2809,12 +2804,12 @@ Thread * ModelExecution::take_step(ModelAction *curr)
  */
 void ModelExecution::fixup_release_sequences()
 {
-	while (!pending_rel_seqs->empty() &&
+	while (!pending_rel_seqs.empty() &&
 			is_feasible_prefix_ignore_relseq() &&
 			!unrealizedraces.empty()) {
 		model_print("*** WARNING: release sequence fixup action "
 				"(%zu pending release seuqence(s)) ***\n",
-				pending_rel_seqs->size());
+				pending_rel_seqs.size());
 		ModelAction *fixup = new ModelAction(MODEL_FIXUP_RELSEQ,
 				std::memory_order_seq_cst, NULL, VALUE_NONE,
 				model_thread);

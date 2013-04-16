@@ -309,8 +309,8 @@ ModelAction * ModelExecution::get_last_fence_conflict(ModelAction *act) const
 		return NULL;
 
 	/* Skip past the release */
-	action_list_t *list = action_trace;
-	action_list_t::reverse_iterator rit;
+	const action_list_t *list = action_trace;
+	action_list_t::const_reverse_iterator rit;
 	for (rit = list->rbegin(); rit != list->rend(); rit++)
 		if (*rit == last_release)
 			break;
@@ -2581,9 +2581,9 @@ ModelAction * ModelExecution::get_uninitialized_action(const ModelAction *curr) 
 	return act;
 }
 
-static void print_list(action_list_t *list)
+static void print_list(const action_list_t *list)
 {
-	action_list_t::iterator it;
+	action_list_t::const_iterator it;
 
 	model_print("---------------------------------------------------------------------\n");
 

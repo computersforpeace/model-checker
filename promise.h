@@ -31,6 +31,7 @@ class Promise {
 	bool eliminate_thread(thread_id_t tid);
 	void add_thread(thread_id_t tid);
 	bool thread_is_available(thread_id_t tid) const;
+	unsigned int max_available_thread_idx() const;
 	bool has_failed() const;
 	void set_write(const ModelAction *act) { write = act; }
 	const ModelAction * get_write() const { return write; }

@@ -100,6 +100,19 @@ bool Promise::thread_is_available(thread_id_t tid) const
 	return available_thread[id];
 }
 
+/**
+ * @brief Get an upper bound on the number of available threads
+ *
+ * Gets an upper bound on the number of threads in the available threads set,
+ * useful for iterating over "thread_is_available()".
+ *
+ * @return The upper bound
+ */
+unsigned int Promise::max_available_thread_idx() const
+{
+	return available_thread.size();
+}
+
 /** @brief Print debug info about the Promise */
 void Promise::print() const
 {

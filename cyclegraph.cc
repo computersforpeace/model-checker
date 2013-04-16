@@ -2,7 +2,6 @@
 #include "action.h"
 #include "common.h"
 #include "promise.h"
-#include "model.h"
 #include "threads-model.h"
 
 /** Initializes a CycleGraph object. */
@@ -319,7 +318,7 @@ static void print_node(FILE *file, const CycleNode *node, int label)
 		if (label) {
 			int first = 1;
 			fprintf(file, " [label=\"P%d, T", idx);
-			for (unsigned int i = 0 ; i < model->get_num_threads(); i++)
+			for (unsigned int i = 0 ; i < promise->max_available_thread_idx(); i++)
 				if (promise->thread_is_available(int_to_id(i))) {
 					fprintf(file, "%s%u", first ? "": ",", i);
 					first = 0;

@@ -74,9 +74,6 @@ public:
 		trace_analyses.push_back(a);
 	}
 
-	action_list_t * get_actions_on_obj(void * obj, thread_id_t tid);
-	ModelAction * get_last_action(thread_id_t tid) const;
-
 	MEMALLOC
 private:
 	/** The scheduler to use: tracks the running/ready Threads */

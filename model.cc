@@ -16,8 +16,6 @@
 #include "execution.h"
 #include "bugmessage.h"
 
-#define INITIAL_THREAD_ID	0
-
 ModelChecker *model;
 
 /** @brief Constructor */

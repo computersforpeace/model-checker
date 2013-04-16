@@ -113,7 +113,7 @@ public:
 
 	action_list_t * get_action_trace() const { return action_trace; }
 
-	MEMALLOC
+	SNAPSHOTALLOC
 private:
 	int get_execution_number() const;
 

@@ -2,8 +2,8 @@
  *  @brief Hashtable.  Standard chained bucket variety.
  */
 
-#ifndef HASHTABLE_H
-#define HASHTABLE_H
+#ifndef __HASHTABLE_H__
+#define __HASHTABLE_H__
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -12,22 +12,12 @@
 #include "common.h"
 
 /**
- * @brief HashTable linked node class, for chained storage of hash table conflicts
- *
- * By default it is snapshotting, but you can pass in your own allocation
- * functions.
+ * @brief HashTable node
  *
  * @tparam _Key    Type name for the key
  * @tparam _Val    Type name for the values to be stored
- * @tparam _malloc Provide your own 'malloc' for the table, or default to
- *                 snapshotting.
- * @tparam _calloc Provide your own 'calloc' for the table, or default to
- *                 snapshotting.
- * @tparam _free   Provide your own 'free' for the table, or default to
- *                 snapshotting.
  */
 template<typename _Key, typename _Val>
-
 struct hashlistnode {
 	_Key key;
 	_Val val;
@@ -37,8 +27,9 @@ struct hashlistnode {
  * @brief A simple, custom hash table
  *
  * By default it is snapshotting, but you can pass in your own allocation
- * functions. Note that this table does not support 0 (NULL) keys and is
- * designed primarily with pointer-based keys in mind.
+ * functions. Note that this table does not support the value 0 (NULL) used as
+ * a key and is designed primarily with pointer-based keys in mind. Other
+ * primitive key types are supported only for non-zero values.
  *
  * @tparam _Key    Type name for the key
  * @tparam _Val    Type name for the values to be stored
@@ -53,10 +44,10 @@ struct hashlistnode {
  *                 snapshotting.
  */
 template<typename _Key, typename _Val, typename _KeyInt, int _Shift = 0, void * (* _malloc)(size_t) = snapshot_malloc, void * (* _calloc)(size_t, size_t) = snapshot_calloc, void (*_free)(void *) = snapshot_free>
-	class HashTable {
+class HashTable {
  public:
 	/**
-	 * Constructor
+	 * @brief Hash table constructor
 	 * @param initialcapacity Sets the initial capacity of the hash table.
 	 * Default size 1024.
 	 * @param factor Sets the percentage full before the hashtable is
@@ -73,7 +64,7 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift = 0, void * 
 		size = 0; // Initial number of elements in the hash
 	}
 
-	/** Destructor */
+	/** @brief Hash table destructor */
 	~HashTable() {
 		_free(table);
 	}
@@ -98,13 +89,17 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift = 0, void * 
 		_free(p);
 	}
 
-	/** Reset the table to its initial state. */
+	/** @brief Reset the table to its initial state. */
 	void reset() {
 		memset(table, 0, capacity * sizeof(struct hashlistnode<_Key, _Val>));
 		size = 0;
 	}
 
-	/** Put a key value pair into the table. */
+	/**
+	 * @brief Put a key/value pair into the table
+	 * @param key The key for the new value; must not be 0 or NULL
+	 * @param val The value to store in the table
+	 */
 	void put(_Key key, _Val val) {
 		/* HashTable cannot handle 0 as a key */
 		ASSERT(key);
@@ -130,7 +125,11 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift = 0, void * 
 		size++;
 	}
 
-	/** Lookup the corresponding value for the given key. */
+	/**
+	 * @brief Lookup the corresponding value for the given key
+	 * @param key The key for finding the value; must not be 0 or NULL
+	 * @return The value in the table, if the key is found; otherwise 0
+	 */
 	_Val get(_Key key) const {
 		struct hashlistnode<_Key, _Val> *search;
 
@@ -148,7 +147,11 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift = 0, void * 
 		return (_Val)0;
 	}
 
-	/** Check whether the table contains a value for the given key. */
+	/**
+	 * @brief Check whether the table contains a value for the given key
+	 * @param key The key for finding the value; must not be 0 or NULL
+	 * @return True, if the key is found; false otherwise
+	 */
 	bool contains(_Key key) const {
 		struct hashlistnode<_Key, _Val> *search;
 
@@ -166,7 +169,10 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift = 0, void * 
 		return false;
 	}
 
-	/** Resize the table. */
+	/**
+	 * @brief Resize the table
+	 * @param newsize The new size of the table
+	 */
 	void resize(unsigned int newsize) {
 		struct hashlistnode<_Key, _Val> *oldtable = table;
 		struct hashlistnode<_Key, _Val> *newtable;
@@ -212,4 +218,5 @@ template<typename _Key, typename _Val, typename _KeyInt, int _Shift = 0, void * 
 	unsigned int threshold;
 	double loadfactor;
 };
-#endif
+
+#endif /* __HASHTABLE_H__ */

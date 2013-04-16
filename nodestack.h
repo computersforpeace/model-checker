@@ -54,7 +54,8 @@ typedef enum {
  */
 class Node {
 public:
-	Node(ModelAction *act, Node *par, int nthreads, Node *prevfairness);
+	Node(const struct model_params *params, ModelAction *act, Node *par,
+			int nthreads, Node *prevfairness);
 	~Node();
 	/* return true = thread choice has already been explored */
 	bool has_been_explored(thread_id_t tid) const;
@@ -134,8 +135,11 @@ private:
 	bool future_value_empty() const;
 	bool increment_future_value();
 	read_from_type_t read_from_status;
+	const struct model_params * get_params() const { return params; }
 
 	ModelAction * const action;
+
+	const struct model_params * const params;
 
 	/** @brief ATOMIC_UNINIT action which was created at this Node */
 	ModelAction *uninit_action;
@@ -201,6 +205,8 @@ public:
 	MEMALLOC
 private:
 	node_list_t node_list;
+
+	const struct model_params * get_params() const;
 
 	/** @brief The model-checker execution object */
 	const ModelExecution *execution;

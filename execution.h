@@ -66,6 +66,8 @@ public:
 			NodeStack *node_stack);
 	~ModelExecution();
 
+	const struct model_params * get_params() const { return params; }
+
 	Thread * take_step(ModelAction *curr);
 	void fixup_release_sequences();
 

@@ -6,10 +6,10 @@
 #include "nodestack.h"
 #include "action.h"
 #include "common.h"
-#include "model.h"
 #include "threads-model.h"
 #include "modeltypes.h"
 #include "execution.h"
+#include "params.h"
 
 /**
  * @brief Node constructor
@@ -19,15 +19,18 @@
  * as an empty stub, to represent the first thread "choice") and up to one
  * parent.
  *
+ * @param params The model-checker parameters
  * @param act The ModelAction to associate with this Node. May be NULL.
  * @param par The parent Node in the NodeStack. May be NULL if there is no
  * parent.
  * @param nthreads The number of threads which exist at this point in the
  * execution trace.
  */
-Node::Node(ModelAction *act, Node *par, int nthreads, Node *prevfairness) :
+Node::Node(const struct model_params *params, ModelAction *act, Node *par,
+		int nthreads, Node *prevfairness) :
 	read_from_status(READ_FROM_PAST),
 	action(act),
+	params(params),
 	uninit_action(NULL),
 	parent(par),
 	num_threads(nthreads),
@@ -55,7 +58,7 @@ Node::Node(ModelAction *act, Node *par, int nthreads, Node *prevfairness) :
 	int currtid = id_to_int(act->get_tid());
 	int prevtid = prevfairness ? id_to_int(prevfairness->action->get_tid()) : 0;
 
-	if (model->params.fairwindow != 0) {
+	if (get_params()->fairwindow != 0) {
 		for (int i = 0; i < num_threads; i++) {
 			ASSERT(i < ((int)fairness.size()));
 			struct fairness_info *fi = &fairness[i];
@@ -81,7 +84,7 @@ Node::Node(ModelAction *act, Node *par, int nthreads, Node *prevfairness) :
 				 * conditions
 				 * If we meet the enabled count and have no
 				 * turns, give us priority */
-				if ((fi->enabled_count >= model->params.enabledcount) &&
+				if ((fi->enabled_count >= get_params()->enabledcount) &&
 						(fi->turns == 0))
 					fi->priority = true;
 			}
@@ -621,14 +624,14 @@ bool Node::add_future_value(struct future_value fv)
 		/* Future value hasn't been explored; update expiration */
 		future_values[idx].expiration = expiration;
 		return true;
-	} else if (idx >= 0 && expiration <= future_values[idx].expiration + model->params.expireslop) {
+	} else if (idx >= 0 && expiration <= future_values[idx].expiration + get_params()->expireslop) {
 		/* Future value has been explored and is within the "sloppy" window */
 		return false;
 	}
 
 	/* Limit the size of the future-values set */
-	if (model->params.maxfuturevalues > 0 &&
-			(int)future_values.size() >= model->params.maxfuturevalues)
+	if (get_params()->maxfuturevalues > 0 &&
+			(int)future_values.size() >= get_params()->maxfuturevalues)
 		return false;
 
 	future_values.push_back(fv);
@@ -771,6 +774,11 @@ void NodeStack::register_engine(const ModelExecution *exec)
 	this->execution = exec;
 }
 
+const struct model_params * NodeStack::get_params() const
+{
+	return execution->get_params();
+}
+
 void NodeStack::print() const
 {
 	model_print("............................................\n");
@@ -799,14 +807,14 @@ ModelAction * NodeStack::explore_action(ModelAction *act, enabled_type_t *is_ena
 	Node *prevfairness = NULL;
 	if (head) {
 		head->explore_child(act, is_enabled);
-		if (model->params.fairwindow != 0 && head_idx > (int)model->params.fairwindow)
-			prevfairness = node_list[head_idx - model->params.fairwindow];
+		if (get_params()->fairwindow != 0 && head_idx > (int)get_params()->fairwindow)
+			prevfairness = node_list[head_idx - get_params()->fairwindow];
 	}
 
 	int next_threads = execution->get_num_threads();
 	if (act->get_type() == THREAD_CREATE)
 		next_threads++;
-	node_list.push_back(new Node(act, head, next_threads, prevfairness));
+	node_list.push_back(new Node(get_params(), act, head, next_threads, prevfairness));
 	total_nodes++;
 	head_idx++;
 	return NULL;

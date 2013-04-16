@@ -69,7 +69,7 @@ public:
 
 	const model_params params;
 	void add_trace_analysis(TraceAnalysis *a) {
-		trace_analyses->push_back(a);
+		trace_analyses.push_back(a);
 	}
 
 	action_list_t * get_actions_on_obj(void * obj, thread_id_t tid);
@@ -96,7 +96,7 @@ private:
 
 	ucontext_t system_context;
 
-	ModelVector<TraceAnalysis *> * trace_analyses;
+	ModelVector<TraceAnalysis *> trace_analyses;
 
 	/** @brief The cumulative execution stats */
 	struct execution_stats stats;

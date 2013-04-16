@@ -30,7 +30,7 @@ ModelChecker::ModelChecker(struct model_params params) :
 	execution(new ModelExecution(&params, scheduler, node_stack)),
 	diverge(NULL),
 	earliest_diverge(NULL),
-	trace_analyses(new ModelVector<TraceAnalysis *>())
+	trace_analyses()
 {
 }
 
@@ -38,9 +38,8 @@ ModelChecker::ModelChecker(struct model_params params) :
 ModelChecker::~ModelChecker()
 {
 	delete node_stack;
-	for (unsigned int i = 0; i < trace_analyses->size(); i++)
-		delete (*trace_analyses)[i];
-	delete trace_analyses;
+	for (unsigned int i = 0; i < trace_analyses.size(); i++)
+		delete trace_analyses[i];
 	delete scheduler;
 }
 
@@ -328,8 +327,8 @@ bool ModelChecker::next_execution()
 
 /** @brief Run trace analyses on complete trace */
 void ModelChecker::run_trace_analyses() {
-	for (unsigned int i = 0; i < trace_analyses->size(); i++)
-		(*trace_analyses)[i]->analyze(execution->get_action_trace());
+	for (unsigned int i = 0; i < trace_analyses.size(); i++)
+		trace_analyses[i]->analyze(execution->get_action_trace());
 }
 
 /**

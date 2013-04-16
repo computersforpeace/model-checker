@@ -186,7 +186,7 @@ private:
 	ModelAction * get_uninitialized_action(const ModelAction *curr) const;
 
 	action_list_t * const action_trace;
-	HashTable<int, Thread *, int> * const thread_map;
+	HashTable<int, Thread *, int> thread_map;
 
 	/** Per-object list of actions. Maps an object (i.e., memory location)
 	 * to a trace of all actions performed on the object. */
@@ -194,9 +194,9 @@ private:
 
 	/** Per-object list of actions. Maps an object (i.e., memory location)
 	 * to a trace of all actions performed on the object. */
-	HashTable<const void *, action_list_t *, uintptr_t, 4> * const condvar_waiters_map;
+	HashTable<const void *, action_list_t *, uintptr_t, 4> condvar_waiters_map;
 
-	HashTable<void *, SnapVector<action_list_t> *, uintptr_t, 4 > * const obj_thrd_map;
+	HashTable<void *, SnapVector<action_list_t> *, uintptr_t, 4> obj_thrd_map;
 	SnapVector<Promise *> promises;
 	SnapVector<struct PendingFutureValue> futurevalues;
 

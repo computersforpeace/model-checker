@@ -65,10 +65,10 @@ ModelExecution::ModelExecution(ModelChecker *m,
 	params(params),
 	scheduler(scheduler),
 	action_trace(new action_list_t()),
-	thread_map(new HashTable<int, Thread *, int>()),
+	thread_map(),
 	obj_map(new HashTable<const void *, action_list_t *, uintptr_t, 4>()),
-	condvar_waiters_map(new HashTable<const void *, action_list_t *, uintptr_t, 4>()),
-	obj_thrd_map(new HashTable<void *, SnapVector<action_list_t> *, uintptr_t, 4 >()),
+	condvar_waiters_map(),
+	obj_thrd_map(),
 	promises(),
 	futurevalues(),
 	pending_rel_seqs(),
@@ -80,7 +80,7 @@ ModelExecution::ModelExecution(ModelChecker *m,
 {
 	/* Initialize a model-checker thread, for special ModelActions */
 	model_thread = new Thread(get_next_id());
-	thread_map->put(id_to_int(model_thread->get_id()), model_thread);
+	thread_map.put(id_to_int(model_thread->get_id()), model_thread);
 	scheduler->register_engine(this);
 }
 
@@ -88,12 +88,9 @@ ModelExecution::ModelExecution(ModelChecker *m,
 ModelExecution::~ModelExecution()
 {
 	for (unsigned int i = 0; i < get_num_threads(); i++)
-		delete thread_map->get(i);
-	delete thread_map;
+		delete thread_map.get(i);
 
-	delete obj_thrd_map;
 	delete obj_map;
-	delete condvar_waiters_map;
 	delete action_trace;
 
 	for (unsigned int i = 0; i < promises.size(); i++)
@@ -130,7 +127,7 @@ static SnapVector<action_list_t> * get_safe_ptr_vect_action(HashTable<void *, Sn
 
 action_list_t * ModelExecution::get_actions_on_obj(void * obj, thread_id_t tid) const
 {
-	SnapVector<action_list_t> *wrv=obj_thrd_map->get(obj);
+	SnapVector<action_list_t> *wrv = obj_thrd_map.get(obj);
 	if (wrv==NULL)
 		return NULL;
 	unsigned int thread=id_to_int(tid);
@@ -697,14 +694,14 @@ bool ModelExecution::process_mutex(ModelAction *curr)
 
 		/* Should we go to sleep? (simulate spurious failures) */
 		if (curr->get_node()->get_misc() == 0) {
-			get_safe_ptr_action(condvar_waiters_map, curr->get_location())->push_back(curr);
+			get_safe_ptr_action(&condvar_waiters_map, curr->get_location())->push_back(curr);
 			/* disable us */
 			scheduler->sleep(get_thread(curr));
 		}
 		break;
 	}
 	case ATOMIC_NOTIFY_ALL: {
-		action_list_t *waiters = get_safe_ptr_action(condvar_waiters_map, curr->get_location());
+		action_list_t *waiters = get_safe_ptr_action(&condvar_waiters_map, curr->get_location());
 		//activate all the waiting threads
 		for (action_list_t::iterator rit = waiters->begin(); rit != waiters->end(); rit++) {
 			scheduler->wake(get_thread(*rit));
@@ -713,7 +710,7 @@ bool ModelExecution::process_mutex(ModelAction *curr)
 		break;
 	}
 	case ATOMIC_NOTIFY_ONE: {
-		action_list_t *waiters = get_safe_ptr_action(condvar_waiters_map, curr->get_location());
+		action_list_t *waiters = get_safe_ptr_action(&condvar_waiters_map, curr->get_location());
 		int wakeupthread = curr->get_node()->get_misc();
 		action_list_t::iterator it = waiters->begin();
 		advance(it, wakeupthread);
@@ -1092,7 +1089,7 @@ bool ModelExecution::initialize_curr_action(ModelAction **curr)
 		else if (newcurr->is_wait())
 			newcurr->get_node()->set_misc_max(2);
 		else if (newcurr->is_notify_one()) {
-			newcurr->get_node()->set_misc_max(get_safe_ptr_action(condvar_waiters_map, newcurr->get_location())->size());
+			newcurr->get_node()->set_misc_max(get_safe_ptr_action(&condvar_waiters_map, newcurr->get_location())->size());
 		}
 		return true; /* This was a new ModelAction */
 	}
@@ -1437,7 +1434,7 @@ bool ModelExecution::should_read_instead(const ModelAction *curr, const T *rf, c
 	if (!mo_graph->checkReachable(rf, other_rf))
 		return false;
 
-	SnapVector<action_list_t> *thrd_lists = get_safe_ptr_vect_action(obj_thrd_map, curr->get_location());
+	SnapVector<action_list_t> *thrd_lists = obj_thrd_map.get(curr->get_location());
 	action_list_t *list = &(*thrd_lists)[id_to_int(curr->get_tid())];
 	action_list_t::reverse_iterator rit = list->rbegin();
 	ASSERT((*rit) == curr);
@@ -1480,7 +1477,7 @@ bool ModelExecution::check_recency(ModelAction *curr, const T *rf) const
 			curr->get_node()->get_read_from_promise_size() <= 1)
 		return true;
 
-	SnapVector<action_list_t> *thrd_lists = get_safe_ptr_vect_action(obj_thrd_map, curr->get_location());
+	SnapVector<action_list_t> *thrd_lists = obj_thrd_map.get(curr->get_location());
 	int tid = id_to_int(curr->get_tid());
 	ASSERT(tid < (int)thrd_lists->size());
 	action_list_t *list = &(*thrd_lists)[tid];
@@ -1537,7 +1534,7 @@ bool ModelExecution::check_recency(ModelAction *curr, const T *rf) const
 template <typename rf_type>
 bool ModelExecution::r_modification_order(ModelAction *curr, const rf_type *rf)
 {
-	SnapVector<action_list_t> *thrd_lists = get_safe_ptr_vect_action(obj_thrd_map, curr->get_location());
+	SnapVector<action_list_t> *thrd_lists = obj_thrd_map.get(curr->get_location());
 	unsigned int i;
 	bool added = false;
 	ASSERT(curr->is_read());
@@ -1663,7 +1660,7 @@ bool ModelExecution::r_modification_order(ModelAction *curr, const rf_type *rf)
  */
 bool ModelExecution::w_modification_order(ModelAction *curr, ModelVector<ModelAction *> *send_fv)
 {
-	SnapVector<action_list_t> *thrd_lists = get_safe_ptr_vect_action(obj_thrd_map, curr->get_location());
+	SnapVector<action_list_t> *thrd_lists = obj_thrd_map.get(curr->get_location());
 	unsigned int i;
 	bool added = false;
 	ASSERT(curr->is_write());
@@ -1807,7 +1804,7 @@ bool ModelExecution::thin_air_constraint_may_allow(const ModelAction *writer, co
  */
 bool ModelExecution::mo_may_allow(const ModelAction *writer, const ModelAction *reader)
 {
-	SnapVector<action_list_t> *thrd_lists = get_safe_ptr_vect_action(obj_thrd_map, reader->get_location());
+	SnapVector<action_list_t> *thrd_lists = obj_thrd_map.get(reader->get_location());
 	unsigned int i;
 	/* Iterate over all threads */
 	for (i = 0; i < thrd_lists->size(); i++) {
@@ -1908,7 +1905,7 @@ bool ModelExecution::release_seq_heads(const ModelAction *rf,
 		release_heads->push_back(fence_release);
 
 	int tid = id_to_int(rf->get_tid());
-	SnapVector<action_list_t> *thrd_lists = get_safe_ptr_vect_action(obj_thrd_map, rf->get_location());
+	SnapVector<action_list_t> *thrd_lists = obj_thrd_map.get(rf->get_location());
 	action_list_t *list = &(*thrd_lists)[tid];
 	action_list_t::const_reverse_iterator rit;
 
@@ -2128,7 +2125,7 @@ void ModelExecution::add_action_to_lists(ModelAction *act)
 	if (uninit)
 		action_trace->push_front(uninit);
 
-	SnapVector<action_list_t> *vec = get_safe_ptr_vect_action(obj_thrd_map, act->get_location());
+	SnapVector<action_list_t> *vec = get_safe_ptr_vect_action(&obj_thrd_map, act->get_location());
 	if (tid >= (int)vec->size())
 		vec->resize(priv->next_thread_id);
 	(*vec)[tid].push_back(act);
@@ -2151,7 +2148,7 @@ void ModelExecution::add_action_to_lists(ModelAction *act)
 		void *mutex_loc = (void *) act->get_value();
 		get_safe_ptr_action(obj_map, mutex_loc)->push_back(act);
 
-		SnapVector<action_list_t> *vec = get_safe_ptr_vect_action(obj_thrd_map, mutex_loc);
+		SnapVector<action_list_t> *vec = get_safe_ptr_vect_action(&obj_thrd_map, mutex_loc);
 		if (tid >= (int)vec->size())
 			vec->resize(priv->next_thread_id);
 		(*vec)[tid].push_back(act);
@@ -2474,7 +2471,7 @@ void ModelExecution::compute_relseq_breakwrites(ModelAction *curr)
  */
 void ModelExecution::build_may_read_from(ModelAction *curr)
 {
-	SnapVector<action_list_t> *thrd_lists = get_safe_ptr_vect_action(obj_thrd_map, curr->get_location());
+	SnapVector<action_list_t> *thrd_lists = obj_thrd_map.get(curr->get_location());
 	unsigned int i;
 	ASSERT(curr->is_read());
 
@@ -2679,7 +2676,7 @@ void ModelExecution::print_summary() const
  */
 void ModelExecution::add_thread(Thread *t)
 {
-	thread_map->put(id_to_int(t->get_id()), t);
+	thread_map.put(id_to_int(t->get_id()), t);
 	if (!t->is_model_thread())
 		scheduler->add_thread(t);
 }
@@ -2691,7 +2688,7 @@ void ModelExecution::add_thread(Thread *t)
  */
 Thread * ModelExecution::get_thread(thread_id_t tid) const
 {
-	return thread_map->get(id_to_int(tid));
+	return thread_map.get(id_to_int(tid));
 }
 
 /**

@@ -2,8 +2,11 @@
 #include "action.h"
 #include "threads-model.h"
 #include "clockvector.h"
+#include "execution.h"
 
-SCAnalysis::SCAnalysis() {
+SCAnalysis::SCAnalysis(const ModelExecution *execution) :
+	execution(execution)
+{
 	cvmap=new HashTable<const ModelAction *, ClockVector *, uintptr_t, 4>();
 	cycleset=new HashTable<const ModelAction *, const ModelAction *, uintptr_t, 4>();
 	threadlists=new SnapVector<action_list_t>(1);

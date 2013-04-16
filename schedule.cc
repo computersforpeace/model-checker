@@ -6,6 +6,7 @@
 #include "common.h"
 #include "model.h"
 #include "nodestack.h"
+#include "execution.h"
 
 /**
  * Format an "enabled_type_t" for printing
@@ -35,11 +36,21 @@ void enabled_type_to_string(enabled_type_t e, char *str)
 
 /** Constructor */
 Scheduler::Scheduler() :
+	execution(NULL),
 	enabled(NULL),
 	enabled_len(0),
 	curr_thread_index(0),
 	current(NULL)
 {
+}
+
+/**
+ * @brief Register the ModelExecution engine
+ * @param execution The ModelExecution which is controlling execution
+ */
+void Scheduler::register_engine(ModelExecution *execution)
+{
+	this->execution = execution;
 }
 
 void Scheduler::set_enabled(Thread *t, enabled_type_t enabled_status) {
@@ -56,7 +67,7 @@ void Scheduler::set_enabled(Thread *t, enabled_type_t enabled_status) {
 	}
 	enabled[threadid] = enabled_status;
 	if (enabled_status == THREAD_DISABLED)
-		model->check_promises_thread_disabled();
+		execution->check_promises_thread_disabled();
 }
 
 /**

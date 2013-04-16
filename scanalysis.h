@@ -5,7 +5,7 @@
 
 class SCAnalysis : public TraceAnalysis {
  public:
-	SCAnalysis();
+	SCAnalysis(const ModelExecution *execution);
 	~SCAnalysis();
 	virtual void analyze(action_list_t *);
 
@@ -23,5 +23,6 @@ class SCAnalysis : public TraceAnalysis {
 	HashTable<const ModelAction *,ClockVector *, uintptr_t, 4 > * cvmap;
 	HashTable<const ModelAction *,const ModelAction *, uintptr_t, 4 > * cycleset;
 	SnapVector<action_list_t> * threadlists;
+	const ModelExecution *execution;
 };
 #endif

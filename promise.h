@@ -14,6 +14,7 @@
 #include "stl-model.h"
 
 class ModelAction;
+class ModelExecution;
 
 struct future_value {
 	uint64_t value;
@@ -23,7 +24,7 @@ struct future_value {
 
 class Promise {
  public:
-	Promise(ModelAction *read, struct future_value fv);
+	Promise(const ModelExecution *execution, ModelAction *read, struct future_value fv);
 	bool add_reader(ModelAction *reader);
 	ModelAction * get_reader(unsigned int i) const;
 	unsigned int get_num_readers() const { return readers.size(); }
@@ -52,6 +53,9 @@ class Promise {
 
 	SNAPSHOTALLOC
  private:
+	/** @brief The execution which created this Promise */
+	const ModelExecution *execution;
+
 	/** @brief Thread ID(s) for thread(s) that potentially can satisfy this
 	 *  promise */
 	SnapVector<bool> available_thread;

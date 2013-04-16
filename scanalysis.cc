@@ -2,8 +2,11 @@
 #include "action.h"
 #include "threads-model.h"
 #include "clockvector.h"
+#include "execution.h"
 
-SCAnalysis::SCAnalysis() {
+SCAnalysis::SCAnalysis(const ModelExecution *execution) :
+	execution(execution)
+{
 	cvmap=new HashTable<const ModelAction *, ClockVector *, uintptr_t, 4>();
 	cycleset=new HashTable<const ModelAction *, const ModelAction *, uintptr_t, 4>();
 	threadlists=new SnapVector<action_list_t>(1);
@@ -70,7 +73,7 @@ ModelAction * SCAnalysis::getNextAction() {
 	//print cycles in a nice way to avoid confusion
 	//make sure thread starts appear after the create
 	if (act->is_thread_start()) {
-		ModelAction *createact=model->get_thread(act)->get_creation();
+		ModelAction *createact=execution->get_thread(act)->get_creation();
 		if (createact) {
 			action_list_t *threadlist=&(*threadlists)[id_to_int(createact->get_tid())];
 			if (!threadlist->empty()) {
@@ -167,7 +170,7 @@ bool SCAnalysis::processRead(ModelAction *read, ClockVector *cv) {
 			continue;
 		if (tid==write->get_tid())
 			continue;
-		action_list_t * list=model->get_actions_on_obj(read->get_location(), tid);
+		action_list_t * list=execution->get_actions_on_obj(read->get_location(), tid);
 		if (list==NULL)
 			continue;
 		for (action_list_t::reverse_iterator rit = list->rbegin(); rit != list->rend(); rit++) {
@@ -212,7 +215,7 @@ void SCAnalysis::computeCV(action_list_t *list) {
 			ModelAction *act = *it;
 			ModelAction *lastact = last_act[id_to_int(act->get_tid())];
 			if (act->is_thread_start())
-				lastact=model->get_thread(act)->get_creation();
+				lastact=execution->get_thread(act)->get_creation();
 			ClockVector *lastcv=(lastact != NULL) ? cvmap->get(lastact) : NULL;
 			last_act[id_to_int(act->get_tid())]=act;
 			ClockVector *cv=cvmap->get(act);
@@ -224,7 +227,7 @@ void SCAnalysis::computeCV(action_list_t *list) {
 			}
 			if (act->is_thread_join()) {
 				Thread *joinedthr = act->get_thread_operand();
-				ModelAction *finish = model->get_last_action(joinedthr->get_id());
+				ModelAction *finish = execution->get_last_action(joinedthr->get_id());
 				ClockVector *finishcv = cvmap->get(finish);
 				changed |= (finishcv == NULL) || merge(cv, act, finishcv);
 			}

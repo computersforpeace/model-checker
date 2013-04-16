@@ -133,9 +133,10 @@ static void parse_options(struct model_params *params, int argc, char **argv)
 int main_argc;
 char **main_argv;
 
-void install_trace_analyses() {
+static void install_trace_analyses(const ModelExecution *execution)
+{
 	if (model->params.sc_trace_analysis)
-		model->add_trace_analysis(new SCAnalysis());
+		model->add_trace_analysis(new SCAnalysis(execution));
 }
 
 /** The model_main function contains the main model checking loop. */
@@ -153,7 +154,7 @@ static void model_main()
 	snapshot_stack_init();
 
 	model = new ModelChecker(params);
-	install_trace_analyses();
+	install_trace_analyses(model->get_execution());
 
 	snapshot_record(0);
 	model->run();

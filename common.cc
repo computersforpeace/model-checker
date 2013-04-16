@@ -42,11 +42,6 @@ void print_trace(void)
 #endif /* CONFIG_STACKTRACE */
 }
 
-void model_print_summary(void)
-{
-	model->print_summary();
-}
-
 void assert_hook(void)
 {
 	model_print("Add breakpoint to line %u in file %s.\n", __LINE__, __FILE__);

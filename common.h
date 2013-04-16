@@ -30,7 +30,6 @@ do { \
 	if (!(expr)) { \
 		fprintf(stderr, "Error: assertion failed in %s at line %d\n", __FILE__, __LINE__); \
 		print_trace(); \
-		model_print_summary(); \
 		assert_hook();				 \
 		exit(EXIT_FAILURE); \
 	} \
@@ -43,5 +42,4 @@ do { \
 #define error_msg(...) fprintf(stderr, "Error: " __VA_ARGS__)
 
 void print_trace(void);
-void model_print_summary(void);
 #endif /* __COMMON_H__ */

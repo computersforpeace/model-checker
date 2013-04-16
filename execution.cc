@@ -64,7 +64,7 @@ ModelExecution::ModelExecution(ModelChecker *m,
 	model(m),
 	params(params),
 	scheduler(scheduler),
-	action_trace(new action_list_t()),
+	action_trace(),
 	thread_map(),
 	obj_map(new HashTable<const void *, action_list_t *, uintptr_t, 4>()),
 	condvar_waiters_map(),
@@ -91,7 +91,6 @@ ModelExecution::~ModelExecution()
 		delete thread_map.get(i);
 
 	delete obj_map;
-	delete action_trace;
 
 	for (unsigned int i = 0; i < promises.size(); i++)
 		delete promises[i];
@@ -309,7 +308,7 @@ ModelAction * ModelExecution::get_last_fence_conflict(ModelAction *act) const
 		return NULL;
 
 	/* Skip past the release */
-	const action_list_t *list = action_trace;
+	const action_list_t *list = &action_trace;
 	action_list_t::const_reverse_iterator rit;
 	for (rit = list->rbegin(); rit != list->rend(); rit++)
 		if (*rit == last_release)
@@ -856,7 +855,7 @@ bool ModelExecution::process_fence(ModelAction *curr)
 	 */
 	bool updated = false;
 	if (curr->is_acquire()) {
-		action_list_t *list = action_trace;
+		action_list_t *list = &action_trace;
 		action_list_t::reverse_iterator rit;
 		/* Find X : is_read(X) && X --sb-> curr */
 		for (rit = list->rbegin(); rit != list->rend(); rit++) {
@@ -1004,7 +1003,7 @@ void ModelExecution::process_relseq_fixup(ModelAction *curr, work_queue_t *work_
 		work_queue->push_back(MOEdgeWorkEntry(acquire));
 
 		/* propagate synchronization to later actions */
-		action_list_t::reverse_iterator rit = action_trace->rbegin();
+		action_list_t::reverse_iterator rit = action_trace.rbegin();
 		for (; (*rit) != acquire; rit++) {
 			ModelAction *propagate = *rit;
 			if (acquire->happens_before(propagate)) {
@@ -2077,7 +2076,7 @@ bool ModelExecution::resolve_release_sequences(void *location, work_queue_t *wor
 				work_queue->push_back(MOEdgeWorkEntry(acquire));
 
 			/* propagate synchronization to later actions */
-			action_list_t::reverse_iterator rit = action_trace->rbegin();
+			action_list_t::reverse_iterator rit = action_trace.rbegin();
 			for (; (*rit) != acquire; rit++) {
 				ModelAction *propagate = *rit;
 				if (acquire->happens_before(propagate)) {
@@ -2121,9 +2120,9 @@ void ModelExecution::add_action_to_lists(ModelAction *act)
 	}
 	list->push_back(act);
 
-	action_trace->push_back(act);
+	action_trace.push_back(act);
 	if (uninit)
-		action_trace->push_front(uninit);
+		action_trace.push_front(uninit);
 
 	SnapVector<action_list_t> *vec = get_safe_ptr_vect_action(&obj_thrd_map, act->get_location());
 	if (tid >= (int)vec->size())
@@ -2609,7 +2608,7 @@ void ModelExecution::dumpGraph(char *filename) const
 	mo_graph->dumpNodes(file);
 	ModelAction **thread_array = (ModelAction **)model_calloc(1, sizeof(ModelAction *) * get_num_threads());
 
-	for (action_list_t::iterator it = action_trace->begin(); it != action_trace->end(); it++) {
+	for (action_list_t::iterator it = action_trace.begin(); it != action_trace.end(); it++) {
 		ModelAction *act = *it;
 		if (act->is_read()) {
 			mo_graph->dot_print_node(file, act);
@@ -2657,7 +2656,7 @@ void ModelExecution::print_summary() const
 		model_print("\n");
 	} else
 		print_infeasibility(" INFEASIBLE");
-	print_list(action_trace);
+	print_list(&action_trace);
 	model_print("\n");
 	if (!promises.empty()) {
 		model_print("Pending promises:\n");

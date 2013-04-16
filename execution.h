@@ -111,7 +111,7 @@ public:
 
 	ModelAction * get_next_backtrack();
 
-	action_list_t * get_action_trace() const { return action_trace; }
+	action_list_t * get_action_trace() { return &action_trace; }
 
 	SNAPSHOTALLOC
 private:
@@ -185,7 +185,7 @@ private:
 
 	ModelAction * get_uninitialized_action(const ModelAction *curr) const;
 
-	action_list_t * const action_trace;
+	action_list_t action_trace;
 	HashTable<int, Thread *, int> thread_map;
 
 	/** Per-object list of actions. Maps an object (i.e., memory location)

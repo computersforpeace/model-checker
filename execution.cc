@@ -1209,7 +1209,7 @@ bool ModelExecution::check_action_enabled(ModelAction *curr) {
  *
  * @param curr The current action to process
  * @return The ModelAction that is actually executed; may be different than
- * curr; may be NULL, if the current action is not enabled to run
+ * curr
  */
 ModelAction * ModelExecution::check_current_action(ModelAction *curr)
 {

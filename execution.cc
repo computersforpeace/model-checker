@@ -2816,7 +2816,7 @@ void ModelExecution::fixup_release_sequences()
 {
 	while (!pending_rel_seqs.empty() &&
 			is_feasible_prefix_ignore_relseq() &&
-			!unrealizedraces.empty()) {
+			haveUnrealizedRaces()) {
 		model_print("*** WARNING: release sequence fixup action "
 				"(%zu pending release seuqence(s)) ***\n",
 				pending_rel_seqs.size());

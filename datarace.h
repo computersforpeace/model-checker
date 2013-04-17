@@ -6,10 +6,8 @@
 #include "config.h"
 #include <stdint.h>
 #include "modeltypes.h"
-#include "stl-model.h"
 
 /* Forward declaration */
-class ClockVector;
 class ModelAction;
 
 struct ShadowTable {
@@ -46,8 +44,7 @@ void raceCheckWrite(thread_id_t thread, void *location);
 void raceCheckRead(thread_id_t thread, const void *location);
 bool checkDataRaces();
 void assert_race(struct DataRace *race);
-
-extern SnapVector<struct DataRace *> unrealizedraces;
+bool haveUnrealizedRaces();
 
 /**
  * @brief A record of information for detecting data races

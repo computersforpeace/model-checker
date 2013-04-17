@@ -8,9 +8,10 @@
 #include "config.h"
 #include "action.h"
 #include "execution.h"
+#include "stl-model.h"
 
 static struct ShadowTable *root;
-SnapVector<struct DataRace *> unrealizedraces;
+static SnapVector<DataRace *> unrealizedraces;
 static void *memory_base;
 static void *memory_top;
 
@@ -353,4 +354,9 @@ void raceCheckRead(thread_id_t thread, const void *location)
 	}
 
 	*shadow = ENCODEOP(threadid, ourClock, id_to_int(writeThread), writeClock);
+}
+
+bool haveUnrealizedRaces()
+{
+	return !unrealizedraces.empty();
 }

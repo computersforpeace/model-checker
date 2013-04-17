@@ -3,6 +3,7 @@
  */
 
 #include <unistd.h>
+#include <getopt.h>
 
 #include "common.h"
 #include "output.h"
@@ -31,7 +32,7 @@ static void param_defaults(struct model_params *params)
 	params->uninitvalue = 0;
 }
 
-static void print_usage(struct model_params *params)
+static void print_usage(const char *program_name, struct model_params *params)
 {
 	/* Reset defaults before printing */
 	param_defaults(params);
@@ -41,44 +42,82 @@ static void print_usage(struct model_params *params)
 "Distributed under the GPLv2\n"
 "Written by Brian Norris and Brian Demsky\n"
 "\n"
-"Usage: <program name> [MC_OPTIONS] -- [PROGRAM ARGUMENTS]\n"
+"Usage: %s [MODEL-CHECKER OPTIONS] -- [PROGRAM ARGS]\n"
 "\n"
-"Options:\n"
-"-h                    Display this help message and exit\n"
-"-m                    Maximum times a thread can read from the same write\n"
-"                      while other writes exist. Default: %d\n"
-"-M                    Maximum number of future values that can be sent to\n"
-"                      the same read. Default: %d\n"
-"-s                    Maximum actions that the model checker will wait for\n"
-"                      a write from the future past the expected number of\n"
-"                      actions. Default: %d\n"
-"-S                    Future value expiration sloppiness. Default: %u\n"
-"-f                    Specify a fairness window in which actions that are\n"
-"                      enabled sufficiently many times should receive\n"
-"                      priority for execution. Default: %d\n"
-"-y                    Turn on CHESS yield-based fairness support.\n"
-"                      Default: %d\n"
-"-Y                    Prohibit an execution from running a yield.\n"
-"                      Default: %d\n"
-"-e                    Enabled count. Default: %d\n"
-"-b                    Upper length bound. Default: %d\n"
-"-v                    Print verbose execution information.\n"
-"-u                    Value for uninitialized reads. Default: %u\n"
-"-c                    Use SC Trace Analysis.\n"
-"--                    Program arguments follow.\n\n",
-params->maxreads, params->maxfuturevalues, params->maxfuturedelay, params->expireslop, params->fairwindow, params->yieldon, params->yieldblock, params->enabledcount, params->bound, params->uninitvalue);
+"MODLE-CHECKER OPTIONS can be any of the model-checker options listed below. Arguments\n"
+"provided after the `--' (the PROGRAM ARGS) are passed to the user program.\n"
+"\n"
+"Model-checker options:\n"
+"-h, --help                  Display this help message and exit\n"
+"-m, --liveness=NUM          Maximum times a thread can read from the same write\n"
+"                              while other writes exist.\n"
+"                              Default: %d\n"
+"-M, --maxfv=NUM             Maximum number of future values that can be sent to\n"
+"                              the same read.\n"
+"                              Default: %d\n"
+"-s, --maxfvdelay=NUM        Maximum actions that the model checker will wait for\n"
+"                              a write from the future past the expected number\n"
+"                              of actions.\n"
+"                              Default: %d\n"
+"-S, --fvslop=NUM            Future value expiration sloppiness.\n"
+"                              Default: %u\n"
+"-y, --yield                 Enable CHESS-like yield-based fairness support.\n"
+"                              Default: %s\n"
+"-Y, --yieldblock            Prohibit an execution from running a yield.\n"
+"                              Default: %s\n"
+"-f, --fairness=WINDOW       Specify a fairness window in which actions that are\n"
+"                              enabled sufficiently many times should receive\n"
+"                              priority for execution (not recommended).\n"
+"                              Default: %d\n"
+"-e, --enabled=COUNT         Enabled count.\n"
+"                              Default: %d\n"
+"-b, --bound=MAX             Upper length bound.\n"
+"                              Default: %d\n"
+"-v, --verbose               Print verbose execution information.\n"
+"-u, --uninitialized=VALUE   Return VALUE any load which may read from an\n"
+"                              uninitialized atomic.\n"
+"                              Default: %u\n"
+"-c, --analysis              Use SC Trace Analysis.\n"
+" --                         Program arguments follow.\n\n",
+		program_name,
+		params->maxreads,
+		params->maxfuturevalues,
+		params->maxfuturedelay,
+		params->expireslop,
+		params->yieldon ? "enabled" : "disabled",
+		params->yieldblock ? "enabled" : "disabled",
+		params->fairwindow,
+		params->enabledcount,
+		params->bound,
+		params->uninitvalue);
 	exit(EXIT_SUCCESS);
 }
 
 static void parse_options(struct model_params *params, int argc, char **argv)
 {
-	const char *shortopts = "hyYcm:M:s:S:f:e:b:u:v";
-	int opt;
+	const char *shortopts = "hyYcm:M:s:S:f:e:b:u:v::";
+	const struct option longopts[] = {
+		{"help", no_argument, NULL, 'h'},
+		{"liveness", required_argument, NULL, 'm'},
+		{"maxfv", required_argument, NULL, 'M'},
+		{"maxfvdelay", required_argument, NULL, 's'},
+		{"fvslop", required_argument, NULL, 'S'},
+		{"fairness", required_argument, NULL, 'f'},
+		{"yield", no_argument, NULL, 'y'},
+		{"yieldblock", no_argument, NULL, 'Y'},
+		{"enabled", required_argument, NULL, 'e'},
+		{"bound", required_argument, NULL, 'b'},
+		{"verbose", optional_argument, NULL, 'v'},
+		{"uninitialized", optional_argument, NULL, 'u'},
+		{"analysis", optional_argument, NULL, 'c'},
+		{0, 0, 0, 0} /* Terminator */
+	};
+	int opt, longindex;
 	bool error = false;
-	while (!error && (opt = getopt(argc, argv, shortopts)) != -1) {
+	while (!error && (opt = getopt_long(argc, argv, shortopts, longopts, &longindex)) != -1) {
 		switch (opt) {
 		case 'h':
-			print_usage(params);
+			print_usage(argv[0], params);
 			break;
 		case 's':
 			params->maxfuturedelay = atoi(optarg);
@@ -102,7 +141,7 @@ static void parse_options(struct model_params *params, int argc, char **argv)
 			params->maxfuturevalues = atoi(optarg);
 			break;
 		case 'v':
-			params->verbose = 1;
+			params->verbose = optarg ? atoi(optarg) : 1;
 			break;
 		case 'u':
 			params->uninitvalue = atoi(optarg);
@@ -133,7 +172,7 @@ static void parse_options(struct model_params *params, int argc, char **argv)
 	optind = 1;
 
 	if (error)
-		print_usage(params);
+		print_usage(argv[0], params);
 }
 
 int main_argc;

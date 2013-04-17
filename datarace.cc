@@ -11,7 +11,7 @@
 #include "stl-model.h"
 
 static struct ShadowTable *root;
-static SnapVector<DataRace *> unrealizedraces;
+static SnapVector<DataRace *> *unrealizedraces;
 static void *memory_base;
 static void *memory_top;
 
@@ -26,6 +26,7 @@ void initRaceDetector()
 	root = (struct ShadowTable *)snapshot_calloc(sizeof(struct ShadowTable), 1);
 	memory_base = snapshot_calloc(sizeof(struct ShadowBaseTable) * SHADOWBASETABLES, 1);
 	memory_top = ((char *)memory_base) + sizeof(struct ShadowBaseTable) * SHADOWBASETABLES;
+	unrealizedraces = new SnapVector<DataRace *>();
 }
 
 void * table_calloc(size_t size)
@@ -111,7 +112,7 @@ static void reportDataRace(thread_id_t oldthread, modelclock_t oldclock, bool is
 	race->newaction = newaction;
 	race->isnewwrite = isnewwrite;
 	race->address = address;
-	unrealizedraces.push_back(race);
+	unrealizedraces->push_back(race);
 
 	/* If the race is realized, bail out now. */
 	if (checkDataRaces())
@@ -132,15 +133,15 @@ bool checkDataRaces()
 	if (get_execution()->isfeasibleprefix()) {
 		bool race_asserted = false;
 		/* Prune the non-racing unrealized dataraces */
-		for (unsigned i = 0; i < unrealizedraces.size(); i++) {
-			struct DataRace *race = unrealizedraces[i];
+		for (unsigned i = 0; i < unrealizedraces->size(); i++) {
+			struct DataRace *race = (*unrealizedraces)[i];
 			if (clock_may_race(race->newaction->get_cv(), race->newaction->get_tid(), race->oldclock, race->oldthread)) {
 				assert_race(race);
 				race_asserted = true;
 			}
 			snapshot_free(race);
 		}
-		unrealizedraces.clear();
+		unrealizedraces->clear();
 		return race_asserted;
 	}
 	return false;
@@ -358,5 +359,5 @@ void raceCheckRead(thread_id_t thread, const void *location)
 
 bool haveUnrealizedRaces()
 {
-	return !unrealizedraces.empty();
+	return !unrealizedraces->empty();
 }

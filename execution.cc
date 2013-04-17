@@ -58,7 +58,7 @@ struct model_snapshot_members {
 
 /** @brief Constructor */
 ModelExecution::ModelExecution(ModelChecker *m,
-		struct model_params *params,
+		const struct model_params *params,
 		Scheduler *scheduler,
 		NodeStack *node_stack) :
 	model(m),

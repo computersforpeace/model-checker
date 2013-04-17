@@ -24,7 +24,7 @@ ModelChecker::ModelChecker(struct model_params params) :
 	params(params),
 	scheduler(new Scheduler()),
 	node_stack(new NodeStack()),
-	execution(new ModelExecution(this, &params, scheduler, node_stack)),
+	execution(new ModelExecution(this, &this->params, scheduler, node_stack)),
 	execution_number(1),
 	diverge(NULL),
 	earliest_diverge(NULL),

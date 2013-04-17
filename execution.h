@@ -61,7 +61,7 @@ struct release_seq {
 class ModelExecution {
 public:
 	ModelExecution(ModelChecker *m,
-			struct model_params *params,
+			const struct model_params *params,
 			Scheduler *scheduler,
 			NodeStack *node_stack);
 	~ModelExecution();

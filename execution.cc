@@ -366,7 +366,10 @@ ModelAction * ModelExecution::get_last_fence_conflict(ModelAction *act) const
 ModelAction * ModelExecution::get_last_conflict(ModelAction *act) const
 {
 	switch (act->get_type()) {
-	/* case ATOMIC_FENCE: fences don't directly cause backtracking */
+	case ATOMIC_FENCE:
+		/* Only seq-cst fences can (directly) cause backtracking */
+		if (!act->is_seqcst())
+			break;
 	case ATOMIC_READ:
 	case ATOMIC_WRITE:
 	case ATOMIC_RMW: {

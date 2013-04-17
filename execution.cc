@@ -380,6 +380,8 @@ ModelAction * ModelExecution::get_last_conflict(ModelAction *act) const
 		action_list_t::reverse_iterator rit;
 		for (rit = list->rbegin(); rit != list->rend(); rit++) {
 			ModelAction *prev = *rit;
+			if (prev == act)
+				continue;
 			if (prev->could_synchronize_with(act)) {
 				ret = prev;
 				break;

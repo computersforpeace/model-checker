@@ -22,9 +22,7 @@ int model_out = STDOUT_FILENO;
 void print_trace(void)
 {
 #ifdef CONFIG_STACKTRACE
-	FILE *file = fdopen(model_out, "w");
-	print_stacktrace(file);
-	fclose(file);
+	print_stacktrace(model_out);
 #else
 	void *array[MAX_TRACE_LEN];
 	char **strings;

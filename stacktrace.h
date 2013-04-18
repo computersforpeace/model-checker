@@ -9,10 +9,13 @@
 #include <execinfo.h>
 #include <cxxabi.h>
 
-/** Print a demangled stack backtrace of the caller function to FILE* out. */
-static inline void print_stacktrace(FILE *out = stderr, unsigned int max_frames = 63)
+/**
+ * @brief Print a demangled stack backtrace of the caller function to file
+ * descriptor fd.
+ */
+static inline void print_stacktrace(int fd = STDERR_FILENO, unsigned int max_frames = 63)
 {
-	fprintf(out, "stack trace:\n");
+	dprintf(fd, "stack trace:\n");
 
 	// storage array for stack trace address data
 	void* addrlist[max_frames+1];
@@ -21,7 +24,7 @@ static inline void print_stacktrace(FILE *out = stderr, unsigned int max_frames 
 	int addrlen = backtrace(addrlist, sizeof(addrlist) / sizeof(void*));
 
 	if (addrlen == 0) {
-		fprintf(out, "  <empty, possibly corrupt>\n");
+		dprintf(fd, "  <empty, possibly corrupt>\n");
 		return;
 	}
 
@@ -65,22 +68,27 @@ static inline void print_stacktrace(FILE *out = stderr, unsigned int max_frames 
 					funcname, &funcnamesize, &status);
 			if (status == 0) {
 				funcname = ret; // use possibly realloc()-ed string
-				fprintf(out, "  %s : %s+%s\n",
+				dprintf(fd, "  %s : %s+%s\n",
 						symbollist[i], funcname, begin_offset);
 			} else {
 				// demangling failed. Output function name as a C function with
 				// no arguments.
-				fprintf(out, "  %s : %s()+%s\n",
+				dprintf(fd, "  %s : %s()+%s\n",
 						symbollist[i], begin_name, begin_offset);
 			}
 		} else {
 			// couldn't parse the line? print the whole line.
-			fprintf(out, "  %s\n", symbollist[i]);
+			dprintf(fd, "  %s\n", symbollist[i]);
 		}
 	}
 
 	free(funcname);
 	free(symbollist);
+}
+
+static inline void print_stacktrace(FILE *out, unsigned int max_frames = 63)
+{
+	print_stacktrace(fileno(out), max_frames);
 }
 
 #endif // __STACKTRACE_H__

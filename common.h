@@ -29,7 +29,7 @@ void assert_hook(void);
 do { \
 	if (!(expr)) { \
 		fprintf(stderr, "Error: assertion failed in %s at line %d\n", __FILE__, __LINE__); \
-		print_trace(); \
+		/* print_trace(); // Trace printing may cause dynamic memory allocation */ \
 		assert_hook();				 \
 		exit(EXIT_FAILURE); \
 	} \

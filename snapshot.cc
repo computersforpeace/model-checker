@@ -106,10 +106,10 @@ mprot_snapshotter::~mprot_snapshotter()
 static void mprot_handle_pf(int sig, siginfo_t *si, void *unused)
 {
 	if (si->si_code == SEGV_MAPERR) {
-		model_print("Real Fault at %p\n", si->si_addr);
-		print_trace();
+		model_print("Segmentation fault at %p\n", si->si_addr);
 		model_print("For debugging, place breakpoint at: %s:%d\n",
 				__FILE__, __LINE__);
+		// print_trace(); // Trace printing may cause dynamic memory allocation
 		exit(EXIT_FAILURE);
 	}
 	void* addr = ReturnPageAlignedAddress(si->si_addr);

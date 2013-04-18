@@ -264,6 +264,17 @@ bool ModelExecution::is_deadlocked() const
 	return blocking_threads;
 }
 
+bool ModelExecution::is_yieldblocked() const
+{
+	for (unsigned int i = 0; i < get_num_threads(); i++) {
+		thread_id_t tid = int_to_id(i);
+		Thread *t = get_thread(tid);
+		if (t->get_pending() && t->get_pending()->is_yield())
+			return true;
+	}
+	return false;
+}
+
 /**
  * Check if this is a complete execution. That is, have all thread completed
  * execution (rather than exiting because sleep sets have forced a redundant
@@ -273,6 +284,8 @@ bool ModelExecution::is_deadlocked() const
  */
 bool ModelExecution::is_complete_execution() const
 {
+	if (params->yieldblock && is_yieldblocked())
+		return false;
 	for (unsigned int i = 0; i < get_num_threads(); i++)
 		if (is_enabled(int_to_id(i)))
 			return false;
@@ -1200,6 +1213,8 @@ bool ModelExecution::check_action_enabled(ModelAction *curr) {
 			thread_blocking_check_promises(blocking, get_thread(curr));
 			return false;
 		}
+	} else if (params->yieldblock && curr->is_yield()) {
+		return false;
 	}
 
 	return true;
@@ -2659,6 +2674,8 @@ void ModelExecution::print_summary() const
 
 	model_print("Execution %d:", get_execution_number());
 	if (isfeasibleprefix()) {
+		if (params->yieldblock && is_yieldblocked())
+			model_print(" YIELD BLOCKED");
 		if (scheduler->all_threads_sleeping())
 			model_print(" SLEEP-SET REDUNDANT");
 		model_print("\n");

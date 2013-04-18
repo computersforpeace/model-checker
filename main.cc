@@ -21,6 +21,7 @@ static void param_defaults(struct model_params *params)
 	params->maxfuturedelay = 6;
 	params->fairwindow = 0;
 	params->yieldon = false;
+	params->yieldblock = false;
 	params->sc_trace_analysis = false;
 	params->enabledcount = 1;
 	params->bound = 0;
@@ -57,19 +58,21 @@ static void print_usage(struct model_params *params)
 "                      priority for execution. Default: %d\n"
 "-y                    Turn on CHESS yield-based fairness support.\n"
 "                      Default: %d\n"
+"-Y                    Prohibit an execution from running a yield.\n"
+"                      Default: %d\n"
 "-e                    Enabled count. Default: %d\n"
 "-b                    Upper length bound. Default: %d\n"
 "-v                    Print verbose execution information.\n"
 "-u                    Value for uninitialized reads. Default: %u\n"
 "-c                    Use SC Trace Analysis.\n"
 "--                    Program arguments follow.\n\n",
-params->maxreads, params->maxfuturevalues, params->maxfuturedelay, params->expireslop, params->fairwindow, params->yieldon, params->enabledcount, params->bound, params->uninitvalue);
+params->maxreads, params->maxfuturevalues, params->maxfuturedelay, params->expireslop, params->fairwindow, params->yieldon, params->yieldblock, params->enabledcount, params->bound, params->uninitvalue);
 	exit(EXIT_SUCCESS);
 }
 
 static void parse_options(struct model_params *params, int argc, char **argv)
 {
-	const char *shortopts = "hycm:M:s:S:f:e:b:u:v";
+	const char *shortopts = "hyYcm:M:s:S:f:e:b:u:v";
 	int opt;
 	bool error = false;
 	while (!error && (opt = getopt(argc, argv, shortopts)) != -1) {
@@ -109,6 +112,9 @@ static void parse_options(struct model_params *params, int argc, char **argv)
 			break;
 		case 'y':
 			params->yieldon = true;
+			break;
+		case 'Y':
+			params->yieldblock = true;
 			break;
 		default: /* '?' */
 			error = true;

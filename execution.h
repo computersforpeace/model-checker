@@ -109,6 +109,7 @@ public:
 	bool is_feasible_prefix_ignore_relseq() const;
 	bool is_infeasible() const;
 	bool is_deadlocked() const;
+	bool is_yieldblocked() const;
 	bool too_many_steps() const;
 
 	ModelAction * get_next_backtrack();

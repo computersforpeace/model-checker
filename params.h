@@ -9,6 +9,7 @@ struct model_params {
 	int maxreads;
 	int maxfuturedelay;
 	bool yieldon;
+	bool yieldblock;
 	bool sc_trace_analysis;
 	unsigned int fairwindow;
 	unsigned int enabledcount;

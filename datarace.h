@@ -2,7 +2,9 @@
  *  @brief Data race detection code.
  */
 
-#ifndef DATARACE_H
+#ifndef __DATARACE_H__
+#define __DATARACE_H__
+
 #include "config.h"
 #include <stdint.h>
 #include "modeltypes.h"
@@ -88,4 +90,5 @@ struct RaceRecord {
 #define MAXTHREADID (THREADMASK-1)
 #define MAXREADVECTOR (READMASK-1)
 #define MAXWRITEVECTOR (WRITEMASK-1)
-#endif
+
+#endif /* __DATARACE_H__ */

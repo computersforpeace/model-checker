@@ -190,6 +190,9 @@ static void mprot_add_to_snapshot(void *addr, unsigned int numPages)
 		exit(EXIT_FAILURE);
 	}
 
+	DEBUG("snapshot region %p-%p (%u page%s)\n",
+			addr, (char *)addr + numPages * PAGESIZE, numPages,
+			numPages > 1 ? "s" : "");
 	mprot_snap->regionsToSnapShot[memoryregion].basePtr = addr;
 	mprot_snap->regionsToSnapShot[memoryregion].sizeInPages = numPages;
 }

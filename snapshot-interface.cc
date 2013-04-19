@@ -85,10 +85,16 @@ static void SnapshotGlobalSegments()
 
 static void get_binary_name(char *buf, size_t len)
 {
-	if (readlink("/proc/self/exe", buf, len) == -1) {
+	ssize_t size = readlink("/proc/self/exe", buf, len);
+	if (size < 0) {
 		perror("readlink");
 		exit(EXIT_FAILURE);
 	}
+
+	/* Terminate string */
+	if ((size_t)size > len)
+		size = len;
+	buf[size] = '\0';
 }
 
 /** The SnapshotGlobalSegments function computes the memory regions

@@ -266,6 +266,9 @@ bool ModelExecution::is_deadlocked() const
 
 bool ModelExecution::is_yieldblocked() const
 {
+	if (!params->yieldblock)
+		return false;
+
 	for (unsigned int i = 0; i < get_num_threads(); i++) {
 		thread_id_t tid = int_to_id(i);
 		Thread *t = get_thread(tid);
@@ -284,7 +287,7 @@ bool ModelExecution::is_yieldblocked() const
  */
 bool ModelExecution::is_complete_execution() const
 {
-	if (params->yieldblock && is_yieldblocked())
+	if (is_yieldblocked())
 		return false;
 	for (unsigned int i = 0; i < get_num_threads(); i++)
 		if (is_enabled(int_to_id(i)))
@@ -2674,7 +2677,7 @@ void ModelExecution::print_summary() const
 
 	model_print("Execution %d:", get_execution_number());
 	if (isfeasibleprefix()) {
-		if (params->yieldblock && is_yieldblocked())
+		if (is_yieldblocked())
 			model_print(" YIELD BLOCKED");
 		if (scheduler->all_threads_sleeping())
 			model_print(" SLEEP-SET REDUNDANT");

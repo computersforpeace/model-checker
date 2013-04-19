@@ -12,7 +12,6 @@
 /* MYBINARYNAME only works because our pathname usually includes 'model' (e.g.,
  * /.../model-checker/test/userprog.o) */
 #define MYBINARYNAME "model"
-#define MYLIBRARYNAME "libmodel.so"
 #define MAPFILE "/proc/self/maps"
 
 struct snapshot_entry {
@@ -74,7 +73,7 @@ static void SnapshotGlobalSegments()
 
 		sscanf(buf, "%22s %p-%p [%5dK] %c%c%c/%c%c%c SM=%3s %200s\n", type, &begin, &end, &size, &r, &w, &x, &mr, &mw, &mx, smstr, regionname);
 
-		if (w == 'w' && (strstr(regionname, MYBINARYNAME) || strstr(regionname, MYLIBRARYNAME))) {
+		if (w == 'w' && strstr(regionname, MYBINARYNAME)) {
 			size_t len = ((uintptr_t)end - (uintptr_t)begin) / PAGESIZE;
 			if (len != 0)
 				snapshot_add_memory_region(begin, len);
@@ -114,7 +113,7 @@ static void SnapshotGlobalSegments()
 		void *begin, *end;
 
 		sscanf(buf, "%p-%p %c%c%c%c %*x %*x:%*x %*u %200s\n", &begin, &end, &r, &w, &x, &p, regionname);
-		if (w == 'w' && (strstr(regionname, binary_name) || strstr(regionname, MYLIBRARYNAME))) {
+		if (w == 'w' && strstr(regionname, binary_name)) {
 			size_t len = ((uintptr_t)end - (uintptr_t)begin) / PAGESIZE;
 			if (len != 0)
 				snapshot_add_memory_region(begin, len);

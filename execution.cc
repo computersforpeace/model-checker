@@ -264,6 +264,14 @@ bool ModelExecution::is_deadlocked() const
 	return blocking_threads;
 }
 
+/**
+ * @brief Check if we are yield-blocked
+ *
+ * A program can be "yield-blocked" if all threads are ready to execute a
+ * yield.
+ *
+ * @return True if the program is yield-blocked; false otherwise
+ */
 bool ModelExecution::is_yieldblocked() const
 {
 	if (!params->yieldblock)
@@ -1197,9 +1205,10 @@ void ModelExecution::thread_blocking_check_promises(Thread *blocker, Thread *wai
 /**
  * @brief Check whether a model action is enabled.
  *
- * Checks whether a lock or join operation would be successful (i.e., is the
- * lock already locked, or is the joined thread already complete). If not, put
- * the action in a waiter list.
+ * Checks whether an operation would be successful (i.e., is a lock already
+ * locked, or is the joined thread already complete).
+ *
+ * For yield-blocking, yields are never enabled.
  *
  * @param curr is the ModelAction to check whether it is enabled.
  * @return a bool that indicates whether the action is enabled.

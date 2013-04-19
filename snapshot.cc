@@ -148,12 +148,12 @@ static void mprot_snapshot_init(unsigned int numbackingpages,
 	sa.sa_sigaction = mprot_handle_pf;
 #ifdef MAC
 	if (sigaction(SIGBUS, &sa, NULL) == -1) {
-		model_print("SIGACTION CANNOT BE INSTALLED\n");
+		perror("sigaction(SIGBUS)");
 		exit(EXIT_FAILURE);
 	}
 #endif
 	if (sigaction(SIGSEGV, &sa, NULL) == -1) {
-		model_print("SIGACTION CANNOT BE INSTALLED\n");
+		perror("sigaction(SIGSEGV)");
 		exit(EXIT_FAILURE);
 	}
 

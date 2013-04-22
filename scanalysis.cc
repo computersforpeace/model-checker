@@ -6,7 +6,9 @@
 
 SCAnalysis::SCAnalysis(const ModelExecution *execution) :
 	cvmap(),
-	cycleset(),
+	cyclic(false),
+	badrfset(),
+	lastwrmap(),
 	threadlists(1),
 	execution(execution)
 {
@@ -16,18 +18,21 @@ SCAnalysis::~SCAnalysis() {
 }
 
 void SCAnalysis::print_list(action_list_t *list) {
-	action_list_t::iterator it;
-
 	model_print("---------------------------------------------------------------------\n");
-
+	if (cyclic)
+		model_print("Not SC\n");
 	unsigned int hash = 0;
 
-	for (it = list->begin(); it != list->end(); it++) {
+	for (action_list_t::iterator it = list->begin(); it != list->end(); it++) {
 		const ModelAction *act = *it;
 		if (act->get_seq_number() > 0) {
-			if (cycleset.contains(act))
-				model_print("CYC");
+			if (badrfset.contains(act))
+				model_print("BRF ");
 			act->print();
+			cvmap.get(act)->print();
+			if (badrfset.contains(act)) {
+				model_print("DESIRED %u \n",badrfset.get(act)->get_seq_number());
+			}
 		}
 		hash = hash ^ (hash << 3) ^ ((*it)->hash());
 	}
@@ -39,13 +44,32 @@ void SCAnalysis::analyze(action_list_t *actions) {
  	buildVectors(actions);
 	computeCV(actions);
 	action_list_t *list = generateSC(actions);
+	check_rf(list);
 	print_list(list);
 }
 
-bool SCAnalysis::merge(ClockVector *cv, const ModelAction *act, ClockVector *cv2) {
-	if (cv2->getClock(act->get_tid()) >= act->get_seq_number() && act->get_seq_number() != 0) {
-		cycleset.put(act, act);
+void SCAnalysis::check_rf(action_list_t *list) {
+	for (action_list_t::iterator it = list->begin(); it != list->end(); it++) {
+		const ModelAction *act = *it;
+		if (act->is_read()) {
+			if (act->get_reads_from()!=lastwrmap.get(act->get_location()))
+				badrfset.put(act,lastwrmap.get(act->get_location()));
+		}
+		if (act->is_write())
+			lastwrmap.put(act->get_location(), act);
 	}
+}
+
+bool SCAnalysis::merge(ClockVector *cv, const ModelAction *act, const ModelAction *act2) {
+	ClockVector * cv2=cvmap.get(act2);
+	if (cv2==NULL)
+		return true;
+	if (cv2->getClock(act->get_tid()) >= act->get_seq_number() && act->get_seq_number() != 0) {
+		cyclic=true;
+		//refuse to introduce cycles into clock vectors
+		return false;
+	}
+
 	return cv->merge(cv2);
 }
 
@@ -135,7 +159,6 @@ void SCAnalysis::buildVectors(action_list_t *list) {
 
 bool SCAnalysis::updateConstraints(ModelAction *act) {
 	bool changed = false;
-	ClockVector *actcv = cvmap.get(act);
 	for (int i = 0; i <= maxthreads; i++) {
 		thread_id_t tid = int_to_id(i);
 		if (tid == act->get_tid())
@@ -151,7 +174,7 @@ bool SCAnalysis::updateConstraints(ModelAction *act) {
 				break;
 			if (write->get_location() == act->get_location()) {
 				//write is sc after act
-				merge(writecv, write, actcv);
+				merge(writecv, write, act);
 				changed = true;
 				break;
 			}
@@ -166,7 +189,7 @@ bool SCAnalysis::processRead(ModelAction *read, ClockVector *cv) {
 	/* Merge in the clock vector from the write */
 	const ModelAction *write = read->get_reads_from();
 	ClockVector *writecv = cvmap.get(write);
-	changed |= writecv == NULL || (merge(cv, read, writecv) && (*read < *write));
+	changed |= merge(cv, read, write) && (*read < *write);
 
 	for (int i = 0; i <= maxthreads; i++) {
 		thread_id_t tid = int_to_id(i);
@@ -190,7 +213,7 @@ bool SCAnalysis::processRead(ModelAction *read, ClockVector *cv) {
 				 write -rf-> R =>
 				 R -sc-> write2 */
 			if (write2cv->synchronized_since(write)) {
-				changed |= merge(write2cv, write2, cv);
+				changed |= merge(write2cv, write2, read);
 			}
 
 			//looking for earliest write2 in iteration to satisfy this
@@ -198,7 +221,7 @@ bool SCAnalysis::processRead(ModelAction *read, ClockVector *cv) {
 				 write -rf-> R =>
 				 write2 -sc-> write */
 			if (cv->synchronized_since(write2)) {
-				changed |= writecv == NULL || merge(writecv, write, write2cv);
+				changed |= writecv==NULL || merge(writecv, write, write2);
 				break;
 			}
 		}
@@ -219,20 +242,19 @@ void SCAnalysis::computeCV(action_list_t *list) {
 			ModelAction *lastact = last_act[id_to_int(act->get_tid())];
 			if (act->is_thread_start())
 				lastact = execution->get_thread(act)->get_creation();
-			ClockVector *lastcv = (lastact != NULL) ? cvmap.get(lastact) : NULL;
 			last_act[id_to_int(act->get_tid())] = act;
 			ClockVector *cv = cvmap.get(act);
 			if (cv == NULL) {
-				cv = new ClockVector(lastcv, act);
+				cv = new ClockVector(NULL, act);
 				cvmap.put(act, cv);
-			} else if (lastcv != NULL) {
-				merge(cv, act, lastcv);
+			}
+			if (lastact != NULL) {
+				merge(cv, act, lastact);
 			}
 			if (act->is_thread_join()) {
 				Thread *joinedthr = act->get_thread_operand();
 				ModelAction *finish = execution->get_last_action(joinedthr->get_id());
-				ClockVector *finishcv = cvmap.get(finish);
-				changed |= (finishcv == NULL) || merge(cv, act, finishcv);
+				changed |= merge(cv, act, finish);
 			}
 			if (act->is_read()) {
 				changed |= processRead(act, cv);

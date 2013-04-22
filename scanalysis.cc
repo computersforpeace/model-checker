@@ -29,9 +29,8 @@ void SCAnalysis::print_list(action_list_t *list) {
 			if (badrfset.contains(act))
 				model_print("BRF ");
 			act->print();
-			cvmap.get(act)->print();
 			if (badrfset.contains(act)) {
-				model_print("DESIRED %u \n",badrfset.get(act)->get_seq_number());
+				model_print("Desired Rf: %u \n",badrfset.get(act)->get_seq_number());
 			}
 		}
 		hash = hash ^ (hash << 3) ^ ((*it)->hash());

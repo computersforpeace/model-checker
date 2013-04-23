@@ -81,7 +81,7 @@ ModelAction * SCAnalysis::getNextAction() {
 			continue;
 		ModelAction *first = threadlist->front();
 		if (act==NULL) {
-			act=first;
+			act = first;
 			continue;
 		}
 		ClockVector *cv = cvmap.get(act);
@@ -92,7 +92,6 @@ ModelAction * SCAnalysis::getNextAction() {
 	if (act == NULL)
 		return act;
 
-
 	/* Find the model action with the earliest sequence number in case of a cycle.
 	 */
 
@@ -101,11 +100,22 @@ ModelAction * SCAnalysis::getNextAction() {
 		if (threadlist->empty())
 			continue;
 		ModelAction *first = threadlist->front();
-		ClockVector *cv = cvmap.get(act);
 		ClockVector *cvfirst = cvmap.get(first);
-		if (first->get_seq_number()<act->get_seq_number()&&
-				(cv->synchronized_since(first)||!cvfirst->synchronized_since(act))) {
-			act=first;
+		if (first->get_seq_number()<act->get_seq_number()) {
+			bool candidate=true;
+			for (int j = 0; j <= maxthreads; j++) {
+				action_list_t *threadlist2 = &threadlists[j];
+				if (threadlist2->empty())
+					continue;
+				ModelAction *check = threadlist2->front();
+				if ((check!=first) &&
+						cvfirst->synchronized_since(check)) {
+					candidate=false;
+					break;
+				}
+			}
+			if (candidate)
+				act=first;
 		}
 	}
 

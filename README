@@ -31,26 +31,47 @@ $ make
 $ export LD_LIBRARY_PATH=.
 $ ./test/userprog.o                   # Runs simple test program
 $ ./test/userprog.o -h                # Prints help information
-Usage: <program name> [MC_OPTIONS] -- [PROGRAM ARGUMENTS]
+Copyright (c) 2013 Regents of the University of California. All rights reserved.
+Distributed under the GPLv2
+Written by Brian Norris and Brian Demsky
 
-Options:
--h                    Display this help message and exit
--m                    Maximum times a thread can read from the same write
-                      while other writes exist. Default: 0
--M                    Maximum number of future values that can be sent to
-                      the same read. Default: 0
--s                    Maximum actions that the model checker will wait for
-                      a write from the future past the expected number of
-                      actions. Default: 100
--S                    Future value expiration sloppiness. Default: 10
--f                    Specify a fairness window in which actions that are
-                      enabled sufficiently many times should receive
-                      priority for execution. Default: 0
--e                    Enabled count. Default: 1
--b                    Upper length bound. Default: 0
--v                    Print verbose execution information.
--y                    CHESS like yield based fairness. Default: 0
---                    Program arguments follow.
+Usage: ./test/userprog.o [MODEL-CHECKER OPTIONS] -- [PROGRAM ARGS]
+
+MODLE-CHECKER OPTIONS can be any of the model-checker options listed below. Arguments
+provided after the `--' (the PROGRAM ARGS) are passed to the user program.
+
+Model-checker options:
+-h, --help                  Display this help message and exit
+-m, --liveness=NUM          Maximum times a thread can read from the same write
+                              while other writes exist.
+                              Default: 0
+-M, --maxfv=NUM             Maximum number of future values that can be sent to
+                              the same read.
+                              Default: 0
+-s, --maxfvdelay=NUM        Maximum actions that the model checker will wait for
+                              a write from the future past the expected number
+                              of actions.
+                              Default: 6
+-S, --fvslop=NUM            Future value expiration sloppiness.
+                              Default: 4
+-y, --yield                 Enable CHESS-like yield-based fairness support.
+                              Default: disabled
+-Y, --yieldblock            Prohibit an execution from running a yield.
+                              Default: disabled
+-f, --fairness=WINDOW       Specify a fairness window in which actions that are
+                              enabled sufficiently many times should receive
+                              priority for execution (not recommended).
+                              Default: 0
+-e, --enabled=COUNT         Enabled count.
+                              Default: 1
+-b, --bound=MAX             Upper length bound.
+                              Default: 0
+-v, --verbose               Print verbose execution information.
+-u, --uninitialized=VALUE   Return VALUE any load which may read from an
+                              uninitialized atomic.
+                              Default: 0
+-c, --analysis              Use SC Trace Analysis.
+ --                         Program arguments follow.
 
 
 Note that we also provide a series of benchmarks (distributed separately),
@@ -59,5 +80,5 @@ you can build and run the benchmarks as follows:
 
   cd benchmarks
   make
-  ./run.sh barrier/barrier -f 10 -m 2  # runs barrier test with fairness/memory liveness
-  ./bench.sh <dir>                     # run all benchmarks twice, with timing results; all logged to <dir>
+  ./run.sh barrier/barrier -y -m 2     # runs barrier test with fairness/memory liveness
+  ./bench.sh                           # run all benchmarks twice, with timing results

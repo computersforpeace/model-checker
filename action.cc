@@ -478,7 +478,10 @@ void ModelAction::set_read_from(const ModelAction *act)
 	reads_from = act;
 	reads_from_promise = NULL;
 	if (act->is_uninitialized())
-		model->assert_bug("May read from uninitialized atomic\n");
+		model->assert_bug("May read from uninitialized atomic:\n"
+				"    action %d, thread %d, location %p (%s, %s)",
+				seq_number, id_to_int(tid), location,
+				get_type_str(), get_mo_str());
 }
 
 /**

@@ -182,6 +182,9 @@ public:
 	MEMALLOC
 private:
 
+	const char * get_type_str() const;
+	const char * get_mo_str() const;
+
 	/** @brief Type of action (read, write, RMW, fence, thread create, etc.) */
 	action_type type;
 

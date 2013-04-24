@@ -522,95 +522,49 @@ bool ModelAction::happens_before(const ModelAction *act) const
 	return act->cv->synchronized_since(this);
 }
 
+const char * ModelAction::get_type_str() const
+{
+	switch (this->type) {
+		case MODEL_FIXUP_RELSEQ: return "relseq fixup";
+		case THREAD_CREATE: return "thread create";
+		case THREAD_START: return "thread start";
+		case THREAD_YIELD: return "thread yield";
+		case THREAD_JOIN: return "thread join";
+		case THREAD_FINISH: return "thread finish";
+		case ATOMIC_UNINIT: return "uninitialized";
+		case ATOMIC_READ: return "atomic read";
+		case ATOMIC_WRITE: return "atomic write";
+		case ATOMIC_RMW: return "atomic rmw";
+		case ATOMIC_FENCE: return "fence";
+		case ATOMIC_RMWR: return "atomic rmwr";
+		case ATOMIC_RMWC: return "atomic rmwc";
+		case ATOMIC_INIT: return "init atomic";
+		case ATOMIC_LOCK: return "lock";
+		case ATOMIC_UNLOCK: return "unlock";
+		case ATOMIC_TRYLOCK: return "trylock";
+		case ATOMIC_WAIT: return "wait";
+		case ATOMIC_NOTIFY_ONE: return "notify one";
+		case ATOMIC_NOTIFY_ALL: return "notify all";
+		default: return "unknown type";
+	};
+}
+
+const char * ModelAction::get_mo_str() const
+{
+	switch (this->order) {
+		case std::memory_order_relaxed: return "relaxed";
+		case std::memory_order_acquire: return "acquire";
+		case std::memory_order_release: return "release";
+		case std::memory_order_acq_rel: return "acq_rel";
+		case std::memory_order_seq_cst: return "seq_cst";
+		default: return "unknown";
+	}
+}
+
 /** @brief Print nicely-formatted info about this ModelAction */
 void ModelAction::print() const
 {
-	const char *type_str, *mo_str;
-	switch (this->type) {
-	case MODEL_FIXUP_RELSEQ:
-		type_str = "relseq fixup";
-		break;
-	case THREAD_CREATE:
-		type_str = "thread create";
-		break;
-	case THREAD_START:
-		type_str = "thread start";
-		break;
-	case THREAD_YIELD:
-		type_str = "thread yield";
-		break;
-	case THREAD_JOIN:
-		type_str = "thread join";
-		break;
-	case THREAD_FINISH:
-		type_str = "thread finish";
-		break;
-	case ATOMIC_UNINIT:
-		type_str = "uninitialized";
-		break;
-	case ATOMIC_READ:
-		type_str = "atomic read";
-		break;
-	case ATOMIC_WRITE:
-		type_str = "atomic write";
-		break;
-	case ATOMIC_RMW:
-		type_str = "atomic rmw";
-		break;
-	case ATOMIC_FENCE:
-		type_str = "fence";
-		break;
-	case ATOMIC_RMWR:
-		type_str = "atomic rmwr";
-		break;
-	case ATOMIC_RMWC:
-		type_str = "atomic rmwc";
-		break;
-	case ATOMIC_INIT:
-		type_str = "init atomic";
-		break;
-	case ATOMIC_LOCK:
-		type_str = "lock";
-		break;
-	case ATOMIC_UNLOCK:
-		type_str = "unlock";
-		break;
-	case ATOMIC_TRYLOCK:
-		type_str = "trylock";
-		break;
-	case ATOMIC_WAIT:
-		type_str = "wait";
-		break;
-	case ATOMIC_NOTIFY_ONE:
-		type_str = "notify one";
-		break;
-	case ATOMIC_NOTIFY_ALL:
-		type_str = "notify all";
-		break;
-	default:
-		type_str = "unknown type";
-	}
-
-	switch (this->order) {
-	case std::memory_order_relaxed:
-		mo_str = "relaxed";
-		break;
-	case std::memory_order_acquire:
-		mo_str = "acquire";
-		break;
-	case std::memory_order_release:
-		mo_str = "release";
-		break;
-	case std::memory_order_acq_rel:
-		mo_str = "acq_rel";
-		break;
-	case std::memory_order_seq_cst:
-		mo_str = "seq_cst";
-		break;
-	default:
-		mo_str = "unknown";
-		break;
-	}
+	const char *type_str = get_type_str(), *mo_str = get_mo_str();
 
 	model_print("(%4d) Thread: %-2d   Action: %-13s   MO: %7s  Loc: %14p   Value: %-#18" PRIx64,
 			seq_number, id_to_int(tid), type_str, mo_str, location, get_return_value());

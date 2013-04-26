@@ -30,7 +30,7 @@ void SCAnalysis::print_list(action_list_t *list) {
 				model_print("BRF ");
 			act->print();
 			if (badrfset.contains(act)) {
-				model_print("Desired Rf: %u \n",badrfset.get(act)->get_seq_number());
+				model_print("Desired Rf: %u \n", badrfset.get(act)->get_seq_number());
 			}
 		}
 		hash = hash ^ (hash << 3) ^ ((*it)->hash());
@@ -51,8 +51,8 @@ void SCAnalysis::check_rf(action_list_t *list) {
 	for (action_list_t::iterator it = list->begin(); it != list->end(); it++) {
 		const ModelAction *act = *it;
 		if (act->is_read()) {
-			if (act->get_reads_from()!=lastwrmap.get(act->get_location()))
-				badrfset.put(act,lastwrmap.get(act->get_location()));
+			if (act->get_reads_from() != lastwrmap.get(act->get_location()))
+				badrfset.put(act, lastwrmap.get(act->get_location()));
 		}
 		if (act->is_write())
 			lastwrmap.put(act->get_location(), act);
@@ -60,11 +60,11 @@ void SCAnalysis::check_rf(action_list_t *list) {
 }
 
 bool SCAnalysis::merge(ClockVector *cv, const ModelAction *act, const ModelAction *act2) {
-	ClockVector * cv2=cvmap.get(act2);
-	if (cv2==NULL)
+	ClockVector *cv2 = cvmap.get(act2);
+	if (cv2 == NULL)
 		return true;
 	if (cv2->getClock(act->get_tid()) >= act->get_seq_number() && act->get_seq_number() != 0) {
-		cyclic=true;
+		cyclic = true;
 		//refuse to introduce cycles into clock vectors
 		return false;
 	}
@@ -80,7 +80,7 @@ ModelAction * SCAnalysis::getNextAction() {
 		if (threadlist->empty())
 			continue;
 		ModelAction *first = threadlist->front();
-		if (act==NULL) {
+		if (act == NULL) {
 			act = first;
 			continue;
 		}
@@ -101,21 +101,21 @@ ModelAction * SCAnalysis::getNextAction() {
 			continue;
 		ModelAction *first = threadlist->front();
 		ClockVector *cvfirst = cvmap.get(first);
-		if (first->get_seq_number()<act->get_seq_number()) {
-			bool candidate=true;
+		if (first->get_seq_number() < act->get_seq_number()) {
+			bool candidate = true;
 			for (int j = 0; j <= maxthreads; j++) {
 				action_list_t *threadlist2 = &threadlists[j];
 				if (threadlist2->empty())
 					continue;
 				ModelAction *check = threadlist2->front();
-				if ((check!=first) &&
+				if ((check != first) &&
 						cvfirst->synchronized_since(check)) {
-					candidate=false;
+					candidate = false;
 					break;
 				}
 			}
 			if (candidate)
-				act=first;
+				act = first;
 		}
 	}
 
@@ -145,7 +145,7 @@ action_list_t * SCAnalysis::generateSC(action_list_t *list) {
 		//add ordering constraints from this choice
 		if (updateConstraints(act)) {
 			//propagate changes if we have them
-			bool oc=cyclic;
+			bool oc = cyclic;
 			computeCV(list);
 			if (!oc && cyclic)
 				model_print("XXXXXXXXXXXXXX\n");
@@ -233,7 +233,7 @@ bool SCAnalysis::processRead(ModelAction *read, ClockVector *cv) {
 				 write -rf-> R =>
 				 write2 -sc-> write */
 			if (cv->synchronized_since(write2)) {
-				changed |= writecv==NULL || merge(writecv, write, write2);
+				changed |= writecv == NULL || merge(writecv, write, write2);
 				break;
 			}
 		}

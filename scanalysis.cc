@@ -145,7 +145,10 @@ action_list_t * SCAnalysis::generateSC(action_list_t *list) {
 		//add ordering constraints from this choice
 		if (updateConstraints(act)) {
 			//propagate changes if we have them
+			bool oc=cyclic;
 			computeCV(list);
+			if (!oc && cyclic)
+				model_print("XXXXXXXXXXXXXX\n");
 		}
 		//add action to end
 		sclist->push_back(act);

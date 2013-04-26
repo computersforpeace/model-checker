@@ -2643,7 +2643,7 @@ void ModelExecution::dumpGraph(char *filename) const
 	mo_graph->dumpNodes(file);
 	ModelAction **thread_array = (ModelAction **)model_calloc(1, sizeof(ModelAction *) * get_num_threads());
 
-	for (action_list_t::iterator it = action_trace.begin(); it != action_trace.end(); it++) {
+	for (action_list_t::const_iterator it = action_trace.begin(); it != action_trace.end(); it++) {
 		ModelAction *act = *it;
 		if (act->is_read()) {
 			mo_graph->dot_print_node(file, act);

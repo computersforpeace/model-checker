@@ -12,15 +12,16 @@ class SCAnalysis : public TraceAnalysis {
 	SNAPSHOTALLOC
  private:
 	void print_list(action_list_t *list);
-	void buildVectors(action_list_t *);
+	int buildVectors(action_list_t *);
 	bool updateConstraints(ModelAction *act);
 	void computeCV(action_list_t *);
 	action_list_t * generateSC(action_list_t *);
 	bool processRead(ModelAction *read, ClockVector *cv);
-	ModelAction * getNextAction();
+	int getNextActions(ModelAction **array);
 	bool merge(ClockVector *cv, const ModelAction *act, const ModelAction *act2);
 	void check_rf(action_list_t *list);
-
+	void reset(action_list_t *list);
+	ModelAction* pruneArray(ModelAction**, int);
 
 	int maxthreads;
 	HashTable<const ModelAction *, ClockVector *, uintptr_t, 4 > cvmap;

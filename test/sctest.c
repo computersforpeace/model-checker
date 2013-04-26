@@ -8,6 +8,8 @@ atomic_int x;
 atomic_int y;
 atomic_int z;
 
+static int r1, r2, r3;
+
 static void a(void *obj)
 {
 	atomic_store_explicit(&z, 1, memory_order_relaxed);
@@ -17,20 +19,20 @@ static void b(void *obj)
 {
 	atomic_store_explicit(&x, 1, memory_order_relaxed);
 	atomic_store_explicit(&y, 1, memory_order_relaxed);
-	int r1=atomic_load_explicit(&z, memory_order_relaxed);
+	r1=atomic_load_explicit(&z, memory_order_relaxed);
 }
 static void c(void *obj)
 {
 	atomic_store_explicit(&z, 2, memory_order_relaxed);
 	atomic_store_explicit(&x, 2, memory_order_relaxed);
-	int r2=atomic_load_explicit(&y, memory_order_relaxed);
+	r2=atomic_load_explicit(&y, memory_order_relaxed);
 }
 
 static void d(void *obj)
 {
 	atomic_store_explicit(&z, 3, memory_order_relaxed);
 	atomic_store_explicit(&y, 2, memory_order_relaxed);
-	int r3=atomic_load_explicit(&x, memory_order_relaxed);
+	r3=atomic_load_explicit(&x, memory_order_relaxed);
 }
 
 int user_main(int argc, char **argv)
@@ -50,6 +52,8 @@ int user_main(int argc, char **argv)
 	thrd_join(t2);
 	thrd_join(t3);
 	thrd_join(t4);
+
+	/* Check and/or print r1, r2, r3? */
 
 	return 0;
 }

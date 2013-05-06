@@ -37,7 +37,7 @@ Written by Brian Norris and Brian Demsky
 
 Usage: ./test/userprog.o [MODEL-CHECKER OPTIONS] -- [PROGRAM ARGS]
 
-MODLE-CHECKER OPTIONS can be any of the model-checker options listed below. Arguments
+MODEL-CHECKER OPTIONS can be any of the model-checker options listed below. Arguments
 provided after the `--' (the PROGRAM ARGS) are passed to the user program.
 
 Model-checker options:

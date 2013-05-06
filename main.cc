@@ -46,7 +46,7 @@ static void print_usage(const char *program_name, struct model_params *params)
 "\n"
 "Usage: %s [MODEL-CHECKER OPTIONS] -- [PROGRAM ARGS]\n"
 "\n"
-"MODLE-CHECKER OPTIONS can be any of the model-checker options listed below. Arguments\n"
+"MODEL-CHECKER OPTIONS can be any of the model-checker options listed below. Arguments\n"
 "provided after the `--' (the PROGRAM ARGS) are passed to the user program.\n"
 "\n"
 "Model-checker options:\n"

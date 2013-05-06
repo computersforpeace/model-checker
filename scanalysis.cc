@@ -4,17 +4,26 @@
 #include "clockvector.h"
 #include "execution.h"
 
-SCAnalysis::SCAnalysis(const ModelExecution *execution) :
+SCAnalysis::SCAnalysis() :
 	cvmap(),
 	cyclic(false),
 	badrfset(),
 	lastwrmap(),
 	threadlists(1),
-	execution(execution)
+	execution(NULL)
 {
 }
 
 SCAnalysis::~SCAnalysis() {
+}
+
+void SCAnalysis::setExecution(ModelExecution * execution) {
+	this->execution=execution;
+}
+
+char * SCAnalysis::name() {
+	char * name = "SC";
+	return name;
 }
 
 void SCAnalysis::print_list(action_list_t *list) {

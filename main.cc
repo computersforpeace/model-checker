@@ -4,6 +4,7 @@
 
 #include <unistd.h>
 #include <getopt.h>
+#include <string.h>
 
 #include "common.h"
 #include "output.h"
@@ -15,6 +16,7 @@
 #include "params.h"
 #include "snapshot-interface.h"
 #include "scanalysis.h"
+#include "plugins.h"
 
 static void param_defaults(struct model_params *params)
 {
@@ -23,7 +25,6 @@ static void param_defaults(struct model_params *params)
 	params->fairwindow = 0;
 	params->yieldon = false;
 	params->yieldblock = false;
-	params->sc_trace_analysis = false;
 	params->enabledcount = 1;
 	params->bound = 0;
 	params->maxfuturevalues = 0;
@@ -77,7 +78,7 @@ static void print_usage(const char *program_name, struct model_params *params)
 "-u, --uninitialized=VALUE   Return VALUE any load which may read from an\n"
 "                              uninitialized atomic.\n"
 "                              Default: %u\n"
-"-c, --analysis              Use SC Trace Analysis.\n"
+"-t, --analysis=NAME         Use Trace Analysis.\n"
 " --                         Program arguments follow.\n\n",
 		program_name,
 		params->maxreads,
@@ -93,9 +94,24 @@ static void print_usage(const char *program_name, struct model_params *params)
 	exit(EXIT_SUCCESS);
 }
 
+bool install_plugin(char * name) {
+	ModelVector<TraceAnalysis *> * registeredanalysis=getRegisteredTraceAnalysis();
+	ModelVector<TraceAnalysis *> * installedanalysis=getInstalledTraceAnalysis();
+
+	for(unsigned int i=0;i<registeredanalysis->size();i++) {
+		TraceAnalysis * analysis=(*registeredanalysis)[i];
+		if (strcmp(name, analysis->name())==0) {
+			installedanalysis->push_back(analysis);
+			return false;
+		}
+	}
+	model_print("Analysis %s Not Found\n", name);
+	return true;
+}
+
 static void parse_options(struct model_params *params, int argc, char **argv)
 {
-	const char *shortopts = "hyYcm:M:s:S:f:e:b:u:v::";
+	const char *shortopts = "hyYt:m:M:s:S:f:e:b:u:v::";
 	const struct option longopts[] = {
 		{"help", no_argument, NULL, 'h'},
 		{"liveness", required_argument, NULL, 'm'},
@@ -109,7 +125,7 @@ static void parse_options(struct model_params *params, int argc, char **argv)
 		{"bound", required_argument, NULL, 'b'},
 		{"verbose", optional_argument, NULL, 'v'},
 		{"uninitialized", optional_argument, NULL, 'u'},
-		{"analysis", optional_argument, NULL, 'c'},
+		{"analysis", optional_argument, NULL, 't'},
 		{0, 0, 0, 0} /* Terminator */
 	};
 	int opt, longindex;
@@ -146,11 +162,12 @@ static void parse_options(struct model_params *params, int argc, char **argv)
 		case 'u':
 			params->uninitvalue = atoi(optarg);
 			break;
-		case 'c':
-			params->sc_trace_analysis = true;
-			break;
 		case 'y':
 			params->yieldon = true;
+			break;
+		case 't':
+			if (install_plugin(optarg))
+				error = true;
 			break;
 		case 'Y':
 			params->yieldblock = true;
@@ -178,10 +195,14 @@ static void parse_options(struct model_params *params, int argc, char **argv)
 int main_argc;
 char **main_argv;
 
-static void install_trace_analyses(const ModelExecution *execution)
+static void install_trace_analyses(ModelExecution *execution)
 {
-	if (model->params.sc_trace_analysis)
-		model->add_trace_analysis(new SCAnalysis(execution));
+	ModelVector<TraceAnalysis *> * installedanalysis=getInstalledTraceAnalysis();
+	for(unsigned int i=0;i<installedanalysis->size();i++) {
+		TraceAnalysis * ta=(*installedanalysis)[i];
+		ta->setExecution(execution);
+		model->add_trace_analysis(ta);
+	}
 }
 
 /** The model_main function contains the main model checking loop. */
@@ -190,6 +211,7 @@ static void model_main()
 	struct model_params params;
 
 	param_defaults(&params);
+	register_plugins();
 
 	parse_options(&params, main_argc, main_argv);
 

@@ -5,9 +5,12 @@
 
 class SCAnalysis : public TraceAnalysis {
  public:
-	SCAnalysis(const ModelExecution *execution);
+	SCAnalysis();
 	~SCAnalysis();
+	virtual void setExecution(ModelExecution * execution);
 	virtual void analyze(action_list_t *);
+	virtual char * name();
+
 
 	SNAPSHOTALLOC
  private:
@@ -29,6 +32,6 @@ class SCAnalysis : public TraceAnalysis {
 	HashTable<const ModelAction *, const ModelAction *, uintptr_t, 4 > badrfset;
 	HashTable<void *, const ModelAction *, uintptr_t, 4 > lastwrmap;
 	SnapVector<action_list_t> threadlists;
-	const ModelExecution *execution;
+	ModelExecution *execution;
 };
 #endif

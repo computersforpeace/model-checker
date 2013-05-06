@@ -50,7 +50,7 @@ public:
 	/** @returns the context for the main model-checking system thread */
 	ucontext_t * get_system_context() { return &system_context; }
 
-	const ModelExecution * get_execution() const { return execution; }
+	ModelExecution * get_execution() const { return execution; }
 
 	int get_execution_number() const { return execution_number; }
 

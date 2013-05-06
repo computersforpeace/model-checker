@@ -10,7 +10,9 @@ SCAnalysis::SCAnalysis() :
 	badrfset(),
 	lastwrmap(),
 	threadlists(1),
-	execution(NULL)
+	execution(NULL),
+	print_always(false),
+	print_buggy(true)
 {
 }
 
@@ -21,13 +23,31 @@ void SCAnalysis::setExecution(ModelExecution * execution) {
 	this->execution=execution;
 }
 
-char * SCAnalysis::name() {
-	char * name = "SC";
+const char * SCAnalysis::name() {
+	const char * name = "SC";
 	return name;
 }
 
-bool SCAnalysis::option(char *) {
-	return false;
+bool SCAnalysis::option(char * opt) {
+	if (strcmp(opt, "verbose")==0) {
+		print_always=true;
+		return false;
+	} else if (strcmp(opt, "buggy")==0) {
+		return false;
+	} else if (strcmp(opt, "quiet")==0) {
+		print_buggy=false;
+		return false;
+	} if (strcmp(opt, "help") != 0) {
+		model_print("Unrecognized option: %s\n", opt);
+	}
+
+	model_print("SC Analysis options\n");
+	model_print("verbose -- print all feasible executions\n");
+	model_print("buggy -- print only buggy executions (default)\n");
+	model_print("quiet -- print nothing\n");
+	model_print("\n");
+	
+	return true;
 }
 
 void SCAnalysis::print_list(action_list_t *list) {
@@ -55,7 +75,8 @@ void SCAnalysis::print_list(action_list_t *list) {
 void SCAnalysis::analyze(action_list_t *actions) {
 	action_list_t *list = generateSC(actions);
 	check_rf(list);
-	print_list(list);
+	if (print_always || (print_buggy && execution->have_bug_reports()))
+		print_list(list);
 }
 
 void SCAnalysis::check_rf(action_list_t *list) {

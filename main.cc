@@ -35,6 +35,7 @@ static void param_defaults(struct model_params *params)
 
 static void print_usage(const char *program_name, struct model_params *params)
 {
+	ModelVector<TraceAnalysis *> * registeredanalysis=getRegisteredTraceAnalysis();
 	/* Reset defaults before printing */
 	param_defaults(params);
 
@@ -78,8 +79,9 @@ static void print_usage(const char *program_name, struct model_params *params)
 "-u, --uninitialized=VALUE   Return VALUE any load which may read from an\n"
 "                              uninitialized atomic.\n"
 "                              Default: %u\n"
-"-t, --analysis=NAME         Use Trace Analysis.\n"
-"-o, --options=NAME          Options.\n"
+"-t, --analysis=NAME         Use Analysis Plugin.\n"
+"-o, --options=NAME          Option for previous analysis plugin.  \n"
+"                            -o help for a list of options\n"
 " --                         Program arguments follow.\n\n",
 		program_name,
 		params->maxreads,
@@ -92,6 +94,11 @@ static void print_usage(const char *program_name, struct model_params *params)
 		params->enabledcount,
 		params->bound,
 		params->uninitvalue);
+	model_print("Analysis plug ins:\n");
+	for(unsigned int i=0;i<registeredanalysis->size();i++) {
+		TraceAnalysis * analysis=(*registeredanalysis)[i];
+		model_print("%s\n", analysis->name());
+	}
 	exit(EXIT_SUCCESS);
 }
 

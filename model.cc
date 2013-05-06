@@ -36,8 +36,6 @@ ModelChecker::ModelChecker(struct model_params params) :
 ModelChecker::~ModelChecker()
 {
 	delete node_stack;
-	for (unsigned int i = 0; i < trace_analyses.size(); i++)
-		delete trace_analyses[i];
 	delete scheduler;
 }
 

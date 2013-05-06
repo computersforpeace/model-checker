@@ -9,7 +9,7 @@ class SCAnalysis : public TraceAnalysis {
 	~SCAnalysis();
 	virtual void setExecution(ModelExecution * execution);
 	virtual void analyze(action_list_t *);
-	virtual char * name();
+	virtual const char * name();
 	virtual bool option(char *);
 
 	SNAPSHOTALLOC
@@ -33,5 +33,7 @@ class SCAnalysis : public TraceAnalysis {
 	HashTable<void *, const ModelAction *, uintptr_t, 4 > lastwrmap;
 	SnapVector<action_list_t> threadlists;
 	ModelExecution *execution;
+	bool print_always;
+	bool print_buggy;
 };
 #endif

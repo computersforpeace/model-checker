@@ -483,4 +483,8 @@ void ModelChecker::run()
 
 	model_print("******* Model-checking complete: *******\n");
 	print_stats();
+
+	/* Have the trace analyses dump their output. */
+	for (unsigned int i = 0; i < trace_analyses.size(); i++)
+		trace_analyses[i]->finish();
 }

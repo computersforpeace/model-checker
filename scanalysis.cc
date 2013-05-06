@@ -3,6 +3,8 @@
 #include "threads-model.h"
 #include "clockvector.h"
 #include "execution.h"
+#include <sys/time.h>
+
 
 SCAnalysis::SCAnalysis() :
 	cvmap(),
@@ -12,11 +14,14 @@ SCAnalysis::SCAnalysis() :
 	threadlists(1),
 	execution(NULL),
 	print_always(false),
-	print_buggy(true)
+	print_buggy(true),
+	time(false),
+	stats((struct sc_statistics *)model_calloc(1, sizeof(struct sc_statistics)))
 {
 }
 
 SCAnalysis::~SCAnalysis() {
+	delete(stats);
 }
 
 void SCAnalysis::setExecution(ModelExecution * execution) {
@@ -28,6 +33,11 @@ const char * SCAnalysis::name() {
 	return name;
 }
 
+void SCAnalysis::finish() {
+	if (time)
+		model_print("Elapsed time in usec %llu\n", stats->elapsedtime);
+}
+
 bool SCAnalysis::option(char * opt) {
 	if (strcmp(opt, "verbose")==0) {
 		print_always=true;
@@ -37,7 +47,10 @@ bool SCAnalysis::option(char * opt) {
 	} else if (strcmp(opt, "quiet")==0) {
 		print_buggy=false;
 		return false;
-	} if (strcmp(opt, "help") != 0) {
+	} else if (strcmp(opt, "time")==0) {
+		time=true;
+		return false;
+	} else if (strcmp(opt, "help") != 0) {
 		model_print("Unrecognized option: %s\n", opt);
 	}
 
@@ -45,6 +58,7 @@ bool SCAnalysis::option(char * opt) {
 	model_print("verbose -- print all feasible executions\n");
 	model_print("buggy -- print only buggy executions (default)\n");
 	model_print("quiet -- print nothing\n");
+	model_print("time -- time execution of scanalysis\n");
 	model_print("\n");
 	
 	return true;
@@ -73,10 +87,19 @@ void SCAnalysis::print_list(action_list_t *list) {
 }
 
 void SCAnalysis::analyze(action_list_t *actions) {
+
+	struct timeval start;
+	struct timeval finish;
+	if (time)
+		gettimeofday(&start, NULL);
 	action_list_t *list = generateSC(actions);
 	check_rf(list);
 	if (print_always || (print_buggy && execution->have_bug_reports()))
 		print_list(list);
+	if (time) {
+		gettimeofday(&finish, NULL);
+		stats->elapsedtime+=((finish.tv_sec*1000000+finish.tv_usec)-(start.tv_sec*1000000+start.tv_usec));
+	}
 }
 
 void SCAnalysis::check_rf(action_list_t *list) {

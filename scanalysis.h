@@ -3,6 +3,10 @@
 #include "traceanalysis.h"
 #include "hashtable.h"
 
+struct sc_statistics {
+	unsigned long long elapsedtime;
+};
+
 class SCAnalysis : public TraceAnalysis {
  public:
 	SCAnalysis();
@@ -11,6 +15,8 @@ class SCAnalysis : public TraceAnalysis {
 	virtual void analyze(action_list_t *);
 	virtual const char * name();
 	virtual bool option(char *);
+	virtual void finish();
+
 
 	SNAPSHOTALLOC
  private:
@@ -35,5 +41,7 @@ class SCAnalysis : public TraceAnalysis {
 	ModelExecution *execution;
 	bool print_always;
 	bool print_buggy;
+	bool time;
+	struct sc_statistics *stats;
 };
 #endif

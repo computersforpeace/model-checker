@@ -5,6 +5,8 @@
 
 struct sc_statistics {
 	unsigned long long elapsedtime;
+	unsigned int sccount;
+	unsigned int nonsccount;
 };
 
 class SCAnalysis : public TraceAnalysis {
@@ -20,6 +22,7 @@ class SCAnalysis : public TraceAnalysis {
 
 	SNAPSHOTALLOC
  private:
+	void update_stats();
 	void print_list(action_list_t *list);
 	int buildVectors(action_list_t *);
 	bool updateConstraints(ModelAction *act);
@@ -41,6 +44,7 @@ class SCAnalysis : public TraceAnalysis {
 	ModelExecution *execution;
 	bool print_always;
 	bool print_buggy;
+	bool print_nonsc;
 	bool time;
 	struct sc_statistics *stats;
 };

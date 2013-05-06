@@ -15,6 +15,7 @@ SCAnalysis::SCAnalysis() :
 	execution(NULL),
 	print_always(false),
 	print_buggy(true),
+	print_nonsc(false),
 	time(false),
 	stats((struct sc_statistics *)model_calloc(1, sizeof(struct sc_statistics)))
 {
@@ -36,6 +37,8 @@ const char * SCAnalysis::name() {
 void SCAnalysis::finish() {
 	if (time)
 		model_print("Elapsed time in usec %llu\n", stats->elapsedtime);
+	model_print("SC count: %u\n", stats->sccount);
+	model_print("Non-SC count: %u\n", stats->nonsccount);
 }
 
 bool SCAnalysis::option(char * opt) {
@@ -47,6 +50,9 @@ bool SCAnalysis::option(char * opt) {
 	} else if (strcmp(opt, "quiet")==0) {
 		print_buggy=false;
 		return false;
+	} else if (strcmp(opt, "nonsc")==0) {
+		print_nonsc=true;
+		return false;
 	} else if (strcmp(opt, "time")==0) {
 		time=true;
 		return false;
@@ -57,6 +63,7 @@ bool SCAnalysis::option(char * opt) {
 	model_print("SC Analysis options\n");
 	model_print("verbose -- print all feasible executions\n");
 	model_print("buggy -- print only buggy executions (default)\n");
+	model_print("nonsc -- print non-sc execution\n");
 	model_print("quiet -- print nothing\n");
 	model_print("time -- time execution of scanalysis\n");
 	model_print("\n");
@@ -94,11 +101,20 @@ void SCAnalysis::analyze(action_list_t *actions) {
 		gettimeofday(&start, NULL);
 	action_list_t *list = generateSC(actions);
 	check_rf(list);
-	if (print_always || (print_buggy && execution->have_bug_reports()))
+	if (print_always || (print_buggy && execution->have_bug_reports())|| (print_nonsc && cyclic))
 		print_list(list);
 	if (time) {
 		gettimeofday(&finish, NULL);
 		stats->elapsedtime+=((finish.tv_sec*1000000+finish.tv_usec)-(start.tv_sec*1000000+start.tv_usec));
+	}
+	update_stats();
+}
+
+void SCAnalysis::update_stats() {
+	if (cyclic) {
+		stats->nonsccount++;
+	} else {
+		stats->sccount++;
 	}
 }
 

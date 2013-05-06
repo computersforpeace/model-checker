@@ -10,7 +10,7 @@ class SCAnalysis : public TraceAnalysis {
 	virtual void setExecution(ModelExecution * execution);
 	virtual void analyze(action_list_t *);
 	virtual char * name();
-
+	virtual bool option(char *);
 
 	SNAPSHOTALLOC
  private:

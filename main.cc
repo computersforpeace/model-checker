@@ -79,6 +79,7 @@ static void print_usage(const char *program_name, struct model_params *params)
 "                              uninitialized atomic.\n"
 "                              Default: %u\n"
 "-t, --analysis=NAME         Use Trace Analysis.\n"
+"-o, --options=NAME          Options.\n"
 " --                         Program arguments follow.\n\n",
 		program_name,
 		params->maxreads,
@@ -111,7 +112,7 @@ bool install_plugin(char * name) {
 
 static void parse_options(struct model_params *params, int argc, char **argv)
 {
-	const char *shortopts = "hyYt:m:M:s:S:f:e:b:u:v::";
+	const char *shortopts = "hyYt:o:m:M:s:S:f:e:b:u:v::";
 	const struct option longopts[] = {
 		{"help", no_argument, NULL, 'h'},
 		{"liveness", required_argument, NULL, 'm'},
@@ -126,6 +127,7 @@ static void parse_options(struct model_params *params, int argc, char **argv)
 		{"verbose", optional_argument, NULL, 'v'},
 		{"uninitialized", optional_argument, NULL, 'u'},
 		{"analysis", optional_argument, NULL, 't'},
+		{"options", optional_argument, NULL, 'o'},
 		{0, 0, 0, 0} /* Terminator */
 	};
 	int opt, longindex;
@@ -168,6 +170,13 @@ static void parse_options(struct model_params *params, int argc, char **argv)
 		case 't':
 			if (install_plugin(optarg))
 				error = true;
+			break;
+		case 'o':
+			{
+				ModelVector<TraceAnalysis *> * analyses = getInstalledTraceAnalysis();
+				if ( analyses->size() == 0 || (*analyses)[analyses->size()-1]->option(optarg))
+					error = true;
+			}
 			break;
 		case 'Y':
 			params->yieldblock = true;

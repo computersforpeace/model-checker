@@ -26,6 +26,10 @@ char * SCAnalysis::name() {
 	return name;
 }
 
+bool SCAnalysis::option(char *) {
+	return false;
+}
+
 void SCAnalysis::print_list(action_list_t *list) {
 	model_print("---------------------------------------------------------------------\n");
 	if (cyclic)

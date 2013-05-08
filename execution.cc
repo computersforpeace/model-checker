@@ -1025,21 +1025,9 @@ void ModelExecution::process_relseq_fixup(ModelAction *curr, work_queue_t *work_
 		/* Must synchronize */
 		if (!synchronize(release, acquire))
 			return;
-		/* Re-check all pending release sequences */
-		work_queue->push_back(CheckRelSeqWorkEntry(NULL));
-		/* Re-check act for mo_graph edges */
-		work_queue->push_back(MOEdgeWorkEntry(acquire));
 
-		/* propagate synchronization to later actions */
-		action_list_t::reverse_iterator rit = action_trace.rbegin();
-		for (; (*rit) != acquire; rit++) {
-			ModelAction *propagate = *rit;
-			if (acquire->happens_before(propagate)) {
-				synchronize(acquire, propagate);
-				/* Re-check 'propagate' for mo_graph edges */
-				work_queue->push_back(MOEdgeWorkEntry(propagate));
-			}
-		}
+		/* Propagate the changed clock vector */
+		propagate_clockvector(acquire, work_queue);
 	} else {
 		/* Break release sequence with new edges:
 		 *   release --mo--> write --mo--> rf */
@@ -2063,6 +2051,37 @@ void ModelExecution::get_release_seq_heads(ModelAction *acquire,
 }
 
 /**
+ * @brief Propagate a modified clock vector to actions later in the execution
+ * order
+ *
+ * After an acquire operation lazily completes a release-sequence
+ * synchronization, we must update all clock vectors for operations later than
+ * the acquire in the execution order.
+ *
+ * @param acquire The ModelAction whose clock vector must be propagated
+ * @param work The work queue to which we can add work items, if this
+ * propagation triggers more updates (e.g., to the modification order)
+ */
+void ModelExecution::propagate_clockvector(ModelAction *acquire, work_queue_t *work)
+{
+	/* Re-check all pending release sequences */
+	work->push_back(CheckRelSeqWorkEntry(NULL));
+	/* Re-check read-acquire for mo_graph edges */
+	work->push_back(MOEdgeWorkEntry(acquire));
+
+	/* propagate synchronization to later actions */
+	action_list_t::reverse_iterator rit = action_trace.rbegin();
+	for (; (*rit) != acquire; rit++) {
+		ModelAction *propagate = *rit;
+		if (acquire->happens_before(propagate)) {
+			synchronize(acquire, propagate);
+			/* Re-check 'propagate' for mo_graph edges */
+			work->push_back(MOEdgeWorkEntry(propagate));
+		}
+	}
+}
+
+/**
  * Attempt to resolve all stashed operations that might synchronize with a
  * release sequence for a given location. This implements the "lazy" portion of
  * determining whether or not a release sequence was contiguous, since not all
@@ -2100,22 +2119,8 @@ bool ModelExecution::resolve_release_sequences(void *location, work_queue_t *wor
 					updated = true;
 
 		if (updated) {
-			/* Re-check all pending release sequences */
-			work_queue->push_back(CheckRelSeqWorkEntry(NULL));
-			/* Re-check read-acquire for mo_graph edges */
-			if (acquire->is_read())
-				work_queue->push_back(MOEdgeWorkEntry(acquire));
-
-			/* propagate synchronization to later actions */
-			action_list_t::reverse_iterator rit = action_trace.rbegin();
-			for (; (*rit) != acquire; rit++) {
-				ModelAction *propagate = *rit;
-				if (acquire->happens_before(propagate)) {
-					synchronize(acquire, propagate);
-					/* Re-check 'propagate' for mo_graph edges */
-					work_queue->push_back(MOEdgeWorkEntry(propagate));
-				}
-			}
+			/* Propagate the changed clock vector */
+			propagate_clockvector(acquire, work_queue);
 		}
 		if (complete) {
 			it = pending_rel_seqs.erase(it);

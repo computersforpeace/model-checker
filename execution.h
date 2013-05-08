@@ -183,6 +183,7 @@ private:
 	bool w_modification_order(ModelAction *curr, ModelVector<ModelAction *> *send_fv);
 	void get_release_seq_heads(ModelAction *acquire, ModelAction *read, rel_heads_list_t *release_heads);
 	bool release_seq_heads(const ModelAction *rf, rel_heads_list_t *release_heads, struct release_seq *pending) const;
+	void propagate_clockvector(ModelAction *acquire, work_queue_t *work);
 	bool resolve_release_sequences(void *location, work_queue_t *work_queue);
 	void add_future_value(const ModelAction *writer, ModelAction *reader);
 

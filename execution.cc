@@ -817,9 +817,10 @@ void ModelExecution::add_future_value(const ModelAction *writer, ModelAction *re
 /**
  * Process a write ModelAction
  * @param curr The ModelAction to process
+ * @param work The work queue, for adding fixup work
  * @return True if the mo_graph was updated or promises were resolved
  */
-bool ModelExecution::process_write(ModelAction *curr)
+bool ModelExecution::process_write(ModelAction *curr, work_queue_t *work)
 {
 	/* Readers to which we may send our future value */
 	ModelVector<ModelAction *> send_fv;
@@ -832,7 +833,7 @@ bool ModelExecution::process_write(ModelAction *curr)
 
 	if (promise) {
 		earliest_promise_reader = promise->get_reader(0);
-		updated_promises = resolve_promise(curr, promise);
+		updated_promises = resolve_promise(curr, promise, work);
 	} else
 		earliest_promise_reader = NULL;
 
@@ -1272,7 +1273,7 @@ ModelAction * ModelExecution::check_current_action(ModelAction *curr)
 			if (act->is_read() && !second_part_of_rmw && process_read(act))
 				update = true;
 
-			if (act->is_write() && process_write(act))
+			if (act->is_write() && process_write(act, &work_queue))
 				update = true;
 
 			if (act->is_fence() && process_fence(act))
@@ -2333,15 +2334,20 @@ Promise * ModelExecution::pop_promise_to_resolve(const ModelAction *curr)
  * Resolve a Promise with a current write.
  * @param write The ModelAction that is fulfilling Promises
  * @param promise The Promise to resolve
+ * @param work The work queue, for adding new fixup work
  * @return True if the Promise was successfully resolved; false otherwise
  */
-bool ModelExecution::resolve_promise(ModelAction *write, Promise *promise)
+bool ModelExecution::resolve_promise(ModelAction *write, Promise *promise,
+		work_queue_t *work)
 {
 	ModelVector<ModelAction *> actions_to_check;
 
 	for (unsigned int i = 0; i < promise->get_num_readers(); i++) {
 		ModelAction *read = promise->get_reader(i);
-		read_from(read, write);
+		if (read_from(read, write)) {
+			/* Propagate the changed clock vector */
+			propagate_clockvector(read, work);
+		}
 		actions_to_check.push_back(read);
 	}
 	/* Make sure the promise's value matches the write's value */

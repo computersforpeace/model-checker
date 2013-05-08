@@ -141,7 +141,7 @@ private:
 	ModelAction * check_current_action(ModelAction *curr);
 	bool initialize_curr_action(ModelAction **curr);
 	bool process_read(ModelAction *curr);
-	bool process_write(ModelAction *curr);
+	bool process_write(ModelAction *curr, work_queue_t *work);
 	bool process_fence(ModelAction *curr);
 	bool process_mutex(ModelAction *curr);
 	bool process_thread_action(ModelAction *curr);
@@ -160,7 +160,8 @@ private:
 	void set_backtracking(ModelAction *act);
 	bool set_latest_backtrack(ModelAction *act);
 	Promise * pop_promise_to_resolve(const ModelAction *curr);
-	bool resolve_promise(ModelAction *curr, Promise *promise);
+	bool resolve_promise(ModelAction *curr, Promise *promise,
+			work_queue_t *work);
 	void compute_promises(ModelAction *curr);
 	void compute_relseq_breakwrites(ModelAction *curr);
 

@@ -569,25 +569,25 @@ void ModelAction::print() const
 {
 	const char *type_str = get_type_str(), *mo_str = get_mo_str();
 
-	model_print("(%4d) Thread: %-2d   Action: %-13s   MO: %7s  Loc: %14p   Value: %-#18" PRIx64,
+	model_print("%-4d %-2d   %-13s   %7s  %14p   %-#18" PRIx64,
 			seq_number, id_to_int(tid), type_str, mo_str, location, get_return_value());
 	if (is_read()) {
 		if (reads_from)
-			model_print("  Rf: %-3d", reads_from->get_seq_number());
+			model_print("  %-3d", reads_from->get_seq_number());
 		else if (reads_from_promise) {
 			int idx = reads_from_promise->get_index();
 			if (idx >= 0)
-				model_print("  Rf: P%-2d", idx);
+				model_print("  P%-2d", idx);
 			else
-				model_print("  Rf: P? ");
+				model_print("  P? ");
 		} else
-			model_print("  Rf: ?  ");
+			model_print("  ?  ");
 	}
 	if (cv) {
 		if (is_read())
 			model_print(" ");
 		else
-			model_print("          ");
+			model_print("      ");
 		cv->print();
 	} else
 		model_print("\n");

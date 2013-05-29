@@ -2630,7 +2630,9 @@ static void print_list(const action_list_t *list)
 {
 	action_list_t::const_iterator it;
 
-	model_print("---------------------------------------------------------------------\n");
+	model_print("------------------------------------------------------------------------------------\n");
+	model_print("#    t    Action type     MO       Location         Value               Rf  CV\n");
+	model_print("------------------------------------------------------------------------------------\n");
 
 	unsigned int hash = 0;
 
@@ -2641,7 +2643,7 @@ static void print_list(const action_list_t *list)
 		hash = hash^(hash<<3)^((*it)->hash());
 	}
 	model_print("HASH %u\n", hash);
-	model_print("---------------------------------------------------------------------\n");
+	model_print("------------------------------------------------------------------------------------\n");
 }
 
 #if SUPPORT_MOD_ORDER_DUMP

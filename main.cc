@@ -94,7 +94,7 @@ static void print_usage(const char *program_name, struct model_params *params)
 		params->enabledcount,
 		params->bound,
 		params->uninitvalue);
-	model_print("Analysis plug ins:\n");
+	model_print("Analysis plugins:\n");
 	for(unsigned int i=0;i<registeredanalysis->size();i++) {
 		TraceAnalysis * analysis=(*registeredanalysis)[i];
 		model_print("%s\n", analysis->name());

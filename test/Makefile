@@ -8,15 +8,19 @@ include $(BASE)/common.mk
 DIR := litmus
 include $(DIR)/Makefile
 
+DEPS := $(join $(addsuffix ., $(dir $(OBJECTS))), $(addsuffix .d, $(notdir $(OBJECTS))))
+
 CPPFLAGS += -I$(BASE) -I$(BASE)/include
 
 all: $(OBJECTS)
 
+-include $(DEPS)
+
 %.o: %.c
-	$(CC) -o $@ $< $(CPPFLAGS) -L$(BASE) -l$(LIB_NAME)
+	$(CC) -MMD -MF $(@D)/.$(@F).d -o $@ $< $(CPPFLAGS) -L$(BASE) -l$(LIB_NAME)
 
 %.o: %.cc
-	$(CXX) -o $@ $< $(CPPFLAGS) -L$(BASE) -l$(LIB_NAME)
+	$(CXX) -MMD -MF $(@D)/.$(@F).d -o $@ $< $(CPPFLAGS) -L$(BASE) -l$(LIB_NAME)
 
 clean::
-	rm -f $(OBJECTS)
+	rm -f $(OBJECTS) $(DEPS)

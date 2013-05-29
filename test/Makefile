@@ -1,17 +1,16 @@
-BASE = ..
+BASE := ..
+
+OBJECTS := $(patsubst %.c, %.o, $(wildcard *.c))
+OBJECTS += $(patsubst %.cc, %.o, $(wildcard *.cc))
 
 include $(BASE)/common.mk
 
+DIR := litmus
+include $(DIR)/Makefile
+
 CPPFLAGS += -I$(BASE) -I$(BASE)/include
 
-SRCS = $(wildcard *.c)
-CPSRCS = $(wildcard *.cc)
-OBJS = $(patsubst %.c,%.o,$(SRCS)) $(patsubst %.cc,%.o,$(CPSRCS))
-
-all: $(OBJS) litmus-tests
-
-litmus-tests::
-	$(MAKE) -C litmus
+all: $(OBJECTS)
 
 %.o: %.c
 	$(CC) -o $@ $< $(CPPFLAGS) -L$(BASE) -l$(LIB_NAME)
@@ -20,5 +19,4 @@ litmus-tests::
 	$(CXX) -o $@ $< $(CPPFLAGS) -L$(BASE) -l$(LIB_NAME)
 
 clean::
-	rm -f *.o
-	$(MAKE) -C litmus clean
+	rm -f $(OBJECTS)

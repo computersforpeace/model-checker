@@ -1,12 +1,12 @@
 # A few common Makefile items
 
-CC = gcc
-CXX = g++
+CC := gcc
+CXX := g++
 
-UNAME = $(shell uname)
+UNAME := $(shell uname)
 
-LIB_NAME = model
-LIB_SO = lib$(LIB_NAME).so
+LIB_NAME := model
+LIB_SO := lib$(LIB_NAME).so
 
 CPPFLAGS += -Wall -g -O3
 

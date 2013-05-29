@@ -1,22 +1,22 @@
 include common.mk
 
-OBJECTS = libthreads.o schedule.o model.o threads.o librace.o action.o \
-	  nodestack.o clockvector.o main.o snapshot-interface.o cyclegraph.o \
-	  datarace.o impatomic.o cmodelint.o \
-	  snapshot.o malloc.o mymemory.o common.o mutex.o promise.o conditionvariable.o \
-	  context.o scanalysis.o execution.o plugins.o
+OBJECTS := libthreads.o schedule.o model.o threads.o librace.o action.o \
+	   nodestack.o clockvector.o main.o snapshot-interface.o cyclegraph.o \
+	   datarace.o impatomic.o cmodelint.o \
+	   snapshot.o malloc.o mymemory.o common.o mutex.o promise.o conditionvariable.o \
+	   context.o scanalysis.o execution.o plugins.o
 
 CPPFLAGS += -Iinclude -I.
-LDFLAGS = -ldl -lrt -rdynamic
-SHARED = -shared
+LDFLAGS := -ldl -lrt -rdynamic
+SHARED := -shared
 
 # Mac OSX options
 ifeq ($(UNAME), Darwin)
-LDFLAGS = -ldl
-SHARED = -Wl,-undefined,dynamic_lookup -dynamiclib
+LDFLAGS := -ldl
+SHARED := -Wl,-undefined,dynamic_lookup -dynamiclib
 endif
 
-TESTS_DIR = test
+TESTS_DIR := test
 
 all: $(LIB_SO) tests
 

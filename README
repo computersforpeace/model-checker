@@ -70,7 +70,9 @@ Model-checker options:
 -u, --uninitialized=VALUE   Return VALUE any load which may read from an
                               uninitialized atomic.
                               Default: 0
--c, --analysis              Use SC Trace Analysis.
+-t, --analysis=NAME         Use Analysis Plugin.
+-o, --options=NAME          Option for previous analysis plugin.
+                            -o help for a list of options
  --                         Program arguments follow.
 
 

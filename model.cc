@@ -197,15 +197,13 @@ void ModelChecker::assert_user_bug(const char *msg)
 /** @brief Print bug report listing for this execution (if any bugs exist) */
 void ModelChecker::print_bugs() const
 {
-	if (execution->have_bug_reports()) {
-		SnapVector<bug_message *> *bugs = execution->get_bugs();
+	SnapVector<bug_message *> *bugs = execution->get_bugs();
 
-		model_print("Bug report: %zu bug%s detected\n",
-				bugs->size(),
-				bugs->size() > 1 ? "s" : "");
-		for (unsigned int i = 0; i < bugs->size(); i++)
-			(*bugs)[i]->print();
-	}
+	model_print("Bug report: %zu bug%s detected\n",
+			bugs->size(),
+			bugs->size() > 1 ? "s" : "");
+	for (unsigned int i = 0; i < bugs->size(); i++)
+		(*bugs)[i]->print();
 }
 
 /**
@@ -252,10 +250,12 @@ void ModelChecker::print_stats() const
  */
 void ModelChecker::print_execution(bool printbugs) const
 {
+	model_print("Program output from execution %d:\n",
+			get_execution_number());
 	print_program_output();
 
 	if (params.verbose >= 2) {
-		model_print("Earliest divergence point since last feasible execution:\n");
+		model_print("\nEarliest divergence point since last feasible execution:\n");
 		if (earliest_diverge)
 			earliest_diverge->print();
 		else
@@ -266,8 +266,10 @@ void ModelChecker::print_execution(bool printbugs) const
 	}
 
 	/* Don't print invalid bugs */
-	if (printbugs)
+	if (printbugs && execution->have_bug_reports()) {
+		model_print("\n");
 		print_bugs();
+	}
 
 	model_print("\n");
 	execution->print_summary();

@@ -147,6 +147,8 @@ void print_program_output()
 {
 	char buf[200];
 
+	model_print("---- BEGIN PROGRAM OUTPUT ----\n");
+
 	/* Gather all program output */
 	fflush(stdout);
 
@@ -165,5 +167,7 @@ void print_program_output()
 			ret -= res;
 		}
 	}
+
+	model_print("---- END PROGRAM OUTPUT   ----\n");
 }
 #endif /* ! CONFIG_DEBUG */

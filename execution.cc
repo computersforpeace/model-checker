@@ -1389,7 +1389,7 @@ void ModelExecution::print_infeasibility(const char *prefix) const
 	if (promises.size() != 0)
 		ptr += sprintf(ptr, "[unresolved promise]");
 	if (ptr != buf)
-		model_print("%s: %s\n", prefix ? prefix : "Infeasible", buf);
+		model_print("%s: %s", prefix ? prefix : "Infeasible", buf);
 }
 
 /**
@@ -2697,17 +2697,21 @@ void ModelExecution::print_summary() const
 	dumpGraph(buffername);
 #endif
 
-	model_print("Execution %d:", get_execution_number());
+	model_print("Execution trace %d:", get_execution_number());
 	if (isfeasibleprefix()) {
 		if (is_yieldblocked())
 			model_print(" YIELD BLOCKED");
 		if (scheduler->all_threads_sleeping())
 			model_print(" SLEEP-SET REDUNDANT");
-		model_print("\n");
+		if (have_bug_reports())
+			model_print(" DETECTED BUG(S)");
 	} else
 		print_infeasibility(" INFEASIBLE");
+	model_print("\n");
+
 	print_list(&action_trace);
 	model_print("\n");
+
 	if (!promises.empty()) {
 		model_print("Pending promises:\n");
 		for (unsigned int i = 0; i < promises.size(); i++) {

@@ -75,7 +75,9 @@ static void print_usage(const char *program_name, struct model_params *params)
 "                              Default: %d\n"
 "-b, --bound=MAX             Upper length bound.\n"
 "                              Default: %d\n"
-"-v, --verbose               Print verbose execution information.\n"
+"-v[NUM], --verbose[=NUM]    Print verbose execution information. NUM is optional:\n"
+"                              0 is quiet; 1 is noisy; 2 is noisier.\n"
+"                              Default: %d\n"
 "-u, --uninitialized=VALUE   Return VALUE any load which may read from an\n"
 "                              uninitialized atomic.\n"
 "                              Default: %u\n"
@@ -93,6 +95,7 @@ static void print_usage(const char *program_name, struct model_params *params)
 		params->fairwindow,
 		params->enabledcount,
 		params->bound,
+		params->verbose,
 		params->uninitvalue);
 	model_print("Analysis plugins:\n");
 	for(unsigned int i=0;i<registeredanalysis->size();i++) {

@@ -254,7 +254,7 @@ void ModelChecker::print_execution(bool printbugs) const
 {
 	print_program_output();
 
-	if (params.verbose) {
+	if (params.verbose >= 2) {
 		model_print("Earliest divergence point since last feasible execution:\n");
 		if (earliest_diverge)
 			earliest_diverge->print();

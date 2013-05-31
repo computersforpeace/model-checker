@@ -24,7 +24,7 @@ struct model_params {
 	 *  value */
 	unsigned int expireslop;
 
-	/** @brief Verbosity (0 = quiet; 1 = noisy) */
+	/** @brief Verbosity (0 = quiet; 1 = noisy; 2 = noisier) */
 	int verbose;
 
 	/** @brief Command-line argument count to pass to user program */

@@ -136,6 +136,11 @@ including <librace.h> and utilizing the appropriate functions
 (store_{8,16,32,64}() and load_{8,16,32,64}()) for loading/storing data from/to
 non-atomic shared memory.
 
+CDSChecker can also check boolean assertions in your test programs. Just
+include <model-assert.h> and use the MODEL_ASSERT() macro in your test program.
+CDSChecker will report a bug in any possible execution in which the argument to
+MODEL_ASSERT() evaluates to false (that is, 0).
+
 Test programs should be compiled against our shared library (libmodel.so) using
 the headers in the include/ directory. Then the shared library must be made
 available to the dynamic linker, using the LD_LIBRARY_PATH environment

@@ -1,6 +1,6 @@
 # generic types
 *.o
-.*.swp
+*.swp
 *.swo
 *.so
 *~

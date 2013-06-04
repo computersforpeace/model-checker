@@ -104,18 +104,18 @@ SC
 
 
 Note that we also provide a series of benchmarks (distributed separately),
-which can be placed under the benchmarks/ directory. After building CDSChecker,
+which can be placed under the `benchmarks/` directory. After building CDSChecker,
 you can build and run the benchmarks as follows:
 
         cd benchmarks
         make
         ./run.sh barrier/barrier -y -m 2     # runs barrier test with fairness/memory liveness
-        ./bench.sh                           # run all benchmarks twice, with timing results
+        ./bench.sh                           # run all benchmarks and provide timing results
 
 Running your own code
 ---------------------
 
-We provide several test and sample programs under the test/ directory, which
+We provide several test and sample programs under the `test/` directory, which
 should compile and run with no trouble. Of course, you likely want to test your
 own code. To do so, you need to perform a few steps.
 

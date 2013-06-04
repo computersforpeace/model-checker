@@ -146,7 +146,7 @@ variable, for instance.
 Reading an execution trace
 --------------------------
 
-When CDSChecker detects a bug in your program (or when run with the --verbose
+When CDSChecker detects a bug in your program (or when run with the `--verbose`
 flag), it prints the output of the program run (STDOUT) along with some summary
 trace information for the execution in question. The trace is given as a
 sequence of lines, where each line represents an operation in the execution
@@ -180,7 +180,7 @@ The following list describes each of the columns in the execution trace output:
 
  * Rf: For reads, the sequence number of the operation from which it reads.
    [Note: If the execution is a partial, infeasible trace (labeled INFEASIBLE),
-   as printed during --verbose execution, reads may not be resolved and so may
+   as printed during `--verbose` execution, reads may not be resolved and so may
    have Rf=? or Rf=Px, where x is a promised future value.]
 
  * CV: The clock vector, encapsulating the happens-before relation (see our
@@ -226,7 +226,7 @@ HASH 4073708854
 Now consider, for example, operation 10:
 
 This is the 10th operation in the execution order. It is an atomic read-relaxed
-operation performed by thread 3 at memory address 0x601068. It reads the value
+operation performed by thread 3 at memory address `0x601068`. It reads the value
 "0", which was written by the 2nd operation in the execution order. Its clock
 vector consists of the following values:
 

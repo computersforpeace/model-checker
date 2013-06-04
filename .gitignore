@@ -1,6 +1,6 @@
 # generic types
 *.o
-.*.swp
+*.swp
 *.swo
 *.so
 *~
@@ -12,3 +12,4 @@
 /tags
 /doc/docs
 /benchmarks
+/README.html

@@ -18,14 +18,19 @@ endif
 
 TESTS_DIR := test
 
-all: $(LIB_SO) tests
+MARKDOWN := doc/Markdown/Markdown.pl
+
+all: $(LIB_SO) tests README.html
 
 debug: CPPFLAGS += -DCONFIG_DEBUG
 debug: all
 
 PHONY += docs
-docs: *.c *.cc *.h
+docs: *.c *.cc *.h README.html
 	doxygen
+
+README.html: README.md
+	$(MARKDOWN) $< > $@
 
 $(LIB_SO): $(OBJECTS)
 	$(CXX) $(SHARED) -o $(LIB_SO) $+ $(LDFLAGS)

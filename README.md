@@ -166,8 +166,8 @@ The following list describes each of the columns in the execution trace output:
 
  * Action type: The type of operation performed
 
- * MO: The memory-order for this operation (i.e., `memory_order_XXX`, where XXX is
-   relaxed, release, acquire, rel_acq, or seq_cst)
+ * MO: The memory-order for this operation (i.e., `memory_order_XXX`, where `XXX` is
+   `relaxed`, `release`, `acquire`, `rel_acq`, or `seq_cst`)
 
  * Location: The memory location on which this operation is operating. This is
    well-defined for atomic write/read/RMW, but other operations are subject to
@@ -176,7 +176,7 @@ The following list describes each of the columns in the execution trace output:
  * Value: For reads/writes/RMW, the value returned by the operation. Note that
    for RMW, this is the value that is *read*, not the value that was *written*.
    For other operations, 'value' may have some CDSChecker-internal meaning, or
-   it may simply be a don't-care (such as 0xdeadbeef).
+   it may simply be a don't-care (such as `0xdeadbeef`).
 
  * Rf: For reads, the sequence number of the operation from which it reads.
    [Note: If the execution is a partial, infeasible trace (labeled INFEASIBLE),

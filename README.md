@@ -22,7 +22,7 @@ eliminate redundant executions to significantly shrink the state space.
 The model checking algorithm is described in more detail in this paper
 (currently under review):
 
-  [http://demsky.eecs.uci.edu/publications/c11modelcheck.pdf](http://demsky.eecs.uci.edu/publications/c11modelcheck.pdf)
+  <http://demsky.eecs.uci.edu/publications/c11modelcheck.pdf>
 
 It is designed to support unit tests on concurrent data structure written using
 C11/C++11 atomics.
@@ -40,7 +40,7 @@ flavors. We have not attempted to port to Windows.
 
 Other references can be found at the main project page:
 
-  [http://demsky.eecs.uci.edu/c11modelchecker.php](http://demsky.eecs.uci.edu/c11modelchecker.php)
+  <http://demsky.eecs.uci.edu/c11modelchecker.php>
 
 Basic build and run
 -------------------

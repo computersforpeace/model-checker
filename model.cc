@@ -351,26 +351,6 @@ Thread * ModelChecker::get_thread(const ModelAction *act) const
 }
 
 /**
- * @brief Check if a Thread is currently enabled
- * @param t The Thread to check
- * @return True if the Thread is currently enabled
- */
-bool ModelChecker::is_enabled(Thread *t) const
-{
-	return scheduler->is_enabled(t);
-}
-
-/**
- * @brief Check if a Thread is currently enabled
- * @param tid The ID of the Thread to check
- * @return True if the Thread is currently enabled
- */
-bool ModelChecker::is_enabled(thread_id_t tid) const
-{
-	return scheduler->is_enabled(tid);
-}
-
-/**
  * Switch from a model-checker context to a user-thread context. This is the
  * complement of ModelChecker::switch_to_master and must be called from the
  * model-checker context
@@ -458,7 +438,7 @@ void ModelChecker::run()
 			for (unsigned int i = 0; i < get_num_threads(); i++) {
 				Thread *th = get_thread(int_to_id(i));
 				ModelAction *act = th->get_pending();
-				if (act && is_enabled(th) && !execution->check_action_enabled(act)) {
+				if (act && execution->is_enabled(th) && !execution->check_action_enabled(act)) {
 					scheduler->sleep(th);
 				}
 			}

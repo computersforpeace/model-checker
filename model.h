@@ -57,9 +57,6 @@ public:
 	Thread * get_thread(thread_id_t tid) const;
 	Thread * get_thread(const ModelAction *act) const;
 
-	bool is_enabled(Thread *t) const;
-	bool is_enabled(thread_id_t tid) const;
-
 	Thread * get_current_thread() const;
 
 	void switch_from_master(Thread *thread);

@@ -1820,6 +1820,7 @@ bool ModelExecution::thin_air_constraint_may_allow(const ModelAction *writer, co
  * require compiler support):
  *
  *   If X --hb-> Y --mo-> Z, then X should not read from Z.
+ *   If X --hb-> Y, A --rf-> Y, and A --mo-> Z, then X should not read from Z.
  */
 bool ModelExecution::mo_may_allow(const ModelAction *writer, const ModelAction *reader)
 {

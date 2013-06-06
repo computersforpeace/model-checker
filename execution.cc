@@ -755,12 +755,13 @@ bool ModelExecution::process_mutex(ModelAction *curr)
 /**
  * @brief Check if the current pending promises allow a future value to be sent
  *
- * If one of the following is true:
- *  (a) there are no pending promises
- *  (b) the reader and writer do not cross any promises
- * Then, it is safe to pass a future value back now.
+ * It is unsafe to pass a future value back if there exists a pending promise Pr
+ * such that:
  *
- * Otherwise, we must save the pending future value until (a) or (b) is true
+ *    reader --exec-> Pr --exec-> writer
+ *
+ * If such Pr exists, we must save the pending future value until Pr is
+ * resolved.
  *
  * @param writer The operation which sends the future value. Must be a write.
  * @param reader The operation which will observe the value. Must be a read.
@@ -769,8 +770,6 @@ bool ModelExecution::process_mutex(ModelAction *curr)
 bool ModelExecution::promises_may_allow(const ModelAction *writer,
 		const ModelAction *reader) const
 {
-	if (promises.empty())
-		return true;
 	for (int i = promises.size() - 1; i >= 0; i--) {
 		ModelAction *pr = promises[i]->get_reader(0);
 		//reader is after promise...doesn't cross any promise

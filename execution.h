@@ -202,6 +202,13 @@ private:
 	HashTable<const void *, action_list_t *, uintptr_t, 4> condvar_waiters_map;
 
 	HashTable<void *, SnapVector<action_list_t> *, uintptr_t, 4> obj_thrd_map;
+
+	/**
+	 * @brief List of currently-pending promises
+	 *
+	 * Promises are sorted by the execution order of the read(s) which
+	 * created them
+	 */
 	SnapVector<Promise *> promises;
 	SnapVector<struct PendingFutureValue> futurevalues;
 

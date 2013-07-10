@@ -17,7 +17,7 @@ PREFIX=
 export LD_LIBRARY_PATH=.
 
 [ $# -gt 0 ] && [ "$1" = "gdb" ] && PREFIX=gdb && shift
-[ $# -gt 0 ] && [ -x "$1" ] && [ -f "$1" ] && BIN="$1" && shift
+[ $# -gt 0 ] && [ -e "$1" ] && BIN="$1" && shift
 
-set -x
+set -xe
 $PREFIX $BIN $@

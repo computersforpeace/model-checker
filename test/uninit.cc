@@ -40,7 +40,7 @@ int user_main(int argc, char **argv)
 
 	std::atomic_init(&x, 0);
 
-	printf("Main thread: creating 2 threads\n");
+	printf("Main thread: creating 3 threads\n");
 	thrd_create(&t1, (thrd_start_t)&a, NULL);
 	thrd_create(&t2, (thrd_start_t)&b, NULL);
 	thrd_create(&t3, (thrd_start_t)&c, NULL);

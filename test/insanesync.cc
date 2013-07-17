@@ -8,10 +8,8 @@
 
 using namespace std;
 
-atomic_int x;
-atomic_int y;
-atomic_intptr_t z;
-atomic_intptr_t z2;
+atomic_int x, y;
+atomic_intptr_t z, z2;
 
 int r1, r2, r3; /* "local" variables */
 

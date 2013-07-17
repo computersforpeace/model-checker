@@ -38,8 +38,8 @@ static void a(void *obj)
 static void b(void *obj)
 {
 	r3 = y.fetch_add(1, memory_order_acquire);
-	void *ptr = (void *)z.load(memory_order_relaxed);
-	z2.store((intptr_t)ptr, memory_order_relaxed);
+	intptr_t ptr = z.load(memory_order_relaxed);
+	z2.store(ptr, memory_order_relaxed);
 }
 
 static void c(void *obj)

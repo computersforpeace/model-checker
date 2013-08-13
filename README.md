@@ -16,7 +16,7 @@ execution behaviors and to significantly shrink the state space. The model
 checking algorithm is described in more detail in this paper (published in
 OOPSLA '13):
 
-  <http://demsky.eecs.uci.edu/publications/c11modelcheck.pdf>
+>   <http://demsky.eecs.uci.edu/publications/c11modelcheck.pdf>
 
 It is designed to support unit tests on concurrent data structure written using
 C/C++ atomics.
@@ -31,10 +31,6 @@ compiler (and we want to support others, at least for now).
 CDSChecker should compile on Linux and Mac OSX with no dependencies and has been
 tested with LLVM (clang/clang++) and GCC. It likely can be ported to other \*NIX
 flavors. We have not attempted to port to Windows.
-
-You may also refer to the CDSChecker project page:
-
-  <http://demsky.eecs.uci.edu/c11modelchecker.php>
 
 
 Getting Started
@@ -273,6 +269,20 @@ Other Notes
   CDSChecker to hit unexpected parts of the unit test program (causing a
   division by 0, for instance). In such programs, you might consider running
   CDSChecker with the `-u num` option.
+
+
+See Also
+--------
+
+The CDSChecker project page:
+
+>   <http://demsky.eecs.uci.edu/c11modelchecker.php>
+
+The CDSChecker source and accompanying benchmarks on Gitweb:
+
+>   <http://demsky.eecs.uci.edu/git/?p=model-checker.git>
+>
+>   <http://demsky.eecs.uci.edu/git/?p=model-checker-benchmarks.git>
 
 
 Contact

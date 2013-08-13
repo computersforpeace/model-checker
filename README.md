@@ -5,27 +5,20 @@ Copyright &copy; 2013 Regents of the University of California. All rights reserv
 
 CDSChecker is distributed under the GPL v2. See the LICENSE file for details.
 
-This README is divided into sections as follows:
-
- *  Overview
- *  Basic build and run
- *  Running your own code
- *  Reading an execution trace
- *  References
-
 Overview
 --------
 
-CDSChecker is a model checker for C11/C++11 exhaustively explores the behaviors
-of code under the C11/C++11 memory model. It uses partial order reduction to
-eliminate redundant executions to significantly shrink the state space.
-The model checking algorithm is described in more detail in this paper
-(currently under review):
+CDSChecker is a model checker for C11/C++11 which exhaustively explores the
+behaviors of code under the C/C++ memory model. It uses partial order reduction
+as well as a few other novel techniques to eliminate time spent on redundant
+execution behaviors and to significantly shrink the state space. The model
+checking algorithm is described in more detail in this paper (published in
+OOPSLA '13):
 
   <http://demsky.eecs.uci.edu/publications/c11modelcheck.pdf>
 
 It is designed to support unit tests on concurrent data structure written using
-C11/C++11 atomics.
+C/C++ atomics.
 
 CDSChecker is constructed as a dynamically-linked shared library which
 implements the C and C++ atomic types and portions of the other thread-support
@@ -38,95 +31,116 @@ CDSChecker should compile on Linux and Mac OSX with no dependencies and has been
 tested with LLVM (clang/clang++) and GCC. It likely can be ported to other \*NIX
 flavors. We have not attempted to port to Windows.
 
-Other references can be found at the main project page:
+You may also refer to the CDSChecker project page:
 
   <http://demsky.eecs.uci.edu/c11modelchecker.php>
 
-Basic build and run
+Getting Started
+---------------
+
+If you haven't done so already, you may download CDSChecker using
+[git](http://git-scm.com/):
+
+      git clone git://demsky.eecs.uci.edu/model-checker.git
+
+Get the benchmarks (not required; distributed separately):
+
+      cd model-checker
+      git clone git://demsky.eecs.uci.edu/model-checker-benchmarks.git benchmarks
+
+Compile the model checker:
+
+      make
+
+Compile the benchmarks:
+
+      make benchmarks
+
+Run a simple example (the `run.sh` script does some very minimal processing for
+you):
+
+      ./run.sh test/userprog.o
+
+To see the help message on how to run CDSChecker, execute:
+
+      ./run.sh -h
+
+Useful Options
+--------------
+
+`-m num`
+
+  > Controls the liveness of the memory system. Note that multithreaded programs
+  > often rely on memory liveness for termination, so this parameter is
+  > necessary for such programs.
+  >
+  > Liveness is controlled by `num`: the number of times a load is allowed to
+  > see the same store when a newer store exists---one that is ordered later in
+  > the modification order.
+
+`-y`
+
+  > Turns on CHESS-like yield-based fairness support (requires `thrd_yield()`
+  > instrumentation in test program).
+
+`-f num`
+
+  > Turns on alternative fairness support (less desirable than `-y`).
+
+`-v`
+
+  > Verbose: show all executions and not just buggy ones.
+
+`-s num`
+
+  > Constrain how long we will run to wait for a future value past when it is
+  > expected
+
+`-u num`
+
+  > Value to provide to atomics loads from uninitialized memory locations. The
+  > default is 0, but this may cause some programs to throw exceptions
+  > (segfault) before the model checker prints a trace.
+
+Suggested options:
+
+>     -m 2 -y
+
+or
+
+>     -m 2 -f 10
+
+Benchmarks
 -------------------
 
-Sample run instructions:
+Many simple tests are located in the `tests/` directory. You may also want to
+try the larger benchmarks (distributed separately), which can be placed under
+the `benchmarks/` directory. After building CDSChecker, you can build and run
+the benchmarks as follows:
 
-<pre>
-$ make
-$ export LD_LIBRARY_PATH=.
-$ ./test/userprog.o                   # Runs simple test program
-$ ./test/userprog.o -h                # Prints help information
-Copyright (c) 2013 Regents of the University of California. All rights reserved.
-Distributed under the GPLv2
-Written by Brian Norris and Brian Demsky
-
-Usage: ./test/userprog.o [MODEL-CHECKER OPTIONS] -- [PROGRAM ARGS]
-
-MODEL-CHECKER OPTIONS can be any of the model-checker options listed below. Arguments
-provided after the `--' (the PROGRAM ARGS) are passed to the user program.
-
-Model-checker options:
--h, --help                  Display this help message and exit
--m, --liveness=NUM          Maximum times a thread can read from the same write
-                              while other writes exist.
-                              Default: 0
--M, --maxfv=NUM             Maximum number of future values that can be sent to
-                              the same read.
-                              Default: 0
--s, --maxfvdelay=NUM        Maximum actions that the model checker will wait for
-                              a write from the future past the expected number
-                              of actions.
-                              Default: 6
--S, --fvslop=NUM            Future value expiration sloppiness.
-                              Default: 4
--y, --yield                 Enable CHESS-like yield-based fairness support.
-                              Default: disabled
--Y, --yieldblock            Prohibit an execution from running a yield.
-                              Default: disabled
--f, --fairness=WINDOW       Specify a fairness window in which actions that are
-                              enabled sufficiently many times should receive
-                              priority for execution (not recommended).
-                              Default: 0
--e, --enabled=COUNT         Enabled count.
-                              Default: 1
--b, --bound=MAX             Upper length bound.
-                              Default: 0
--v[NUM], --verbose[=NUM]    Print verbose execution information. NUM is optional:
-                              0 is quiet; 1 is noisy; 2 is noisier.
-                              Default: 0
--u, --uninitialized=VALUE   Return VALUE any load which may read from an
-                              uninitialized atomic.
-                              Default: 0
--t, --analysis=NAME         Use Analysis Plugin.
--o, --options=NAME          Option for previous analysis plugin.
-                            -o help for a list of options
- --                         Program arguments follow.
-
-Analysis plugins:
-SC
-</pre>
-
-
-Note that we also provide a series of benchmarks (distributed separately),
-which can be placed under the `benchmarks/` directory. After building CDSChecker,
-you can build and run the benchmarks as follows:
-
-        cd benchmarks
-        make
-        ./run.sh barrier/barrier -y -m 2     # runs barrier test with fairness/memory liveness
-        ./bench.sh                           # run all benchmarks and provide timing results
+>     make benchmarks
+>     cd benchmarks
+>     ./run.sh barrier/barrier -y -m 2     # runs barrier test with fairness/memory liveness
+>     ./bench.sh                           # run all benchmarks and provide timing results
 
 Running your own code
 ---------------------
 
-We provide several test and sample programs under the `test/` directory, which
-should compile and run with no trouble. Of course, you likely want to test your
-own code. To do so, you need to perform a few steps.
+You likely want to test your own code, not just our simple tests. To do so, you
+need to perform a few steps.
 
 First, because CDSChecker executes your program dozens (if not hundreds or
 thousands) of times, you will have the most success if your code is written as a
 unit test and not as a full-blown program.
 
-Next, test programs should use the standard C11/C++11 library headers
-(`<atomic>`/`<stdatomic.h>`, `<mutex>`, `<condition_variable>`, `<thread.h>`) and must
-name their main routine as `user_main(int, char**)` rather than `main(int, char**)`.
-We only support C11 thread syntax (`thrd_t`, etc. from `<thread.h>`).
+Second, because CDSChecker must be able to manage your program for you, your
+program should declare its main entry point as `user_main(int, char**)` rather
+than `main(int, char**)`.
+
+Third, test programs should use the standard C11/C++11 library headers
+(`<atomic>`/`<stdatomic.h>`, `<mutex>`, `<condition_variable>`, `<thread.h>`).
+As of now, we only support C11 thread syntax (`thrd_t`, etc. from
+`<thread.h>`).
 
 Test programs may also use our included happens-before race detector by
 including <librace.h> and utilizing the appropriate functions
@@ -231,6 +245,38 @@ operation performed by thread 3 at memory address `0x601068`. It reads the value
 vector consists of the following values:
 
         CV[0] = 0, CV[1] = 7, CV[2] = 0, CV[3] = 10
+
+
+Other Notes
+-----------
+
+* Deadlock detection: CDSChecker can detect deadlocks. For instance, try the
+  following test program.
+
+  >     ./run.sh test/deadlock.o
+
+  Deadlock detection currently detects when a thread is about to step into a
+  deadlock, without actually including the final step in the trace. But you can
+  examine the program to see the next step.
+
+* CDSChecker has to speculatively explore many execution behaviors due to the
+  relaxed memory model, and many of these turn out to be infeasible (that is,
+  they cannot be legally produced by the memory model). CDSChecker discards
+  these executions as soon as it identifies them (see the "Number of infeasible
+  executions" statistic); however, the speculation can occasionally cause
+  CDSChecker to hit unexpected parts of the unit test program (causing a
+  division by 0, for instance). In such programs, you might consider running
+  CDSChecker with the `-u num` option.
+
+
+Contact
+-------
+
+Please feel free to contact us for more information. Bug reports are welcome,
+and we are happy to hear from our users. We are also very interested to know if
+CDSChecker catches bugs in your programs.
+
+Contact Brian Norris at <banorris@uci.edu> or Brian Demsky at <bdemsky@uci.edu>.
 
 
 References

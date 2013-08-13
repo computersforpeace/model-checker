@@ -15,6 +15,8 @@ BIN=./test/userprog.o
 PREFIX=
 
 export LD_LIBRARY_PATH=.
+# For Mac OSX
+export DYLD_LIBRARY_PATH=.
 
 [ $# -gt 0 ] && [ "$1" = "gdb" ] && PREFIX=gdb && shift
 [ $# -gt 0 ] && [ -e "$1" ] && BIN="$1" && shift

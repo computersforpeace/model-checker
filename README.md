@@ -5,6 +5,7 @@ Copyright &copy; 2013 Regents of the University of California. All rights reserv
 
 CDSChecker is distributed under the GPL v2. See the LICENSE file for details.
 
+
 Overview
 --------
 
@@ -35,6 +36,7 @@ You may also refer to the CDSChecker project page:
 
   <http://demsky.eecs.uci.edu/c11modelchecker.php>
 
+
 Getting Started
 ---------------
 
@@ -64,6 +66,7 @@ you):
 To see the help message on how to run CDSChecker, execute:
 
       ./run.sh -h
+
 
 Useful Options
 --------------
@@ -110,6 +113,7 @@ or
 
 >     -m 2 -f 10
 
+
 Benchmarks
 -------------------
 
@@ -122,6 +126,7 @@ the benchmarks as follows:
 >     cd benchmarks
 >     ./run.sh barrier/barrier -y -m 2     # runs barrier test with fairness/memory liveness
 >     ./bench.sh                           # run all benchmarks and provide timing results
+
 
 Running your own code
 ---------------------
@@ -156,6 +161,7 @@ Test programs should be compiled against our shared library (libmodel.so) using
 the headers in the `include/` directory. Then the shared library must be made
 available to the dynamic linker, using the `LD_LIBRARY_PATH` environment
 variable, for instance.
+
 
 Reading an execution trace
 --------------------------

@@ -152,8 +152,8 @@ from `<thread.h>`).
 
 Test programs may also use our included happens-before race detector by
 including <librace.h> and utilizing the appropriate functions
-(`store_{8,16,32,64}()` and `load_{8,16,32,64}()`) for loading/storing data from/to
-non-atomic shared memory.
+(`store_{8,16,32,64}()` and `load_{8,16,32,64}()`) for storing/loading data
+to/from non-atomic shared memory.
 
 CDSChecker can also check boolean assertions in your test programs. Just
 include `<model-assert.h>` and use the `MODEL_ASSERT()` macro in your test program.

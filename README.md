@@ -121,8 +121,9 @@ the benchmarks as follows:
 
 >     make benchmarks
 >     cd benchmarks
->     ./run.sh barrier/barrier -y -m 2     # runs barrier test with fairness/memory liveness
->     ./bench.sh                           # run all benchmarks and provide timing results
+>     ./run.sh barrier/barrier -y -m 2           # runs barrier test with fairness/memory liveness
+>     ./run.sh linuxrwlocks/linuxrwlocks -y -m 2 # Linux RW locks test with fairness/liveness
+>     ./bench.sh                                 # run all benchmarks and provide timing results
 
 
 Running your own code

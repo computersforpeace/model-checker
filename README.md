@@ -239,29 +239,27 @@ The following list describes each of the columns in the execution trace output:
 
 See the following example trace:
 
-<pre>
-------------------------------------------------------------------------------------
-#    t    Action type     MO       Location         Value               Rf  CV
-------------------------------------------------------------------------------------
-1    1    thread start    seq_cst  0x7f68ff11e7c0   0xdeadbeef              ( 0,  1)
-2    1    init atomic     relaxed        0x601068   0                       ( 0,  2)
-3    1    init atomic     relaxed        0x60106c   0                       ( 0,  3)
-4    1    thread create   seq_cst  0x7f68fe51c710   0x7f68fe51c6e0          ( 0,  4)
-5    2    thread start    seq_cst  0x7f68ff11ebc0   0xdeadbeef              ( 0,  4,  5)
-6    2    atomic read     relaxed        0x60106c   0                   3   ( 0,  4,  6)
-7    1    thread create   seq_cst  0x7f68fe51c720   0x7f68fe51c6e0          ( 0,  7)
-8    3    thread start    seq_cst  0x7f68ff11efc0   0xdeadbeef              ( 0,  7,  0,  8)
-9    2    atomic write    relaxed        0x601068   0                       ( 0,  4,  9)
-10   3    atomic read     relaxed        0x601068   0                   2   ( 0,  7,  0, 10)
-11   2    thread finish   seq_cst  0x7f68ff11ebc0   0xdeadbeef              ( 0,  4, 11)
-12   3    atomic write    relaxed        0x60106c   0x2a                    ( 0,  7,  0, 12)
-13   1    thread join     seq_cst  0x7f68ff11ebc0   0x2                     ( 0, 13, 11)
-14   3    thread finish   seq_cst  0x7f68ff11efc0   0xdeadbeef              ( 0,  7,  0, 14)
-15   1    thread join     seq_cst  0x7f68ff11efc0   0x3                     ( 0, 15, 11, 14)
-16   1    thread finish   seq_cst  0x7f68ff11e7c0   0xdeadbeef              ( 0, 16, 11, 14)
-HASH 4073708854
-------------------------------------------------------------------------------------
-</pre>
+    ------------------------------------------------------------------------------------
+    #    t    Action type     MO       Location         Value               Rf  CV
+    ------------------------------------------------------------------------------------
+    1    1    thread start    seq_cst  0x7f68ff11e7c0   0xdeadbeef              ( 0,  1)
+    2    1    init atomic     relaxed        0x601068   0                       ( 0,  2)
+    3    1    init atomic     relaxed        0x60106c   0                       ( 0,  3)
+    4    1    thread create   seq_cst  0x7f68fe51c710   0x7f68fe51c6e0          ( 0,  4)
+    5    2    thread start    seq_cst  0x7f68ff11ebc0   0xdeadbeef              ( 0,  4,  5)
+    6    2    atomic read     relaxed        0x60106c   0                   3   ( 0,  4,  6)
+    7    1    thread create   seq_cst  0x7f68fe51c720   0x7f68fe51c6e0          ( 0,  7)
+    8    3    thread start    seq_cst  0x7f68ff11efc0   0xdeadbeef              ( 0,  7,  0,  8)
+    9    2    atomic write    relaxed        0x601068   0                       ( 0,  4,  9)
+    10   3    atomic read     relaxed        0x601068   0                   2   ( 0,  7,  0, 10)
+    11   2    thread finish   seq_cst  0x7f68ff11ebc0   0xdeadbeef              ( 0,  4, 11)
+    12   3    atomic write    relaxed        0x60106c   0x2a                    ( 0,  7,  0, 12)
+    13   1    thread join     seq_cst  0x7f68ff11ebc0   0x2                     ( 0, 13, 11)
+    14   3    thread finish   seq_cst  0x7f68ff11efc0   0xdeadbeef              ( 0,  7,  0, 14)
+    15   1    thread join     seq_cst  0x7f68ff11efc0   0x3                     ( 0, 15, 11, 14)
+    16   1    thread finish   seq_cst  0x7f68ff11e7c0   0xdeadbeef              ( 0, 16, 11, 14)
+    HASH 4073708854
+    ------------------------------------------------------------------------------------
 
 Now consider, for example, operation 10:
 

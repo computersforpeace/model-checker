@@ -3834,7 +3834,7 @@ static void* mmap_alloc(mstate m, size_t nb) {
 /* Realloc using mmap */
 static mchunkptr mmap_resize(mstate m, mchunkptr oldp, size_t nb, int flags) {
   size_t oldsize = chunksize(oldp);
-  flags = flags; /* placate people compiling -Wunused */
+  (void)flags; /* placate people compiling -Wunused */
   if (is_small(nb)) /* Can't shrink mmap regions below small size */
     return 0;
   /* Keep old chunk if big enough but not too big */
@@ -5588,7 +5588,7 @@ void mspace_free(mspace msp, void* mem) {
     mchunkptr p  = mem2chunk(mem);
 #if FOOTERS
     mstate fm = get_mstate_for(p);
-    msp = msp; /* placate people compiling -Wunused */
+    (void)msp; /* placate people compiling -Wunused */
 #else /* FOOTERS */
     mstate fm = (mstate)msp;
 #endif /* FOOTERS */
@@ -5762,7 +5762,7 @@ void* mspace_realloc_in_place(mspace msp, void* oldmem, size_t bytes) {
       mstate m = (mstate)msp;
 #else /* FOOTERS */
       mstate m = get_mstate_for(oldp);
-      msp = msp; /* placate people compiling -Wunused */
+      (void)msp; /* placate people compiling -Wunused */
       if (!ok_magic(m)) {
         USAGE_ERROR_ACTION(m, oldmem);
         return 0;

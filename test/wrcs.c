@@ -16,43 +16,43 @@ static void a(void *obj)
 
 static void b(void *obj)
 {
-	atomic_load_explicit(&x1, memory_order_seq_cst);
+	(void)atomic_load_explicit(&x1, memory_order_seq_cst);
 	atomic_store_explicit(&x2, 1,memory_order_seq_cst);
 }
 
 static void c(void *obj)
 {
-	atomic_load_explicit(&x2, memory_order_seq_cst);
+	(void)atomic_load_explicit(&x2, memory_order_seq_cst);
 	atomic_store_explicit(&x3, 1,memory_order_seq_cst);
 }
 
 static void d(void *obj)
 {
-	atomic_load_explicit(&x3, memory_order_seq_cst);
+	(void)atomic_load_explicit(&x3, memory_order_seq_cst);
 	atomic_store_explicit(&x4, 1,memory_order_seq_cst);
 }
 
 static void e(void *obj)
 {
-	atomic_load_explicit(&x4, memory_order_seq_cst);
+	(void)atomic_load_explicit(&x4, memory_order_seq_cst);
 	atomic_store_explicit(&x5, 1,memory_order_seq_cst);
 }
 
 static void f(void *obj)
 {
-	atomic_load_explicit(&x5, memory_order_seq_cst);
+	(void)atomic_load_explicit(&x5, memory_order_seq_cst);
 	atomic_store_explicit(&x6, 1,memory_order_seq_cst);
 }
 
 static void g(void *obj)
 {
-	atomic_load_explicit(&x6, memory_order_seq_cst);
+	(void)atomic_load_explicit(&x6, memory_order_seq_cst);
 	atomic_store_explicit(&x7, 1,memory_order_seq_cst);
 }
 static void h(void *obj)
 {
-	atomic_load_explicit(&x7, memory_order_seq_cst);
-	atomic_load_explicit(&x1, memory_order_seq_cst);
+	(void)atomic_load_explicit(&x7, memory_order_seq_cst);
+	(void)atomic_load_explicit(&x1, memory_order_seq_cst);
 }
 
 int user_main(int argc, char **argv)

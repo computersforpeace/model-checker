@@ -11,7 +11,7 @@ atomic_int y;
 atomic_int z;
 static void a(void *obj)
 {
-	atomic_load_explicit(&z, memory_order_relaxed); // this is only for schedule control
+	(void)atomic_load_explicit(&z, memory_order_relaxed); // this is only for schedule control
 	int t1=atomic_load_explicit(&x, memory_order_relaxed);
 	atomic_store_explicit(&y, 1, memory_order_relaxed);
 	printf("t1=%d\n",t1);

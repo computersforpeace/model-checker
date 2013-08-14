@@ -256,6 +256,56 @@ vector consists of the following values:
 
         CV[0] = 0, CV[1] = 7, CV[2] = 0, CV[3] = 10
 
+End of Execution Summary
+------------------------
+
+CDSChecker prints summary statistics at the end of each execution. These
+summaries are based off of a few different properties of an execution, which we
+will break down here:
+
+* An _infeasible_ execution is an execution which is not consistent with the
+  memory model. Such an execution can be considered overhead for the
+  model-checker, since it should never appear in practice.
+
+* A _buggy_ execution is an execution in which CDSChecker has found a real
+  bug: a data race, a deadlock, failure of a user-provided assertion, or an
+  uninitialized load, for instance. CDSChecker will only report bugs in feasible
+  executions.
+
+* A _redundant_ execution is a feasible execution that is exploring the same
+  state space explored by a previous feasible execution. Such exploration is
+  another instance of overhead, so CDSChecker terminates these executions as
+  soon as they are detected. CDSChecker is mostly able to avoid such executions
+  but may encounter them if a fairness option is enabled.
+
+Now, we can examine the end-of-execution summary of one test program:
+
+    $ ./run.sh test/rmwprog.o
+    + test/rmwprog.o
+    ******* Model-checking complete: *******
+    Number of complete, bug-free executions: 6
+    Number of redundant executions: 0
+    Number of buggy executions: 0
+    Number of infeasible executions: 29
+    Total executions: 35
+
+* _Number of complete, bug-free executions:_ these are feasible, non-buggy, and
+  non-redundant executions. They each represent different, legal behaviors you
+  can expect to see in practice.
+
+* _Number of redundant executions:_ these are feasible but redundant executions
+  that were terminated as soon as CDSChecker noticed the redundancy.
+
+* _Number of buggy executions:_ these are feasible, buggy executions. These are
+  the trouble spots where your program is triggering a bug or assertion.
+  Ideally, this number should be 0.
+
+* _Number of infeasible executions:_ these are infeasible executions,
+  representing some of the overhead of model-checking.
+
+* _Total executions:_ the total number of executions explored by CDSChecker.
+  Should be the sum of the above categories, since they are mutually exclusive.
+
 
 Other Notes and Pitfalls
 ------------------------

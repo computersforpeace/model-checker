@@ -1,14 +1,6 @@
 CDSChecker: A Model Checker for C11 and C++11 Atomics
 =====================================================
 
-Copyright &copy; 2013 Regents of the University of California. All rights reserved.
-
-CDSChecker is distributed under the GPL v2. See the LICENSE file for details.
-
-
-Overview
---------
-
 CDSChecker is a model checker for C11/C++11 which exhaustively explores the
 behaviors of code under the C/C++ memory model. It uses partial order reduction
 as well as a few other novel techniques to eliminate time spent on redundant
@@ -401,6 +393,14 @@ and we are happy to hear from our users. We are also very interested to know if
 CDSChecker catches bugs in your programs.
 
 Contact Brian Norris at <banorris@uci.edu> or Brian Demsky at <bdemsky@uci.edu>.
+
+
+Copyright
+---------
+
+Copyright &copy; 2013 Regents of the University of California. All rights reserved.
+
+CDSChecker is distributed under the GPL v2. See the LICENSE file for details.
 
 
 References

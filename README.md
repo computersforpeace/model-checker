@@ -257,8 +257,8 @@ vector consists of the following values:
         CV[0] = 0, CV[1] = 7, CV[2] = 0, CV[3] = 10
 
 
-Other Notes
------------
+Other Notes and Pitfalls
+------------------------
 
 * Deadlock detection: CDSChecker can detect deadlocks. For instance, try the
   following test program.
@@ -277,6 +277,31 @@ Other Notes
   CDSChecker to hit unexpected parts of the unit test program (causing a
   division by 0, for instance). In such programs, you might consider running
   CDSChecker with the `-u num` option.
+
+* Related to the previous point, CDSChecker may report more than one bug for a
+  particular candidate execution. This is because some bugs may not be
+  reportable until CDSChecker has explored more of the program, and in the
+  time between initial discovery and final assessment of the bug, CDSChecker may
+  discover another bug.
+
+* Data races may be reported as multiple bugs, one for each byte-address of the
+  data race in question. See, for example, this run:
+
+        $ ./run.sh test/releaseseq.o
+        ...
+        Bug report: 4 bugs detected
+          [BUG] Data race detected @ address 0x601078:
+            Access 1: write in thread  2 @ clock   4
+            Access 2:  read in thread  3 @ clock   9
+          [BUG] Data race detected @ address 0x601079:
+            Access 1: write in thread  2 @ clock   4
+            Access 2:  read in thread  3 @ clock   9
+          [BUG] Data race detected @ address 0x60107a:
+            Access 1: write in thread  2 @ clock   4
+            Access 2:  read in thread  3 @ clock   9
+          [BUG] Data race detected @ address 0x60107b:
+            Access 1: write in thread  2 @ clock   4
+            Access 2:  read in thread  3 @ clock   9
 
 
 See Also

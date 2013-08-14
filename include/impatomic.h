@@ -88,14 +88,16 @@ inline void atomic_flag::clear( memory_order __x__ ) volatile
         ({ volatile __typeof__((__a__)->__f__)* __p__ = & ((__a__)->__f__);   \
                 __typeof__(__m__) __v__ = (__m__);                            \
                 model_write_action((void *) __p__,  __x__, (uint64_t) __v__); \
-                __v__; })
+                __v__ = __v__; /* Silence clang (-Wunused-value) */           \
+         })
 
 
 #define _ATOMIC_INIT_( __a__, __m__ )                                         \
         ({ volatile __typeof__((__a__)->__f__)* __p__ = & ((__a__)->__f__);   \
                 __typeof__(__m__) __v__ = (__m__);                            \
                 model_init_action((void *) __p__,  (uint64_t) __v__);         \
-                __v__; })
+                __v__ = __v__; /* Silence clang (-Wunused-value) */           \
+         })
 
 #define _ATOMIC_MODIFY_( __a__, __o__, __m__, __x__ )                         \
         ({ volatile __typeof__((__a__)->__f__)* __p__ = & ((__a__)->__f__);   \
@@ -104,7 +106,8 @@ inline void atomic_flag::clear( memory_order __x__ ) volatile
         __typeof__((__a__)->__f__) __copy__= __old__;                         \
         __copy__ __o__ __v__;                                                 \
         model_rmw_action((void *)__p__, __x__, (uint64_t) __copy__);          \
-        __old__; })
+        __old__ = __old__; /* Silence clang (-Wunused-value) */               \
+         })
 
 /* No spurious failure for now */
 #define _ATOMIC_CMPSWP_WEAK_ _ATOMIC_CMPSWP_

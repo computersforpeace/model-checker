@@ -1,5 +1,5 @@
-CDSChecker Readme
-=================
+CDSChecker: A Model Checker for C11 and C++11 Atomics
+=====================================================
 
 Copyright &copy; 2013 Regents of the University of California. All rights reserved.
 

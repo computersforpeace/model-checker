@@ -241,7 +241,8 @@ void ModelChecker::print_stats() const
 	model_print("Number of buggy executions: %d\n", stats.num_buggy_executions);
 	model_print("Number of infeasible executions: %d\n", stats.num_infeasible);
 	model_print("Total executions: %d\n", stats.num_total);
-	model_print("Total nodes created: %d\n", node_stack->get_total_nodes());
+	if (params.verbose)
+		model_print("Total nodes created: %d\n", node_stack->get_total_nodes());
 }
 
 /**

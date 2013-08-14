@@ -37,7 +37,8 @@ Getting Started
 ---------------
 
 If you haven't done so already, you may download CDSChecker using
-[git](http://git-scm.com/):
+[git](http://git-scm.com/) (for those without git, snapshots can be found at the
+Gitweb URLs below):
 
       git clone git://demsky.eecs.uci.edu/model-checker.git
 

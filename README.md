@@ -85,7 +85,9 @@ Useful Options
 
 `-f num`
 
-  > Turns on alternative fairness support (less desirable than `-y`).
+  > Turns on alternative fairness support (less desirable than `-y`). A
+  > necessary alternative for some programs that do not support yield-based
+  > fairness properly.
 
 `-v`
 
@@ -323,6 +325,12 @@ Now, we can examine the end-of-execution summary of one test program:
 
 Other Notes and Pitfalls
 ------------------------
+
+* Many programs require some form of fairness in order to terminate in a finite
+  amount of time. CDSChecker supports the `-y num` and `-f num` flags for these
+  cases. The `-y` option (yield-based fairness) is preferable, but it requires
+  careful usage of yields (i.e., `thrd_yield()`) in the test program. For
+  programs without proper `thrd_yield()`, you may consider using `-f` instead.
 
 * Deadlock detection: CDSChecker can detect deadlocks. For instance, try the
   following test program.

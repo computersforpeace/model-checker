@@ -146,10 +146,9 @@ Second, because CDSChecker must be able to manage your program for you, your
 program should declare its main entry point as `user_main(int, char**)` rather
 than `main(int, char**)`.
 
-Third, test programs should use the standard C11/C++11 library headers
-(`<atomic>`/`<stdatomic.h>`, `<mutex>`, `<condition_variable>`, `<thread.h>`).
-As of now, we only support C11 thread syntax (`thrd_t`, etc. from
-`<thread.h>`).
+Third, test programs must use the standard C11/C++11 library headers (see below
+for supported APIs). Notably, we only support C11 thread syntax (`thrd_t`, etc.
+from `<thread.h>`).
 
 Test programs may also use our included happens-before race detector by
 including <librace.h> and utilizing the appropriate functions
@@ -166,6 +165,22 @@ the headers in the `include/` directory. Then the shared library must be made
 available to the dynamic linker, using the `LD_LIBRARY_PATH` environment
 variable, for instance.
 
+
+### Supported C11/C++11 APIs ###
+
+To model-check multithreaded code properly, CDSChecker needs to instrument any
+concurrency-related API calls made in your code. Currently, we support parts of
+the following thread-support libraries. The C versions can be used in either C
+or C++.
+
+* `<atomic>`, `<cstdatomic>`, `<stdatomic.h>`
+* `<condition_variable>`
+* `<mutex>`
+* `<threads.h>`
+
+Because we want to extend support to legacy (i.e., non-C++11) compilers, we do
+not support some new C++11 features that can't be implemented in C++03 (e.g.,
+C++ `<thread>`).
 
 Reading an execution trace
 --------------------------

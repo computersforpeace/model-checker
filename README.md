@@ -147,8 +147,9 @@ program should declare its main entry point as `user_main(int, char**)` rather
 than `main(int, char**)`.
 
 Third, test programs must use the standard C11/C++11 library headers (see below
-for supported APIs). Notably, we only support C11 thread syntax (`thrd_t`, etc.
-from `<thread.h>`).
+for supported APIs) and must compile against the versions provided in
+CDSChecker's `include/` directory. Notably, we only support C11 thread syntax
+(`thrd_t`, etc. from `<thread.h>`).
 
 Test programs may also use our included happens-before race detector by
 including <librace.h> and utilizing the appropriate functions

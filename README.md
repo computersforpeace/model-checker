@@ -376,7 +376,7 @@ See Also
 
 The CDSChecker project page:
 
->   <http://demsky.eecs.uci.edu/c11modelchecker.php>
+>   <http://demsky.eecs.uci.edu/c11modelchecker.html>
 
 The CDSChecker source and accompanying benchmarks on Gitweb:
 

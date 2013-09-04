@@ -1,14 +1,6 @@
 CDSChecker: A Model Checker for C11 and C++11 Atomics
 =====================================================
 
-Copyright &copy; 2013 Regents of the University of California. All rights reserved.
-
-CDSChecker is distributed under the GPL v2. See the LICENSE file for details.
-
-
-Overview
---------
-
 CDSChecker is a model checker for C11/C++11 which exhaustively explores the
 behaviors of code under the C/C++ memory model. It uses partial order reduction
 as well as a few other novel techniques to eliminate time spent on redundant
@@ -37,12 +29,15 @@ Getting Started
 ---------------
 
 If you haven't done so already, you may download CDSChecker using
-[git](http://git-scm.com/) (for those without git, snapshots can be found at the
-Gitweb URLs below):
+[git](http://git-scm.com/):
 
       git clone git://demsky.eecs.uci.edu/model-checker.git
 
-Get the benchmarks (not required; distributed separately):
+Source code can also be downloaded via the snapshot links on Gitweb (found in
+the __See Also__ section).
+
+Get the benchmarks (not required; distributed separately), placing them as a
+subdirectory under the `model-checker` directory:
 
       cd model-checker
       git clone git://demsky.eecs.uci.edu/model-checker-benchmarks.git benchmarks
@@ -381,7 +376,7 @@ See Also
 
 The CDSChecker project page:
 
->   <http://demsky.eecs.uci.edu/c11modelchecker.php>
+>   <http://demsky.eecs.uci.edu/c11modelchecker.html>
 
 The CDSChecker source and accompanying benchmarks on Gitweb:
 
@@ -398,6 +393,14 @@ and we are happy to hear from our users. We are also very interested to know if
 CDSChecker catches bugs in your programs.
 
 Contact Brian Norris at <banorris@uci.edu> or Brian Demsky at <bdemsky@uci.edu>.
+
+
+Copyright
+---------
+
+Copyright &copy; 2013 Regents of the University of California. All rights reserved.
+
+CDSChecker is distributed under the GPL v2. See the LICENSE file for details.
 
 
 References

@@ -11,12 +11,15 @@
 # default program.
 #
 
-BIN=./test/userprog.o
+# Get the directory in which this script and the binaries are located
+BINDIR="${0%/*}"
+
+BIN=${BINDIR}/test/userprog.o
 PREFIX=
 
-export LD_LIBRARY_PATH=.
+export LD_LIBRARY_PATH=${BINDIR}
 # For Mac OSX
-export DYLD_LIBRARY_PATH=.
+export DYLD_LIBRARY_PATH=${BINDIR}
 
 [ $# -gt 0 ] && [ "$1" = "gdb" ] && PREFIX=gdb && shift
 [ $# -gt 0 ] && [ -e "$1" ] && BIN="$1" && shift
